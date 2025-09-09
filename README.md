@@ -1,61 +1,101 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# README.md – Guide de collaboration GitHub pour Laravel 12
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+##Ce guide explique comment collaborer correctement sur ce dépôt GitHub pour **éviter les conflits** et garantir un développement fluide. **Seul Diègue fusionnera les rendu sur la branche `main`**.
 
-## About Laravel
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+5. Branche `develop` (pour le développement concerne uniquement :
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+```bash
+git checkout -b develop
+git push -u origin develop
+```
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
+## 2 Branches Git et leur rôle
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+| Branche         | Rôle                                                                                            |
+| --------------- | ----------------------------------------------------------------------------------------------- |
+| `main`          | Version **stable** pour production. Seul Diègue fusionne ici.                          |
+| `develop`       | Version **en cours de développement**. Toutes les fonctionnalités passent par ici avant `main`. |
+| `feature/<nom>` | Chaque nouvelle **fonctionnalité** (ex: `feature/auth`).                                        |
+| `hotfix/<nom>`  | Correction rapide d’un **bug en production**.                                                   |
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+---
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Règles pour les collaborateurs
 
-## Laravel Sponsors
+1. **Ne jamais coder directement sur `main` ou `develop`.**
+2. **Créer votre branche de fonctionnalité à partir de `develop`** :
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+```bash
+git checkout develop
+git pull origin develop
+git checkout -b feature/nom-de-fonctionnalité
+```
 
-### Premium Partners
+3. **Commits clairs et fréquents** :
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+```bash
+git add .
+git commit -m "Description claire de la modification que vous avez apporté"
+```
 
-## Contributing
+4. **Pousser sa branche sur GitHub** :
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```bash
+git push origin feature/nom-de-fonctionnalité
+```
 
-## Code of Conduct
+5. **Créer une Pull Request (PR) vers `develop`**.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+   * Seul Diègue fait ceci pour fusionner après validation.
+6. **Toujours mettre à jour sa branche avec `develop` avant de fusionner** :
 
-## Security Vulnerabilities
+```bash
+git checkout develop
+git pull origin develop
+git checkout feature/nom-de-fonctionnalite
+git merge develop
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+---
 
-## License
+##Fusion dans `main` (à faire uniquement par Diègue)
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+1. Vérifier que `develop` est stable et testé.
+2. Passer sur `main` :
+
+```bash
+git checkout main
+```
+
+3. Fusionner `develop` :
+
+```bash
+git merge develop
+git push origin main
+```
+
+> Seul Diègue du projet effectue cette étape pour éviter tout conflit sur `main`.
+
+---
+
+
+* **Supprimer les branches de fonctionnalité après fusion** pour garder le dépôt propre :
+
+```bash
+git branch -d feature/nom-de-fonctionnalite   # local
+git push origin --delete feature/nom-de-fonctionnalite   # distant
+```
+
+* Toujours **pull avant de commencer à coder** :
+
+```bash
+git checkout develop
+git pull origin develop
+```
+
+* Écrire des **messages de commit clairs et explicites**.
+* **Pas de modification directe de la branche `main`.**
+
