@@ -1,11 +1,16 @@
 <?php
+namespace App\Notifications;
 
 use Illuminate\Notifications\Notification;
 use Illuminate\Notifications\Messages\MailMessage;
 use Twilio\Rest\Client as TwilioClient;
+use Illuminate\Bus\Queueable;
+use App\Models\Invitation;
 
-class InvitationNotification extends Notification
-{
+
+class InvitationNotification extends Notification{
+
+    use Queueable;
     protected $invitation;
     protected $plainPassword;
 
@@ -16,7 +21,7 @@ class InvitationNotification extends Notification
 
     public function via($notifiable){
         $channels = ['mail'];
-        if ($this->invitation->phone) $channels[] = 'twilio'; // custom channel name if implemented
+        if ($this->invitation->phone) $channels[] = 'twilio'; 
         return $channels;
     }
 
