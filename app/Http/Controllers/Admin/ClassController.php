@@ -9,8 +9,7 @@ use App\Models\AcademicYear;
 use Illuminate\Http\Request;
 
 class ClassController extends Controller{
-    public function index()
-    {
+    public function index(){
         $classes = SchoolClass::with('school','academicYear')->paginate(20);
         return view('admin.classes.index', compact('classes'));
     }

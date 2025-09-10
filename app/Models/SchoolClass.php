@@ -9,9 +9,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class SchoolClass extends Model{
     use HasFactory;
 
-    protected $table = 'classes';
-    protected $fillable = ['school_id','name','level','series','academic_year_id'];
+    protected $fillable = [
+        'name', 'level', 'sector', 'year_id', 'series'
+    ];
 
-    public function school() { return $this->belongsTo(School::class); }
-    public function academicYear() { return $this->belongsTo(AcademicYear::class); }
+    public function year()
+    {
+        return $this->belongsTo(Year::class);
+    }
 }

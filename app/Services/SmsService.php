@@ -1,14 +1,26 @@
 <?php
 
-use Twilio\Rest\Client;
+namespace App\Services;
 
-class SmsService {
-    protected $client;
-    public function __construct() {
-        $this->client = new Client(config('services.twilio.sid'), config('services.twilio.token'));
-    }
-    public function send($to, $body) {
-        $from = config('services.twilio.from');
-        return $this->client->messages->create($to, ['from'=>$from,'body'=>$body]);
+use Illuminate\Support\Facades\Http;
+
+class SmsService{
+    public function send($to, $message){
+    
+        $apiKey = env('SMS_API_KEY');
+        $sender = env('SMS_SENDER');
+
+        $response = Http::post('https://api.smsprovider.com/send', [
+            'to' => $to,
+            'from' => $sender,
+            'text' => $message,
+            'api_key' => $apiKey,
+        ]);
+
+        if ($response->failed()) {
+            throw new \Exception('SMS sending failed: ' . $response->body());
+        }
+
+        return $response->json();
     }
 }

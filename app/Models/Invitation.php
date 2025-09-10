@@ -4,11 +4,28 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-class Invitation extends Model{
+
+class Invitation extends Model
+{
     use HasFactory;
 
-    protected $fillable = ['email','phone','role','token','temporary_password','expires_at','created_by','accepted'];
+    protected $fillable = [
+        'email',
+        'role',
+        'year_id',
+        'phone',
+        'token',
+        'expires_at',
+        'temporary_password',
+        'created_by',
+        'accepted',
+    ];
+
     protected $dates = ['expires_at'];
+
+    protected $casts = [
+        'expires_at' => 'datetime',
+    ];
 
     public function creator()
     {

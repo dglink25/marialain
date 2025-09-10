@@ -12,7 +12,7 @@ class InvitationAcceptController extends Controller{
     public function showForm($token){
         $inv = Invitation::where('token',$token)->firstOrFail();
         if ($inv->isExpired()) return view('invitations.expired');
-        return view('invitations.accept', compact('inv'));
+        return view('admin.invitations.accept', compact('inv'));
     }
 
     public function accept(Request $request, $token){

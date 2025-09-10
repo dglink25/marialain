@@ -21,7 +21,7 @@ class InvitationNotification extends Notification{
 
     public function via($notifiable){
         $channels = ['mail'];
-        if ($this->invitation->phone) $channels[] = 'twilio'; 
+        //if ($this->invitation->phone) $channels[] = 'twilio'; 
         return $channels;
     }
 

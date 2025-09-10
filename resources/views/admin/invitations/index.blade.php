@@ -26,7 +26,6 @@
                 <td>{{ $i->accepted ? 'oui':'non' }}</td>
                 <td>
                     <form method="POST" action="{{ route('invitations.destroy',$i) }}" style="display:inline">@csrf @method('DELETE')<button>Révoquer</button></form>
-                    <form method="POST" action="{{ route('invitations.resend',$i) }}" style="display:inline">@csrf <button>Renvoyer</button></form>
                 </td>
             </tr>
         @endforeach

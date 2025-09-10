@@ -11,9 +11,8 @@
     <nav>
         <a href="{{ route('home') }}">Accueil</a>
         @auth
-            <a href="{{ route('schools.index') }}">Écoles</a>
-            <a href="{{ route('classes.index') }}">Classes</a>
-            <a href="{{ route('invitations.index') }}">Invitations</a>
+            <a href="{{ route('admin.profile.show') }}">Profil</a>
+            <a href="{{ route('admin.years.index') }}">Années scolaires</a>
             <form method="POST" action="{{ route('logout') }}" style="display:inline">@csrf <button type="submit">Déconnexion</button></form>
         @else
             <a href="{{ route('login') }}">Connexion</a>
