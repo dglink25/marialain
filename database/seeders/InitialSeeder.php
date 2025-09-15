@@ -28,8 +28,7 @@ class InitialSeeder extends Seeder
                 ['display_name' => $role['display_name']] // Valeur si nouveau
             );
         }
-
-        // Créer les entités sans doublons
+        
         $entities = [
             ['slug' => 'maternelle', 'name' => 'Maternelle'],
             ['slug' => 'primaire', 'name' => 'Primaire'],
@@ -42,8 +41,6 @@ class InitialSeeder extends Seeder
                 ['name' => $entity['name']]
             );
         }
-
-        // Créer un utilisateur admin si inexistant
         User::firstOrCreate(
             ['email' => 'admin@mariealain'],
             [

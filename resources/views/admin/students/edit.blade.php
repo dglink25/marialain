@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
+@if(auth()->check())
 <div class="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-md">
     <h1 class="text-2xl font-bold mb-6">Modifier un étudiant</h1>
 
@@ -49,6 +50,25 @@
             >
         </div>
 
+        <!-- Sexe -->
+            <div class="mb-3">
+                <label class="block mb-1" for="gender">Sexe</label>
+                <select name="gender" id="gender" class="border rounded p-2 w-full" required>
+                    <option value="">Sélectionnez une option</option>
+                    <option value="M" {{ old('gender', $student->gender) == 'M' ? 'selected' : '' }}>Masculin</option>
+                    <option value="F" {{ old('gender', $student->gender) == 'F' ? 'selected' : '' }}>Féminin</option>
+                </select>
+            </div>
+
+            <!-- Numéro éduque Master -->
+            <div class="mb-3">
+                <label for="num_educ" class="block mb-1">Numéro éduque Master</label>
+                <input type="text" name="num_educ" id="num_educ"
+                    value="{{ old('num_educ', $student->num_educ) }}"
+                    class="border rounded p-2 w-full" required>
+            </div>
+
+
 
         <!-- Entité -->
         <div class="mb-3">
@@ -78,13 +98,30 @@
             </select>
         </div>
 
-        <!-- Frais de scolarité payés -->
+        <!-- Nom du parent -->
         <div class="mb-3">
-            <label for="school_fees_paid" class="block text-sm font-medium">Scolarité payée à l'inscription</label>
-            <input type="number" step="1" name="school_fees_paid" id="school_fees_paid" 
-                   value="{{ old('school_fees', $student->school_fees) }}" 
-                   class="border rounded p-2 w-full" required>
+            <label for="parent_full_name" class="block text-sm font-medium">Nom complet du parent</label>
+            <input type="text" name="parent_full_name" id="parent_full_name" 
+                value="{{ old('parent_full_name', $student->parent_full_name) }}" 
+                class="border rounded p-2 w-full" required>
         </div>
+
+        <!-- Email du parent -->
+        <div class="mb-3">
+            <label for="parent_email" class="block text-sm font-medium">Email du parent</label>
+            <input type="email" name="parent_email" id="parent_email" 
+                value="{{ old('parent_email', $student->parent_email) }}" 
+                class="border rounded p-2 w-full" required>
+        </div>
+
+        <!-- Frais de scolarité -->
+        <div class="mb-3">
+            <label for="school_fees" class="block text-sm font-medium">Frais de scolarité</label>
+            <input type="number" name="school_fees" id="school_fees" step="1"
+                value="{{ old('school_fees', $student->school_fees) }}" 
+                class="border rounded p-2 w-full" required>
+        </div>
+
 
         <!-- Boutons -->
         <div class="flex justify-between mt-6">
@@ -148,4 +185,7 @@
         }
     });
 </script>
+@else
+<p style="color:red"> Une erreur s'est produite lors de l'affichage de cette section <br> Veuillez vous connectez à nouveau pour continuer <a href="{{ route('login') }}" class="block px-3 py-2 rounded bg-blue-600 text-white">Se connecter</a></p>
+@endif 
 @endsection

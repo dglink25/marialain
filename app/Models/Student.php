@@ -22,6 +22,8 @@ class Student extends Model{
         'parent_full_name',
         'parent_email',
         'school_fees',
+        'num_educ',
+        'gender',
     ];
 
     public function entity() {

@@ -13,15 +13,34 @@ class Classe extends Model
         'school_fees',
     ];
 
-    // Relation vers Entity
     public function entity()
     {
         return $this->belongsTo(Entity::class, 'entity_id');
     }
 
-    // Relation vers AcademicYear
     public function academicYear()
     {
         return $this->belongsTo(AcademicYear::class, 'academic_year_id');
     }
+
+    public function timetables() {
+        return $this->hasMany(Timetable::class);
+    }
+
+    public function teachers(){
+        return $this->belongsToMany(User::class, 'class_teacher_subject', 'class_id', 'teacher_id')
+                    ->withPivot('subject_id')
+                    ->withTimestamps();
+    }
+
+    public function students()
+    {
+        return $this->hasMany(Student::class, 'classe_id');
+    }
+
+    public function timetable()
+    {
+        return $this->hasMany(Timetable::class, 'class_id');
+    }
+
 }

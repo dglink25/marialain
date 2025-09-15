@@ -1,14 +1,32 @@
 @extends('layouts.app')
 
 @section('content')
+@if(auth()->check())
 <div class="max-w-4xl mx-auto">
     <h1 class="text-2xl font-bold mb-6">Inscription à CPEG MARIE-ALAIN</h1>
 
-    @if(session('success'))
-        <div class="bg-green-100 text-green-700 p-2 mb-4 rounded">
-            {{ session('success') }}
-        </div>
-    @endif
+    @if ($errors->any())
+    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+        <ul class="list-disc pl-5">
+            @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
+
+@if (session('error'))
+    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+        {{ session('error') }}
+    </div>
+@endif
+
+@if (session('success'))
+    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+        {{ session('success') }}
+    </div>
+@endif
+
 
     <form method="POST" action="{{ route('admin.students.store') }}" enctype="multipart/form-data" class="bg-white shadow-md rounded p-4 space-y-4">
         @csrf
@@ -42,6 +60,20 @@
             <div>
                 <label class="block mb-1">Âge</label>
                 <input type="number" id="age" class="border rounded p-2 w-full" readonly>
+            </div>
+
+            <div>
+                <label class="block mb-1" for="gender">Sexe</label>
+                <select name="gender" id="gender" class="border rounded p-2 w-full" required>
+                    <option value="">Sélectionnez une option</option>
+                    <option value="M">Masculin</option>
+                    <option value="F">Féminin</option>
+                </select>
+            </div>
+
+            <div>
+                <label for="num_educ" class="block mb-1">Numéro éduque Master</label>
+                <input type="text"  name="num_educ" class="border rounded p-2 w-full" required>
             </div>
 
             <!-- Entité et Classe -->
@@ -154,4 +186,7 @@
         }
     });
 </script>
+@else
+<p style="color:red"> Une erreur s'est produite lors de l'affichage de cette section <br> Veuillez vous connectez à nouveau pour continuer <a href="{{ route('login') }}" class="block px-3 py-2 rounded bg-blue-600 text-white">Se connecter</a></p>
+@endif 
 @endsection

@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
+@if(auth()->check())
 <div class="max-w-6xl mx-auto p-6 bg-white rounded-lg shadow">
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-2xl font-bold">Liste alphabétique des étudiants</h1>
@@ -45,4 +46,7 @@
         @endforeach
     @endforeach
 </div>
+@else
+<p style="color:red"> Une erreur s'est produite lors de l'affichage de cette section <br> Veuillez vous connectez à nouveau pour continuer <a href="{{ route('login') }}" class="block px-3 py-2 rounded bg-blue-600 text-white">Se connecter</a></p>
+@endif 
 @endsection

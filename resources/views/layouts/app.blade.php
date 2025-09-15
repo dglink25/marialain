@@ -3,7 +3,7 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width,initial-scale=1" />
-        <title>MARI ALAIN</title>
+        <title>CPEG MARIE-ALAIN</title>
         <!-- Tailwind + Flowbite -->
         <script src="https://cdn.tailwindcss.com"></script>
         <link href="https://unpkg.com/flowbite@1.6.5/dist/flowbite.min.css" rel="stylesheet" />
@@ -14,7 +14,7 @@
             <aside id="sidebar" class="w-64 bg-white shadow-md hidden md:block">
             <div class="p-4 flex items-center gap-3 border-b">
                 <img src="{{ asset('logo.png') }}" class="h-12" alt="Logo" />
-                <span class="font-bold">MARI ALAIN</span>
+                <span class="font-bold">CPEG MARIE-ALAIN</span>
             </div>
             <nav class="p-4 space-y-2">
                 <a href="{{ route('home') }}" class="block px-3 py-2 rounded hover:bg-blue-50">Accueil</a>
@@ -26,23 +26,37 @@
                         @case('directeur_primaire')
                             <a href="{{ route('directeur.dashboard') }}" class="block px-4 py-2 rounded hover:bg-gray-200">Dashboard Directeur</a>
                             @break
+
+                        @case('teacher')
+                            <a href="{{ route('teacher.dashboard') }}" class="block px-4 py-2 hover:bg-gray-200">Dashboard Enseignant</a>
+                            <a href="{{ route('teacher.classes') }}" class="block px-4 py-2 hover:bg-gray-200">Mes classes</a>
+                            @break
+
                         @case('censeur')
                             <a href="{{ route('censeur.dashboard') }}" class="block px-4 py-2 rounded hover:bg-gray-200">Dashboard Censeur</a>
+                            <a href="{{ route('censeur.invitations.index') }}" class="block px-4 py-2 hover:bg-gray-200">Invitations enseignants</a>
+                            <a href="{{ route('censeur.subjects.index') }}" class="block px-4 py-2 hover:bg-gray-200">Matières</a>
+                            <a href="{{ route('censeur.classes.index') }}" class="block px-4 py-2 hover:bg-gray-200" >Liste Classes</a>
                             @break
+
                         @case('surveillant')
                             <a href="{{ route('surveillant.dashboard') }}" class="block px-4 py-2 rounded hover:bg-gray-200">Dashboard Surveillant</a>
                             @break
+
                         @case('secretaire')
                             <a href="{{ route('secretaire.dashboard') }}" class="block px-4 py-2 rounded hover:bg-gray-200">Dashboard Secrétaire</a>
                             <a href="{{ route('admin.students.create') }}" class="block px-4 py-2 rounded hover:bg-gray-200">Inscription en ligne</a>
                             <a href="{{ route('admin.students.index') }}" class="block px-4 py-2 rounded hover:bg-gray-200">Liste Elèves</a>
                             @break
+
                         @case('super_admin')
                             <a href="{{ route('admin.dashboard') }}" class="block px-3 py-2 rounded hover:bg-blue-50">Tableau de bord</a>
                             <a href="{{ route('admin.academic_years.index') }}" class="block py-2 px-4 hover:bg-gray-200">Années académiques</a>
                             <a href="{{ route('admin.classes.index') }}" class="block py-2 px-4 hover:bg-gray-200">Classes</a>
                             <a href="{{ route('admin.invitations.index') }}" class="block py-2 px-4 hover:bg-gray-200">Invitations enseignants</a>
                             @break
+
+                        
                     @endswitch
                 @endif
                 

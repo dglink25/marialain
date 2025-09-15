@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
+@if(auth()->check())
 <div class="max-w-3xl mx-auto bg-white p-6 rounded-lg shadow-md">
     <h1 class="text-2xl font-bold mb-6">Détails sur l'élève {{ $student->last_name }} {{ $student->first_name }}</h1>
 
@@ -60,4 +61,7 @@
         </div>
     </div>
 </div>
+@else
+<p style="color:red"> Une erreur s'est produite lors de l'affichage de cette section <br> Veuillez vous connectez à nouveau pour continuer <a href="{{ route('login') }}" class="block px-3 py-2 rounded bg-blue-600 text-white">Se connecter</a></p>
+@endif
 @endsection

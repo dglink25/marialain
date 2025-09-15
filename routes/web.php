@@ -10,6 +10,21 @@ use App\Mail\InvitationMail;
 use App\Models\Invitation;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\StudentController;
+use App\Http\Controllers\InvitationResponseController;
+use App\Http\Controllers\Censeur\ClasseController;
+use App\Http\Controllers\Teacher\ClassController as TeacherClassController;
+
+use App\Http\Controllers\Admin\StudentExportController;
+
+use App\Http\Controllers\Censeur\InvitationController as CenseurInvitationController;
+use App\Http\Controllers\Teacher\TeacherController;
+use App\Http\Controllers\Censeur\SubjectController;
+use App\Http\Controllers\Censeur\AssignmentController;
+use App\Http\Controllers\Censeur\TimetableController;
+use App\Http\Controllers\Teacher\DashboardController;
+
+
+
 
 /*
 |--------------------------------------------------------------------------
@@ -122,7 +137,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::resource('students', StudentController::class);
 });
 
-use App\Http\Controllers\Admin\StudentExportController;
 
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('students/list', [StudentExportController::class, 'index'])->name('students.list');
@@ -133,8 +147,82 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
 
 Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () {
-    // ... tes autres routes
-    
     Route::get('/students/list', [StudentController::class, 'listAlphabetical'])
          ->name('students.list');
 });
+
+
+// Routes censeur (auth requis mais pas de middleware global 'role' dans Kernel)
+Route::prefix('censeur')->name('censeur.')->middleware('auth')->group(function () {
+    Route::get('/invitations', [CenseurInvitationController::class, 'index'])->name('invitations.index');
+    Route::resource('subjects', SubjectController::class);
+    Route::resource('assignments',AssignmentController::class);
+    //Route::resource('timetables',TimetableController::class);
+    Route::post('/invitations', [CenseurInvitationController::class, 'send'])->name('invitations.send');
+});
+
+Route::prefix('censeur')->group(function () {
+    Route::get('timetables/{classId}', [TimetableController::class, 'index'])
+        ->name('censeur.timetables.index');
+});
+
+
+Route::prefix('teacher')->middleware(['auth'])->name('teacher.')->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Liste des classes de l’enseignant
+    Route::get('/classes', [TeacherClassController::class, 'index'])->name('classes');
+
+    // Liste des élèves dans une classe
+    Route::get('/classes/{classId}/students', [TeacherClassController::class, 'students'])
+        ->name('classes.students');
+
+    // Emploi du temps d’une classe
+    Route::get('/classes/{classId}/timetable', [TeacherClassController::class, 'timetable'])
+        ->name('classes.timetable');
+});
+
+
+Route::prefix('censeur')->group(function () {
+    Route::get('classes', [ClasseController::class, 'index'])->name('censeur.classes.index');
+
+    // Actions par classe
+    Route::get('classes/{classId}/students', [ClasseController::class, 'students'])->name('censeur.classes.students');
+    Route::get('classes/{classId}/timetable', [ClasseController::class, 'timetable'])->name('censeur.classes.timetable');
+    Route::get('classes/{classId}/teachers', [ClasseController::class, 'teachers'])->name('censeur.classes.teachers');
+});
+
+
+
+Route::prefix('censeur')->group(function () {
+    // Timetables
+    Route::get('classes/{classId}/timetables', [TimetableController::class, 'index'])->name('censeur.timetables.index');
+    Route::post('classes/{classId}/timetables', [TimetableController::class, 'store'])->name('censeur.timetables.store');
+    Route::put('classes/{classId}/timetables/{id}', [TimetableController::class, 'update'])->name('censeur.timetables.update');
+    Route::delete('classes/{classId}/timetables/{id}', [TimetableController::class, 'destroy'])->name('censeur.timetables.destroy');
+});
+
+Route::get('/invitation/accept/{token}', [InvitationResponseController::class, 'accept'])
+    ->name('invitation.accept');
+
+
+
+Route::prefix('censeur')->name('censeur.')->group(function() {
+    Route::get('classes/{classId}/horaires', [TimetableController::class, 'index'])->name('timetables.index');
+    Route::post('classes/{classId}/horaires', [TimetableController::class, 'store'])->name('timetables.store');
+
+    // Modifier un créneau
+    Route::get('classes/{classId}/horaires/{id}/edit', [TimetableController::class, 'edit'])->name('timetables.edit');
+    Route::put('classes/{classId}/horaires/{id}', [TimetableController::class, 'update'])->name('timetables.update');
+    Route::delete('classes/{classId}/horaires/{id}', [TimetableController::class, 'destroy'])->name('timetables.destroy');
+});
+
+Route::prefix('censeur')->name('censeur.')->group(function () {
+    Route::get('classes/{class}/timetables/download', [TimetableController::class, 'downloadPDF'])
+        ->name('timetables.download');
+});
+
+
+Route::get('/censeur/classes/{class}/students/pdf', [ClasseController::class, 'downloadStudentsPdf'])
+     ->name('censeur.classes.students.pdf');
+
