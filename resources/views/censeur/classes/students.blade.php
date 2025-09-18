@@ -18,23 +18,29 @@
                 <table class="min-w-full border border-gray-300 text-sm table-fixed">
                     <thead class="bg-gray-100 sticky top-0 z-10">
                         <tr>
+                            <th>N°</th>
                             <th class="border px-4 py-2 text-left w-1/6">Numéro Éduque Master</th>
                             <th class="border px-4 py-2 text-left w-1/6">Nom</th>
-                            <th class="border px-4 py-2 text-left w-1/6">Prénom</th>
+                            <th class="border px-4 py-2 text-left w-1/6">Prénoms</th>
                             <th class="border px-4 py-2 text-left w-1/6">Date de naissance</th>
+                            <th class="border px-4 py-2 text-left">Lieu de naissance</th>
                             <th class="border px-4 py-2 text-left w-1/6">Sexe</th>
                             <th class="border px-4 py-2 text-left w-1/6">Email parent</th>
+                            <th class="border px-4 py-2 text-left">Téléphone parent</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($class->students->sortBy([['last_name', 'asc'], ['first_name', 'asc']]) as $student)
                             <tr class="hover:bg-gray-50">
+                                <td>{{ $loop->iteration }}</td> {{-- Numéro automatique --}}
                                 <td class="border px-4 py-2">{{ $student->num_educ ?? '-' }}</td>
                                 <td class="border px-4 py-2">{{ $student->last_name }}</td>
                                 <td class="border px-4 py-2">{{ $student->first_name }}</td>
                                 <td class="border px-4 py-2">{{ $student->birth_date }}</td>
+                                <td class="border px-4 py-2">{{ $student->birth_place }}</td>
                                 <td class="border px-4 py-2">{{ $student->gender ?? '-' }}</td>
                                 <td class="border px-4 py-2">{{ $student->parent_email }}</td>
+                                <td class="border px-4 py-2">{{ $student->parent_phone }}</td>
                             </tr>
                         @endforeach
                     </tbody>

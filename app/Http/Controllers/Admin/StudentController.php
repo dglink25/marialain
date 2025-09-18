@@ -18,6 +18,7 @@ class StudentController extends Controller{
                 'first_name' => 'required|string',
                 'last_name' => 'required|string',
                 'birth_date' => 'required|date',
+                'birth_place' => 'required|string',
                 'entity_id' => 'required|exists:entities,id',
                 'classe_id' => 'required|exists:classes,id',
                 'birth_certificate' => 'required|mimes:pdf|max:2048',
@@ -26,6 +27,7 @@ class StudentController extends Controller{
                 'diploma_certificate' => 'nullable|mimes:pdf|max:2048',
                 'parent_full_name' => 'required|string',
                 'parent_email' => 'required|email',
+                'parent_phone' => 'required|string',
                 'school_fees' => 'required|integer|min:0',
                 'num_educ' => 'required|string',
                 'gender' => 'required|string',
@@ -48,12 +50,15 @@ class StudentController extends Controller{
 
         // Calcul automatique de l'âge
         $data['age'] = now()->diffInYears($request->birth_date);
+        $data['age'] = (-1)*$data['age'];
+        var_dump($data['age']);
 
         try {
             $student = Student::create([
                 'first_name' => $data['first_name'],
                 'last_name' => $data['last_name'],
                 'birth_date' => $data['birth_date'],
+                'birth_place' => $data['birth_place'],
                 'gender' => $data['gender'],
                 'entity_id' => $data['entity_id'],
                 'classe_id' => $data['classe_id'],
@@ -63,6 +68,7 @@ class StudentController extends Controller{
                 'diploma_certificate' => $data['diploma_certificate'] ?? null,
                 'parent_full_name' => $data['parent_full_name'],
                 'parent_email' => $data['parent_email'],
+                'parent_phone' =>   $data['parent_phone'],
                 'school_fees' => $data['school_fees'],
                 'num_educ' => $data['num_educ'],
                 'age' => $data['age'],
@@ -105,6 +111,7 @@ class StudentController extends Controller{
             'first_name' => 'required|string',
             'last_name' => 'required|string',
             'birth_date' => 'required|date',
+            'birth_place' => 'required|string',
             'entity_id' => 'required|exists:entities,id',
             'classe_id' => 'required|exists:classes,id',
             'birth_certificate' => 'nullable|mimes:pdf|max:2048',
@@ -113,11 +120,14 @@ class StudentController extends Controller{
             'diploma_certificate' => 'nullable|mimes:pdf|max:2048',
             'parent_full_name' => 'required|string',
             'parent_email' => 'required|email',
+            'parent_phone' => 'required|string',
             'school_fees' => 'required|integer|min:0',
             'num_educ' => 'required|string',
             'gender' => 'required|string',
         ]);
 
+        $data['age'] = now()->diffInYears($request->birth_date);
+        $data['age'] = (-1)*$data['age'];
         $data = $request->all();
 
         // Upload fichiers si nécessaire

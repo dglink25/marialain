@@ -12,9 +12,6 @@
             class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
                 + Nouvelle inscription
             </a>
-            <a href="{{ route('admin.students.list') }}" class="hover:text-gray-200">
-                Liste Alphabétique
-            </a>
 
         </div>
 

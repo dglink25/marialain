@@ -12,19 +12,22 @@ class Student extends Model{
         'first_name',
         'last_name',
         'birth_date',
+        'birth_place',
         'age',
+        'gender',
+        'num_educ',
         'entity_id',
         'classe_id',
-        'vaccination_card',
         'birth_certificate',
+        'vaccination_card',
         'previous_report_card',
         'diploma_certificate',
         'parent_full_name',
         'parent_email',
+        'parent_phone',
         'school_fees',
-        'num_educ',
-        'gender',
     ];
+
 
     public function entity() {
         return $this->belongsTo(Entity::class);

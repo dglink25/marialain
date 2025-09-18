@@ -22,6 +22,11 @@
         </div>
 
         <div>
+            <p class="text-sm text-gray-500">Lieu de naissance</p>
+            <p class="text-lg font-semibold">{{ $student->birth_place }}</p>
+        </div>
+
+        <div>
             <p class="text-sm text-gray-500">Entité</p>
             <p class="text-lg font-semibold">{{ $student->entity->name ?? 'N/A' }}</p>
         </div>

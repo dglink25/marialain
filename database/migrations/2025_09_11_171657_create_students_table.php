@@ -14,7 +14,7 @@ return new class extends Migration {
             $table->date('birth_date');
             $table->integer('age')->nullable();
             $table->foreignId('entity_id')->constrained('entities')->onDelete('cascade');
-            $table->foreignId('classe_id')->constrained('classes')->onDelete('cascade');
+            $table->foreignId('class_id')->constrained('classes')->onDelete('cascade');
             $table->string('vaccination_card')->nullable(); // PDF
             $table->string('birth_certificate'); // PDF
             $table->string('previous_report_card')->nullable(); // PDF

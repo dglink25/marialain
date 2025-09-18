@@ -47,13 +47,13 @@
                             <a href="{{ route('secretaire.dashboard') }}" class="block px-4 py-2 rounded hover:bg-gray-200">Dashboard Secrétaire</a>
                             <a href="{{ route('admin.students.create') }}" class="block px-4 py-2 rounded hover:bg-gray-200">Inscription en ligne</a>
                             <a href="{{ route('admin.students.index') }}" class="block px-4 py-2 rounded hover:bg-gray-200">Liste Elèves</a>
+                            <a href="{{ route('admin.classes.index') }}" class="block py-2 px-4 hover:bg-gray-200">Gestion de classes</a>
                             @break
 
                         @case('super_admin')
                             <a href="{{ route('admin.dashboard') }}" class="block px-3 py-2 rounded hover:bg-blue-50">Tableau de bord</a>
                             <a href="{{ route('admin.academic_years.index') }}" class="block py-2 px-4 hover:bg-gray-200">Années académiques</a>
                             <a href="{{ route('admin.classes.index') }}" class="block py-2 px-4 hover:bg-gray-200">Classes</a>
-                            <a href="{{ route('admin.invitations.index') }}" class="block py-2 px-4 hover:bg-gray-200">Invitations enseignants</a>
                             @break
 
                         

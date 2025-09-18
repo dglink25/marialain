@@ -37,6 +37,18 @@ Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
+// Page classes primaires
+Route::get('/admin/classes/primary/secondary_classes', function (){
+    return view('admin.classes.secondary_classes');
+})->name('admin.classes.primary');
+
+Route::get('classes', [ClasseController::class, 'index'])->name('censeur.classes.index');
+
+// Page classes secondaires
+Route::get('/admin/classes/secondary/create', [App\Http\Controllers\Admin\ClasseController::class, 'createSecondary'])
+    ->name('admin.classes.secondary');
+
+
 // Profil
 Route::middleware('auth')->group(function () {
     Route::get('/profil', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -111,9 +123,6 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::post('/invitations', [InvitationController::class,'store'])->name('invitations.store');
 });
 
-Route::middleware(['auth'])->group(function () {
-    //Route::get('/dashboard', [App\Http\Controllers\HomeController::class, 'index'])->name('dashboard');
-});
 
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
     Route::resource('classes', ClassController::class);

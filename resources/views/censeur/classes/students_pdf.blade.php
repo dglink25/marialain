@@ -26,28 +26,36 @@
     <h1>Élèves de la classe : {{ $class->name }}</h1>
 
     <table>
+        
         <thead>
             <tr>
+                <th>N°</th>
                 <th>Numéro Éduque Master</th>
                 <th>Nom</th>
-                <th>Prénom</th>
+                <th>Prénoms</th>
                 <th>Date de naissance</th>
+                <th>Lieu de naissance</th>
                 <th>Sexe</th>
                 <th>Email parent</th>
+                <th>Téléphone parent</th>
             </tr>
         </thead>
         <tbody>
             @foreach($students as $student)
             <tr>
+                <td>{{ $loop->iteration }}</td> {{-- Numéro automatique --}}
                 <td>{{ $student->num_educ ?? '-' }}</td>
                 <td>{{ $student->last_name }}</td>
                 <td>{{ $student->first_name }}</td>
                 <td>{{ $student->birth_date }}</td>
+                <td>{{ $student->birth_place }}</td>
                 <td>{{ $student->gender ?? '-' }}</td>
                 <td>{{ $student->parent_email }}</td>
+                <td>{{ $student->parent_phone }}</td>
             </tr>
             @endforeach
         </tbody>
     </table>
+
 </body>
 </html>

@@ -55,11 +55,18 @@
                     class="border rounded p-2 w-full" 
                     required
                 >
-                
             </div>
             <div>
                 <label class="block mb-1">Âge</label>
                 <input type="number" id="age" class="border rounded p-2 w-full" readonly>
+            </div>
+
+            <!-- Lieu de naissance -->
+            <div class="mb-3">
+                <label for="birth_place" class="block text-sm font-medium">Lieu de naissance</label>
+                <input type="text" name="birth_place" id="birth_place"
+                    value="{{ old('birth_place') }}"
+                    class="border rounded p-2 w-full" required>
             </div>
 
             <div>
@@ -122,9 +129,17 @@
                 <input type="text" name="parent_full_name" value="{{ old('parent_full_name') }}" class="border rounded p-2 w-full" required>
             </div>
             <div>
-                <label class="block mb-1">Email parents/tuteurs</label>
+                <label class="block mb-1">Email parents / tuteurs</label>
                 <input type="email" name="parent_email" value="{{ old('parent_email') }}" class="border rounded p-2 w-full" required>
             </div>
+            <!-- Téléphone du parent -->
+            <div class="mb-3">
+                <label for="parent_phone" class="block text-sm font-medium">Téléphone du parent</label>
+                <input type="text" name="parent_phone" id="parent_phone"
+                    value="{{ old('parent_phone') }}"
+                    class="border rounded p-2 w-full" required>
+            </div>
+
 
             <!-- Scolarité -->
             <div class="col-span-2">

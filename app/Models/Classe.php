@@ -23,10 +23,6 @@ class Classe extends Model
         return $this->belongsTo(AcademicYear::class, 'academic_year_id');
     }
 
-    public function timetables() {
-        return $this->hasMany(Timetable::class);
-    }
-
     public function teachers(){
         return $this->belongsToMany(User::class, 'class_teacher_subject', 'class_id', 'teacher_id')
                     ->withPivot('subject_id')
@@ -35,10 +31,10 @@ class Classe extends Model
 
     public function students()
     {
-        return $this->hasMany(Student::class, 'classe_id');
+        return $this->hasMany(Student::class, 'class_id');
     }
 
-    public function timetable()
+    public function timetables()
     {
         return $this->hasMany(Timetable::class, 'class_id');
     }

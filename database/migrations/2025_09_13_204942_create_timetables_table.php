@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('timetables', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('classe_id');
+            $table->unsignedBigInteger('class_id');
             $table->unsignedBigInteger('teacher_id');
             $table->unsignedBigInteger('subject_id');
             $table->string('day'); // lundi, mardi, ...

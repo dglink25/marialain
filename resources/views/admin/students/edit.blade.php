@@ -50,6 +50,14 @@
             >
         </div>
 
+        <!-- Lieu de naissance -->
+        <div class="mb-3">
+            <label for="birth_place" class="block text-sm font-medium">Lieu de naissance</label>
+            <input type="text" name="birth_place" id="birth_place"
+                value="{{ old('birth_place', $student->birth_place) }}"
+                class="border rounded p-2 w-full" required>
+        </div>
+
         <!-- Sexe -->
             <div class="mb-3">
                 <label class="block mb-1" for="gender">Sexe</label>
@@ -119,6 +127,14 @@
             <label for="school_fees" class="block text-sm font-medium">Frais de scolarité</label>
             <input type="number" name="school_fees" id="school_fees" step="1"
                 value="{{ old('school_fees', $student->school_fees) }}" 
+                class="border rounded p-2 w-full" required>
+        </div>
+
+        <!-- Téléphone du parent -->
+        <div class="mb-3">
+            <label for="parent_phone" class="block text-sm font-medium">Téléphone du parent</label>
+            <input type="text" name="parent_phone" id="parent_phone"
+                value="{{ old('parent_phone', $student->parent_phone) }}"
                 class="border rounded p-2 w-full" required>
         </div>
 

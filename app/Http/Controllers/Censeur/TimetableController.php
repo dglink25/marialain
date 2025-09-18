@@ -16,7 +16,7 @@ class TimetableController extends Controller
     {
         $class = Classe::findOrFail($classId);
 
-        $timetables = Timetable::where('classe_id', $classId)
+        $timetables = Timetable::where('class_id', $classId)
             ->with('teacher', 'subject')
             ->orderBy('day')
             ->orderBy('start_time')
@@ -55,8 +55,6 @@ class TimetableController extends Controller
             'teacher_id' => 'required|exists:users,id',
             'subject_id' => 'required|exists:subjects,id',
             'day' => 'required|in:Lundi,Mardi,Mercredi,Jeudi,Vendredi,Samedi',
-            'start_time' => 'required|date_format:H:i',
-            'end_time' => 'required|date_format:H:i|after:start_time',
         ]);
 
         $timetable = Timetable::findOrFail($id);
@@ -100,7 +98,7 @@ class TimetableController extends Controller
 
         $class = Classe::findOrFail($classId);
 
-        $timetables = Timetable::where('classe_id', $classId)
+        $timetables = Timetable::where('class_id', $classId)
             ->with('teacher', 'subject')
             ->orderBy('day')
             ->orderBy('start_time')

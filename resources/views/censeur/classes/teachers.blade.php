@@ -11,6 +11,7 @@
             <table class="min-w-full border border-gray-300 text-sm">
                 <thead class="bg-gray-100">
                     <tr>
+                        <th>N°</th>
                         <th class="border px-4 py-2 text-left">Nom de l'enseignant</th>
                         <th class="border px-4 py-2 text-left">Email</th>
                         <th class="border px-4 py-2 text-left">Matières enseignées</th>
@@ -19,6 +20,7 @@
                 <tbody>
                     @foreach($teachers as $data)
                         <tr class="hover:bg-gray-50">
+                            <td>{{ $loop->iteration }}</td> {{-- Numéro automatique --}}
                             <td class="border px-4 py-2 font-semibold text-gray-700">
                                 {{ $data['teacher']->name }}
                             </td>
