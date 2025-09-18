@@ -31,6 +31,15 @@ class ClassController extends Controller
         $entities = Entity::all();
         $years = AcademicYear::where('active', 1)->get();
 
+
+
+
+        
+        return redirect()->route('profile.edit');
+
+
+
+
         return view('admin.classes.edit', compact('classe', 'entities', 'years'));
     }
 

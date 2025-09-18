@@ -17,7 +17,7 @@ class Student extends Model{
         'gender',
         'num_educ',
         'entity_id',
-        'classe_id',
+        'class_id',
         'birth_certificate',
         'vaccination_card',
         'previous_report_card',
@@ -34,6 +34,6 @@ class Student extends Model{
     }
 
     public function classe() {
-        return $this->belongsTo(Classe::class);
+        return $this->belongsTo(Classe::class, 'class_id');
     }
 }
