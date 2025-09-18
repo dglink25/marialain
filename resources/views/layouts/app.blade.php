@@ -21,7 +21,9 @@
                 
 
                 @if(auth()->check())
-                    <a href="{{ route('profile.edit') }}" class="block px-4 py-2 rounded hover:bg-gray-200">Mon Profil</a>
+                    <a href="{{ route('profile.edit') }}" class="block px-4 py-2 hover:bg-gray-100">Mon Profil</a>
+
+
                     @switch(auth()->user()->role->name)
                         @case('directeur_primaire')
                             <a href="{{ route('directeur.dashboard') }}" class="block px-4 py-2 rounded hover:bg-gray-200">Dashboard Directeur</a>

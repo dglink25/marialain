@@ -33,9 +33,13 @@ use App\Http\Controllers\Teacher\DashboardController;
 */
 
 // Page publique
-Route::get('/', function () {
+Route::get('/home', function () {
     return view('welcome');
 })->name('home');
+
+Route::get('/', function () {
+    return view('accueil');
+})->name('accueil');
 
 // Page classes primaires
 Route::get('/admin/classes/primary/secondary_classes', function (){
@@ -52,7 +56,7 @@ Route::get('/admin/classes/secondary/create', [App\Http\Controllers\Admin\Classe
 // Profil
 Route::middleware('auth')->group(function () {
     Route::get('/profil', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::post('/profil/update', [ProfileController::class, 'update'])->name('profile.update');
+    Route::post('/profil/updates', [ProfileController::class, 'updates'])->name('profile.update');
     Route::post('/profil/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
     Route::post('/profil/photo', [ProfileController::class, 'updatePhoto'])->name('profile.photo');
 
@@ -74,6 +78,7 @@ Route::middleware('auth')->group(function () {
     })->name('secretaire.dashboard');
 });
 
+Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
 
 
 // Auth (Breeze fournit login/logout/password reset)
@@ -235,3 +240,7 @@ Route::prefix('censeur')->name('censeur.')->group(function () {
 Route::get('/censeur/classes/{class}/students/pdf', [ClasseController::class, 'downloadStudentsPdf'])
      ->name('censeur.classes.students.pdf');
 
+Route::middleware(['auth'])->group(function () {
+    Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::post('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
+});
