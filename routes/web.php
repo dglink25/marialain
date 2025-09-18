@@ -33,9 +33,13 @@ use App\Http\Controllers\Teacher\DashboardController;
 */
 
 // Page publique
-Route::get('/', function () {
+Route::get('/home', function () {
     return view('welcome');
 })->name('home');
+
+Route::get('/', function () {
+    return view('accueil');
+})->name('accueil');
 
 // Page classes primaires
 Route::get('/admin/classes/primary/secondary_classes', function (){
