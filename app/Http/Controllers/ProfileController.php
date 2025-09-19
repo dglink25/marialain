@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Hash;
 use Smalot\PdfParser\Parser;
+use App\Models\User;
 
 class ProfileController extends Controller{
     public function edit() {
@@ -29,11 +30,13 @@ class ProfileController extends Controller{
     }
 
 
-    public function show()
+    public function show($id)
     {
-        $user = auth()->user();
+        $user = User::findOrFail($id);
+
         return view('profile.show', compact('user'));
     }
+
 
 
     public function updatePassword(Request $request){
@@ -80,37 +83,36 @@ class ProfileController extends Controller{
             'rib_file' => 'nullable|mimes:pdf|max:2048',
         ]);
 
-        // Upload fichiers + lecture PDF
-        $parser = new Parser();
+        // photo de profil
+        if ($request->hasFile('profile_photo')) {
+            $data['profile_photo'] = $request->file('profile_photo')->store('profiles','public');
+        }
+
+        // PDF parser
+        $parser = new \Smalot\PdfParser\Parser();
 
         foreach (['id_card_file','birth_certificate_file','diploma_file','ifu_file','rib_file'] as $field) {
             if ($request->hasFile($field)) {
                 $path = $request->file($field)->store('enseignants','public');
                 $data[$field] = $path;
 
-                // extraire texte du pdf
                 $pdf = $parser->parseFile($request->file($field)->getPathName());
                 $text = $pdf->getText();
 
-                if ($field === 'ifu_file') {
-                    if (preg_match('/\b\d{13}\b/', $text, $matches)) {
-                        $data['ifu_number'] = $matches[0];
-                    }
+                if ($field === 'ifu_file' && preg_match('/\b\d{13}\b/', $text, $matches)) {
+                    $data['ifu_number'] = $matches[0];
                 }
-                if ($field === 'id_card_file') {
-                    if (preg_match('/[A-Z0-9]{6,}/', $text, $matches)) {
-                        $data['id_card_number'] = $matches[0];
-                    }
+                if ($field === 'id_card_file' && preg_match('/[A-Z0-9]{6,}/', $text, $matches)) {
+                    $data['id_card_number'] = $matches[0];
                 }
             }
         }
 
-        // Sauvegarder
         $user->update($data);
 
-        return redirect()->route('profile.show')
-            ->with('success','Profil mis à jour avec succès.');
+        return back()->with('success','Profil mis à jour avec succès.');
     }
+
 
 
     public function updatePhoto(Request $request) {

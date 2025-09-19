@@ -12,9 +12,12 @@
                 <thead class="bg-gray-100">
                     <tr>
                         <th>N°</th>
-                        <th class="border px-4 py-2 text-left">Nom de l'enseignant</th>
+                        <th class="border px-4 py-2 text-left">Nom & Prénoms</th>
+                        <th>Sexe</th>
                         <th class="border px-4 py-2 text-left">Email</th>
+                        <th>Téléphone</th>
                         <th class="border px-4 py-2 text-left">Matières enseignées</th>
+                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -25,10 +28,22 @@
                                 {{ $data['teacher']->name }}
                             </td>
                             <td class="border px-4 py-2 text-gray-600">
-                                {{ $data['teacher']->email ?? 'Non disponible' }}
+                                {{ $data['teacher']->gendre ?? '--' }}
+                            </td>
+                            <td class="border px-4 py-2 text-gray-600">
+                                {{ $data['teacher']->email ?? '--' }}
+                            </td>
+                            <td class="border px-4 py-2 text-gray-600">
+                                {{ $data['teacher']->phone ?? '--' }}
                             </td>
                             <td class="border px-4 py-2 text-gray-600">
                                 {{ $data['subjects']->join(', ') }}
+                            </td>
+                            <td class="border px-4 py-2 text-gray-600">
+                                <a href="{{ route('enseignants.show', $data['teacher']->id) }}" 
+                                class="text-blue-600 underline hover:text-blue-800">
+                                Voir le profil
+                                </a>
                             </td>
                         </tr>
                     @endforeach
@@ -40,6 +55,11 @@
     </div>
 
     <div class="mt-4">
+        <a href="{{ route('enseignants.export', $class->id) }}" 
+            class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+            Télécharger PDF
+        </a>
+
         <a href="{{ route('censeur.classes.index') }}" 
            class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700">
            Retour

@@ -12,8 +12,8 @@ use App\Models\User;
 use App\Models\TeacherInvitation;
 use App\Mail\TeacherInvitationMail;
 
-class InvitationController extends Controller
-{
+class InvitationController extends Controller{
+    
     public function index() {
         $invitations = TeacherInvitation::with('user')->latest()->get();
         return view('censeur.invitations.index', compact('invitations'));

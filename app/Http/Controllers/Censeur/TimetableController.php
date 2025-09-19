@@ -9,11 +9,12 @@ use App\Models\Timetable;
 use App\Models\Subject;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\DB;
+
 
 class TimetableController extends Controller
 {
-    public function index($classId)
-    {
+    public function index($classId){
         $class = Classe::findOrFail($classId);
 
         $timetables = Timetable::where('class_id', $classId)
@@ -37,9 +38,7 @@ class TimetableController extends Controller
         return view('censeur.timetables.index', compact('class', 'hours', 'timetables', 'subjects', 'teachers'));
     }
 
-    // Affichage du formulaire d'édition
-    public function edit($classId, $id)
-    {
+    public function edit($classId, $id){
         $class = Classe::findOrFail($classId);
         $timetable = Timetable::findOrFail($id);
         $teachers = User::whereHas('role', fn($q) => $q->where('name','teacher'))->get();
@@ -48,28 +47,82 @@ class TimetableController extends Controller
         return view('censeur.timetables.edit', compact('class','timetable','teachers','subjects'));
     }
 
-    // Mise à jour du créneau
-    public function update(Request $request, $classId, $id)
-    {
+   
+
+    public function update(Request $request, $classId, $id){
         $request->validate([
             'teacher_id' => 'required|exists:users,id',
             'subject_id' => 'required|exists:subjects,id',
             'day' => 'required|in:Lundi,Mardi,Mercredi,Jeudi,Vendredi,Samedi',
+            'start_time' => 'nullable',
+            'end_time' => 'nullable|after:start_time',
         ]);
 
         $timetable = Timetable::findOrFail($id);
-        $timetable->update($request->only('teacher_id','subject_id','day','start_time','end_time'));
+
+        // anciennes valeurs avant modification
+        $oldTeacherId = $timetable->teacher_id;
+        $oldSubjectId = $timetable->subject_id;
+
+        DB::beginTransaction();
+        try {
+
+            $timetable->update($request->only('teacher_id','subject_id','day','start_time','end_time'));
+
+            $affected = DB::table('class_teacher_subject')
+                ->where('class_id', $classId)
+                ->where('teacher_id', $oldTeacherId)
+                ->where('subject_id', $oldSubjectId)
+                ->update([
+                    'teacher_id' => $request->teacher_id,
+                    'subject_id' => $request->subject_id,
+                    'updated_at' => now(),
+                ]);
+
+            if ($affected === 0) {
+                // Rien trouvé : soit la ligne n'existait pas, soit elle a déjà été modifiée.
+                // Pour éviter doublons on supprime d'abord toute éventuelle ligne identique (nouvelle combinaison)
+                DB::table('class_teacher_subject')
+                    ->where('class_id', $classId)
+                    ->where('teacher_id', $request->teacher_id)
+                    ->where('subject_id', $request->subject_id)
+                    ->delete();
+
+                // Puis on insère la nouvelle relation
+                DB::table('class_teacher_subject')->insert([
+                    'class_id'   => $classId,
+                    'teacher_id' => $request->teacher_id,
+                    'subject_id' => $request->subject_id,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+
+            DB::commit();
+        } 
+        catch (\Throwable $e) {
+            DB::rollBack();
+            // log pour debug
+            Log::error('Timetable update error: '.$e->getMessage(), [
+                'class_id' => $classId,
+                'timetable_id' => $id,
+                'oldTeacher' => $oldTeacherId,
+                'oldSubject' => $oldSubjectId,
+                'newTeacher' => $request->teacher_id,
+                'newSubject' => $request->subject_id,
+            ]);
+            return back()->with('error', 'Erreur lors de la mise à jour : '.$e->getMessage());
+        }
 
         return redirect()->route('censeur.timetables.index', $classId)
                         ->with('success','Créneau modifié avec succès.');
     }
 
-    public function store(Request $request, $classId)
-    {
+
+    public function store(Request $request, $classId){
         $request->validate([
             'teacher_id' => 'required|exists:users,id',
             'subject_id' => 'required|exists:subjects,id',
-            'day' => 'required',
             'start_time' => 'required',
             'end_time' => 'required|after:start_time',
         ]);
@@ -83,12 +136,24 @@ class TimetableController extends Controller
             'end_time' => $request->end_time,
         ]);
 
+        DB::table('class_teacher_subject')->insert([
+            'class_id'   => $classId,
+            'teacher_id' => $request->teacher_id,
+            'subject_id' => $request->subject_id,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
         return back()->with('success', 'Créneau ajouté avec succès.');
     }
 
-    public function destroy($id)
-    {
+    public function destroy($id){
         Timetable::findOrFail($id)->delete();
+        DB::table('class_teacher_subject')
+        ->where('class_id', $classId)
+        ->where('teacher_id', $teacher_id)
+        ->where('subject_id', $subjectId)
+        ->delete();
         return back()->with('success', 'Créneau supprimé.');
     }
 

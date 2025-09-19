@@ -7,10 +7,8 @@ use App\Models\TeacherInvitation;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 
-class InvitationResponseController extends Controller
-{
-    public function accept($token)
-    {
+class InvitationResponseController extends Controller{
+    public function accept($token){
         // On cherche l’invitation
         $invitation = TeacherInvitation::where('token', $token)->first();
 
@@ -26,12 +24,14 @@ class InvitationResponseController extends Controller
         }
 
         // Marquer l’invitation comme acceptée
-        $invitation->accepted = true;
-        $invitation->save();
-
-        // Ici tu peux connecter automatiquement l’utilisateur si tu veux
-        // auth()->login($user);
-
+        
+        $invitation->forceFill([
+            'accepted' => true,
+            'accepted_at' => now(),
+        ])->save();
+        
+        //return redirect()->route('profile.edit');
+        
         return redirect('/login')->with('success', 'Invitation acceptée, vous pouvez vous connecter avec vos identifiants.');
     }
 }

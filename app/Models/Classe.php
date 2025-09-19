@@ -38,5 +38,6 @@ class Classe extends Model
     {
         return $this->hasMany(Timetable::class, 'class_id');
     }
+    
 
 }

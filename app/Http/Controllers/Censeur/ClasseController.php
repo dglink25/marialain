@@ -8,17 +8,14 @@ use App\Models\User;
 use App\Models\Timetable;
 use Barryvdh\DomPDF\Facade\Pdf; // Import du PDF
 
-
 class ClasseController extends Controller
 {
-    public function index()
-    {
+    public function index(){
         $classes = Classe::where('entity_id', 3)->get();
         return view('censeur.classes.index', compact('classes'));
     }
 
-    public function students($classId)
-    {
+    public function students($classId){
         $class = Classe::with(['students' => function($query) {
             $query->orderBy('last_name')->orderBy('first_name');
         }])->findOrFail($classId);
@@ -27,14 +24,12 @@ class ClasseController extends Controller
     }
 
 
-    public function timetable($classId)
-    {
+    public function timetable($classId){
         $class = Classe::findOrFail($classId);
         return redirect()->route('censeur.timetables.index', $classId);
     }
 
-    public function teachers($id)
-    {
+    public function teachers($id){
         $class = Classe::with(['timetables.teacher', 'timetables.subject'])->findOrFail($id);
 
         // Regrouper par enseignant et collecter ses matières
@@ -52,8 +47,7 @@ class ClasseController extends Controller
         return view('censeur.classes.teachers', compact('class', 'teachers'));
     }
 
-    public function downloadStudentsPdf($classId)
-    {
+    public function downloadStudentsPdf($classId){
         $class = Classe::with('students')->findOrFail($classId);
 
         // Trier les élèves par nom et prénom
@@ -67,5 +61,31 @@ class ClasseController extends Controller
         return $pdf->download('eleves_'.$class->name.'.pdf');
     }
 
+    public function export($id){
+        $class = Classe::with(['timetables.teacher', 'timetables.subject'])->findOrFail($id);
+
+        // Regrouper les enseignants + matières comme dans ta fonction teachers()
+        $teachers = $class->timetables
+            ->groupBy('teacher_id')
+            ->map(function ($items) {
+                $teacher = $items->first()->teacher;
+                $subjects = $items->pluck('subject.name')->unique()->values();
+                return [
+                    'teacher' => $teacher,
+                    'subjects' => $subjects,
+                ];
+            });
+
+        // Génération du PDF
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('censeur.teachers.export', [
+            'class' => $class,
+            'teachers' => $teachers,
+        ])->setPaper('a4', 'landscape');
+
+        return $pdf->download("enseignants_{$class->name}.pdf");
+    }
+
+
+    
 
 }
