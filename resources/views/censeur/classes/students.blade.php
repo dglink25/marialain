@@ -19,12 +19,13 @@
                     <thead class="bg-gray-100 sticky top-0 z-10">
                         <tr>
                             <th>N°</th>
-                            <th class="border px-4 py-2 text-left w-1/6">Numéro Éduque Master</th>
+                            <th class="border px-4 py-2 text-left w-1/6">N° Éduc Master</th>
                             <th class="border px-4 py-2 text-left w-1/6">Nom</th>
                             <th class="border px-4 py-2 text-left w-1/6">Prénoms</th>
                             <th class="border px-4 py-2 text-left w-1/6">Date de naissance</th>
                             <th class="border px-4 py-2 text-left">Lieu de naissance</th>
                             <th class="border px-4 py-2 text-left w-1/6">Sexe</th>
+                            <th class="border px-4 py-2 text-left">Nom parent</th>
                             <th class="border px-4 py-2 text-left w-1/6">Email parent</th>
                             <th class="border px-4 py-2 text-left">Téléphone parent</th>
                         </tr>
@@ -39,6 +40,7 @@
                                 <td class="border px-4 py-2">{{ $student->birth_date }}</td>
                                 <td class="border px-4 py-2">{{ $student->birth_place }}</td>
                                 <td class="border px-4 py-2">{{ $student->gender ?? '-' }}</td>
+                                <td class="border px-4 py-2">{{ $student->parent_full_name }}</td>
                                 <td class="border px-4 py-2">{{ $student->parent_email }}</td>
                                 <td class="border px-4 py-2">{{ $student->parent_phone }}</td>
                             </tr>
