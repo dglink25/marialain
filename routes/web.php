@@ -37,13 +37,31 @@ use App\Http\Controllers\Dprimaire\primaryteacherController;
 */
 
 // Page publique
-Route::get('/', function () {
+Route::get('/home', function () {
     return view('welcome');
 })->name('home');
+
 //primaire
 Route:: get('/primaire/classe/classes', [ClassesprimaireController::class, 'index'])-> name('primaire.classes');
 Route:: get('/primaire/classe/ajouter', [AjouterClasse::class, 'index'])-> name('primaire.ajouterclasse');
 Route:: get('/primaire/enseignants/enseignants', [primaryteacherController::class, 'index'])-> name('primaire.enseignants.enseignants');
+
+
+Route::get('/', function () {
+    return view('accueil');
+})->name('accueil');
+
+// Page classes primaires
+Route::get('/admin/classes/primary/secondary_classes', function (){
+    return view('admin.classes.secondary_classes');
+})->name('admin.classes.primary');
+
+Route::get('classes', [ClasseController::class, 'index'])->name('censeur.classes.index');
+
+// Page classes secondaires
+Route::get('/admin/classes/secondary/create', [App\Http\Controllers\Admin\ClasseController::class, 'createSecondary'])
+    ->name('admin.classes.secondary');
+
 // Profil
 Route::middleware('auth')->group(function () {
     Route::get('/profil', [ProfileController::class, 'edit'])->name('profile.edit');
