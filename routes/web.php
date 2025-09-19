@@ -22,6 +22,10 @@ use App\Http\Controllers\Censeur\SubjectController;
 use App\Http\Controllers\Censeur\AssignmentController;
 use App\Http\Controllers\Censeur\TimetableController;
 use App\Http\Controllers\Teacher\DashboardController;
+use App\Http\Controllers\Dprimaire\ClassesprimaireController;
+use App\Http\Controllers\Dprimaire\AjouterClasse;
+use App\Http\Controllers\Dprimaire\primaryteacherController;
+
 
 
 
@@ -33,30 +37,17 @@ use App\Http\Controllers\Teacher\DashboardController;
 */
 
 // Page publique
-Route::get('/home', function () {
+Route::get('/', function () {
     return view('welcome');
 })->name('home');
-
-Route::get('/', function () {
-    return view('accueil');
-})->name('accueil');
-
-// Page classes primaires
-Route::get('/admin/classes/primary/secondary_classes', function (){
-    return view('admin.classes.secondary_classes');
-})->name('admin.classes.primary');
-
-Route::get('classes', [ClasseController::class, 'index'])->name('censeur.classes.index');
-
-// Page classes secondaires
-Route::get('/admin/classes/secondary/create', [App\Http\Controllers\Admin\ClasseController::class, 'createSecondary'])
-    ->name('admin.classes.secondary');
-
-
+//primaire
+Route:: get('/primaire/classe/classes', [ClassesprimaireController::class, 'index'])-> name('primaire.classes');
+Route:: get('/primaire/classe/ajouter', [AjouterClasse::class, 'index'])-> name('primaire.ajouterclasse');
+Route:: get('/primaire/enseignants/enseignants', [primaryteacherController::class, 'index'])-> name('primaire.enseignants.enseignants');
 // Profil
 Route::middleware('auth')->group(function () {
     Route::get('/profil', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::post('/profil/updates', [ProfileController::class, 'updates'])->name('profile.update');
+    Route::post('/profil/update', [ProfileController::class, 'update'])->name('profile.update');
     Route::post('/profil/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
     Route::post('/profil/photo', [ProfileController::class, 'updatePhoto'])->name('profile.photo');
 
@@ -78,7 +69,6 @@ Route::middleware('auth')->group(function () {
     })->name('secretaire.dashboard');
 });
 
-Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
 
 
 // Auth (Breeze fournit login/logout/password reset)
@@ -128,6 +118,9 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::post('/invitations', [InvitationController::class,'store'])->name('invitations.store');
 });
 
+Route::middleware(['auth'])->group(function () {
+    //Route::get('/dashboard', [App\Http\Controllers\HomeController::class, 'index'])->name('dashboard');
+});
 
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
     Route::resource('classes', ClassController::class);
@@ -240,7 +233,3 @@ Route::prefix('censeur')->name('censeur.')->group(function () {
 Route::get('/censeur/classes/{class}/students/pdf', [ClasseController::class, 'downloadStudentsPdf'])
      ->name('censeur.classes.students.pdf');
 
-Route::middleware(['auth'])->group(function () {
-    Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::post('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
-});
