@@ -6,6 +6,8 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
     <link rel="stylesheet" href="{{ asset('ursule/style/page1.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Sacramento&display=swap" rel="stylesheet">
+    <script src="{{ asset('ursule/js/js1.js') }}"defer ></script>
     <title>Document</title>
 </head>
 <body>
@@ -36,9 +38,10 @@
     <div class="collapse navbar-collapse" id="menuNav">
       <ul class="navbar-nav ms-auto">
         <li class="nav-item"><a class="nav-link" href="#accueil">Accueil</a></li>
-        <li class="nav-item"><a class="nav-link" href="#services">À propos</a></li>
-        <li class="nav-item"><a class="nav-link" href="#contact">À propos</a></li>
-        <li class="nav-item"><a class="nav-link" href="#apropos">À propos</a></li>
+        <li class="nav-item"><a class="nav-link" href="#a-propos">À propos</a></li>
+        <li class="nav-item"><a class="nav-link" href="#programmes">Programmes</a></li>
+        <li class="nav-item"><a class="nav-link" href="#apropos">Cours</a></li>
+        <li class="nav-item"><a class="nav-link" href="#apropos">Administration</a></li>
       </ul>
     </div>
     <div class="d-none d-lg-block">
@@ -46,6 +49,7 @@
     </div>
   </div>
 </nav>
+
 <section id="accueil" class="carousel-section">
   <div id="carouselEcole" class="carousel slide" data-bs-ride="carousel">
     <div class="carousel-inner">
@@ -64,7 +68,6 @@
             <div class="col-lg-6 col-12 animate__animated animate__fadeInRight">
               <div class="image-decor-wrapper position-relative">
                 <img src="{{ asset('ursule/img/ecole1.jpeg') }}" class="main-img img-fluid" alt="École Marialain">
-                <img src="{{ asset('ursule/img/main-banner-shape-1.png') }}" class="decor decor-1" alt="Décoration 1">
               </div>
             </div>
           </div>
@@ -85,7 +88,6 @@
             <div class="col-lg-6 col-12 animate__animated animate__fadeInRight">
               <div class="image-decor-wrapper position-relative">
                 <img src="{{ asset('ursule/img/ecole2.jpeg') }}" class="main-img img-fluid" alt="Activités">
-                <img src="{{ asset('ursule/img/main-banner-shape-1.png') }}" class="decor decor-1" alt="Décoration 1">
               </div>
             </div>
           </div>
@@ -100,13 +102,13 @@
               <div class="text-wrapper">
                 <h2>Encadrement pédagogique</h2>
                 <p>Des enseignants passionnés et des méthodes innovantes pour chaque élève.</p>
+                
                 <a href="/pedagogie" class="btn bg-orange">Voir plus</a>
               </div>
             </div>
             <div class="col-lg-6 col-12 animate__animated animate__fadeInRight">
               <div class="image-decor-wrapper position-relative">
                 <img src="{{ asset('ursule/img/ecole3.jpeg') }}" class="main-img img-fluid" alt="Pédagogie">
-                <img src="{{ asset('ursule/img/main-banner-shape-1.png') }}" class="decor decor-1" alt="Décoration 1">
               </div>
             </div>
           </div>
@@ -114,21 +116,292 @@
       </div>
 
     </div>
-
+    <img src="{{ asset('ursule/img/main-banner-shape-1.png') }}" class="decor decor-1" alt="Décoration 1">
+    <img src="{{ asset('ursule/img/decora2.png') }}" class="decor decor-2" alt="Décoration 2">
+    <img src="{{ asset('ursule/img/decora3.png') }}" class="decor decor-3" alt="Décoration 2">
     <!-- Contrôles repositionnés -->
-    <button class="carousel-control-prev custom-control" type="button" data-bs-target="#carouselEcole" data-bs-slide="prev">
+    <button class="carousel-control-prev custom-control ms-3" type="button" data-bs-target="#carouselEcole" data-bs-slide="prev">
       <span class="carousel-control-prev-icon"></span>
     </button>
-    <button class="carousel-control-next custom-control" type="button" data-bs-target="#carouselEcole" data-bs-slide="next">
+    <button class="carousel-control-next custom-control me-3" type="button" data-bs-target="#carouselEcole" data-bs-slide="next">
       <span class="carousel-control-next-icon "></span>
     </button>
   </div>
 </section>
 
+<section id="a-propos" class="section-apropos py-5">
+  <div class="container">
+    <div class="row align-items-center">
 
+      <!-- Texte dynamique -->
+      <div class="col-lg-7 col-12 mb-4 mb-lg-0">
+        <span class="who-we">Qui somme nous</span>
+        <h2 class="section-title">À propos </h2>
+        <div id="ecole-description" class="section-description"></div>
+        <blockquote class="founder-quote">
+            “L’éducation est la racine du progrès. À CPEG MARIE-ALAIN, nous cultivons les talents de demain.”
+        </blockquote>
+        <a href="#inscription" class="btn bg-orange mt-3">S'inscrire</a>
+      </div>
+        <!-- Image animée -->
+      <div class="col-lg-5 col-12 text-center">
+        <div class="image-wrapper">
+          <img src="{{ asset('ursule/img/ecole3.jpeg') }}" alt="Fondateur" class="img-wave-border">
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<section id="programmes" class="py-5 ">
+  <div class="container">
+    <div class="text-center mb-5">
+      <h2 class="fw-bold">Nos Programmes</h2>
+      <p class="text-muted">Des parcours pédagogiques adaptés à chaque âge, enrichis par des méthodes modernes et des environnements stimulants.</p>
+    </div>
+
+    <div class="row g-4">
+      <!-- Maternelle -->
+      <div class="col-md-4">
+        <div class="card h-100 shadow-sm border-0 programme-card">
+          <img src="{{ asset('ursule/img/ecole2.jpeg') }}" class="card-img-top" alt="Programme Maternelle">
+          <div class="card-body">
+            <h5 class="card-title text-orange">Maternelle</h5>
+            <p class="card-text">Éveil sensoriel, jeux éducatifs et socialisation dans un cadre bienveillant.</p>
+            <!-- Contribution -->
+            <div class="d-flex align-items-center justify-content-between contribution-line">
+                <span class="fw-semibold text-muted">Contribution annuelle</span>
+                <span class="badge rounded-pill bg-gradient-orange">50 000 – 100 000 FCFA</span>
+            </div>
+            <a href="#inscription" class="btn btn-glass btn-sm mt-4 w-70">Rejoindre le programme</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Primaire -->
+      <div class="col-md-4">
+        <div class="card h-100 shadow-sm border-0 programme-card">
+          <img src="{{ asset('ursule/img/ecole2.jpeg') }}" class="card-img-top" alt="Programme Primaire">
+          <div class="card-body">
+            <h5 class="card-title text-orange">Primaire</h5>
+            <p class="card-text">Maîtrise des fondamentaux, initiation aux langues et aux sciences.</p>
+            <!-- Contribution -->
+            <div class="d-flex align-items-center justify-content-between contribution-line">
+                <span class="fw-semibold text-muted">Contribution annuelle</span>
+                <span class="badge rounded-pill bg-gradient-orange">50 000 – 100 000 FCFA</span>
+            </div>
+            <a href="#inscription" class="btn btn-glass mt-4 w-70">Rejoindre le programme</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Collège -->
+      <div class="col-md-4">
+        <div class="card h-100 shadow-sm border-0 programme-card">
+          <img src="{{ asset('ursule/img/ecole2.jpeg') }}" class="card-img-top" alt="Programme Collège">
+          <div class="card-body">
+            <h5 class="card-title text-orange">Collège</h5>
+            <p class="card-text">Renforcement académique, projets interdisciplinaires et ouverture numérique.</p>
+            <!-- Contribution -->
+            <div class="d-flex align-items-center justify-content-between contribution-line">
+                <span class="fw-semibold text-muted">Contribution annuelle</span>
+                <span class="badge rounded-pill bg-gradient-orange">50 000 – 100 000 FCFA</span>
+            </div>
+            <a href="#inscription" class="btn btn-glass mt-4 w-70">Rejoindre le programme</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="cours" class="py-5">
+  <div class="container">
+    <p class="who-we text-center">Cours</p>
+    <h2 class="text-center mb-4">Nos Cours</h2>
+    <p class="text-center mb-5">Découvrez les matières enseignées dans notre établissement, avec leur description et les niveaux concernés.</p>
+
+    <div class="row g-4" id="coursList">
+      <!-- Cartes visibles par défaut -->
+      <div class="col-md-4">
+        <div class="cours-card h-100">
+          <div class="card-body">
+            <h5 class="cours-title"><span class="bg-3">01</span>Mathématiques</h5>
+            <p class="cours-text">Étude des nombres, calculs, géométrie, logique et résolution de problèmes.</p>
+            <p class="cours-niveau">📘 Primaire, 🎓 Collège</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="cours-card h-100">
+          <div class="card-body">
+            <h5 class="cours-title"><span class="bg-3">02</span>Français</h5>
+            <p class="cours-text">Lecture, écriture, grammaire, vocabulaire, expression orale et écrite.</p>
+            <p class="cours-niveau">🧒 Maternelle, 📘 Primaire, 🎓 Collège</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="cours-card h-100">
+          <div class="card-body">
+            <h5 class="cours-title"><span class="bg-3">03</span>Sciences</h5>
+            <p class="cours-text">Découverte du vivant, des phénomènes naturels et de l’environnement.</p>
+            <p class="cours-niveau">📘 Primaire</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bloc caché -->
+      <div class="collapse" id="moreCourses">
+        <div class="row g-4 mt-2">
+          <div class="col-md-4">
+            <div class="cours-card h-100">
+              <div class="card-body">
+                <h5 class="cours-title"><span class="bg-3">04</span>Histoire-Géographie</h5>
+                <p class="cours-text">Compréhension du passé, des civilisations et des repères géographiques.</p>
+                <p class="cours-niveau">📘 Primaire, 🎓 Collège</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <div class="cours-card h-100">
+              <div class="card-body">
+                <h5 class="cours-title"><span class="bg-3">05</span>Éducation Civique</h5>
+                <p class="cours-text">Apprentissage des règles de vie, des droits, devoirs et valeurs citoyennes.</p>
+                <p class="cours-niveau">📘 Primaire, 🎓 Collège</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <div class="cours-card h-100">
+              <div class="card-body">
+                <h5 class="cours-title"><span class="bg-3">06</span>Anglais</h5>
+                <p class="cours-text">Initiation et approfondissement de la langue anglaise : vocabulaire, grammaire, expression.</p>
+                <p class="cours-niveau">📘 Primaire, 🎓 Collège</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <div class="cours-card h-100">
+              <div class="card-body">
+                <h5 class="cours-title"><span class="bg-3">07</span>Arts Plastiques</h5>
+                <p class="cours-text">Expression artistique à travers le dessin, la peinture et les activités manuelles.</p>
+                <p class="cours-niveau">🧒 Maternelle, 📘 Primaire</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <div class="cours-card h-100">
+              <div class="card-body">
+                <h5 class="cours-title"><span class="bg-3">08</span>Éducation Physique</h5>
+                <p class="cours-text">Activités sportives pour développer la motricité, la coordination et l’esprit d’équipe.</p>
+                <p class="cours-niveau">🧒 Maternelle, 📘 Primaire, 🎓 Collège</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <div class="cours-card h-100">
+              <div class="card-body">
+                <h5 class="cours-title"><span class="bg-3">09</span>Physique-Chimie</h5>
+                <p class="cours-text">Étude des phénomènes physiques, lois scientifiques et réactions chimiques.</p>
+                <p class="cours-niveau">🎓 Collège</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <div class="cours-card h-100">
+              <div class="card-body">
+                <h5 class="cours-title"><span class="bg-3">10</span>Langage oral</h5>
+                <p class="cours-text">Développement du vocabulaire, de l’écoute et de l’expression orale.</p>
+                <p class="cours-niveau">🧒 Maternelle</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <div class="cours-card h-100">
+              <div class="card-body">
+                <h5 class="cours-title"><span class="bg-3">11</span>Éveil sensoriel</h5>
+                <p class="cours-text">Activités pour stimuler les sens, la curiosité et la motricité fine.</p>
+                <p class="cours-niveau">🧒 Maternelle</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bouton intégré dans la liste -->
+      <div class="cours-toggle-wrapper">
+        <button id="toggleBtn" class="btn btn-vp toggle-btn" type="button" data-bs-toggle="collapse" data-bs-target="#moreCourses" aria-expanded="false" aria-controls="moreCourses">
+          Voir plus
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+ <section class="teachers-section p-5">
+        <div class="container-fluid text-center">
+           <p class="who-we text-center">Nos membres d'administration</p>
+            <h2 class="mb-4">Nos dirigeants</h2>
+            <div class="row g-4 justify-content-center">
+                
+                <div class="col-md-6 col-lg-3">
+                    <div class="teacher-card text-center p-3 rounded ">
+                      <div class="image">
+                        <img src="{{ asset('ursule/img/ecole1.jpeg') }}" alt="Glims Bond" class="teacher-img rounded-circle ">
+                      </div>
+                        
+                        <h5 class="teacher-name mt-3">Nom Prenom</h5>
+                        <p class="teacher-title">Statut</p>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-3">
+                    <div class="teacher-card text-center p-3 rounded ">
+                        <div class="image">
+                          <img src="{{ asset('ursule/img/ecole1.jpeg') }}" alt="Glims Bond" class="teacher-img rounded-circle ">
+                        </div>
+                        <h5 class="teacher-name mt-3">Nom Prenom</h5>
+                        <p class="teacher-title">Statut</p>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-3">
+                    <div class="teacher-card text-center p-3 rounded ">
+                        <div class="image">
+                          <img src="{{ asset('ursule/img/ecole1.jpeg') }}" alt="Glims Bond" class="teacher-img rounded-circle ">
+                        </div>
+                        <h5 class="teacher-name mt-3">Nom Prenom</h5>
+                        <p class="teacher-title">Staut</p>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-3">
+                    <div class="teacher-card text-center p-3 rounded ">
+                        <div class="image">
+                          <img src="{{ asset('ursule/img/ecole1.jpeg') }}" alt="Glims Bond" class="teacher-img rounded-circle ">
+                        </div>
+                        <h5 class="teacher-name">Nom Prenom</h5>
+                        <p class="teacher-title">Statut</p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+</section>
 
     <a href="{{ route('home') }}" >home</a>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
 </body>
 </html>
