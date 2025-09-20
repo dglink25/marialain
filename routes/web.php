@@ -105,9 +105,6 @@ Route::prefix('censeur')->name('censeur.')->middleware('auth')->group(function (
     // Matières
     Route::resource('subjects', SubjectController::class);
 
-    // Attributions de classes
-    Route::resource('assignments', AssignmentController::class);
-
     // Classes
     Route::get('classes', [ClasseController::class, 'index'])->name('classes.index');
     Route::get('classes/{classId}/students', [ClasseController::class, 'students'])->name('classes.students');
@@ -124,6 +121,14 @@ Route::prefix('censeur')->name('censeur.')->middleware('auth')->group(function (
     Route::delete('classes/{classId}/timetables/{id}', [TimetableController::class, 'destroy'])->name('timetables.destroy');
     Route::get('classes/{class}/timetables/download', [TimetableController::class, 'downloadPDF'])->name('timetables.download');
 });
+
+// Afficher le profil d’un enseignant
+Route::get('/enseignants/{user}', [App\Http\Controllers\ProfileController::class, 'show'])
+    ->name('enseignants.show');
+
+// Export PDF des enseignants d’une classe (Censeur)
+Route::get('/classes/{class}/enseignants/export', [App\Http\Controllers\Censeur\ClasseController::class, 'export'])
+    ->name('enseignants.export');
 
 //Enseignant  
 Route::prefix('teacher')->name('teacher.')->middleware('auth')->group(function () {
