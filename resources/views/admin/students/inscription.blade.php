@@ -33,7 +33,7 @@
 @endif
 
 
-    <form method="POST" action="{{ route('admin.students.store') }}" enctype="multipart/form-data" class="bg-white shadow-md rounded p-4 space-y-4">
+    <form method="POST" action="{{ route('students.store') }}" enctype="multipart/form-data" class="bg-white shadow-md rounded p-4 space-y-4">
         @csrf
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">

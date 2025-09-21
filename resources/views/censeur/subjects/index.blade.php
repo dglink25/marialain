@@ -14,10 +14,12 @@
             <div class="w-32 h-32 rounded-full bg-gray-200 flex items-center justify-center mb-4">
                 <span class="text-gray-700 font-semibold">{{ $subject->id }}</span>
             </div>
-            <div class="bg-green-600 text-white px-4 py-2 rounded text-center hover:bg-green-700">
-                <p>{{ $subject->name }}</p>
-            </div>
+            <a href="{{ route('subjects.teachers', $subject->id) }}" 
+            class="bg-green-600 text-white px-4 py-2 rounded text-center hover:bg-green-700 transition">
+                {{ $subject->name }}
+            </a>
         </div>
+
         @endforeach
     </div>
 @endsection

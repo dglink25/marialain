@@ -8,18 +8,31 @@ use App\Mail\StudentValidated;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use App\Models\StudentPayment;
+use App\Models\AcademicYear;
 
-class StudentValidationController extends Controller
-{
+class StudentValidationController extends Controller{
+
+    public function checkActiveYear(){
+        $activeYear = AcademicYear::where('active', 1)->first();
+        if (!$activeYear) {
+            // Retourner une vue d’erreur si pas d’année active
+            return view('errors.no_active_year');
+        }
+        return $activeYear;
+    }
+
     // Liste des élèves non validés
-    public function index()
-    {
+    public function index(){
         $students = Student::where('is_validated', false)->get();
         return view('admin.students.pending', compact('students'));
     }
 
     // Validation et envoi du mail avec reçu
     public function validateStudent(Request $request, Student $student){
+        if (!$this->checkActiveYear() instanceof AcademicYear) {
+            return $this->checkActiveYear();
+        }
+
         $request->validate([
             'amount_paid' => 'required|numeric|min:0',
         ]);

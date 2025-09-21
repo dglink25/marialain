@@ -25,8 +25,6 @@ class ClasseController extends Controller
         return view('censeur.classes.students', compact('class'));
     }
 
-
-
     public function timetable($classId){
         $class = Classe::findOrFail($classId);
         return redirect()->route('censeur.timetables.index', $classId);

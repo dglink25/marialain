@@ -39,6 +39,9 @@ class TimetableController extends Controller
     }
 
     public function edit($classId, $id){
+        if (!$this->checkActiveYear() instanceof AcademicYear) {
+            return $this->checkActiveYear();
+        }
         $class = Classe::findOrFail($classId);
         $timetable = Timetable::findOrFail($id);
         $teachers = User::whereHas('role', fn($q) => $q->where('name','teacher'))->get();
@@ -50,6 +53,9 @@ class TimetableController extends Controller
    
 
     public function update(Request $request, $classId, $id){
+        if (!$this->checkActiveYear() instanceof AcademicYear) {
+            return $this->checkActiveYear();
+        }
         $request->validate([
             'teacher_id' => 'required|exists:users,id',
             'subject_id' => 'required|exists:subjects,id',
@@ -120,6 +126,10 @@ class TimetableController extends Controller
 
 
     public function store(Request $request, $classId){
+        if (!$this->checkActiveYear() instanceof AcademicYear) {
+            return $this->checkActiveYear();
+        }
+
         $request->validate([
             'teacher_id' => 'required|exists:users,id',
             'subject_id' => 'required|exists:subjects,id',
@@ -148,6 +158,10 @@ class TimetableController extends Controller
     }
 
     public function destroy($id){
+        if (!$this->checkActiveYear() instanceof AcademicYear) {
+            return $this->checkActiveYear();
+        }
+
         Timetable::findOrFail($id)->delete();
         DB::table('class_teacher_subject')
         ->where('class_id', $classId)
@@ -156,8 +170,6 @@ class TimetableController extends Controller
         ->delete();
         return back()->with('success', 'Créneau supprimé.');
     }
-
-    
 
     public function downloadPDF($classId){
 

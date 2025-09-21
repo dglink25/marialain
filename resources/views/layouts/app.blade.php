@@ -58,7 +58,7 @@
                         @case('super_admin')
                             <a href="{{ route('admin.dashboard') }}" class="block px-3 py-2 rounded hover:bg-blue-50">Tableau de bord</a>
                             <a href="{{ route('admin.academic_years.index') }}" class="block py-2 px-4 hover:bg-gray-200">Années académiques</a>
-                            <a href="{{ route('admin.classes.index') }}" class="block py-2 px-4 hover:bg-gray-200">Classes</a>
+                            
                             @break
                         @default
                             <span class="px-4 py-2 text-gray-500">Rôle non défini</span>

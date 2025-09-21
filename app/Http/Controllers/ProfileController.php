@@ -11,6 +11,8 @@ use Illuminate\View\View;
 use Illuminate\Support\Facades\Hash;
 use Smalot\PdfParser\Parser;
 use App\Models\User;
+use Illuminate\Support\Facades\Storage;
+
 
 class ProfileController extends Controller{
     public function edit() {
@@ -18,26 +20,11 @@ class ProfileController extends Controller{
         return view('profile.edit', compact('user'));
     }
 
-    public function updates(Request $request) {
-        $user = Auth::user();
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,'.$user->id,
-            'phone' => 'nullable|string|max:20',
-        ]);
-        $user->update($request->only('name','email','phone'));
-        return back()->with('success','Profil mis à jour.');
-    }
-
-
-    public function show($id)
-    {
+    public function show($id){
         $user = User::findOrFail($id);
 
         return view('profile.show', compact('user'));
     }
-
-
 
     public function updatePassword(Request $request){
         $request->validate([
@@ -60,13 +47,13 @@ class ProfileController extends Controller{
                     ->with('showPasswordForm', true);
     }
 
-    public function update(Request $request)
-    {
+    public function update(Request $request){
         $user = auth()->user();
 
+        // Valider uniquement ce qui est fourni
         $data = $request->validate([
-            'name' => 'required|string',
-            'email' => 'required|email',
+            'name' => 'nullable|string',
+            'email' => 'nullable|email',
             'phone' => 'nullable|string',
             'gender' => 'nullable|string',
             'marital_status' => 'nullable|string',
@@ -83,7 +70,7 @@ class ProfileController extends Controller{
             'rib_file' => 'nullable|mimes:pdf|max:2048',
         ]);
 
-        // photo de profil
+        // Photo de profil
         if ($request->hasFile('profile_photo')) {
             $data['profile_photo'] = $request->file('profile_photo')->store('profiles','public');
         }
@@ -108,24 +95,41 @@ class ProfileController extends Controller{
             }
         }
 
-        $user->update($data);
+        // Mettre à jour uniquement les champs fournis
+        $user->update(array_filter($data, fn($value) => $value !== null));
 
         return back()->with('success','Profil mis à jour avec succès.');
     }
 
-
-
     public function updatePhoto(Request $request) {
         $user = Auth::user();
+
+        // Mettre à jour la photo si un fichier est envoyé
         if ($request->hasFile('profile_photo')) {
-            $path = $request->file('profile_photo')->store('profiles','public');
+            // Supprimer l'ancienne photo si elle existe
+            if ($user->profile_photo && Storage::disk('public')->exists($user->profile_photo)) {
+                Storage::disk('public')->delete($user->profile_photo);
+            }
+
+            $path = $request->file('profile_photo')->store('profiles', 'public');
             $user->profile_photo = $path;
             $user->save();
+
+            return back()->with('success', 'Photo mise à jour avec succès.');
         }
+
+        // Supprimer la photo si le bouton est cliqué
         if ($request->get('remove_photo')) {
+            if ($user->profile_photo && Storage::disk('public')->exists($user->profile_photo)) {
+                Storage::disk('public')->delete($user->profile_photo);
+            }
             $user->profile_photo = null;
             $user->save();
+
+            return back()->with('success', 'Photo supprimée avec succès.');
         }
-        return back()->with('success','Photo mise à jour.');
+
+        return back()->with('info', 'Aucune modification effectuée.');
     }
+
 }

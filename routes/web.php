@@ -116,8 +116,6 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
         ->name('admin.students.validate');
 });
 
-
-
 // Auth (Breeze fournit login/logout/password reset)
 require __DIR__.'/auth.php';
 
@@ -266,12 +264,18 @@ Route::get('/invitation/accept/{token}', [InvitationResponseController::class, '
 //Profil (utilisateurs connectés)
 
 Route::middleware('auth')->group(function () {
-    Route::get('/profil', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::post('/profil/updates', [ProfileController::class, 'updates'])->name('profile.update');
-    Route::post('/profil/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
-    Route::post('/profil/photo', [ProfileController::class, 'updatePhoto'])->name('profile.photo');
-    Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
+
+    // Édition du profil
+    Route::get('/profil/modifier', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::post('/profil/modifier', [ProfileController::class, 'update'])->name('profile.update');
+
+    // Changement de mot de passe
+    Route::post('/profil/mot-de-passe', [ProfileController::class, 'updatePassword'])->name('profile.password');
+
+    // Mise à jour de la photo de profil
+    Route::post('/profil/photo', [ProfileController::class, 'updatePhoto'])->name('profile.updatePhoto');
 });
+
 
 // Dashboards par rôle
 
@@ -327,8 +331,6 @@ Route::get('/inscription', [StudentController::class, 'inscription'])->name('stu
 Route::post('/inscription', [StudentController::class, 'store'])->name('students.store');
 
 
-
-
 // Censeur
 
 Route::prefix('censeur')->name('censeur.')->middleware('auth')->group(function () {
@@ -379,3 +381,6 @@ Route::prefix('students')->name('students.')->group(function() {
     Route::get('{student}/payments/create', [StudentPaymentController::class,'create'])->name('payments.create');
     Route::post('{student}/payments', [StudentPaymentController::class,'store'])->name('payments.store');
 });
+
+Route::get('subjects/{subject}/teachers', [SubjectController::class, 'teachers'])
+    ->name('subjects.teachers');

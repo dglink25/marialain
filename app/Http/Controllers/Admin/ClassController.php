@@ -7,8 +7,16 @@ use App\Models\Classe; // ✅ modèle correct
 use App\Models\AcademicYear;
 use App\Models\Entity;
 
-class ClassController extends Controller
-{
+class ClassController extends Controller{
+    public function checkActiveYear(){
+        $activeYear = AcademicYear::where('active', 1)->first();
+        if (!$activeYear) {
+            // Retourner une vue d’erreur si pas d’année active
+            return view('errors.no_active_year');
+        }
+        return $activeYear;
+    }
+
     public function index(Request $request)
     {
         $entities = Entity::all();
@@ -25,8 +33,10 @@ class ClassController extends Controller
         return view('admin.classes.index', compact('classes', 'entities', 'years'));
     }
 
-    public function edit($id)
-    {
+    public function edit($id){
+        if (!$this->checkActiveYear() instanceof AcademicYear) {
+            return $this->checkActiveYear();
+        }
         $classe = Classe::findOrFail($id);
         $entities = Entity::all();
         $years = AcademicYear::where('active', 1)->get();
@@ -34,8 +44,10 @@ class ClassController extends Controller
         return view('admin.classes.edit', compact('classe', 'entities', 'years'));
     }
 
-    public function update(Request $request, $id)
-    {
+    public function update(Request $request, $id){
+        if (!$this->checkActiveYear() instanceof AcademicYear) {
+            return $this->checkActiveYear();
+        }
         $request->validate([
             'name' => 'required|string|max:255',
             'academic_year_id' => 'required|exists:academic_years,id',
@@ -49,16 +61,20 @@ class ClassController extends Controller
         return redirect()->route('admin.classes.index')->with('success', 'Classe mise à jour.');
     }
 
-    public function destroy($id)
-    {
+    public function destroy($id){
+        if (!$this->checkActiveYear() instanceof AcademicYear) {
+            return $this->checkActiveYear();
+        }
         $classe = Classe::findOrFail($id);
         $classe->delete();
 
         return redirect()->route('admin.classes.index')->with('success', 'Classe supprimée.');
     }
 
-    public function store(Request $request)
-    {
+    public function store(Request $request){
+        if (!$this->checkActiveYear() instanceof AcademicYear) {
+            return $this->checkActiveYear();
+        }
         $request->validate([
             'name' => 'required|string|max:255',
             'academic_year_id' => 'required|exists:academic_years,id',

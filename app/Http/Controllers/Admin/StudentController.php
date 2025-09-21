@@ -14,10 +14,24 @@ use App\Models\StudentPayment;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Storage;
 use ZipArchive;
+use App\Models\AcademicYear;
+use App\Mail\StudentRegistered;
 
 class StudentController extends Controller{
+    public function checkActiveYear(){
+        $activeYear = AcademicYear::where('active', 1)->first();
+        if (!$activeYear) {
+            // Retourner une vue d’erreur si pas d’année active
+            return view('errors.no_active_year');
+        }
+        return $activeYear;
+    }
     
     public function store(Request $request){
+        if (!$this->checkActiveYear() instanceof AcademicYear) {
+            return $this->checkActiveYear();
+        }
+
         $validator = Validator::make($request->all(), [
                 'first_name' => 'required|string',
                 'last_name' => 'required|string',
@@ -83,8 +97,6 @@ class StudentController extends Controller{
                 $studentData['amount_paid'] = $data['school_fees'];
 
                 $student = Student::create($studentData);
-
-            
                 $student->update([
                     'is_validated' => true,
                 ]);
@@ -108,7 +120,9 @@ class StudentController extends Controller{
             }
 
             $student = Student::create($studentData);
-
+            // Envoi d'email aux parents
+            Mail::to($student->parent_email)->send(new StudentRegistered($student));
+            
             return redirect()->back()->with('success', 'Inscription réussi avec succès.');
         } 
         catch (\Exception $e) {
@@ -124,6 +138,13 @@ class StudentController extends Controller{
     }
 
     public function edit($id){
+        if (!$this->checkActiveYear() instanceof AcademicYear) {
+            return $this->checkActiveYear();
+        }
+
+        if (!$this->checkActiveYear() instanceof AcademicYear) {
+            return $this->checkActiveYear();
+        }
         $student = Student::findOrFail($id);
         $entities = Entity::all();
         $classes = Classe::all();
@@ -136,8 +157,10 @@ class StudentController extends Controller{
         return view('admin.students.show', compact('student'));
     }
 
-
     public function update(Request $request, $id){
+        if (!$this->checkActiveYear() instanceof AcademicYear) {
+            return $this->checkActiveYear();
+        }
         $student = Student::findOrFail($id);
 
         $validated = $request->validate([
@@ -179,6 +202,9 @@ class StudentController extends Controller{
     }
 
     public function destroy($id){
+        if (!$this->checkActiveYear() instanceof AcademicYear) {
+            return $this->checkActiveYear();
+        }
         $student = Student::findOrFail($id);
         $student->delete();
 
@@ -194,16 +220,20 @@ class StudentController extends Controller{
     }
 
     public function create(){
+        if (!$this->checkActiveYear() instanceof AcademicYear) {
+            return $this->checkActiveYear();
+        }
+
         $entities = Entity::all();
-        $classes = Classe::all();
+        $classes  = Classe::all();
         return view('admin.students.create', compact('entities', 'classes'));
     }
 
     public function index(Request $request){
+
         $query = Student::with('entity', 'classe')
             ->where('is_validated', 1);
 
-    
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
@@ -226,20 +256,24 @@ class StudentController extends Controller{
 
         $students = $query->paginate(10)->withQueryString();
 
-        // Charger listes entités et classes pour le filtre
-        $entities = \App\Models\Entity::all();
-        $classes  = \App\Models\Classe::all();
+        $entities = Entity::all();
+        $classes  = Classe::all();
 
         return view('admin.students.index', compact('students', 'entities', 'classes'));
     }
 
     public function inscription(){
+        if (!$this->checkActiveYear() instanceof AcademicYear) {
+            return $this->checkActiveYear();
+        }
+
         $entities = Entity::all();
-        $classes = Classe::all(); 
+        $classes  = Classe::all(); 
         return view('admin.students.inscription', compact('entities', 'classes'));
     }
 
-   public function exportPdf(Request $request){
+
+    public function exportPdf(Request $request){
         $query = Student::with('entity', 'classe')
             ->where('is_validated', 1); // uniquement les validés
 
