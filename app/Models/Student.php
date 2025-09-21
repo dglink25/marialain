@@ -60,4 +60,8 @@ class Student extends Model{
         return $this->remaining_fees <= 0;
     }
 
+    public function academicYear()
+    {
+        return $this->belongsTo(AcademicYear::class);
+    }
 }

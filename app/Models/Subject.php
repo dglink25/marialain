@@ -12,5 +12,9 @@ class Subject extends Model{
                     ->withTimestamps();
     }
 
+    public function academicYear()
+    {
+        return $this->belongsTo(AcademicYear::class);
+    }
 
 }

@@ -33,12 +33,10 @@ use App\Http\Controllers\Teacher\DashboardController;
 use App\Http\Controllers\Teacher\ClassController as TeacherClassController;
 use App\Http\Controllers\Admin\EntityController;
 
-Route::get('/admin/entities/{entity}/classes', [EntityController::class, 'getClasses']);
-
 use App\Http\Controllers\Dprimaire\ClassesprimaireController;
 use App\Http\Controllers\Dprimaire\AjouterClasse;
 use App\Http\Controllers\Dprimaire\primaryteacherController;
-
+use App\Http\Controllers\ArchiveController;
 
 
 
@@ -56,10 +54,7 @@ Route::get('/home', fn() => view('welcome'))->name('home');
 |--------------------------------------------------------------------------
 */
 
-// Page publique
-Route::get('/home', function () {
-    return view('welcome');
-})->name('home');
+Route::get('/admin/entities/{entity}/classes', [EntityController::class, 'getClasses']);
 
 //primaire
 Route:: get('/primaire/classe/classes', [ClassesprimaireController::class, 'index'])-> name('primaire.classes');
@@ -384,3 +379,8 @@ Route::prefix('students')->name('students.')->group(function() {
 
 Route::get('subjects/{subject}/teachers', [SubjectController::class, 'teachers'])
     ->name('subjects.teachers');
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/archives', [ArchiveController::class, 'index'])->name('archives.index');
+    Route::get('/archives/{id}', [ArchiveController::class, 'show'])->name('archives.show');
+});
