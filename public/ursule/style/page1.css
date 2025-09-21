@@ -1,0 +1,161 @@
+body {
+      margin: 0;
+      padding-top: 80px;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    .navbar {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      backdrop-filter: blur(10px);
+      background-color: rgba(255, 255, 255, 0.3);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      z-index: 1000;
+      transition: background-color 0.3s ease;
+    }
+
+    .navbar-brand img {
+      height: 40px;
+      margin-right: 10px;
+      transition: transform 0.3s ease;
+    }
+
+    .navbar-brand:hover img {
+      transform: rotate(-5deg) scale(1.1);
+    }
+
+    .nav-link {
+      color: black !important;
+      font-weight: 500;
+      transition: color 0.3s ease, transform 0.3s ease;
+    }
+
+    .nav-link:hover {
+      color: #ff1e00 !important;
+      transform: scale(1.05);
+      border-bottom: #ff1e00 2px solid;
+    }
+
+  .navbar-nav  {
+    gap: 20px;
+  }
+  .btn-orange{
+    color: black ;
+    font-weight: 500;
+    padding: 8px;
+    border: #ff1e00 2px solid;
+  }
+  .btn-orange:hover{
+    background-color: #ff1e00;
+    color:white;
+  }
+@media (max-width: 991px) {
+.nav-link {
+    transition: all 0.3s ease;
+    padding: 8px 12px;
+    display: inline-block;
+  }
+
+  .nav-item:hover .nav-link{
+    color: #ff1e00 !important;
+    transform: none;
+    border-bottom: none;
+    
+  }
+  .nav-item:hover{
+    background-color: rgb(219, 219, 219);
+    border-radius: 5px;
+  }
+  .navbar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 4px 8px;
+  }
+}
+/* Section background */
+.carousel-section {
+  background-color: #f0f4f8; /* doux, pas trop clair */
+  padding: 70px 0;
+  min-height: calc(100vh - 100px);
+}
+
+/* Texte */
+.text-wrapper {
+  padding: 40px;
+  color: #333;
+}
+
+.text-wrapper h2 {
+  font-size: 2.2rem;
+  font-weight: bold;
+}
+
+.text-wrapper p {
+  font-size: 1.1rem;
+  margin-bottom: 20px;
+}
+
+/* Bouton */
+.bg-orange {
+  background-color:#ff1e00;
+  color: white;
+  padding: 10px 24px;
+  border-radius: 30px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color 0.3s ease;
+}
+
+
+/* Image décorée */
+.image-decor-wrapper {
+  position: relative;
+  max-width: 500px;
+  margin: auto;
+}
+
+.main-img {
+  width: 100%;
+  border-radius: 16px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  filter: brightness(0.9);
+}
+
+/* Décorations */
+.decor {
+  position: absolute;
+  width: 40%;
+}
+
+.decor-1 {
+     top: -20px; left: -150%; }
+
+/* Carousel controls repositioned */
+.custom-control {
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+}
+
+.carousel-control-prev {
+  left: -60px;
+}
+
+.carousel-control-next {
+  right: -60px;
+}
+
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+  background-color: #ff7f00;
+  position: 20px;
+}
+#carouselEcole {
+  height: 100%;
+}
+.bg-orange:hover {
+  background-color: #e66b00; /* couleur légèrement plus foncée */
+  color: white;
+}

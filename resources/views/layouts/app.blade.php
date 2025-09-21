@@ -27,6 +27,8 @@
                     @switch(optional(auth()->user()->role)->name)
                         @case('directeur_primaire')
                             <a href="{{ route('directeur.dashboard') }}" class="block px-4 py-2 rounded hover:bg-gray-200">Dashboard Directeur</a>
+                            <a href="{{ route('primaire.classes') }}" class="block px-4 py-2 rounded hover:bg-gray-200">Gestion des classes</a>
+                            <a href="{{ route('primaire.enseignants.enseignants') }}" class="block px-4 py-2 rounded hover:bg-gray-200">Gestion des enseignants</a>
                             @break
 
                         @case('teacher')
