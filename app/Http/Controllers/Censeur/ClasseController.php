@@ -17,11 +17,14 @@ class ClasseController extends Controller
 
     public function students($classId){
         $class = Classe::with(['students' => function($query) {
-            $query->orderBy('last_name')->orderBy('first_name');
+            $query->where('is_validated', 1)   // ✅ Seulement les élèves validés
+                ->orderBy('last_name')
+                ->orderBy('first_name');
         }])->findOrFail($classId);
 
         return view('censeur.classes.students', compact('class'));
     }
+
 
 
     public function timetable($classId){
@@ -48,7 +51,9 @@ class ClasseController extends Controller
     }
 
     public function downloadStudentsPdf($classId){
-        $class = Classe::with('students')->findOrFail($classId);
+        $class = Classe::with(['students' => function($query) {
+            $query->where('is_validated', 1);
+        }])->findOrFail($classId);
 
         // Trier les élèves par nom et prénom
         $students = $class->students->sortBy([

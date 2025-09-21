@@ -17,6 +17,16 @@
         </div>
 
         <div>
+            <p class="text-sm text-gray-500">N° Éduc Master</p>
+            <p class="text-lg font-semibold">{{ $student->classe->num_educ ?? 'Manquant' }}</p>
+        </div>
+
+        <div>
+            <p class="text-sm text-gray-500">Sexe</p>
+            <p class="text-lg font-semibold">{{ $student->classe->gender ?? 'Manquant' }}</p>
+        </div>
+
+        <div>
             <p class="text-sm text-gray-500">Date de naissance</p>
             <p class="text-lg font-semibold">{{ $student->birth_date }}</p>
         </div>
@@ -27,7 +37,7 @@
         </div>
 
         <div>
-            <p class="text-sm text-gray-500">Entité</p>
+            <p class="text-sm text-gray-500">Niveau</p>
             <p class="text-lg font-semibold">{{ $student->entity->name ?? 'N/A' }}</p>
         </div>
 
@@ -37,10 +47,56 @@
         </div>
 
         <div>
-            <p class="text-sm text-gray-500">Frais de scolarité payés</p>
-            <p class="text-lg font-semibold">{{ $student->school_fees }} FCFA</p>
+            <p class="text-sm text-gray-500">Parent/Yuteur</p>
+            <p class="text-lg font-semibold">{{ $student->classe->parent_full_name ?? 'Manquant' }}</p>
         </div>
+
+        <div>
+            <p class="text-sm text-gray-500">Téléphone Parent/Yuteur </p>
+            <p class="text-lg font-semibold">{{ $student->classe->parent_phone ?? 'Manquant' }}</p>
+        </div>
+
+        <div>
+            <p class="text-sm text-gray-500">Téléphone Parent/Yuteur </p>
+            <p class="text-lg font-semibold">{{ $student->classe->parent_email ?? 'Manquant' }}</p>
+        </div>
+
+        <div>
+            <p class="text-sm text-gray-500">Age </p>
+            <p class="text-lg font-semibold">{{ $student->classe->age ?? 'Manquant' }}</p>
+        </div>
+
+        <div>
+            <p class="text-sm text-gray-500">Date d'inscription</p>
+            <p class="text-lg font-semibold">{{ $student->classe->created_at ?? 'Manquant' }}</p>
+        </div>
+
+        <div>
+            <p class="text-sm text-gray-500">Dernier modification</p>
+            <p class="text-lg font-semibold">{{ $student->classe->updated_at ?? '- -' }}</p>
+        </div>
+
+        <div>
+            <p class="text-sm text-gray-500">Frais de scolarité total payés</p>
+            <p class="text-lg font-semibold">{{ number_format($student->total_paid,2) }} FCFA</p>
+        </div>
+
+        
+        
+
     </div>
+    <br>
+    <br>
+
+    <hr>
+
+    <br>
+
+    <h2 class="text-lg font-semibold mb-2">Documents</h2>
+
+    <br>
+    <hr>
+    <br>
 
     <div class="flex justify-between mt-8">
         <a href="{{ route('admin.students.index') }}" 

@@ -8,12 +8,16 @@ use App\Models\Student;
 use App\Models\Entity;
 use App\Models\Classe;
 use Illuminate\Support\Facades\Validator;
-
+use App\Mail\StudentValidated;
+use Illuminate\Support\Facades\Mail;
+use App\Models\StudentPayment;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Storage;
+use ZipArchive;
 
 class StudentController extends Controller{
     
-    public function store(Request $request)
-    {
+    public function store(Request $request){
         $validator = Validator::make($request->all(), [
                 'first_name' => 'required|string',
                 'last_name' => 'required|string',
@@ -28,7 +32,6 @@ class StudentController extends Controller{
                 'parent_full_name' => 'required|string',
                 'parent_email' => 'required|email',
                 'parent_phone' => 'required|string',
-                'school_fees' => 'required|integer|min:0',
                 'num_educ' => 'required|string',
                 'gender' => 'required|string',
             ]);
@@ -54,33 +57,65 @@ class StudentController extends Controller{
         var_dump($data['age']);
 
         try {
-            $student = Student::create([
-                'first_name' => $data['first_name'],
-                'last_name' => $data['last_name'],
-                'birth_date' => $data['birth_date'],
-                'birth_place' => $data['birth_place'],
-                'gender' => $data['gender'],
-                'entity_id' => $data['entity_id'],
-                'class_id' => $data['classe_id'],
-                'birth_certificate' => $data['birth_certificate'] ?? null,
-                'vaccination_card' => $data['vaccination_card'] ?? null,
-                'previous_report_card' => $data['previous_report_card'] ?? null,
-                'diploma_certificate' => $data['diploma_certificate'] ?? null,
-                'parent_full_name' => $data['parent_full_name'],
-                'parent_email' => $data['parent_email'],
-                'parent_phone' =>   $data['parent_phone'],
-                'school_fees' => $data['school_fees'],
-                'num_educ' => $data['num_educ'],
-                'age' => $data['age'],
-            ]);
+            
+            $studentData = [
+                'first_name'            => $data['first_name'],
+                'last_name'             => $data['last_name'],
+                'birth_date'            => $data['birth_date'],
+                'birth_place'           => $data['birth_place'],
+                'gender'                => $data['gender'],
+                'entity_id'             => $data['entity_id'],
+                'class_id'              => $data['classe_id'],
+                'birth_certificate'     => $data['birth_certificate'] ?? null,
+                'vaccination_card'      => $data['vaccination_card'] ?? null,
+                'previous_report_card'  => $data['previous_report_card'] ?? null,
+                'diploma_certificate'   => $data['diploma_certificate'] ?? null,
+                'parent_full_name'      => $data['parent_full_name'],
+                'parent_email'          => $data['parent_email'],
+                'parent_phone'          => $data['parent_phone'],
+                'num_educ'              => $data['num_educ'],
+                'age'                   => $data['age'],
+            ];
 
-            return redirect()->back()->with('success', 'Étudiant ajouté avec succès.');
-        } catch (\Exception $e) {
-            // Retourne l'erreur pour debug
+            // Ajoute school_fees uniquement si la colonne existe dans la table students
+            if (\Schema::hasColumn('students', 'school_fees') && isset($data['school_fees'])) {
+                $studentData['school_fees'] = $data['school_fees'];
+                $studentData['amount_paid'] = $data['school_fees'];
+
+                $student = Student::create($studentData);
+
+            
+                $student->update([
+                    'is_validated' => true,
+                ]);
+
+                // Crée le paiement associé
+                $payment = $student->payments()->create([
+                    'tranche'      => 1,
+                    'amount'       => $data['school_fees'],
+                    'payment_date' => now(),
+                ]);
+
+                // Envoi d'email aux parents
+                Mail::to($student->parent_email)->send(new StudentValidated($student));
+
+                // Met à jour les montants payés
+                $student->school_fees_paid = $student->payments()->sum('amount');
+                $student->fully_paid = $student->school_fees_paid >= ($student->classe->school_fees ?? 0);
+                $student->save();
+
+                return redirect()->back()->with('success', 'Inscription réussi avec succès.');
+            }
+
+            $student = Student::create($studentData);
+
+            return redirect()->back()->with('success', 'Inscription réussi avec succès.');
+        } 
+        catch (\Exception $e) {
             return redirect()->back()->with('error', 'Erreur lors de l\'ajout : '.$e->getMessage());
         }
-    }
 
+    }
 
     // Méthode pour récupérer les classes par entité
     public function getClassesByEntity($entity_id){
@@ -96,15 +131,13 @@ class StudentController extends Controller{
         return view('admin.students.edit', compact('student', 'entities', 'classes'));
     }
 
-    public function show($id)
-    {
+    public function show($id){
         $student = Student::with(['entity', 'classe'])->findOrFail($id);
         return view('admin.students.show', compact('student'));
     }
 
 
-    public function update(Request $request, $id)
-    {
+    public function update(Request $request, $id){
         $student = Student::findOrFail($id);
 
         $validated = $request->validate([
@@ -121,7 +154,6 @@ class StudentController extends Controller{
             'parent_full_name' => 'required|string',
             'parent_email' => 'required|email',
             'parent_phone' => 'required|string',
-            'school_fees' => 'required|integer|min:0',
             'num_educ' => 'required|string',
             'gender' => 'required|string',
         ]);
@@ -146,9 +178,7 @@ class StudentController extends Controller{
                         ->with('success', 'Étudiant mis à jour avec succès.');
     }
 
-
-    public function destroy($id)
-    {
+    public function destroy($id){
         $student = Student::findOrFail($id);
         $student->delete();
 
@@ -163,18 +193,127 @@ class StudentController extends Controller{
         return view('admin.students.list', compact('entities'));
     }
 
-    public function create()
-    {
+    public function create(){
         $entities = Entity::all();
-        $classes = Classe::all(); // Ajouté pour sélectionner la classe
+        $classes = Classe::all();
         return view('admin.students.create', compact('entities', 'classes'));
     }
 
-    public function index()
-    {
-        $students = Student::with('entity', 'classe')->paginate(10);
-        return view('admin.students.index', compact('students'));
+    public function index(Request $request){
+        $query = Student::with('entity', 'classe')
+            ->where('is_validated', 1);
+
+    
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('first_name', 'like', "%{$search}%")
+                ->orWhere('last_name', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('entity_id')) {
+            $query->where('entity_id', $request->entity_id);
+        }
+
+        if ($request->filled('class_id')) {
+            $query->where('class_id', $request->class_id);
+        }
+
+        if ($request->filled('date')) {
+            $query->whereDate('created_at', $request->date);
+        }
+
+        $students = $query->paginate(10)->withQueryString();
+
+        // Charger listes entités et classes pour le filtre
+        $entities = \App\Models\Entity::all();
+        $classes  = \App\Models\Classe::all();
+
+        return view('admin.students.index', compact('students', 'entities', 'classes'));
     }
 
+    public function inscription(){
+        $entities = Entity::all();
+        $classes = Classe::all(); 
+        return view('admin.students.inscription', compact('entities', 'classes'));
+    }
+
+   public function exportPdf(Request $request){
+        $query = Student::with('entity', 'classe')
+            ->where('is_validated', 1); // uniquement les validés
+
+        $className = 'Toutes les classes';
+
+        if ($request->filled('class_id')) {
+            $query->where('class_id', $request->class_id);
+
+            // récupérer le nom de la classe
+            $class = \App\Models\Classe::find($request->class_id);
+            if ($class) {
+                $className = $class->name;
+            }
+        }
+
+        $students = $query->orderBy('last_name')
+                        ->orderBy('first_name')
+                        ->get();
+
+        $pdf = Pdf::loadView('admin.students.pdf', [
+            'students' => $students,
+            'className' => $className,
+        ])->setPaper('a4', 'landscape'); // paysage
+
+        $fileName = $request->filled('class_id')
+            ? 'liste_classe_'.$request->class_id.'.pdf'
+            : 'liste_toutes_classes.pdf';
+
+        return $pdf->download($fileName);
+    }
+
+
+    public function exportAllPdf(){
+        // Récupérer toutes les classes avec leurs élèves validés
+        $classes = \App\Models\Classe::with(['students' => function($q) {
+            $q->where('is_validated', 1)
+            ->orderBy('last_name')
+            ->orderBy('first_name');
+        }])->get();
+
+        // Dossier temporaire
+        $tempFolder = storage_path('app/temp_pdfs');
+        if (!file_exists($tempFolder)) {
+            mkdir($tempFolder, 0777, true);
+        }
+
+        $zipFile = storage_path('app/liste_eleves_classes.zip');
+        $zip = new ZipArchive;
+        if ($zip->open($zipFile, ZipArchive::CREATE | ZipArchive::OVERWRITE) === TRUE) {
+            foreach ($classes as $class) {
+                if ($class->students->isEmpty()) {
+                    continue; // ignorer si pas d'élèves
+                }
+
+                // Générer le PDF de la classe
+                $pdf = Pdf::loadView('admin.students.pdf', [
+                    'students' => $class->students,
+                    'className' => $class->name,
+                ])
+                ->setPaper('a4', 'landscape'); // <-- mode paysage
+
+                $fileName = "classe_".str_replace(' ', '_', $class->name).".pdf";
+                $pdfPath = $tempFolder.'/'.$fileName;
+
+                file_put_contents($pdfPath, $pdf->output());
+
+                // Ajouter dans le zip
+                $zip->addFile($pdfPath, $fileName);
+            }
+            $zip->close();
+        }
+
+        // Retourner le zip en téléchargement
+        return response()->download($zipFile)->deleteFileAfterSend(true);
+    }
 
 }

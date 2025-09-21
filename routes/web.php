@@ -8,6 +8,8 @@ use App\Models\Invitation;
 // Controllers
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\InvitationResponseController;
+use App\Http\Controllers\StudentPaymentController;
+
 
 // Admin
 use App\Http\Controllers\Admin\AdminAuthController;
@@ -16,6 +18,7 @@ use App\Http\Controllers\Admin\AcademicYearController;
 use App\Http\Controllers\Admin\ClassController;
 use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\Admin\StudentExportController;
+use App\Http\Controllers\Admin\StudentValidationController;
 
 // Censeur
 use App\Http\Controllers\Censeur\ClasseController;
@@ -27,6 +30,10 @@ use App\Http\Controllers\Censeur\TimetableController;
 // Teacher
 use App\Http\Controllers\Teacher\DashboardController;
 use App\Http\Controllers\Teacher\ClassController as TeacherClassController;
+use App\Http\Controllers\Admin\EntityController;
+
+Route::get('/admin/entities/{entity}/classes', [EntityController::class, 'getClasses']);
+
 
 //Routes publiques
 
@@ -73,6 +80,15 @@ Route::middleware('auth')->group(function () {
         ->name('secretaire.dashboard');
 });
 
+// Admin Sécreateire pour valider inscription
+
+Route::middleware(['auth'])->prefix('admin')->group(function () {
+    Route::get('students/pending', [StudentValidationController::class, 'index'])
+        ->name('admin.students.pending');
+    Route::post('students/{student}/validate', [StudentValidationController::class, 'validateStudent'])
+        ->name('admin.students.validate');
+});
+
 // Admin
 
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
@@ -83,7 +99,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::resource('invitations', AdminInvitationController::class)->only(['index', 'store']);
 
     // Classes
-    Route::resource('classes', ClassController::class)->only(['index', 'store', 'create', 'show', 'destroy']);
+    Route::resource('classes', ClassController::class)->only(['index', 'edit', 'update', 'store', 'create', 'show', 'destroy']);
 
     // Années académiques
     Route::resource('academic_years', AcademicYearController::class)->only(['index', 'store', 'create']);
@@ -91,9 +107,18 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     // Étudiants
     Route::resource('students', StudentController::class);
     Route::get('students/list', [StudentController::class, 'listAlphabetical'])->name('students.list');
-    Route::get('students/export/pdf', [StudentExportController::class, 'exportPdf'])->name('students.export.pdf');
+    Route::get('students/export/pdf', [StudentController::class, 'exportPdf'])->name('students.export.pdf');
     Route::get('students/export/excel', [StudentExportController::class, 'exportExcel'])->name('students.export.excel');
+    Route::get('admin/students/export/all-pdf', [App\Http\Controllers\Admin\StudentController::class, 'exportAllPdf'])
+        ->name('students.export.all.pdf');
 });
+
+//Inscription public 
+Route::get('/inscription', [StudentController::class, 'inscription'])->name('students.create');
+Route::post('/inscription', [StudentController::class, 'store'])->name('students.store');
+
+
+
 
 // Censeur
 
@@ -140,6 +165,11 @@ Route::prefix('teacher')->name('teacher.')->middleware('auth')->group(function (
     Route::get('/classes/{classId}/timetable', [TeacherClassController::class, 'timetable'])->name('classes.timetable');
 });
 
-// Auth routes
+Route::prefix('students')->name('students.')->group(function() {
+    Route::get('{student}/payments', [StudentPaymentController::class,'index'])->name('payments.index');
+    Route::get('{student}/payments/create', [StudentPaymentController::class,'create'])->name('payments.create');
+    Route::post('{student}/payments', [StudentPaymentController::class,'store'])->name('payments.store');
+});
+
 
 require __DIR__.'/auth.php';

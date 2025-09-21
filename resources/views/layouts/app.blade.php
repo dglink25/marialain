@@ -18,13 +18,13 @@
             </div>
             <nav class="p-4 space-y-2">
                 <a href="{{ route('home') }}" class="block px-3 py-2 rounded hover:bg-blue-50">Accueil</a>
-                
+                <a href="{{ route('students.create') }}" class="block px-3 py-2 rounded hover:bg-blue-50">Inscription en ligne</a>
 
                 @if(auth()->check())
                     <a href="{{ route('profile.edit') }}" class="block px-4 py-2 hover:bg-gray-100">Mon Profil</a>
 
 
-                    @switch(auth()->user()->role->name)
+                    @switch(optional(auth()->user()->role)->name)
                         @case('directeur_primaire')
                             <a href="{{ route('directeur.dashboard') }}" class="block px-4 py-2 rounded hover:bg-gray-200">Dashboard Directeur</a>
                             @break
@@ -47,7 +47,8 @@
 
                         @case('secretaire')
                             <a href="{{ route('secretaire.dashboard') }}" class="block px-4 py-2 rounded hover:bg-gray-200">Dashboard Secrétaire</a>
-                            <a href="{{ route('admin.students.create') }}" class="block px-4 py-2 rounded hover:bg-gray-200">Inscription en ligne</a>
+                            <a href="{{ route('admin.students.pending') }}" class="block px-4 py-2 rounded hover:bg-gray-200">Inscription en attente</a>
+                            
                             <a href="{{ route('admin.students.index') }}" class="block px-4 py-2 rounded hover:bg-gray-200">Liste Elèves</a>
                             <a href="{{ route('admin.classes.index') }}" class="block py-2 px-4 hover:bg-gray-200">Gestion de classes</a>
                             @break
@@ -57,7 +58,8 @@
                             <a href="{{ route('admin.academic_years.index') }}" class="block py-2 px-4 hover:bg-gray-200">Années académiques</a>
                             <a href="{{ route('admin.classes.index') }}" class="block py-2 px-4 hover:bg-gray-200">Classes</a>
                             @break
-
+                        @default
+                            <span class="px-4 py-2 text-gray-500">Rôle non défini</span>
                         
                     @endswitch
                 @endif
@@ -82,9 +84,6 @@
 
 
             <main class="flex-1 p-6">
-                @if(session('success'))
-                    <div class="mb-4 p-3 bg-green-50 border border-green-200 text-green-800">{{ session('success') }}</div>
-                @endif
                 @yield('content')
             </main>
             </div>

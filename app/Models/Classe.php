@@ -11,6 +11,7 @@ class Classe extends Model
         'academic_year_id',
         'entity_id',
         'school_fees',
+        'description',
     ];
 
     public function entity()
@@ -38,6 +39,6 @@ class Classe extends Model
     {
         return $this->hasMany(Timetable::class, 'class_id');
     }
-    
 
+    
 }
