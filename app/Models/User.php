@@ -33,6 +33,11 @@ class User extends Authenticatable
     protected $hidden = ['password','remember_token'];
 
     protected $casts = ['email_verified_at' => 'datetime'];
+    public function classePrimaire()
+{
+    return $this->hasOne(Classe::class, 'teacher_id');
+}
+
 
     public function role()
     {

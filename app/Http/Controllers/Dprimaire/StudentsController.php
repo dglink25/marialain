@@ -4,23 +4,38 @@ namespace App\Http\Controllers\Dprimaire;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\Student;
 use App\Models\Classe;
-use App\Models\AcademicYear;
 use Barryvdh\DomPDF\Facade\Pdf; // Import du PDF
-class ClassesprimaireController extends Controller
+
+class StudentsController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         //
-        $annees = AcademicYear::all();
-        $classes = Classe::whereHas('entity', function($query){ $query->where('name', 'primaire'); })->with('academicYear')->get();
-        
-        return view('primaire.classe.classes', compact('classes', 'annees'));
-    }
+        $students = Student::whereHas('classe', function ($query) {
+            $query->whereHas('entity', function ($q) {
+                $q->where('name', 'primaire');
+            });
+        })->with('classe')->orderBy('last_name')->orderBy('first_name')->get();
+        if ($request->has('sort')) {
+            $students = $students->sortBy($request->sort);
+        }
 
+        return view('primaire.ecoliers.liste', compact('students'));
+    }
+    public function downloadPrimaireStudents()
+    {
+        $students = Student::whereHas('classe.entity', function ($query) {
+            $query->where('name', 'primaire');
+        })->with('classe')->orderBy('last_name')->orderBy('first_name')->get();
+
+        $pdf = Pdf::loadView('primaire.ecoliers.pdf', compact('students'));
+        return $pdf->download('etudiants_primaire.pdf');
+    }
     /**
      * Show the form for creating a new resource.
      */
@@ -35,17 +50,6 @@ class ClassesprimaireController extends Controller
     public function store(Request $request)
     {
         //
-        $request-> validate([
-            'name'=> 'required|max:255',
-
-        ]);
-        $annee = AcademicYear:: where('active', '1')->value('id');
-        Classe::create([
-            'name' => $request-> name,
-            'entity_id' => 2,
-            'academic_year_id' => $annee
-        ]);
-        return redirect()-> route('primaire.classe.classes')-> with('success', 'Classe ajoutée avec succes');
     }
 
     /**
@@ -54,10 +58,6 @@ class ClassesprimaireController extends Controller
     public function show(string $id)
     {
         //
-        $class = Classe::with(['students' => function($query) {
-            $query->orderBy('last_name')->orderBy('first_name');
-        }])->findOrFail($id);
-        return view('primaire.classe.showclass', compact('class'));
     }
 
     /**
@@ -67,8 +67,6 @@ class ClassesprimaireController extends Controller
     {
         //
     }
-   
-
 
     /**
      * Update the specified resource in storage.
