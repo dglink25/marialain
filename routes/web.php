@@ -107,6 +107,15 @@ Route::middleware('auth')->group(function () {
     })->name('secretaire.dashboard');
 });
 
+//Validation inscription en attente 
+
+Route::middleware(['auth'])->prefix('admin')->group(function () {
+    Route::get('students/pending', [StudentValidationController::class, 'index'])
+        ->name('admin.students.pending');
+    Route::post('students/{student}/validate', [StudentValidationController::class, 'validateStudent'])
+        ->name('admin.students.validate');
+});
+
 
 
 // Auth (Breeze fournit login/logout/password reset)
