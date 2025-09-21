@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Élèves - {{ $class->name }}</title>
+    <title>Liste des élèves</title>
     <style>
         body {
             font-family: DejaVu Sans, sans-serif;

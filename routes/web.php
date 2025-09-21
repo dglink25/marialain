@@ -50,7 +50,7 @@ Route:: get('/primaire/enseignants/enseignants', [primaryteacherController::clas
 Route:: get('/primaire/enseignants/inviter', [InvitationPController::class, 'index'])-> name('primaire.enseignants.inviter');
 Route::post('/primaire/enseignants/inviter', [InvitationPController::class, 'store'])-> name('primaire.enseignants.inviter.store');
 Route:: get('/primaire/ecoliers/liste', [StudentsController::class, 'index'])-> name('primaire.ecoliers.liste');
-Route::get('/primaire/ecoliers/liste_pdf', [StudentsController::class, 'downloadPrimaireStudents'])
+Route::get('/primaire/ecoliers/pdf', [StudentsController::class, 'downloadPrimaireStudents'])
     ->name('primaire.ecoliers.liste.pdf');
 Route::get('/', function () {
     return view('accueil');

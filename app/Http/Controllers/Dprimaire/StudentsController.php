@@ -28,14 +28,18 @@ class StudentsController extends Controller
         return view('primaire.ecoliers.liste', compact('students'));
     }
     public function downloadPrimaireStudents()
-    {
-        $students = Student::whereHas('classe.entity', function ($query) {
-            $query->where('name', 'primaire');
-        })->with('classe')->orderBy('last_name')->orderBy('first_name')->get();
+{
+    $students = Student::whereHas('classe.entity', function ($query) {
+        $query->where('name', 'primaire');
+    })->with('classe')->orderBy('last_name')->orderBy('first_name')->get();
 
-        $pdf = Pdf::loadView('primaire.ecoliers.pdf', compact('students'));
-        return $pdf->download('etudiants_primaire.pdf');
-    }
+    // Si tu veux afficher juste "Primaire"
+    $class = (object) ['name' => 'Primaire'];
+
+    $pdf = Pdf::loadView('primaire.ecoliers.pdf', compact('students', 'class'));
+    return $pdf->download('liste_des_eleves.pdf');
+}
+
     /**
      * Show the form for creating a new resource.
      */
