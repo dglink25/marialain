@@ -47,7 +47,7 @@
       </ul>
     </div>
     <div class="d-none d-lg-block">
-        <a href="#apropos" class="btn btn-orange ms-4">S'inscrire</a>
+        <a href="{{ route('students.create') }}" class="btn btn-orange ms-4">S'inscrire</a>
     </div>
   </div>
 </nav>

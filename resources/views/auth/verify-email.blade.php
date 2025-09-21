@@ -12,113 +12,144 @@
             box-sizing: border-box;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-
+        
         body {
-            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            background-image: url('https://source.unsplash.com/random/1920x1080/?email,verification');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            position: relative;
+            min-height: 100vh;
+            background-color: #f5f5f5;
             padding: 20px;
         }
-
-        body::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
+        
+        .container {
+            display: flex;
             width: 100%;
-            height: 100%;
-            background: rgba(13, 45, 62, 0.7);
-            z-index: 0;
+            max-width: 900px;
+            height: 550px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
         }
-
-        .verification-container {
-            width: 100%;
-            max-width: 550px;
-            z-index: 1;
-        }
-
-        .verification-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(8px);
-            border-radius: 12px;
+        
+        .left-panel {
+            flex: 1;
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
             padding: 40px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            text-align: center;
+            position: relative;
+        }
+        
+        .logo-container {
+            width: 155px;
+            height: 155px;
+            background: #ffffff;
+            border-radius: 50%;
+            border-radius: 50%;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto 30px auto;
+            padding-top:10px;
+            padding-right:20px  /* <-- centre horizontalement */
         }
 
-        .logo-section {
-            text-align: center;
-            margin-bottom: 30px;
+        
+        .logo-container img {
+            max-width: 150px;
+            max-height: 150px;
+            border-radius: 50%;
+            border-radius: 50%;
+            justify-content: center;
+            align-items: center;
         }
 
-        .logo-section img {
-            height: 90px;
-            margin-bottom: 15px;
-        }
-
-        .logo-section h1 {
-            color: #2c3e50;
+        
+        .left-panel h2 {
             font-size: 28px;
-            font-weight: 600;
-            margin-bottom: 5px;
+            margin-bottom: 15px;
+            text-align: center;
         }
-
-        .logo-section p {
-            color: #7f8c8d;
+        
+        .left-panel p {
+            text-align: center;
             font-size: 16px;
+            line-height: 1.5;
         }
-
+        
+        .right-panel {
+            flex: 1;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            text-align: center;
+        }
+        
+        .welcome-text {
+            margin-bottom: 20px;
+        }
+        
+        .welcome-text h1 {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        
+        .welcome-text p {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .verification-icon {
+            font-size: 60px;
+            color: #2575fc;
+            margin-bottom: 20px;
+        }
+        
         .info-text {
             color: #5a6c7d;
-            font-size: 16px;
+            font-size: 14px;
             line-height: 1.6;
             margin-bottom: 25px;
             text-align: center;
         }
-
-        .verification-icon {
-            font-size: 60px;
-            color: #3498db;
-            margin-bottom: 20px;
-        }
-
+        
         .success-message {
-            padding: 14px;
-            margin-bottom: 25px;
-            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 20px;
+            border-radius: 4px;
             text-align: center;
-            font-size: 15px;
+            font-size: 14px;
             background: #d4edda;
             color: #155724;
             border: 1px solid #c3e6cb;
         }
-
+        
         .actions-container {
             display: flex;
             flex-direction: column;
-            gap: 20px;
-            margin-top: 30px;
+            gap: 15px;
+            margin-top: 25px;
         }
-
+        
         .resend-form {
-            margin-bottom: 15px;
+            margin-bottom: 10px;
         }
-
+        
         .submit-button {
-            padding: 12px 24px;
-            background: #3498db;
+            background: #2575fc;
             color: white;
             border: none;
-            border-radius: 8px;
+            padding: 12px 24px;
+            border-radius: 4px;
             font-size: 16px;
-            font-weight: 600;
+            font-weight: 500;
             cursor: pointer;
             transition: background 0.3s;
             display: inline-flex;
@@ -126,31 +157,31 @@
             justify-content: center;
             gap: 8px;
         }
-
+        
         .submit-button:hover {
-            background: #2980b9;
+            background: #1c64e0;
         }
-
+        
         .logout-form {
-            margin-top: 10px;
+            margin-top: 5px;
         }
-
+        
         .logout-button {
             color: #7f8c8d;
             text-decoration: none;
-            font-size: 15px;
+            font-size: 14px;
             transition: color 0.2s;
             background: none;
             border: none;
             cursor: pointer;
             padding: 5px;
         }
-
+        
         .logout-button:hover {
             color: #e74c3c;
             text-decoration: underline;
         }
-
+        
         @media (min-width: 640px) {
             .actions-container {
                 flex-direction: row;
@@ -167,27 +198,45 @@
                 margin-top: 0;
             }
         }
-
-        @media (max-width: 600px) {
-            .verification-card {
+        
+        @media (max-width: 900px) {
+            .container {
+                flex-direction: column;
+                width: 100%;
+                height: auto;
+                max-width: 500px;
+            }
+            
+            .left-panel {
+                padding: 30px;
+            }
+            
+            .right-panel {
                 padding: 30px;
             }
             
             .info-text {
-                font-size: 15px;
+                font-size: 14px;
             }
         }
     </style>
 </head>
 <body>
-    <div class="verification-container">
-        <div class="verification-card">
-            <div class="logo-section">
+    <div class="container">
+        <div class="left-panel">
+            <div class="logo-container">
                 <img src="{{ asset('logo.png') }}" alt="Logo CPEG MARIE-ALAIN">
-                <h1>CPEG MARIE-ALAIN</h1>
-                <p>Vérification de votre email</p>
             </div>
-
+            <h2>CPEG MARIE-ALAIN</h2>
+            <p>Vérification de votre email</p>
+        </div>
+        
+        <div class="right-panel">
+            <div class="welcome-text">
+                <h1>Vérification requise</h1>
+                <p>Validez votre adresse email pour continuer</p>
+            </div>
+            
             <div class="verification-icon">
                 <i class="fas fa-envelope-circle-check"></i>
             </div>
