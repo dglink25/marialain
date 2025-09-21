@@ -11,6 +11,9 @@
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
         <!-- Bootstrap Icons -->
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+        <!-- Font Awesome -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
     </head>
     <body class="antialiased bg-gray-50 text-gray-800">
         <div class="flex min-h-screen">
@@ -21,21 +24,36 @@
                 <span class="font-bold">CPEG MARIE-ALAIN</span>
             </div>
             <nav class="p-4 space-y-2">
-                <a href="{{ route('home') }}" class="block px-3 py-2 rounded hover:bg-blue-50">Accueil</a>
-                <a href="{{ route('students.create') }}" class="block px-3 py-2 rounded hover:bg-blue-50">Inscription en ligne</a>
+                <a href="{{ route('home') }}" class="flex items-center px-4 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-700 transition">
+                    <i class="fa fa-home w-5 text-gray-500"></i> <span class="ml-3">Accueil</span>
+                </a>
+                <a href="{{ route('students.create') }}" class="flex items-center px-4 py-2 rounded hover:bg-blue-50">
+                    <i class="fa fa-user-plus w-5 text-gray-500"></i> <span class="ml-3">Inscription en ligne</span>
+                </a>
 
                 @if(auth()->check())
-                    <a href="{{ route('profile.edit') }}" class="block px-4 py-2 hover:bg-gray-100">Mon Profil</a>
-                
-                    <a href="{{ route('archives.index') }}" class="block px-4 py-2 hover:bg-gray-100">
-                        Consulter les archives
+                    <a href="{{ route('profile.edit') }}" class="flex items-center px-4 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-700 transition">
+                        <i class="fa fa-user w-5 text-gray-500"></i> <span class="ml-3">Mon Profil</span>
+                    </a>
+
+                    <a href="{{ route('archives.index') }}" class="flex items-center px-4 py-2 hover:bg-gray-100">
+                        <i class="fa fa-archive w-5 text-gray-500"></i> <span class="ml-3">Consulter les archives</span>
                     </a>
 
                     @switch(optional(auth()->user()->role)->name)
                         @case('directeur_primaire')
-                            <a href="{{ route('directeur.dashboard') }}" class="block px-4 py-2 rounded hover:bg-gray-200">Dashboard Directeur</a>
-                            <a href="{{ route('primaire.classes') }}" class="block px-4 py-2 rounded hover:bg-gray-200">Gestion des classes</a>
-                            <a href="{{ route('primaire.enseignants.enseignants') }}" class="block px-4 py-2 rounded hover:bg-gray-200">Gestion des enseignants</a>
+                            <a href="{{ route('directeur.dashboard') }}" class="flex items-center px-4 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-700 transition">
+                                <i class="fa fa-chart-line w-5 text-gray-500"></i> <span class="ml-3">Dashboard Directeur</span>
+                            </a>
+                            <a href="{{ route('primaire.classe.classes') }}" class="flex items-center px-4 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-700 transition">
+                                <i class="fa fa-school w-5 text-gray-500"></i> <span class="ml-3">Gestion des classes</span>
+                            </a>
+                            <a href="{{ route('primaire.enseignants.enseignants') }}" class="flex items-center px-4 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-700 transition">
+                                <i class="fa fa-chalkboard-teacher w-5 text-gray-500"></i> <span class="ml-3">Gestion des enseignants</span>
+                            </a>
+                            <a href="{{ route('primaire.ecoliers.liste') }}" class="flex items-center px-4 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-700 transition">
+                                <i class="fa fa-users w-5 text-gray-500"></i> <span class="ml-3">Gestion des écoliers</span>
+                            </a>
                             @break
 
                         @case('teacher')
@@ -44,14 +62,25 @@
                             @break
 
                         @case('censeur')
-                            <a href="{{ route('censeur.dashboard') }}" class="block px-4 py-2 rounded hover:bg-gray-200">Dashboard Censeur</a>
-                            <a href="{{ route('censeur.invitations.index') }}" class="block px-4 py-2 hover:bg-gray-200">Invitations enseignants</a>
-                            <a href="{{ route('censeur.subjects.index') }}" class="block px-4 py-2 hover:bg-gray-200">Matières</a>
-                            <a href="{{ route('censeur.classes.index') }}" class="block px-4 py-2 hover:bg-gray-200" >Liste Classes</a>
+                            <a href="{{ route('censeur.dashboard') }}" class="flex items-center px-4 py-2 rounded hover:bg-gray-200">
+                                <i class="fa fa-user-shield w-5 text-gray-500"></i> <span class="ml-3">Dashboard Censeur</span>
+                            </a>
+
+                            <a href="{{ route('censeur.invitations.index') }}" class="flex items-center px-4 py-2 hover:bg-gray-200">
+                                <i class="fa fa-envelope-open-text w-5 text-gray-500"></i> <span class="ml-3">Invitations enseignants</span>
+                            </a>
+                            <a href="{{ route('censeur.subjects.index') }}" class="flex items-center px-4 py-2 hover:bg-gray-200">
+                                <i class="fa fa-book-open w-5 text-gray-500"></i> <span class="ml-3">Matières</span>
+                            </a>
+                            <a href="{{ route('censeur.classes.index') }}" class="flex items-center px-4 py-2 hover:bg-gray-200">
+                                <i class="fa fa-school w-5 text-gray-500"></i> <span class="ml-3">Liste Classes</span>
+                            </a>
                             @break
 
                         @case('surveillant')
-                            <a href="{{ route('surveillant.dashboard') }}" class="block px-4 py-2 rounded hover:bg-gray-200">Dashboard Surveillant</a>
+                            <a href="{{ route('surveillant.dashboard') }}" class="flex items-center px-4 py-2 rounded hover:bg-gray-200">
+                                <i class="fa fa-user-secret w-5 text-gray-500"></i> <span class="ml-3">Dashboard Surveillant</span>
+                            </a>
                             @break
 
                         @case('secretaire')
@@ -63,9 +92,12 @@
                             @break
 
                         @case('super_admin')
-                            <a href="{{ route('admin.dashboard') }}" class="block px-3 py-2 rounded hover:bg-blue-50">Tableau de bord</a>
-                            <a href="{{ route('admin.academic_years.index') }}" class="block py-2 px-4 hover:bg-gray-200">Années académiques</a>
-                            
+                            <a href="{{ route('admin.dashboard') }}" class="flex items-center px-4 py-2 rounded hover:bg-blue-50">
+                                <i class="fa fa-cogs w-5 text-gray-500"></i> <span class="ml-3">Tableau de bord</span>
+                            </a>
+                            <a href="{{ route('admin.academic_years.index') }}" class="flex items-center px-4 py-2 hover:bg-gray-200">
+                                <i class="fa fa-calendar-alt w-5 text-gray-500"></i> <span class="ml-3">Années académiques</span>
+                            </a>
                             @break
                         @default
                             <span class="px-4 py-2 text-gray-500">Rôle non défini</span>
@@ -75,9 +107,16 @@
                 
                 @auth
                     
-                    <form method="POST" action="{{ route('logout') }}">@csrf <button type="submit" class="w-full text-left px-3 py-2 rounded hover:bg-red-50">Déconnexion</button></form>
+                    <form method="POST" action="{{ route('logout') }}" class="mt-2">
+                        @csrf
+                        <button type="submit" class="flex items-center w-full px-4 py-2 rounded-lg hover:bg-red-50 hover:text-red-700 transition">
+                            <i class="fa fa-sign-out-alt w-5 text-gray-500"></i> <span class="ml-3">Déconnexion</span>
+                        </button>
+                    </form>
                 @else
-                    <a href="{{ route('login') }}" class="block px-3 py-2 rounded bg-blue-600 text-white">Se connecter</a>
+                    <a href="{{ route('login') }}" class="block px-4 py-2 rounded-lg bg-blue-600 text-white text-center hover:bg-blue-700 transition">
+                        Se connecter
+                    </a>
                 @endauth
             </nav>
             </aside>
@@ -96,7 +135,8 @@
                 @yield('content')
             </main>
             </div>
-        </div>
-        <script src="https://unpkg.com/flowbite@1.6.5/dist/flowbite.js"></script>
-    </body>
+</div>
+
+<script src="https://unpkg.com/flowbite@1.6.5/dist/flowbite.js"></script>
+</body>
 </html>
