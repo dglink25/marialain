@@ -76,7 +76,7 @@ body {
 }
 /* Section background */
 .carousel-section {
-  background-color: #f0f4f8; /* doux, pas trop clair */
+  background-color: #f0f0f0; 
   padding: 70px 0;
   min-height: calc(100vh - 100px);
 }
@@ -107,6 +107,9 @@ body {
   text-decoration: none;
   transition: background-color 0.3s ease;
 }
+.bg-orange:hover{
+background-color: #ff1e00;
+}
 
 
 /* Image décorée */
@@ -126,11 +129,31 @@ body {
 /* Décorations */
 .decor {
   position: absolute;
-  width: 40%;
 }
 
-.decor-1 {
-     top: -20px; left: -150%; }
+.decor-1{
+  width: 8%;
+  z-index: 1;
+  top: 3%;
+  left: 1%;
+  animation: slide-horizontal 4.5s ease-in-out infinite;
+}
+.decor-3{
+   width: 15%;  
+   top: 85%;
+}
+.decor-2 {
+    width: 8%;
+  z-index: 1;
+  top: 85%;
+  left: 47%;
+  animation: slide-horizontal 4.5s ease-in-out infinite;
+}
+@keyframes slide-horizontal {
+  0%   { transform: translateX(0); }
+  50%  { transform: translateX(1.5cm); }
+  100% { transform: translateX(0); }
+}
 
 /* Carousel controls repositioned */
 .custom-control {
@@ -149,13 +172,320 @@ body {
 
 .carousel-control-prev-icon,
 .carousel-control-next-icon {
-  background-color: #ff7f00;
+  background-color:#ff1e00 ;
   position: 20px;
 }
 #carouselEcole {
   height: 100%;
 }
-.bg-orange:hover {
-  background-color: #e66b00; /* couleur légèrement plus foncée */
+
+/* Image ronde avec animation fluide */
+.img-wave-border {
+  width: 346px;
+  height: 331px; 
+  object-fit: cover;
+  border-radius: 50%;
+  border: 6px solid transparent;
+  box-shadow: 0 0 0 6px rgba(255, 127, 0, 0.3);
+  animation: pulseWave 3s ease-in-out infinite;
+  margin: auto;
+}
+@keyframes pulseWave {
+  0%   { box-shadow: 0 0 0 6px rgba(255, 127, 0, 0.3); transform: scale(1); }
+  50%  { box-shadow: 0 0 20px 12px rgba(255, 127, 0, 0.5); transform: scale(1.05); }
+  100% { box-shadow: 0 0 0 6px rgba(255, 127, 0, 0.3); transform: scale(1); }
+}
+
+.section-apropos {
+  background-color: #ffffffc2;
+  color: #333;
+  margin-top: 3%;
+}
+
+.section-title {
+  font-size: 45px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  margin-top: 20px;
+  
+}
+
+.section-description p {
+  font-size: 1.1rem;
+  line-height: 1.8;
+  margin-bottom: 15px;
+  color: #6b6b84;
+}
+.founder-quote {
+  font-size: 16px;
+  font-weight: 500;
+}
+.who-we{
+    font-weight: 600;
+    font-size: 20px;
+    color: #ea512e;
+    font-family: "Sacramento", cursive;
+
+}
+
+#programmes{
+  background-image: url("/ursule/img/activities-bg.jpg"); /* Remplace par ton chemin */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  padding: 60px 0;
+  position: relative;
+  z-index: 1;
+}
+.text-orange {
+  color: #ea512e;
+}
+.programme-card img {
+  height: 200px;
+  object-fit: cover;
+  border-top-left-radius: 0.5rem;
+  border-top-right-radius: 0.5rem;
+}
+
+.programme-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.programme-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 24px rgba(0,0,0,0.1);
+}
+.contribution-line {
+  margin-top: 15px;
+  font-size: 0.95rem;
+}
+
+.bg-gradient-orange {
+  background: linear-gradient(135deg, #ff3c00, #ff8a47);
   color: white;
+  padding: 6px 14px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  box-shadow: 0 4px 12px rgba(255, 127, 0, 0.3);
+  transition: transform 0.3s ease;
+}
+
+.bg-gradient-orange:hover {
+  transform: scale(1.05);
+}
+.btn-glass {
+  margin-top: 10px;
+  background: rgba(255, 38, 0, 0.15);
+  border: 1px solid rgba(255, 127, 0, 0.4);
+  color: #444341;
+  font-weight: 600;
+  font-size: 1rem;
+  padding: 8px 20px;
+  border-radius: 40px;
+  letter-spacing: 0.5px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(255, 127, 0, 0.2);
+}
+
+.btn-glass:hover {
+  background: rgba(255, 127, 0, 0.25);
+  color: rgb(184, 9, 9);
+  box-shadow: 0 6px 20px rgba(255, 127, 0, 0.4);
+  transform: translateY(-2px);
+}
+.card-body{
+    padding: 30px;
+}
+
+  /* Section Cours */
+ #cours {
+    background-color: #ffffff;
+    font-family: 'Segoe UI', sans-serif;
+  }
+
+  #cours h2 {
+    font-weight: 700;
+    color: #2c3e50;
+  }
+
+  .cours-card {
+    border-radius: 10px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    border: none;
+    background-color: #ffffff;
+  }
+
+  .cours-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  }
+
+  .cours-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #ea512e;
+  }
+
+  .cours-text {
+    font-size: 0.95rem;
+    color: #636e72;
+  }
+
+  .cours-niveau {
+    font-style: italic;
+    font-size: 0.85rem;
+    color: #7f8c8d;
+  }
+
+  .cours-toggle-wrapper {
+    background-color: #7a7b7c;
+    text-align: center;
+    margin-top: 30px;
+  }
+
+  .toggle-btn {
+    padding: 10px 20px;
+    font-weight: 500;
+    border-radius: 30px;
+    transition: all 0.3s ease;
+  }
+  .btn-vp,
+  .btn-vm{
+    background-color: none;
+    color: #f0f0f0;
+  }
+
+  .toggle-btn:hover {
+    transform: scale(1.05);
+    color: #ff1e00;
+    background-color: #f0f0f0;
+  }
+  #coursList{
+    background-image: url("/ursule/img/event-bg.jpg");
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-attachment: fixed;
+
+  }
+.bg-3 {
+  display: inline-block;
+  background: linear-gradient(135deg, #2980b9, #6dd5fa);
+  color: #fff;
+  font-weight: 600;
+  font-size: 1rem;
+  padding: 6px 14px;
+  border-radius: 50px;
+  margin-right: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  letter-spacing: 1px;
+  transition: transform 0.3s ease;
+}
+
+.bg-3:hover {
+  transform: scale(1.1);
+}
+/* administration */
+.teachers-section {
+    background-color: #fff;
+}
+
+.teacher-card {
+    position: relative;
+    border: none;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    padding: 20px;
+    border-radius: 10px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+
+.teacher-img {
+    width: 260px;
+    height: 260px;
+    object-fit: cover;
+}
+
+.teacher-name {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #333;
+    margin-top: 10px;
+    margin-bottom: 5px;
+}
+
+.teacher-title {
+    color: #ea512e;
+    font-style: italic;
+    font-size: 0.9rem;
+    margin-bottom: 15px;
+}
+
+/* Styles spécifiques pour les cartes surlignées */
+.teacher-card .btn {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    opacity: 0; /* Cache le bouton par défaut */
+    transition: opacity 0.3s ease;
+}
+
+.teacher-card:hover .btn {
+    opacity: 1; /* Affiche le bouton au survol de la carte */
+}
+.teacher-img {
+
+  box-shadow: 0 0 10px rgba(219, 105, 52, 0.3);
+  animation: pulse 5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(219, 113, 52, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(219, 105, 52, 0.6);
+  }
+}
+.image {
+  height: 270px;
+  background: #ff5741;
+  animation: animateRadiex 7s ease-in-out infinite;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-top-right-radius: 50%;
+  border-bottom-left-radius: 50%;
+}
+
+/* Animation fluide de largeur et arrondi */
+@keyframes animateRadiex {
+  0% {
+    width: 260px;
+    border-bottom-right-radius: 50%;
+    border-top-left-radius: 50%;
+      border-top-right-radius: 40%;
+  border-bottom-left-radius: 40%;
+  }
+  50% {
+    width: 250px;
+    border-bottom-right-radius: 40%;
+    border-top-left-radius: 40%;
+      border-top-right-radius: 50%;
+  border-bottom-left-radius: 50%;
+  }
+  100% {
+    width: 260px;
+    border-bottom-right-radius: 50%;
+    border-top-left-radius: 50%;
+      border-top-right-radius: 40%;
+  border-bottom-left-radius: 40%;
+  }
+}
+.teachers-section{
+  background-color: #fdf6ed;;
 }
