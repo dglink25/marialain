@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="{{ asset('ursule/style/page1.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Sacramento&display=swap" rel="stylesheet">
     <script src="{{ asset('ursule/js/js1.js') }}"defer ></script>
-    <title>Document</title>
+    <title>CPEG MARIE-ALAIN</title>
 </head>
 <body>
       <!-- Barre de navigation -->
@@ -40,8 +40,10 @@
         <li class="nav-item"><a class="nav-link" href="#accueil">Accueil</a></li>
         <li class="nav-item"><a class="nav-link" href="#a-propos">À propos</a></li>
         <li class="nav-item"><a class="nav-link" href="#programmes">Programmes</a></li>
-        <li class="nav-item"><a class="nav-link" href="#apropos">Cours</a></li>
-        <li class="nav-item"><a class="nav-link" href="#apropos">Administration</a></li>
+        <li class="nav-item"><a class="nav-link" href="#cours">Cours</a></li>
+        <li class="nav-item"><a class="nav-link" href="#activites">Activités</a></li>
+        <li class="nav-item"><a class="nav-link" href="#admin">Administration</a></li>
+        <li class="nav-item"><a class="nav-link" href="#galerie">Galerie</a></li>
       </ul>
     </div>
     <div class="d-none d-lg-block">
@@ -136,7 +138,7 @@
       <!-- Texte dynamique -->
       <div class="col-lg-7 col-12 mb-4 mb-lg-0">
         <span class="who-we">Qui somme nous</span>
-        <h2 class="section-title">À propos </h2>
+        <h2 class="section-title text-start">À propos </h2>
         <div id="ecole-description" class="section-description"></div>
         <blockquote class="founder-quote">
             “L’éducation est la racine du progrès. À CPEG MARIE-ALAIN, nous cultivons les talents de demain.”
@@ -267,15 +269,6 @@
             </div>
           </div>
 
-          <div class="col-md-4">
-            <div class="cours-card h-100">
-              <div class="card-body">
-                <h5 class="cours-title"><span class="bg-3">05</span>Éducation Civique</h5>
-                <p class="cours-text">Apprentissage des règles de vie, des droits, devoirs et valeurs citoyennes.</p>
-                <p class="cours-niveau">📘 Primaire, 🎓 Collège</p>
-              </div>
-            </div>
-          </div>
 
           <div class="col-md-4">
             <div class="cours-card h-100">
@@ -287,15 +280,6 @@
             </div>
           </div>
 
-          <div class="col-md-4">
-            <div class="cours-card h-100">
-              <div class="card-body">
-                <h5 class="cours-title"><span class="bg-3">07</span>Arts Plastiques</h5>
-                <p class="cours-text">Expression artistique à travers le dessin, la peinture et les activités manuelles.</p>
-                <p class="cours-niveau">🧒 Maternelle, 📘 Primaire</p>
-              </div>
-            </div>
-          </div>
 
           <div class="col-md-4">
             <div class="cours-card h-100">
@@ -349,10 +333,45 @@
   </div>
 </section>
 
- <section class="teachers-section p-5">
+
+<section id="activites" class="timeline-section">
+  <div class="container">
+    <p class="who-we text-center">Les activités que nous organisons</p>
+    <h2 class="section-title" > Nos Activités</h2>
+    <div class="timeline">
+
+      <!-- Activité 1 -->
+      <div class="timeline-item left">
+        <div class="timeline-content">
+          <h4>Remise des Prix aux Lauréats 🏆</h4>
+          <p>Célébration des élèves méritants avec trophées et reconnaissance publique.</p>
+        </div>
+      </div>
+
+      <!-- Activité 2 -->
+      <div class="timeline-item right">
+        <div class="timeline-content">
+          <h4>Journée Culturelle 🎭</h4>
+          <p>Expositions, spectacles et valorisation des cultures locales.</p>
+        </div>
+      </div>
+
+      <!-- Activité 3 -->
+      <div class="timeline-item left">
+        <div class="timeline-content">
+          <h4>Club de Musique 🎶</h4>
+          <p>Pratique instrumentale, chant et participation à des événements artistiques.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+ <section id="admin"class="teachers-section p-5">
         <div class="container-fluid text-center">
            <p class="who-we text-center">Nos membres d'administration</p>
-            <h2 class="mb-4">Nos dirigeants</h2>
+            <h2 class="mb-4"  >Nos dirigeants</h2>
             <div class="row g-4 justify-content-center">
                 
                 <div class="col-md-6 col-lg-3">
@@ -400,7 +419,122 @@
         </div>
 </section>
 
-    <a href="{{ route('home') }}" >home</a>
+
+<section id="galerie" >
+  <div class="container">
+    <p class="who-we text-center">Galerie de nos activités</p>
+    <h2 class="section-title " >Galerie</h2>
+
+    <div class="row g-4">
+
+      <div class="col-12 col-sm-6 col-md-4">
+        <div class="overflow-hidden rounded shadow-sm">
+          <img src="{{ asset('ursule/img/galerie1.jpeg') }}" alt="Remise des prix" class="img-fluid gallery-img">
+        </div>
+      </div>
+
+      <div class="col-12 col-sm-6 col-md-4">
+        <div class="overflow-hidden rounded shadow-sm">
+          <img src="{{ asset('ursule/img/galerie2.jpeg') }}" alt="Journée culturelle" class="img-fluid gallery-img">
+        </div>
+      </div>
+
+      <div class="col-12 col-sm-6 col-md-4">
+        <div class="overflow-hidden rounded shadow-sm">
+          <img src="{{ asset('ursule/img/galerie3.jpeg') }}" alt="Club de musique" class="img-fluid gallery-img">
+        </div>
+      </div>
+
+      <div class="col-12 col-sm-6 col-md-4">
+        <div class="overflow-hidden rounded shadow-sm">
+          <img src="{{ asset('ursule/img/galerie4.jpeg') }}" alt="Spectacle" class="img-fluid gallery-img">
+        </div>
+      </div>
+
+      <div class="col-12 col-sm-6 col-md-4">
+        <div class="overflow-hidden rounded shadow-sm">
+          <img src="{{ asset('ursule/img/galerie5.jpeg') }}" alt="Exposition" class="img-fluid gallery-img">
+        </div>
+      </div>
+
+      <div class="col-12 col-sm-6 col-md-4">
+        <div class="overflow-hidden rounded shadow-sm">
+          <img src="{{ asset('ursule/img/galerie6.jpeg') }}" alt="Concert" class="img-fluid gallery-img">
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<footer class="footer text-light  pb-4">
+  <div class="container p-3">
+    <div class="row gy-5 grop">
+
+      <!-- À propos -->
+      <div class="col-md-3">
+        <h5 class="footer-title">À propos</h5>
+        <hr class="footer-separator">
+        <p class="footer-text">
+          Nous sommes un établissement dédié à l’épanouissement des jeunes à travers l’éducation, la culture et les arts.<br><br>
+          Notre mission est de former des citoyens responsables et créatifs dans un environnement stimulant.
+        </p>
+      </div>
+
+      <!-- Galerie -->
+      <div class="col-md-3">
+        <h5 class="footer-title">Galerie</h5>
+        <hr class="footer-separator">
+        <div class="footer-gallery">
+          <img src="{{ asset('ursule/img/galerie8.jpeg') }}" alt="Image 1" class="footer-img">
+          <img src="{{ asset('ursule/img/galerie9.jpeg') }}" alt="Image 2" class="footer-img">
+          <img src="{{ asset('ursule/img/galerie10.jpeg') }}" alt="Image 3" class="footer-img">
+          <img src="{{ asset('ursule/img/galerie11.jpeg') }}" alt="Image 4" class="footer-img">
+          <img src="{{ asset('ursule/img/galerie12.jpeg') }}" alt="Image 5" class="footer-img">
+          <img src="{{ asset('ursule/img/galerie1.jpeg') }}" alt="Image 6" class="footer-img">
+          <img src="{{ asset('ursule/img/galerie2.jpeg') }}" alt="Image 7" class="footer-img">
+          <img src="{{ asset('ursule/img/galerie3.jpeg') }}" alt="Image 8" class="footer-img">
+          <img src="{{ asset('ursule/img/galerie4.jpeg') }}" alt="Image 9" class="footer-img">
+        </div>
+      </div>
+
+      <!-- Contact -->
+      <div class="col-md-3">
+        <h5 class="footer-title">Contact</h5>
+        <hr class="footer-separator">
+        <form>
+          <input type="text" class="form-control form-control-sm mb-3" placeholder="Nom">
+          <input type="email" class="form-control form-control-sm mb-3" placeholder="Email">
+          <textarea class="form-control form-control-sm mb-3" rows="2" placeholder="Message"></textarea>
+          <button type="submit" class="btn btn-sm btn-danger w-100">Envoyer</button>
+        </form>
+      </div>
+
+      <!-- Coordonnées -->
+      <div class="col-md-3">
+        <h5 class="footer-title">Coordonnées</h5>
+        <hr class="footer-separator">
+        <p class="footer-text">
+          Quartier Houégbo, Lokossa<br><br>
+          Mono, Bénin<br><br>
+          📞 +229 97 00 00 00<br><br>
+          ✉️ contact@etablissement.bj
+        </p>
+      </div>
+
+    </div>
+
+    <hr class="border-light mt-5">
+    <div class="text-center small">
+      &copy; 2025 CPEG MARIE-ALAIN — Tous droits réservés.
+    </div>
+  </div>
+</footer>
+
+
+
+
+
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
 </body>
