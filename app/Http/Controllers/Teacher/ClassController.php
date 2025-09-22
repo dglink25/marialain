@@ -4,17 +4,18 @@ namespace App\Http\Controllers\Teacher;
 
 use App\Http\Controllers\Controller;
 use App\Models\Classe;
-use App\Models\Timetable;
 use Illuminate\Support\Facades\Auth;
 
 class ClassController extends Controller
 {
-    // Liste des classes assignées à l’enseignant connecté
+    // Liste des classes de l’enseignant connecté
     public function index()
     {
-        $classes = Classe::whereHas('teachers', function ($q) {
-            $q->where('user_id', Auth::id());
-        })->get();
+        // Récupérer l'enseignant connecté
+        $teacher = Auth::user();
+
+        // Récupérer les classes via la relation belongsToMany
+        $classes = $teacher->classes()->with('teachers')->get();
 
         return view('teacher.classes.index', compact('classes'));
     }
@@ -28,16 +29,34 @@ class ClassController extends Controller
     }
 
     // Emploi du temps d’une classe
-    public function timetable($classId)
-    {
-        $class = Classe::findOrFail($classId);
+    // Emploi du temps d’une classe
+    public function timetable($classId){
+        // Charger la classe avec ses emplois du temps + relations
+        $class = Classe::with(['timetables.teacher', 'timetables.subject'])
+                    ->findOrFail($classId);
 
-        $timetables = Timetable::where('class_id', $classId)
-            ->with('subject', 'teacher')
-            ->orderBy('day')
-            ->orderBy('start_time')
-            ->get();
+        // Récupérer tous les créneaux de cette classe
+        $timetables = $class->timetables;
 
-        return view('teacher.timetable', compact('class', 'timetables'));
+        // Définir les plages horaires fixes (par ex. 8h → 18h)
+        $hours = [
+            '07h-08h',
+            '08h-09h',
+            '09h-10h',
+            '10h-11h',
+            '11h-12h',
+            '12h-13h',
+            '13h-14h',
+            '14h-15h',
+            '15h-16h',
+            '16h-17h',
+            '17h-18h',
+            '18h-19h',
+        ];
+
+        return view('teacher.classes.timetable', compact('class', 'timetables', 'hours'));
     }
+
+
+    
 }

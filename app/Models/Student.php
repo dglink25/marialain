@@ -17,7 +17,7 @@ class Student extends Model{
         'gender',
         'num_educ',
         'entity_id',
-        'classe_id',
+        'class_id',
         'birth_certificate',
         'vaccination_card',
         'previous_report_card',
@@ -26,6 +26,8 @@ class Student extends Model{
         'parent_email',
         'parent_phone',
         'school_fees',
+        'is_validated',
+        'amount_paid',
     ];
 
 
@@ -34,6 +36,28 @@ class Student extends Model{
     }
 
     public function classe() {
-        return $this->belongsTo(Classe::class);
+        return $this->belongsTo(Classe::class, 'class_id');
     }
+
+    public function payments()
+    {
+        return $this->hasMany(StudentPayment::class);
+    }
+
+    // Calcul montant total payé
+    public function getTotalPaidAttribute()
+    {
+        return $this->payments->sum('amount');
+    }
+
+    // Calcul montant restant
+    public function getRemainingFeesAttribute(){
+        return $this->classe->school_fees - $this->total_paid;
+    }
+
+    // Vérifier si tout payé
+    public function getIsFullyPaidAttribute(){
+        return $this->remaining_fees <= 0;
+    }
+
 }

@@ -1,30 +1,54 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Admin\AdminAuthController;
-use App\Http\Controllers\Admin\InvitationController;
-use App\Http\Controllers\Admin\AcademicYearController;
-use App\Http\Controllers\Admin\ClassController;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\InvitationMail;
 use App\Models\Invitation;
+
+// Controllers
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\InvitationResponseController;
-use App\Http\Controllers\Censeur\ClasseController;
-use App\Http\Controllers\Teacher\ClassController as TeacherClassController;
+use App\Http\Controllers\StudentPaymentController;
 
+
+// Admin
+use App\Http\Controllers\Admin\AdminAuthController;
+use App\Http\Controllers\Admin\InvitationController as AdminInvitationController;
+use App\Http\Controllers\Admin\AcademicYearController;
+use App\Http\Controllers\Admin\ClassController;
+use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\Admin\StudentExportController;
+use App\Http\Controllers\Admin\StudentValidationController;
 
+// Censeur
+use App\Http\Controllers\Censeur\ClasseController;
 use App\Http\Controllers\Censeur\InvitationController as CenseurInvitationController;
-use App\Http\Controllers\Teacher\TeacherController;
 use App\Http\Controllers\Censeur\SubjectController;
 use App\Http\Controllers\Censeur\AssignmentController;
 use App\Http\Controllers\Censeur\TimetableController;
+
+// Teacher
 use App\Http\Controllers\Teacher\DashboardController;
 
+use App\Http\Controllers\Teacher\ClassController as TeacherClassController;
+use App\Http\Controllers\Admin\EntityController;
+
+Route::get('/admin/entities/{entity}/classes', [EntityController::class, 'getClasses']);
+
+use App\Http\Controllers\Dprimaire\ClassesprimaireController;
+use App\Http\Controllers\Dprimaire\AjouterClasse;
+use App\Http\Controllers\Dprimaire\primaryteacherController;
 
 
+
+
+//Routes publiques
+
+Route::get('/', fn() => view('accueil'))->name('accueil');
+Route::get('/home', fn() => view('welcome'))->name('home');
+
+
+// Test mail (à supprimer en prod)
 
 /*
 |--------------------------------------------------------------------------
@@ -36,6 +60,12 @@ use App\Http\Controllers\Teacher\DashboardController;
 Route::get('/home', function () {
     return view('welcome');
 })->name('home');
+
+//primaire
+Route:: get('/primaire/classe/classes', [ClassesprimaireController::class, 'index'])-> name('primaire.classes');
+Route:: get('/primaire/classe/ajouter', [AjouterClasse::class, 'index'])-> name('primaire.ajouterclasse');
+Route:: get('/primaire/enseignants/enseignants', [primaryteacherController::class, 'index'])-> name('primaire.enseignants.enseignants');
+
 
 Route::get('/', function () {
     return view('accueil');
@@ -51,7 +81,6 @@ Route::get('classes', [ClasseController::class, 'index'])->name('censeur.classes
 // Page classes secondaires
 Route::get('/admin/classes/secondary/create', [App\Http\Controllers\Admin\ClasseController::class, 'createSecondary'])
     ->name('admin.classes.secondary');
-
 
 // Profil
 Route::middleware('auth')->group(function () {
@@ -78,7 +107,14 @@ Route::middleware('auth')->group(function () {
     })->name('secretaire.dashboard');
 });
 
+//Validation inscription en attente 
 
+Route::middleware(['auth'])->prefix('admin')->group(function () {
+    Route::get('students/pending', [StudentValidationController::class, 'index'])
+        ->name('admin.students.pending');
+    Route::post('students/{student}/validate', [StudentValidationController::class, 'validateStudent'])
+        ->name('admin.students.validate');
+});
 
 // Auth (Breeze fournit login/logout/password reset)
 require __DIR__.'/auth.php';
@@ -101,14 +137,18 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
 });
 
 // Route de test pour invitation mail (supprimer en prod)
+
 Route::get('/test-invitation-mail', function () {
     $inv = Invitation::first();
-    if (! $inv) {
+    if (!$inv) {
         return 'Aucune invitation en base pour test.';
     }
     Mail::to('test@example.com')->send(new InvitationMail($inv));
     return 'Mail d’invitation envoyé !';
 });
+
+
+// Invitation par token
 
 
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
@@ -127,6 +167,9 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::post('/invitations', [InvitationController::class,'store'])->name('invitations.store');
 });
 
+Route::middleware(['auth'])->group(function () {
+    //Route::get('/dashboard', [App\Http\Controllers\HomeController::class, 'index'])->name('dashboard');
+});
 
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
     Route::resource('classes', ClassController::class);
@@ -218,24 +261,126 @@ Route::prefix('censeur')->group(function () {
 Route::get('/invitation/accept/{token}', [InvitationResponseController::class, 'accept'])
     ->name('invitation.accept');
 
+//Profil (utilisateurs connectés)
 
+Route::middleware('auth')->group(function () {
 
-Route::prefix('censeur')->name('censeur.')->group(function() {
-    Route::get('classes/{classId}/horaires', [TimetableController::class, 'index'])->name('timetables.index');
-    Route::post('classes/{classId}/horaires', [TimetableController::class, 'store'])->name('timetables.store');
+    // Édition du profil
+    Route::get('/profil/modifier', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::post('/profil/modifier', [ProfileController::class, 'update'])->name('profile.update');
 
-    // Modifier un créneau
-    Route::get('classes/{classId}/horaires/{id}/edit', [TimetableController::class, 'edit'])->name('timetables.edit');
-    Route::put('classes/{classId}/horaires/{id}', [TimetableController::class, 'update'])->name('timetables.update');
-    Route::delete('classes/{classId}/horaires/{id}', [TimetableController::class, 'destroy'])->name('timetables.destroy');
+    // Changement de mot de passe
+    Route::post('/profil/mot-de-passe', [ProfileController::class, 'updatePassword'])->name('profile.password');
+
+    // Mise à jour de la photo de profil
+    Route::post('/profil/photo', [ProfileController::class, 'updatePhoto'])->name('profile.updatePhoto');
 });
 
-Route::prefix('censeur')->name('censeur.')->group(function () {
-    Route::get('classes/{class}/timetables/download', [TimetableController::class, 'downloadPDF'])
-        ->name('timetables.download');
+
+// Dashboards par rôle
+
+Route::middleware('auth')->group(function () {
+    Route::get('/dashboard/directeur', fn() => view('dashboards.directeur', ['user' => auth()->user()]))
+        ->name('directeur.dashboard');
+
+    Route::get('/dashboard/censeur', fn() => view('dashboards.censeur', ['user' => auth()->user()]))
+        ->name('censeur.dashboard');
+
+    Route::get('/dashboard/surveillant', fn() => view('dashboards.surveillant', ['user' => auth()->user()]))
+        ->name('surveillant.dashboard');
+
+    Route::get('/dashboard/secretaire', fn() => view('dashboards.secretaire', ['user' => auth()->user()]))
+        ->name('secretaire.dashboard');
 });
 
+// Admin Sécreateire pour valider inscription
 
-Route::get('/censeur/classes/{class}/students/pdf', [ClasseController::class, 'downloadStudentsPdf'])
-     ->name('censeur.classes.students.pdf');
+Route::middleware(['auth'])->prefix('admin')->group(function () {
+    Route::get('students/pending', [StudentValidationController::class, 'index'])
+        ->name('admin.students.pending');
+    Route::post('students/{student}/validate', [StudentValidationController::class, 'validateStudent'])
+        ->name('admin.students.validate');
+});
 
+// Admin
+
+Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/dashboard', [AdminAuthController::class, 'index'])->name('dashboard');
+    Route::post('/admins', [AdminAuthController::class, 'createAdmin'])->name('admins.store');
+
+    // Invitations enseignants
+    Route::resource('invitations', AdminInvitationController::class)->only(['index', 'store']);
+
+    // Classes
+    Route::resource('classes', ClassController::class)->only(['index', 'edit', 'update', 'store', 'create', 'show', 'destroy']);
+
+    // Années académiques
+    Route::resource('academic_years', AcademicYearController::class)->only(['index', 'store', 'create']);
+
+    // Étudiants
+    Route::resource('students', StudentController::class);
+    Route::get('students/list', [StudentController::class, 'listAlphabetical'])->name('students.list');
+    Route::get('students/export/pdf', [StudentController::class, 'exportPdf'])->name('students.export.pdf');
+    Route::get('students/export/excel', [StudentExportController::class, 'exportExcel'])->name('students.export.excel');
+    Route::get('admin/students/export/all-pdf', [App\Http\Controllers\Admin\StudentController::class, 'exportAllPdf'])
+        ->name('students.export.all.pdf');
+});
+
+//Inscription public 
+Route::get('/inscription', [StudentController::class, 'inscription'])->name('students.create');
+Route::post('/inscription', [StudentController::class, 'store'])->name('students.store');
+
+
+// Censeur
+
+Route::prefix('censeur')->name('censeur.')->middleware('auth')->group(function () {
+    // Invitations enseignants
+    Route::get('/invitations', [CenseurInvitationController::class, 'index'])->name('invitations.index');
+    Route::post('/invitations', [CenseurInvitationController::class, 'send'])->name('invitations.send');
+
+    // Matières
+    Route::resource('subjects', SubjectController::class);
+
+    // Classes
+    Route::get('classes', [ClasseController::class, 'index'])->name('classes.index');
+    Route::get('classes/{classId}/students', [ClasseController::class, 'students'])->name('classes.students');
+    Route::get('classes/{classId}/teachers', [ClasseController::class, 'teachers'])->name('classes.teachers');
+    Route::get('classes/{classId}/timetable', [ClasseController::class, 'timetable'])->name('classes.timetable');
+    Route::get('classes/{class}/students/pdf', [ClasseController::class, 'downloadStudentsPdf'])->name('classes.students.pdf');
+    Route::get('classes/{class}/enseignants/export', [ClasseController::class, 'export'])->name('classes.teachers.export');
+
+    // Timetables
+    Route::get('classes/{classId}/timetables', [TimetableController::class, 'index'])->name('timetables.index');
+    Route::post('classes/{classId}/timetables', [TimetableController::class, 'store'])->name('timetables.store');
+    Route::get('classes/{classId}/timetables/{id}/edit', [TimetableController::class, 'edit'])->name('timetables.edit');
+    Route::put('classes/{classId}/timetables/{id}', [TimetableController::class, 'update'])->name('timetables.update');
+    Route::delete('classes/{classId}/timetables/{id}', [TimetableController::class, 'destroy'])->name('timetables.destroy');
+    Route::get('classes/{class}/timetables/download', [TimetableController::class, 'downloadPDF'])->name('timetables.download');
+});
+
+// Afficher le profil d’un enseignant
+Route::get('/enseignants/{user}', [App\Http\Controllers\ProfileController::class, 'show'])
+    ->name('enseignants.show');
+
+// Export PDF des enseignants d’une classe (Censeur)
+Route::get('/classes/{class}/enseignants/export', [App\Http\Controllers\Censeur\ClasseController::class, 'export'])
+    ->name('enseignants.export');
+
+//Enseignant  
+Route::prefix('teacher')->name('teacher.')->middleware('auth')->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Classes de l’enseignant
+    Route::get('/classes', [TeacherClassController::class, 'index'])->name('classes');
+    Route::get('/classes/{classId}/students', [TeacherClassController::class, 'students'])->name('classes.students');
+    Route::get('/classes/{classId}/timetable', [TeacherClassController::class, 'timetable'])->name('classes.timetable');
+});
+
+Route::prefix('students')->name('students.')->group(function() {
+    Route::get('{student}/payments', [StudentPaymentController::class,'index'])->name('payments.index');
+    Route::get('{student}/payments/create', [StudentPaymentController::class,'create'])->name('payments.create');
+    Route::post('{student}/payments', [StudentPaymentController::class,'store'])->name('payments.store');
+});
+
+Route::get('subjects/{subject}/teachers', [SubjectController::class, 'teachers'])
+    ->name('subjects.teachers');

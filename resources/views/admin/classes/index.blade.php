@@ -8,19 +8,6 @@
         class="mb-4 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
         Ajouter une classe
     </button>
-
-    <!-- Boutons d'ajout -->
-    <div class="flex flex-col md:flex-row gap-4 mb-6">
-        <a href="{{ route('admin.classes.primary') }}" 
-           class="bg-green-600 text-white px-4 py-2 rounded-lg shadow hover:bg-green-700 text-center w-full md:w-auto">
-           Classes Maternelle et Primaire
-        </a>
-
-        <a href="{{ route('admin.classes.secondary') }}" 
-           class="bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 text-center w-full md:w-auto">
-            Classes Secondaire
-        </a>
-    </div>
     <!-- Formulaire caché par défaut -->
     <form method="POST" action="{{ route('admin.classes.store') }}" 
           id="classForm"
@@ -107,7 +94,6 @@
                             class="bg-yellow-500 text-white px-2 py-1 rounded hover:bg-yellow-600">
                                 Modifier
                             </a>
-
                             <form method="POST" action="{{ route('admin.classes.destroy', $classe->id) }}">
                                 @csrf
                                 @method('DELETE')

@@ -4,58 +4,290 @@
     <meta charset="utf-8">
     <title>Élèves - {{ $class->name }}</title>
     <style>
-        body { font-family: DejaVu Sans, sans-serif; font-size: 12px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #333; padding: 6px; text-align: left; }
-        th { background-color: #f0f0f0; }
-        h1 { text-align: center; }
+        /* Styles de base */
+        body {
+            font-family: "Times New Roman", Times, serif;
+            font-size: 12px;
+            margin: 0;
+            padding: 20px;
+            position: relative;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        /* --- Ligne tricolore --- */
+        .tricolor-line {
+            width: 50%;
+            margin: 0 auto 8px auto;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+        .tricolor-line td {
+            height: 3px;
+            padding: 0;
+            border: none;
+            width: 33.33%;
+        }
+        .tricolor-line .green { background-color: #008751; }
+        .tricolor-line .yellow { background-color: #FCD116; }
+        .tricolor-line .red { background-color: #E8112D; }
+
+        /* --- HEADER --- */
+        .header {
+            display: table;
+            width: 100%;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+        }
+        .logo-container {
+            display: table-cell;
+            width: 15%;
+            vertical-align: middle;
+            text-align: center;
+        }
+
+        .logo {
+            width: 70px;
+            height: 70px;
+            object-fit: contain;
+        }
+
+        .school-info {
+            display: table-cell;
+            width: 70%;
+            text-align: center;
+            font-size: 11px;
+            line-height: 1.3;
+        }
+        .school-info .bold { font-weight: bold; }
+
+        /* --- Tableau --- */
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+            font-family: "Times New Roman", Times, serif;
+        }
+
+        th, td {
+            border: 1px solid #333;
+            padding: 6px 4px;
+            font-size: 11px;
+            word-wrap: break-word;
+            text-align: center;
+            font-family: "Times New Roman", Times, serif;
+        }
+
+        th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        /* Titre */
+        .title {
+            text-align: center;
+            margin: 20px 0;
+            font-size: 16px;
+            font-weight: bold;
+            padding: 5px;
+        }
+
+        /* Pied de page */
+        .footer {
+            width: 100%;
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 10px;
+            border-top: 1px solid #ccc;
+            font-size: 11px;
+            color: #666;
+        }
+
+        .signature {
+            margin-top: 50px;
+            text-align: right;
+            font-style: italic;
+        }
+
+        /* Largeurs des colonnes */
+        th:nth-child(1), td:nth-child(1) { width: 5%; }   /* N° */
+        th:nth-child(2), td:nth-child(2) { width: 13%; }  /* Numéro Éduque Master */
+        th:nth-child(3), td:nth-child(3) { width: 16%; }  /* Nom */
+        th:nth-child(4), td:nth-child(4) { width: 15%; }  /* Prénoms */
+        th:nth-child(5), td:nth-child(5) { width: 12%; }  /* Date naissance */
+        th:nth-child(6), td:nth-child(6) { width: 12%; }  /* Lieu de naissance */
+        th:nth-child(7), td:nth-child(7) { width: 8%; }   /* Sexe */
+        th:nth-child(8), td:nth-child(8) { width: 15%; }  /* Nom parent */
+        th:nth-child(9), td:nth-child(9) { width: 15%; }  /* Email parent */
+        th:nth-child(10), td:nth-child(10) { width: 12%; }  /* Téléphone parent */
+
+        /* Styles pour l'impression/PDF */
+        @media print {
+            body {
+                margin: 0;
+                padding: 15px;
+                position: relative;
+            }
+            
+            .header {
+                page-break-after: avoid;
+            }
+            
+            .title {
+                page-break-after: avoid;
+            }
+            
+            table {
+                page-break-inside: auto;
+            }
+            
+            /* EMPÊCHER LA RÉPÉTITION DE L'EN-TÊTE DU TABLEAU */
+            thead {
+                display: table-row-group; /* Changement crucial ici */
+            }
+            
+            tbody {
+                display: table-row-group;
+            }
+            
+            tr {
+                page-break-inside: avoid;
+                page-break-after: auto;
+            }
+            
+            /* Numérotation des pages */
+            .page-number:before {
+                content: "Page " counter(page);
+            }
+            
+            @page {
+                margin: 1cm;
+                @bottom-center {
+                    content: "Page " counter(page) " sur " counter(pages);
+                    font-family: "Times New Roman", Times, serif;
+                    font-size: 10px;
+                }
+            }
+        }
+        
+        /* Pagination pour PDF */
+        .pagination {
+            position: fixed;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 10px;
+            font-family: "Times New Roman", Times, serif;
+        }
     </style>
 </head>
 <body>
+    <div class="container">
+        <!-- Ligne tricolore avec tableau pour meilleur support PDF -->
+        <table class="tricolor-line">
+            <tr>
+                <td class="green" style="width: 33.33%;"></td>
+                <td class="yellow" style="width: 33.33%;"></td>
+                <td class="red" style="width: 33.34%;"></td>
+            </tr>
+        </table>
 
-    <div class="header"style="text-align:center;">
-        <div class="header-left">
+        <!-- HEADER -->
+        <div class="header">
+            <div class="logo-container">
+                <img src="{{ public_path('logo.png') }}" class="logo" alt="Logo Gauche">
+            </div>
+            
             <div class="school-info">
-                <div class="bold">REPUBLIQUE DU BENIN</div>
-                <div>MINISTERE DES ENSEIGNEMENTS SECONDAIRE, TECHNIQUE ET DE LA FORMATION PROFESSIONNELLE</div>
-                <div>DIRECTION DEPARTEMENTALE DES ENSEIGNEMENTS SECONDAIRE, TECHNIQUE ET DE LA FORMATION PROFESSIONNELLE DE L'ATLANTIQUE</div>
-                <div class="bold">CPEG MARIE-ALAIN</div>
+                <div class="republic">RÉPUBLIQUE DU BÉNIN</div>
+                <div class="ministry">MINISTÈRE DES ENSEIGNEMENTS SECONDAIRE, TECHNIQUE ET DE LA FORMATION PROFESSIONNELLE</div>
+                <div class="direction">DIRECTION DÉPARTEMENTALE DES ENSEIGNEMENTS SECONDAIRE, TECHNIQUE ET DE LA FORMATION PROFESSIONNELLE DE L'ATLANTIQUE</div>
+                <div class="school-name">CPEG MARIE-ALAIN</div>
+            </div>
+            
+            <div class="logo-container">
+                <img src="{{ public_path('logo.png') }}" class="logo" alt="Logo Droit">
             </div>
         </div>
+
+        <!-- TITRE -->
+        <div class="title"><u>Liste des élèves de la classe : {{ $class->name }}</u></div>
+
+        <!-- TABLEAU -->
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>N°</th>
+                        <th>N° ÉducMaster</th>
+                        <th>Nom</th>
+                        <th>Prénoms</th>
+                        <th>Date de naissance</th>
+                        <th>Lieu de naissance</th>
+                        <th>Sexe</th>
+                        <th>Nom parent</th>
+                        <th>Email parent</th>
+                        <th>Contact</th>  
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($students as $student)
+                    <tr>
+                        <td>{{ $loop->iteration }}</td>
+                        <td>{{ $student->num_educ ?? '-' }}</td>
+                        <td>{{ $student->last_name }}</td>
+                        <td>{{ $student->first_name }}</td>
+                        <td>{{ $student->birth_date }}</td>
+                        <td>{{ $student->birth_place }}</td>
+                        <td>{{ $student->gender ?? '-' }}</td>
+                        <td>{{ $student->parent_full_name}}</td>
+                        <td>{{ $student->parent_email }}</td>
+                        <td>{{ $student->parent_phone }}</td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+
+        <!-- PIED DE PAGE -->
+        <div class="footer">
+            <div class="signature">Fait à Calavi, le {{ now()->format('d/m/Y') }}<br>Le Censeur</div>
+        </div>
+
+        <!-- PAGINATION -->
+        <div class="pagination">
+            Page <span class="page-number"></span>
+        </div>
     </div>
-    <h1>Élèves de la classe : {{ $class->name }}</h1>
-
-    <table>
-        
-        <thead>
-            <tr>
-                <th>N°</th>
-                <th>Numéro Éduque Master</th>
-                <th>Nom</th>
-                <th>Prénoms</th>
-                <th>Date de naissance</th>
-                <th>Lieu de naissance</th>
-                <th>Sexe</th>
-                <th>Email parent</th>
-                <th>Téléphone parent</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($students as $student)
-            <tr>
-                <td>{{ $loop->iteration }}</td> {{-- Numéro automatique --}}
-                <td>{{ $student->num_educ ?? '-' }}</td>
-                <td>{{ $student->last_name }}</td>
-                <td>{{ $student->first_name }}</td>
-                <td>{{ $student->birth_date }}</td>
-                <td>{{ $student->birth_place }}</td>
-                <td>{{ $student->gender ?? '-' }}</td>
-                <td>{{ $student->parent_email }}</td>
-                <td>{{ $student->parent_phone }}</td>
-            </tr>
-            @endforeach
-        </tbody>
-    </table>
-
+    
+    <script>
+        // Compteur de pages pour l'affichage navigateur
+        document.addEventListener('DOMContentLoaded', function() {
+            // Simuler l'affichage du nombre de pages (approximatif)
+            const rows = document.querySelectorAll('tbody tr');
+            const rowsPerPage = 25; // Estimation du nombre de lignes par page
+            const pageCount = Math.ceil(rows.length / rowsPerPage);
+            
+            if (pageCount > 0) {
+                document.querySelector('.page-number').textContent = `1/${pageCount}`;
+            }
+        });
+    </script>
 </body>
 </html>
