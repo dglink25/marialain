@@ -6,9 +6,10 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
     <link rel="stylesheet" href="{{ asset('ursule/style/page1.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Sacramento&display=swap" rel="stylesheet">
     <script src="{{ asset('ursule/js/js1.js') }}"defer ></script>
-    <title>Document</title>
+    <title>CPEG MARIE-ALAIN</title>
 </head>
 <body>
       <!-- Barre de navigation -->
@@ -21,18 +22,13 @@
       <span class="fw-bold text-dark ms-2">CPEG MARIE-ALAIN</span>
     </a>
 
-    <!-- Bloc droit : bouton S'inscrire + hamburger -->
-    <div class="d-flex align-items-center gap-3 d-lg-none">
 
-      <!-- Bouton S'inscrire -->
-      <a href="#apropos" class="btn btn-orange">S'inscrire</a>
 
       <!-- Bouton hamburger -->
       <button class="navbar-toggler " type="button" data-bs-toggle="collapse" data-bs-target="#menuNav">
         <span class="navbar-toggler-icon"></span>
       </button>
 
-    </div>
 
     <!-- Menu -->
     <div class="collapse navbar-collapse" id="menuNav">
@@ -40,13 +36,24 @@
         <li class="nav-item"><a class="nav-link" href="#accueil">Accueil</a></li>
         <li class="nav-item"><a class="nav-link" href="#a-propos">À propos</a></li>
         <li class="nav-item"><a class="nav-link" href="#programmes">Programmes</a></li>
-        <li class="nav-item"><a class="nav-link" href="#apropos">Cours</a></li>
-        <li class="nav-item"><a class="nav-link" href="#apropos">Administration</a></li>
-      </ul>
-    </div>
-    <div class="d-none d-lg-block">
+        <li class="nav-item"><a class="nav-link" href="#cours">Cours</a></li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+            Ressources
+          </a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="#activites">Activités</a></li>
+            <li><a class="dropdown-item" href="#admin">Administration</a></li>
+            <li><a class="dropdown-item" href="#galerie">Galerie</a></li>
+          </ul>
+        </li>
+        <li class="nav-item">
         <a href="#apropos" class="btn btn-orange ms-4">S'inscrire</a>
+        </li>
+      </ul>
+      
     </div>
+    
   </div>
 </nav>
 
@@ -136,7 +143,7 @@
       <!-- Texte dynamique -->
       <div class="col-lg-7 col-12 mb-4 mb-lg-0">
         <span class="who-we">Qui somme nous</span>
-        <h2 class="section-title">À propos </h2>
+        <h2 class="section-title text-start">À propos </h2>
         <div id="ecole-description" class="section-description"></div>
         <blockquote class="founder-quote">
             “L’éducation est la racine du progrès. À CPEG MARIE-ALAIN, nous cultivons les talents de demain.”
@@ -267,15 +274,6 @@
             </div>
           </div>
 
-          <div class="col-md-4">
-            <div class="cours-card h-100">
-              <div class="card-body">
-                <h5 class="cours-title"><span class="bg-3">05</span>Éducation Civique</h5>
-                <p class="cours-text">Apprentissage des règles de vie, des droits, devoirs et valeurs citoyennes.</p>
-                <p class="cours-niveau">📘 Primaire, 🎓 Collège</p>
-              </div>
-            </div>
-          </div>
 
           <div class="col-md-4">
             <div class="cours-card h-100">
@@ -287,15 +285,6 @@
             </div>
           </div>
 
-          <div class="col-md-4">
-            <div class="cours-card h-100">
-              <div class="card-body">
-                <h5 class="cours-title"><span class="bg-3">07</span>Arts Plastiques</h5>
-                <p class="cours-text">Expression artistique à travers le dessin, la peinture et les activités manuelles.</p>
-                <p class="cours-niveau">🧒 Maternelle, 📘 Primaire</p>
-              </div>
-            </div>
-          </div>
 
           <div class="col-md-4">
             <div class="cours-card h-100">
@@ -349,10 +338,45 @@
   </div>
 </section>
 
- <section class="teachers-section p-5">
+
+<section id="activites" class="timeline-section">
+  <div class="container">
+    <p class="who-we text-center">Les activités que nous organisons</p>
+    <h2 class="section-title" > Nos Activités</h2>
+    <div class="timeline">
+
+      <!-- Activité 1 -->
+      <div class="timeline-item left">
+        <div class="timeline-content">
+          <h4>Remise des Prix aux Lauréats 🏆</h4>
+          <p>Célébration des élèves méritants avec trophées et reconnaissance publique.</p>
+        </div>
+      </div>
+
+      <!-- Activité 2 -->
+      <div class="timeline-item right">
+        <div class="timeline-content">
+          <h4>Journée Culturelle 🎭</h4>
+          <p>Expositions, spectacles et valorisation des cultures locales.</p>
+        </div>
+      </div>
+
+      <!-- Activité 3 -->
+      <div class="timeline-item left">
+        <div class="timeline-content">
+          <h4>Club de Musique 🎶</h4>
+          <p>Pratique instrumentale, chant et participation à des événements artistiques.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+ <section id="admin"class="teachers-section p-5">
         <div class="container-fluid text-center">
            <p class="who-we text-center">Nos membres d'administration</p>
-            <h2 class="mb-4">Nos dirigeants</h2>
+            <h2 class="mb-4"  >Nos dirigeants</h2>
             <div class="row g-4 justify-content-center">
                 
                 <div class="col-md-6 col-lg-3">
@@ -400,7 +424,120 @@
         </div>
 </section>
 
-    <a href="{{ route('home') }}" >home</a>
+
+<section id="galerie" >
+  <div class="container">
+    <p class="who-we text-center">Galerie de nos activités</p>
+    <h2 class="section-title " >Galerie</h2>
+
+    <div class="row g-4">
+
+      <div class="col-12 col-sm-6 col-md-4">
+        <div class="overflow-hidden rounded shadow-sm">
+          <img src="{{ asset('ursule/img/galerie1.jpeg') }}" alt="Remise des prix" class="img-fluid gallery-img">
+        </div>
+      </div>
+
+      <div class="col-12 col-sm-6 col-md-4">
+        <div class="overflow-hidden rounded shadow-sm">
+          <img src="{{ asset('ursule/img/galerie2.jpeg') }}" alt="Journée culturelle" class="img-fluid gallery-img">
+        </div>
+      </div>
+
+      <div class="col-12 col-sm-6 col-md-4">
+        <div class="overflow-hidden rounded shadow-sm">
+          <img src="{{ asset('ursule/img/galerie3.jpeg') }}" alt="Club de musique" class="img-fluid gallery-img">
+        </div>
+      </div>
+
+      <div class="col-12 col-sm-6 col-md-4">
+        <div class="overflow-hidden rounded shadow-sm">
+          <img src="{{ asset('ursule/img/galerie4.jpeg') }}" alt="Spectacle" class="img-fluid gallery-img">
+        </div>
+      </div>
+
+      <div class="col-12 col-sm-6 col-md-4">
+        <div class="overflow-hidden rounded shadow-sm">
+          <img src="{{ asset('ursule/img/galerie5.jpeg') }}" alt="Exposition" class="img-fluid gallery-img">
+        </div>
+      </div>
+
+      <div class="col-12 col-sm-6 col-md-4">
+        <div class="overflow-hidden rounded shadow-sm">
+          <img src="{{ asset('ursule/img/galerie6.jpeg') }}" alt="Concert" class="img-fluid gallery-img">
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<footer class="footer text-light  pb-4">
+  <div class="container p-3">
+    <div class="row gy-5 grop">
+
+      <!-- À propos -->
+      <div class="col-md-3">
+        <h5 class="footer-title">À propos</h5>
+        <hr class="footer-separator">
+        <p class="footer-text">
+          Nous sommes un établissement dédié à l’épanouissement des jeunes à travers l’éducation, la culture et les arts.<br><br>
+          Notre mission est de former des citoyens responsables et créatifs dans un environnement stimulant.
+        </p>
+      </div>
+
+      <div class="col-md-3">
+        <h5 class="footer-title"> Localisation</h5>
+        <hr class="footer-separator">
+        <div class="footer-map">
+          <iframe
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1982.2796390648748!2d2.3295801382923!3d6.450581963616354!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x1024a947e07ab415%3A0x744c26ef40122789!2sComplexe%20Scolaire%20Mari%C3%A9e%20Alain!5e0!3m2!1sfr!2sbj!4v1758535641742!5m2!1sfr!2sbj"
+            width="100%" height="150" style="border:0;" allowfullscreen="" loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade">
+          </iframe>
+          <p class="footer-text">
+            📍Mono, Bénin<br>
+          </p>
+          
+        </div>
+      </div>
+
+      <!-- Contact -->
+      <div class="col-md-3">
+        <h5 class="footer-title">Contact</h5>
+        <hr class="footer-separator">
+        <form>
+          <input type="text" class="form-control form-control-sm mb-3" placeholder="Nom">
+          <input type="email" class="form-control form-control-sm mb-3" placeholder="Email">
+          <textarea class="form-control form-control-sm mb-3" rows="2" placeholder="Message"></textarea>
+          <button type="submit" class="btn btn-sm btn-danger w-100">Envoyer</button>
+        </form>
+      </div>
+
+      <!-- Coordonnées -->
+      <div class="col-md-3">
+        <h5 class="footer-title">Coordonnées</h5>
+        <hr class="footer-separator">
+        <p class="footer-text d-flex flex-column gap-3">
+          <span><i class="bi bi-geo-alt-fill text-danger me-2"></i> Quartier Houégbo, Lokossa</span>
+          <span><i class="bi bi-telephone-fill text-danger me-2"></i> +229 97 00 00 00</span>
+          <span><i class="bi bi-envelope-fill text-danger me-2"></i> contact@etablissement.bj</span>
+        </p>
+      </div>
+
+    </div>
+
+    <hr class="border-light mt-5">
+    <div class="text-center small">
+      &copy; 2025 CPEG MARIE-ALAIN — Tous droits réservés.
+    </div>
+  </div>
+</footer>
+
+
+
+
+
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
 </body>
