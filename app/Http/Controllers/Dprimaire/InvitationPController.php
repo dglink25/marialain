@@ -43,6 +43,7 @@ class InvitationPController extends Controller
         //
         $request -> validate([
             'name'=> 'required|max:255',
+            'email' => 'required',
             'classe'=> 'required',
         ]);
          $plainPassword = Str::random(8);
