@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="max-w-7xl mx-auto">
-    <h1 class="text-3xl font-bold mb-6">Tableau de bord Fondateur de CPEG MARIE-ALAIN</h1>
+    <h1 class="text-3xl font-bold mb-6">Tableau de bord principal</h1>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <!-- Années académiques -->

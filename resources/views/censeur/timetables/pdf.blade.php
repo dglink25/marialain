@@ -5,10 +5,27 @@
     <title>Emploi du temps - {{ $class->name }}</title>
     <style>
         body { 
-            font-family: Arial, sans-serif; 
+            font-family: "Times New Roman", Times, serif; 
             font-size: 11px; 
             margin: 20px; 
         }
+
+        /* --- Ligne tricolore --- */
+        .tricolor-line {
+            width: 70%;
+            margin-bottom: 8px;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+        .tricolor-line td {
+            height: 3px;
+            padding: 0;
+            border: none;
+            width: 33,33%;
+        }
+        .tricolor-line .green { background-color: #008751; } /* Vert du Bénin */
+        .tricolor-line .yellow { background-color: #FCD116; } /* Jaune du Bénin */
+        .tricolor-line .red { background-color: #E8112D; } /* Rouge du Bénin */
 
         /* --- Header --- */
         .header {
@@ -41,8 +58,9 @@
         table {
             border-collapse: collapse;
             margin: auto;
-            width: 95%;
+            width: 100%;
             table-layout: fixed; /* empêche les débordements */
+            font-family: "Times New Roman", Times, serif;
         }
         th, td {
             border: 1px solid #333;
@@ -51,6 +69,7 @@
             vertical-align: middle;
             word-wrap: break-word; /* coupe le texte trop long */
             overflow: hidden;
+            font-family: "Times New Roman", Times, serif;
         }
         th { 
             background-color: #f0f0f0; 
@@ -72,14 +91,26 @@
             font-weight: bold;
             padding: 3px;
             font-size: 10px;
+            font-family: "Times New Roman", Times, serif;
         }
-        .teacher { font-size: 9px; }
+        .teacher { 
+            font-size: 9px; 
+            font-family: "Times New Roman", Times, serif;
+        }
+
+        /* Titre */
+        .title {
+            text-align: center;
+            margin-bottom: 10px;
+            font-family: "Times New Roman", Times, serif;
+        }
 
         /* --- Footer --- */
         .footer {
             margin-top: 20px;
             text-align: center;
             font-size: 11px;
+            font-family: "Times New Roman", Times, serif;
         }
 
         /* --- Pagination PDF (DOMPDF / mPDF) --- */
@@ -100,6 +131,7 @@
             text-align: center;
             font-size: 10px;
             color: #555;
+            font-family: "Times New Roman", Times, serif;
         }
     </style>
 </head>
@@ -111,6 +143,16 @@
             <img src="{{ public_path('logo.png') }}" alt="Logo gauche">
         </div>
         <div class="school-info">
+            <!-- Ligne tricolore ajoutée ici avec un tableau pour meilleur support PDF -->
+            
+            <table class="tricolor-line">
+                <tr>
+                    <td class="green"></td>
+                    <td class="yellow"></td>
+                    <td class="red"></td>
+                </tr>
+            </table>
+           
             <div class="bold">REPUBLIQUE DU BENIN</div>
             <div>MINISTERE DES ENSEIGNEMENTS SECONDAIRE, TECHNIQUE ET DE LA FORMATION PROFESSIONNELLE</div>
             <div>DIRECTION DEPARTEMENTALE DES ENSEIGNEMENTS SECONDAIRE, TECHNIQUE ET DE LA FORMATION PROFESSIONNELLE DE L'ATLANTIQUE</div>
@@ -122,7 +164,7 @@
     </div>
 
     <!-- TITRE -->
-    <h2 style="text-align:center; margin-bottom:10px;">Emploi du temps - {{ $class->name }}</h2>
+    <h2 class="title"><u>Emploi du temps - {{ $class->name }}</u></h2>
         <br>
     <!-- TABLEAU -->
     <table>

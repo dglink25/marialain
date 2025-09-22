@@ -21,13 +21,18 @@ class User extends Authenticatable
         'birth_date',
         'birth_place',
         'nationality',
-        'id_card',
-        'birth_certificate',
-        'diploma',
+        'profile_photo',
+
+        // fichiers PDF stockés
+        'id_card_file',
+        'birth_certificate_file',
+        'diploma_file',
+        'ifu_file',
+        'rib_file',
+
+        // infos extraites
         'ifu_number',
-        'ifu',
-        'rib',
-        'rib_document',
+        'id_card_number',
     ];
 
     protected $hidden = ['password','remember_token'];
@@ -49,7 +54,8 @@ class User extends Authenticatable
         return $this->hasMany(Invitation::class,'invited_by');
     }
 
-    public function subjects() {
+    public function subject()
+    {
         return $this->belongsToMany(Subject::class, 'class_teacher_subject')
                     ->withPivot('class_id');
     }
@@ -65,7 +71,5 @@ class User extends Authenticatable
     {
         return $this->hasMany(TeacherInvitation::class, 'user_id');
     }
-
-
 
 }
