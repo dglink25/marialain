@@ -3,39 +3,67 @@
 <div>
     <!-- When there is no desire, all things are at peace. - Laozi -->
     <div class="container mx-auto py-6">
-        <h1 class="text-2xl font-bold mb-6">Liste des Classes Primaires</h1>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            @foreach($classes as $class)
-                <div class="flex flex-col items-center bg-white shadow rounded-lg p-6">
-                    <!-- Cercle avec nom -->
-                    <div class="w-32 h-32 rounded-full bg-gray-200 flex items-center justify-center mb-4">
-                        <span class="text-gray-700 font-semibold">{{ $class->name }}</span>
-                    </div>
-
-                    <!-- Boutons -->
-                    <div class="flex flex-col space-y-2 w-full">
-                        <a href="#"
-                           class="bg-blue-600 text-white px-4 py-2 rounded text-center hover:bg-blue-700">
-                            Liste des élèves
-                        </a>
-
-                        <a href="#"
-                           class="bg-green-600 text-white px-4 py-2 rounded text-center hover:bg-green-700">
-                            Voir emploi du temps
-                        </a>
-
-                        <a href="#"
-                           class="bg-purple-600 text-white px-4 py-2 rounded text-center hover:bg-purple-700">
-                            Liste des enseignants
-                        </a>
-                    </div>
-                </div>
-            @endforeach
-        </div>
-        <a href="#"
-                           class="bg-blue-600 text-white px-4 py-2 rounded text-center hover:bg-blue-700">
+        <div class="haut" style="display: flex; justify-content: space-between; align-items: center;">
+        <h1 class="text-2xl font-bold mb-6">Liste des classes du Primaire</h1>
+        <a href="#ajouter" 
+                          class="bg-blue-600 text-white px-4 py-2 rounded text-center hover:bg-blue-700 ">
                             Ajouter une classe
             </a>
+
+        </div>
+        
+        <table class="min-w-full bg-white shadow-md rounded-lg overflow-hidden" style="margin-top: 30px ;">
+    <thead class="bg-orange-100 " >
+        <tr>
+            <th class="px-4 py-2 text-left">N</th>
+            <th class="px-4 py-2 text-left">Classe</th>
+            <th class="px-4 py-2 text-left">Enseignant</th>
+            <th class="px-4 py-2 text-left">Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach($classes as $index => $class)
+            <tr class="border-b">
+                <td class="px-4 py-2">{{ $index + 1 }}</td>
+                <td class="px-4 py-2 font-semibold text-gray-800">{{ $class->name }}</td>
+                <td class="px-4 py-2">{{ $class->teacher?->name ?? 'Non assigné' }}</td>
+                <td class="px-4 py-2 flex space-x-2">
+                    <!-- Voir -->
+                    <a href="{{ route('primaire.classe.showclass', $class->id) }}" title="Voir" class="text-blue-600 hover:text-blue-800">
+                        <i class="fas fa-eye"></i>
+                    </a>
+                    <!-- Éditer -->
+                    <a href="#" title="Éditer" class="text-green-600 hover:text-green-800">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <!-- Supprimer -->
+                    <form action="#" method="POST" onsubmit="return confirm('Confirmer la suppression ?')">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" title="Supprimer" class="text-red-600 hover:text-red-800">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+        @endforeach
+    </tbody>
+</table>
+
+        
 </div>
+<div id="ajouter">
+     <h1 class="text-2xl font-bold mb-6">Ajouter une classe</h1>
+    <form action="{{ route('primaire.classe.store') }}" method="POST">
+        @csrf
+        <div class="mb-4">
+            <label for="name" class="block text-sm font-medium text-gray-700">Nom de la classe</label>
+            <input type="text" name="name" id="name" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200">
+            
+        </div>
+        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Ajouter</button>
+    </form>
+
+</div>
+
 @endsection

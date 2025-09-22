@@ -4,10 +4,16 @@ namespace App\Http\Controllers\Dprimaire;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use App\Models\Classe;
-use App\Models\AcademicYear;
-use Barryvdh\DomPDF\Facade\Pdf; // Import du PDF
-class ClassesprimaireController extends Controller
+use App\Models\TeacherInvitation;
+use App\Models\User;
+use App\Mail\TeacherInvitationMail;
+
+class InvitationPController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -15,10 +21,9 @@ class ClassesprimaireController extends Controller
     public function index()
     {
         //
-        $annees = AcademicYear::all();
         $classes = Classe::whereHas('entity', function($query){ $query->where('name', 'primaire'); })->with('academicYear')->get();
-        
-        return view('primaire.classe.classes', compact('classes', 'annees'));
+       
+        return view('primaire.enseignants.inviter', compact('classes'));
     }
 
     /**
@@ -27,6 +32,7 @@ class ClassesprimaireController extends Controller
     public function create()
     {
         //
+        return view('primaire.enseignants.inviter');
     }
 
     /**
@@ -35,17 +41,31 @@ class ClassesprimaireController extends Controller
     public function store(Request $request)
     {
         //
-        $request-> validate([
+        $request -> validate([
             'name'=> 'required|max:255',
+            'classe'=> 'required',
+        ]);
+         $plainPassword = Str::random(8);
 
+        $user = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($plainPassword),
+            'role_id' => 6,
         ]);
-        $annee = AcademicYear:: where('active', '1')->value('id');
-        Classe::create([
-            'name' => $request-> name,
-            'entity_id' => 2,
-            'academic_year_id' => $annee
+
+        $invitation = TeacherInvitation::create([
+            'user_id' => $user->id,
+            'name'  => $request->name,   
+            'email' => $request->email, 
+            'token' => Str::random(32),
+            'censeur_id' => Auth::id(),
         ]);
-        return redirect()-> route('primaire.classe.classes')-> with('success', 'Classe ajoutée avec succes');
+
+        Mail::to($user->email)->send(new TeacherInvitationMail($invitation, $plainPassword));
+
+        return redirect()->route('primaire.enseignants.enseignants')->with('success', 'Invitation envoyée à '.$user->email);
+        
     }
 
     /**
@@ -54,10 +74,6 @@ class ClassesprimaireController extends Controller
     public function show(string $id)
     {
         //
-        $class = Classe::with(['students' => function($query) {
-            $query->orderBy('last_name')->orderBy('first_name');
-        }])->findOrFail($id);
-        return view('primaire.classe.showclass', compact('class'));
     }
 
     /**
@@ -67,8 +83,6 @@ class ClassesprimaireController extends Controller
     {
         //
     }
-   
-
 
     /**
      * Update the specified resource in storage.

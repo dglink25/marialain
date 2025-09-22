@@ -14,12 +14,15 @@ class primaryteacherController extends Controller
      * Display a listing of the resource.
      */
     public function index()
-    {
-        //
-       $teachers = User::whereHas('role', function ($query) {$query->where('name', 'teacher');})->get();
-       $class = Classe::whereHas('entity', function($query){ $query->where('name', 'primaire'); })->with('academicYear')->get();
-            return view('primaire.enseignants.enseignants', compact('teachers', 'class'));
-    }
+{
+    // Récupère tous les enseignants du primaire
+    $teachers = User::whereHas('role', function ($query) {
+        $query->where('name', 'teacher');
+    })->with('classePrimaire') // eager load de la classe du primaire
+      ->get();
+
+    return view('primaire.enseignants.enseignants', compact('teachers'));
+}
 
     /**
      * Show the form for creating a new resource.
