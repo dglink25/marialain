@@ -52,6 +52,7 @@ Route::post('/primaire/enseignants/inviter', [InvitationPController::class, 'sto
 Route:: get('/primaire/ecoliers/liste', [StudentsController::class, 'index'])-> name('primaire.ecoliers.liste');
 Route::get('/primaire/ecoliers/pdf', [StudentsController::class, 'downloadPrimaireStudents'])
     ->name('primaire.ecoliers.liste.pdf');
+    Route::get('/primaire.classe.pdf', [ClassesprimaireController::class, 'downloadPrimaireStudents'])-> name('primaire.classe.pdf');
 Route::get('/', function () {
     return view('accueil');
 })->name('accueil');
