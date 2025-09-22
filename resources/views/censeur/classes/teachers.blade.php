@@ -3,10 +3,9 @@
 @section('content')
 <div class="container py-5">
     <!-- Titre -->
-    <h3 class="text-center text-primary fw-bold mb-4">
-    Enseignants de la classe : {{ $class->name }}
-</h3>
-
+<h2 class="text-3xl font-extrabold text-between text-black-700 mb-8">
+        Enseignants de la classe : {{ $class->name }}
+    </h2>
 
     <!-- Tableau -->
     <div class="card shadow-lg border-0">

@@ -3,10 +3,10 @@
 @section('content')
 <div class="container-fluid p-4 bg-light min-h-screen">
 
-    <h2 class="text-center text-primary mb-4"><strong>Emploi du temps - {{ $class->name }}</strong></h2>
+    <h2 class="text-between text-dark mb-4"><strong>Emploi du temps - {{ $class->name }}</strong></h2>
 
     <!-- Bouton pour afficher le modal -->
-    <div class="d-flex justify-content-center mb-4">
+    <div class="d-flex justify-content-end mb-4">
         <button type="button" class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#addCourseModal">
             <i class="bi bi-plus-circle me-2"></i>Ajouter un cours
         </button>
@@ -14,10 +14,10 @@
 
     <!-- Modal Bootstrap pour l'ajout de cours -->
     <div class="modal fade" id="addCourseModal" tabindex="-1" aria-labelledby="addCourseModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-xl">
+        <div class="modal-dialog modal-md">
             <div class="modal-content">
                 <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title" id="addCourseModalLabel">Ajouter un nouveau cours</h5>
+                    <h5 class="modal-title display-7" id="addCourseModalLabel">Ajouter un nouveau cours</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -25,8 +25,8 @@
                           class="row g-3">
                         @csrf
                         
-                        <div class="col-md-4">
-                            <label class="form-label">Enseignant</label>
+                        <div class="col-md-12">
+                            <label class="form-label"><strong>Enseignant:</strong></label>
                             <select name="teacher_id" class="form-select" required>
                                 <option value="">-- Sélectionner --</option>
                                 @foreach($teachers as $t)
@@ -35,8 +35,8 @@
                             </select>
                         </div>
 
-                        <div class="col-md-4">
-                            <label class="form-label">Matière</label>
+                        <div class="col-md-12">
+                            <label class="form-label"><strong>Matière:</strong></label>
                             <select name="subject_id" class="form-select" required>
                                 <option value="">-- Sélectionner --</option>
                                 @foreach($subjects as $s)
@@ -45,8 +45,8 @@
                             </select>
                         </div>
 
-                        <div class="col-md-4">
-                            <label class="form-label">Jour</label>
+                        <div class="col-md-12">
+                            <label class="form-label"><strong>Jour:</strong></label>
                             <select name="day" class="form-select" required>
                                 <option value="">-- Sélectionner --</option>
                                 @foreach(['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'] as $d)
@@ -55,17 +55,17 @@
                             </select>
                         </div>
 
-                        <div class="col-md-4">
-                            <label class="form-label">Heure début</label>
+                        <div class="col-md-12">
+                            <label class="form-label"><strong>Heure début:</strong></label>
                             <input type="time" name="start_time" class="form-control" required>
                         </div>
 
-                        <div class="col-md-4">
-                            <label class="form-label">Heure fin</label>
+                        <div class="col-md-12">
+                            <label class="form-label"><strong>Heure fin:</strong></label>
                             <input type="time" name="end_time" class="form-control" required>
                         </div>
 
-                        <div class="col-md-4 d-flex align-items-end">
+                        <div class="col-md-12 d-flex align-items-end">
                             <button type="submit" class="btn btn-success w-100">
                                 <i class="bi bi-check-lg me-2"></i>Ajouter
                             </button>
@@ -156,9 +156,11 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <style>
-    h2.text-center.text-primary {
+    h2.text-between {
     font-size: 2.1rem;  /* augmente la taille */
 }
+
+   
 
     /* Styles personnalisés pour compléter Bootstrap */
     .table {

@@ -3,17 +3,9 @@
 @section('content')
 <div class="container mx-auto py-8">
     <!-- Titre -->
-    <h1 class="text-3xl font-extrabold text-center text-blue-700 mb-8">
+    <h2 class="text-3xl font-extrabold text-between text-black-700 mb-8">
         Élèves de la classe : {{ $class->name }}
-    </h1>
-
-    <!-- Bouton PDF -->
-    <div class="mb-6 flex justify-end">
-        <a href="{{ route('censeur.classes.students.pdf', $class->id) }}" 
-           class="bg-red-600 text-white px-5 py-2 rounded-lg shadow hover:bg-red-700 transition">
-           Télécharger PDF
-        </a>
-    </div>
+    </h2>
 
     <!-- Tableau -->
     <div class="bg-white shadow-lg rounded-xl overflow-x-auto">
@@ -56,13 +48,18 @@
             <p class="text-gray-500 p-6 text-center">Aucun élève dans cette classe.</p>
         @endif
     </div>
-
+    <br>
+    <br>
     <!-- Bouton retour -->
-    <div class="mt-6">
-        <a href="{{ route('censeur.classes.index') }}" 
-           class="bg-gray-600 text-white px-5 py-2 rounded-lg shadow hover:bg-gray-700 transition">
-           Retour
+    <div class="d-flex justify-content-between">
+        <a href="{{ route('censeur.classes.index') }}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Retour
         </a>
+        
+        <a href="{{ route('censeur.timetables.download', $class->id) }}" class="btn btn-success">
+            <i class="bi bi-download me-2"></i>Télécharger PDF
+        </a>
+    </div>
     </div>
 </div>
 @endsection
