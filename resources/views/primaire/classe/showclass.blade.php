@@ -43,7 +43,7 @@
         <div>
             <div class="flex items-center justify-between mb-6">
                 <h2 class="text-2xl font-semibold text-blue-700">Liste des élèves</h2>
-                <a href="#" 
+                <a href="{{ route('primaire.classe.pdf') }}" 
                    class="bg-green-600 text-white px-5 py-2 rounded-lg shadow hover:bg-blue-700 transition">
                    Télécharger
                 </a>

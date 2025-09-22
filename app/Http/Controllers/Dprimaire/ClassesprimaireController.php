@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Classe;
 use App\Models\AcademicYear;
 use Barryvdh\DomPDF\Facade\Pdf; // Import du PDF
+use App\Models\Student;
 class ClassesprimaireController extends Controller
 {
     /**
@@ -59,6 +60,18 @@ class ClassesprimaireController extends Controller
         }])->findOrFail($id);
         return view('primaire.classe.showclass', compact('class'));
     }
+    public function downloadPrimaireStudents()
+{
+    $students = Student::whereHas('classe.entity', function ($query) {
+        $query->where('name', 'primaire');
+    })->with('classe')->orderBy('last_name')->orderBy('first_name')->get();
+
+    // Si tu veux afficher juste "Primaire"
+    $class = (object) ['name' => 'Primaire'];
+
+    $pdf = Pdf::loadView('primaire.classe.pdf', compact('students', 'class'));
+    return $pdf->download('liste_des_eleves.pdf');
+}
 
     /**
      * Show the form for editing the specified resource.
