@@ -10,6 +10,24 @@
         </div>
     @endif
 
+    @if($errors->any())
+        <div class="p-4 mb-4 text-red-800 bg-red-200 rounded">
+            <ul class="list-disc pl-5">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
+    @if(isset($error))
+        <div class="p-3 mb-4 text-sm text-red-700 bg-red-100 rounded-lg">
+            {{ $error }}
+        </div>
+    @endif
+
+
+
     <form method="POST" action="{{ route('censeur.invitations.send') }}" class="mb-6">
         @csrf
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">

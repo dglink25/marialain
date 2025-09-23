@@ -37,11 +37,27 @@
         <li class="nav-item"><a class="nav-link" href="#a-propos">À propos</a></li>
         <li class="nav-item"><a class="nav-link" href="#programmes">Programmes</a></li>
         <li class="nav-item"><a class="nav-link" href="#cours">Cours</a></li>
+<<<<<<< HEAD
+=======
+
+        <li class="nav-item"><a class="nav-link" href="#activites">Activités</a></li>
+        <li class="nav-item"><a class="nav-link" href="#admin">Administration</a></li>
+        <li class="nav-item"><a class="nav-link" href="#galerie">Galerie</a></li>
+      </ul>
+    </div>
+    <div class="d-none d-lg-block">
+        <a href="{{ route('students.create') }}" class="btn btn-orange ms-4">S'inscrire</a>
+<!-- 
+>>>>>>> 00716f68044d81f210a9471f8b687e0882439ee8
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
             Ressources
           </a>
+<<<<<<< HEAD
           <ul class="dropdown-menu">
+=======
+           <ul class="dropdown-menu">
+>>>>>>> 00716f68044d81f210a9471f8b687e0882439ee8
             <li><a class="dropdown-item" href="#activites">Activités</a></li>
             <li><a class="dropdown-item" href="#admin">Administration</a></li>
             <li><a class="dropdown-item" href="#galerie">Galerie</a></li>
@@ -50,8 +66,14 @@
         <li class="nav-item">
         <a href="#apropos" class="btn btn-orange ms-4">S'inscrire</a>
         </li>
+<<<<<<< HEAD
       </ul>
       
+=======
+      </ul>-->
+      
+
+>>>>>>> 00716f68044d81f210a9471f8b687e0882439ee8
     </div>
     
   </div>
@@ -533,12 +555,6 @@
     </div>
   </div>
 </footer>
-
-
-
-
-
-
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
 </body>
 </html>

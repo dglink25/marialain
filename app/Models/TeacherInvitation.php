@@ -31,4 +31,8 @@ class TeacherInvitation extends Model
     public function censeur() {
         return $this->belongsTo(User::class, 'censeur_id');
     }
+    public function academicYear()
+    {
+        return $this->belongsTo(AcademicYear::class);
+    }
 }

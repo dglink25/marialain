@@ -1,69 +1,83 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container mx-auto py-6">
-    <h1 class="text-2xl font-bold mb-6">
+<div class="container py-5">
+    <!-- Titre -->
+<h2 class="text-3xl font-extrabold text-between text-black-700 mb-8">
         Enseignants de la classe : {{ $class->name }}
-    </h1>
+    </h2>
 
-    <div class="bg-white shadow-md rounded-lg p-6 overflow-x-auto">
-        @if($teachers->count() > 0)
-            <table class="min-w-full border border-gray-300 text-sm">
-                <thead class="bg-gray-100">
-                    <tr>
-                        <th>N°</th>
-                        <th class="border px-4 py-2 text-left">Nom & Prénoms</th>
-                        <th>Sexe</th>
-                        <th class="border px-4 py-2 text-left">Email</th>
-                        <th>Téléphone</th>
-                        <th class="border px-4 py-2 text-left">Matières enseignées</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($teachers as $data)
-                        <tr class="hover:bg-gray-50">
-                            <td>{{ $loop->iteration }}</td> {{-- Numéro automatique --}}
-                            <td class="border px-4 py-2 font-semibold text-gray-700">
-                                {{ $data['teacher']->name }}
-                            </td>
-                            <td class="border px-4 py-2 text-gray-600">
-                                {{ $data['teacher']->gendre ?? '--' }}
-                            </td>
-                            <td class="border px-4 py-2 text-gray-600">
-                                {{ $data['teacher']->email ?? '--' }}
-                            </td>
-                            <td class="border px-4 py-2 text-gray-600">
-                                {{ $data['teacher']->phone ?? '--' }}
-                            </td>
-                            <td class="border px-4 py-2 text-gray-600">
-                                {{ $data['subjects']->join(', ') }}
-                            </td>
-                            <td class="border px-4 py-2 text-gray-600">
-                                <a href="{{ route('enseignants.show', $data['teacher']->id) }}" 
-                                class="text-blue-600 underline hover:text-blue-800">
-                                Voir le profil
-                                </a>
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        @else
-            <p class="text-gray-500">Aucun enseignant trouvé pour cette classe.</p>
-        @endif
+    <!-- Tableau -->
+    <div class="card shadow-lg border-0">
+        <div class="card-body p-0">
+            @if($teachers->count() > 0)
+                <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+                    <table class="table table-bordered table-hover align-middle mb-0 text-center">
+                        <thead class="table-primary sticky-top">
+                            <tr>
+                                <th scope="col">N°</th>
+                                <th scope="col">Nom & Prénoms</th>
+                                <th scope="col">Sexe</th>
+                                <th scope="col">Email</th>
+                                <th scope="col">Téléphone</th>
+                                <th scope="col">Matières enseignées</th>
+                                <th scope="col">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($teachers as $data)
+                                <tr>
+                                    <td>{{ $loop->iteration }}</td>
+                                    <td class="fw-semibold text-dark">{{ $data['teacher']->name }}</td>
+                                    <td>{{ $data['teacher']->gendre ?? '--' }}</td>
+                                    <td class="text-break">{{ $data['teacher']->email ?? '--' }}</td>
+                                    <td>{{ $data['teacher']->phone ?? '--' }}</td>
+                                    <td>{{ $data['subjects']->join(', ') }}</td>
+                                    <td>
+                                        <a href="{{ route('enseignants.show', $data['teacher']->id) }}" 
+                                           class="btn btn-sm btn-outline-primary">
+                                           <i class="bi bi-person-lines-fill"></i> Voir le profil
+                                        </a>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @else
+                <p class="text-muted text-center p-4 mb-0">
+                    Aucun enseignant trouvé pour cette classe.
+                </p>
+            @endif
+        </div>
     </div>
 
-    <div class="mt-4">
-        <a href="{{ route('enseignants.export', $class->id) }}" 
-            class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
-            Télécharger PDF
+    <!-- Boutons -->
+    <div class="d-flex justify-content-between mt-4">
+        <a href="{{ route('censeur.classes.index') }}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Retour
         </a>
 
-        <a href="{{ route('censeur.classes.index') }}" 
-           class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700">
-           Retour
+        <a href="{{ route('enseignants.export', $class->id) }}" class="btn btn-success">
+            <i class="bi bi-download"></i> Télécharger PDF
         </a>
     </div>
 </div>
+
+<!-- Style personnalisé -->
+<style>
+    .table thead th {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+    }
+    .table td, .table th {
+        vertical-align: middle;
+    }
+
+    h3.text-center.text-primary {
+    font-size: 2.1rem;
+}
+
+</style>
 @endsection

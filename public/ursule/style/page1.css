@@ -256,7 +256,11 @@ background-color: #ff1e00;
   }
   .carousel-control-prev,
   .carousel-control-next {
+<<<<<<< HEAD
     display: none !important;
+=======
+    display: none;
+>>>>>>> 00716f68044d81f210a9471f8b687e0882439ee8
   }
   .main-img {
   height: 300px;
@@ -280,12 +284,15 @@ background-color: #ff1e00;
 
 
 }
+<<<<<<< HEAD
 @media (max-width: 768px) {
   .carousel-control-prev,
   .carousel-control-next {
     display: none !important;
   }
 }
+=======
+>>>>>>> 00716f68044d81f210a9471f8b687e0882439ee8
 
 #programmes{
   background-image: url("/ursule/img/activities-bg.jpg"); /* Remplace par ton chemin */
