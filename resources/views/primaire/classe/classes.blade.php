@@ -3,8 +3,9 @@
 <div>
     <!-- When there is no desire, all things are at peace. - Laozi -->
     <div class="container mx-auto py-6">
+        <h1 class="text-2xl font-bold mb-6">Annéee académique : {{ $annee_academique -> name}} </h1> 
         <div class="haut" style="display: flex; justify-content: space-between; align-items: center;">
-        <h1 class="text-2xl font-bold mb-6">Liste des classes du Primaire</h1>
+        <h1 class="text-1xl font-bold mb-6">Liste des classes du Primaire</h1>
         </div>
         
         <table class="min-w-full bg-white shadow-md rounded-lg overflow-hidden" style="margin-top: 30px ;">

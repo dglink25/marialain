@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Student;
 use App\Models\Classe;
 use Barryvdh\DomPDF\Facade\Pdf; // Import du PDF
+use App\Models\AcademicYear;
 
 class StudentsController extends Controller
 {
@@ -16,6 +17,7 @@ class StudentsController extends Controller
     public function index(Request $request)
     {
         //
+        $annee_academique = AcademicYear::where('active', 1)-> first();
         $students = Student::whereHas('classe', function ($query) {
             $query->whereHas('entity', function ($q) {
                 $q->where('name', 'primaire');
@@ -25,7 +27,7 @@ class StudentsController extends Controller
             $students = $students->sortBy($request->sort);
         }
 
-        return view('primaire.ecoliers.liste', compact('students'));
+        return view('primaire.ecoliers.liste', compact('students', 'annee_academique'));
     }
     public function downloadPrimaireStudents()
 {

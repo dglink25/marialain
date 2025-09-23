@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Classe;
 use App\Models\AcademicYear;
 use Barryvdh\DomPDF\Facade\Pdf; // Import du PDF
+
 use App\Models\Student;
 class ClassesprimaireController extends Controller
 {
@@ -16,10 +17,10 @@ class ClassesprimaireController extends Controller
     public function index()
     {
         //
-        $annees = AcademicYear::all();
+        $annee_academique = AcademicYear::where('active', 1)-> first();
         $classes = Classe::whereHas('entity', function($query){ $query->where('name', 'primaire'); })->with('academicYear')->get();
         
-        return view('primaire.classe.classes', compact('classes', 'annees'));
+        return view('primaire.classe.classes', compact('classes', 'annee_academique'));
     }
 
     /**
@@ -60,18 +61,14 @@ class ClassesprimaireController extends Controller
         }])->findOrFail($id);
         return view('primaire.classe.showclass', compact('class'));
     }
-    public function downloadPrimaireStudents()
+public function downloadClassStudents($id)
 {
-    $students = Student::whereHas('classe.entity', function ($query) {
-        $query->where('name', 'primaire');
-    })->with('classe')->orderBy('last_name')->orderBy('first_name')->get();
-
-    // Si tu veux afficher juste "Primaire"
-    $class = (object) ['name' => 'Primaire'];
-
+     $class = Classe:: FindorFail($id);
+    $students = Student::where('id', $class -> id)-> orderBy('last_name')-> orderBy('First_name')-> get();
     $pdf = Pdf::loadView('primaire.classe.pdf', compact('students', 'class'));
-    return $pdf->download('liste_des_eleves.pdf');
+    return $pdf -> stream('liste_{$class-> name}.pdf');
 }
+
 
     /**
      * Show the form for editing the specified resource.

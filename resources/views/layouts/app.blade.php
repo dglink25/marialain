@@ -41,7 +41,7 @@
                         <a href="{{ route('directeur.dashboard') }}" class="flex items-center px-4 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-700">
                             <i class="fa fa-chart-line w-5 text-gray-500"></i> <span class="ml-3">Dashboard Directeur</span>
                         </a>
-                        <a href="{{ route('primaire.classes') }}" class="flex items-center px-4 py-2 hover:bg-blue-50 hover:text-blue-700">
+                        <a href="{{ route('primaire.classe.classes') }}" class="flex items-center px-4 py-2 hover:bg-blue-50 hover:text-blue-700">
                             <i class="fa fa-school w-5 text-gray-500"></i> <span class="ml-3">Gestion des classes</span>
                         </a>
                         <a href="{{ route('primaire.enseignants.enseignants') }}" class="flex items-center px-4 py-2 hover:bg-blue-50 hover:text-blue-700">
