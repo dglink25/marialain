@@ -213,19 +213,6 @@
 
         <!-- Main Content -->
         <div class="flex-1 flex flex-col md:ml-64">
-            <!-- Top Navigation Bar -->
-            <header class="bg-white shadow sticky top-0 z-50">
-                <div class="px-4 py-3 flex justify-between items-center ">
-                    <!-- Mobile menu button -->
-                    <button id="mobile-menu-button" class="md:hidden p-2 text-gray-600 rounded-lg hover:bg-gray-100">
-                        <i class="fas fa-bars"></i>
-                    </button>
-                    
-                </div>
-                
-                
-                
-            </header>
 
             <!-- Mobile Bottom Navigation -->
             <nav class="mobile-nav md:hidden grid grid-cols-4">
