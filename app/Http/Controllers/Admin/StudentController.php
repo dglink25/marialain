@@ -71,7 +71,8 @@ class StudentController extends Controller{
         var_dump($data['age']);
 
         try {
-            
+            $activeYear = AcademicYear::where('active', true)->firstOrFail();
+
             $studentData = [
                 'first_name'            => $data['first_name'],
                 'last_name'             => $data['last_name'],
@@ -79,6 +80,7 @@ class StudentController extends Controller{
                 'birth_place'           => $data['birth_place'],
                 'gender'                => $data['gender'],
                 'entity_id'             => $data['entity_id'],
+                'academic_year_id'      => $activeYear->id,
                 'class_id'              => $data['classe_id'],
                 'birth_certificate'     => $data['birth_certificate'] ?? null,
                 'vaccination_card'      => $data['vaccination_card'] ?? null,
@@ -230,10 +232,19 @@ class StudentController extends Controller{
     }
 
     public function index(Request $request){
+        // Récupérer l'année académique active
+        $activeYear = AcademicYear::where('active', true)->first();
 
+        // Construire la requête de base
         $query = Student::with('entity', 'classe')
             ->where('is_validated', 1);
 
+        // Filtrer par année active si elle existe
+        if ($activeYear) {
+            $query->where('academic_year_id', $activeYear->id);
+        }
+
+        // Filtres optionnels
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
@@ -261,6 +272,7 @@ class StudentController extends Controller{
 
         return view('admin.students.index', compact('students', 'entities', 'classes'));
     }
+
 
     public function inscription(){
         if (!$this->checkActiveYear() instanceof AcademicYear) {

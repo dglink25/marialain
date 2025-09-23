@@ -12,7 +12,7 @@
 
         <!-- Photo -->
         <div class="flex flex-col items-center">
-            <form action="{{ route('profile.updatePhoto') }}" method="POST" enctype="multipart/form-data">
+            <form action="{{ route('profile.photo') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <label class="cursor-pointer">
                     <input type="file" name="profile_photo" class="hidden" onchange="previewImage(event); this.form.submit()">
