@@ -1,6 +1,5 @@
 <!doctype html>
 <html lang="fr">
-
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -25,12 +24,6 @@
                 <a href="{{ route('home') }}" class="block px-3 py-2 rounded hover:bg-blue-50">Accueil</a>
                 <a href="{{ route('students.create') }}" class="block px-3 py-2 rounded hover:bg-blue-50">Inscription en ligne</a>
 
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>CPEG MARIE-ALAIN</title>
-
-
 
                 @if(auth()->check())
                     <a href="{{ route('profile.edit') }}" class="block px-4 py-2 hover:bg-gray-100">Mon Profil</a>
@@ -38,12 +31,6 @@
                     <a href="{{ route('archives.index') }}" class="block px-4 py-2 hover:bg-gray-100">
                         Consulter les archives
                     </a>
-
-    <!-- Tailwind + Flowbite -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://unpkg.com/flowbite@1.6.5/dist/flowbite.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
 
                     @switch(optional(auth()->user()->role)->name)
                         @case('directeur_primaire')
@@ -110,20 +97,6 @@
                 @yield('content')
             </main>
             </div>
-
-    <!-- Google Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-    </style>
-</head>
-<body class="antialiased bg-gray-50 text-gray-800">
-<div class="flex min-h-screen">
-    <!-- Sidebar -->
-    <aside id="sidebar" class="w-64 bg-white border-r border-gray-200 hidden md:block shadow-sm">
-        <div class="p-6 flex items-center gap-3 border-b">
-            <img src="{{ asset('logo.png') }}" class="h-12" alt="Logo" />
-            <span class="font-bold text-lg text-gray-800">CPEG MARIE-ALAIN</span>
 
         </div>
 

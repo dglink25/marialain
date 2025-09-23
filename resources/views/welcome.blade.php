@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<<<<<<< HEAD
+
 <header class="bg-white shadow p-6">
     <h1 class="text-3xl font-bold text-[#2c3e50]">Bienvenue Valentine !</h1>
     <p class="text-[#7f8c8d] mt-2">
@@ -45,7 +45,7 @@
                 <li>Gestion des recrutements</li>
                 <li>Inscription & suivi des élèves</li>
                 <li>Gestion des classes et entités</li>
-=======
+
 <div class="min-h-screen flex flex-col items-center justify-center bg-gray-50 px-6 py-12">
 
     <!-- Titre principal -->
@@ -72,7 +72,7 @@
                     <i class="fas fa-chalkboard-teacher text-green-500 text-xl"></i>
                     Gestion des classes et entités
                 </li>
->>>>>>> origin/doriane-branch
+
             </ul>
         </div>
 

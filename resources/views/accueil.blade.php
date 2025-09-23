@@ -45,12 +45,12 @@
     </div>
     <div class="d-none d-lg-block">
         <a href="{{ route('students.create') }}" class="btn btn-orange ms-4">S'inscrire</a>
-
+<!-- 
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
             Ressources
           </a>
-          <ul class="dropdown-menu">
+           <ul class="dropdown-menu">
             <li><a class="dropdown-item" href="#activites">Activités</a></li>
             <li><a class="dropdown-item" href="#admin">Administration</a></li>
             <li><a class="dropdown-item" href="#galerie">Galerie</a></li>
@@ -59,7 +59,7 @@
         <li class="nav-item">
         <a href="#apropos" class="btn btn-orange ms-4">S'inscrire</a>
         </li>
-      </ul>
+      </ul>-->
       
 
     </div>
@@ -543,12 +543,6 @@
     </div>
   </div>
 </footer>
-
-
-
-
-
-
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
 </body>
 </html>

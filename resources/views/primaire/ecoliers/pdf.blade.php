@@ -4,11 +4,37 @@
     <meta charset="utf-8">
     <title>Liste des élèves</title>
     <style>
+         /* Styles de base */
         body {
-            font-family: DejaVu Sans, sans-serif;
+            font-family: "Times New Roman", Times, serif;
             font-size: 12px;
-            margin: 30px 40px; /* marges adaptées pour que rien ne se coupe */
+            margin: 0;
+            padding: 20px;
+            position: relative;
         }
+        
+        .container {
+            width: 100%;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        /* --- Ligne tricolore --- */
+        .tricolor-line {
+            width: 50%;
+            margin: 0 auto 8px auto;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+        .tricolor-line td {
+            height: 3px;
+            padding: 0;
+            border: none;
+            width: 33.33%;
+        }
+        .tricolor-line .green { background-color: #008751; }
+        .tricolor-line .yellow { background-color: #FCD116; }
+        .tricolor-line .red { background-color: #E8112D; }
 
         table {
             width: 100%;
@@ -111,6 +137,15 @@
     <div class="header">
         <img src="{{ public_path('logo.png') }}" class="logo-left" alt="Logo Gauche">
         <div class="school-info">
+             <!-- Ligne tricolore ajoutée ici avec un tableau pour meilleur support PDF -->
+            
+            <table class="tricolor-line">
+                <tr>
+                    <td class="green"></td>
+                    <td class="yellow"></td>
+                    <td class="red"></td>
+                </tr>
+            </table>
             <div class="bold">REPUBLIQUE DU BENIN</div>
             <div>MINISTERE DES ENSEIGNEMENTS SECONDAIRE,<br>
                 TECHNIQUE ET DE LA FORMATION PROFESSIONNELLE</div>
