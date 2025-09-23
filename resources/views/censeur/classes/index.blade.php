@@ -2,6 +2,7 @@
 
 @section('content')
 <div class="container mx-auto py-6">
+
     <h1 class="text-2xl font-bold mb-6">Liste des Classes</h1>
 
     @if(isset($error))
@@ -10,7 +11,9 @@
         </div>
     @endif
 
-
+    <h2 class="text-3xl font-extrabold text-between text-black-700 mb-8">
+        Liste des Classes
+    </h2>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         @foreach($classes as $class)
             <div class="flex flex-col items-center bg-white shadow rounded-lg p-6">

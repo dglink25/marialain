@@ -35,6 +35,7 @@ use App\Http\Controllers\Teacher\ClassController as TeacherClassController;
 // Primaire
 use App\Http\Controllers\Dprimaire\ClassesprimaireController;
 use App\Http\Controllers\Dprimaire\primaryteacherController;
+
 use App\Http\Controllers\Dprimaire\InvitationPController;
 use App\Http\Controllers\Dprimaire\StudentsController;
 
@@ -46,8 +47,27 @@ use App\Http\Controllers\Dprimaire\StudentsController;
 | Routes publiques
 |--------------------------------------------------------------------------
 */
+
 Route::get('/', fn() => view('accueil'))->name('accueil');
 Route::get('/home', fn() => view('welcome'))->name('home');
+
+
+Route::get('/admin/entities/{entity}/classes', [EntityController::class, 'getClasses']);
+
+//primaire
+Route:: get('/primaire/classe/classes', [ClassesprimaireController::class, 'index'])-> name('primaire.classe.classes');
+Route:: post('/primaire/classe/classes', [ClassesprimaireController::class, 'store'])-> name('primaire.classe.store');
+Route:: get('/primaire/classe/showclass/{id}', [ClassesprimaireController::class, 'show'])-> name('primaire.classe.showclass');
+Route:: get('/primaire/enseignants/enseignants', [primaryteacherController::class, 'index'])-> name('primaire.enseignants.enseignants');
+Route:: get('/primaire/enseignants/inviter', [InvitationPController::class, 'index'])-> name('primaire.enseignants.inviter');
+Route::post('/primaire/enseignants/inviter', [InvitationPController::class, 'store'])-> name('primaire.enseignants.inviter.store');
+Route:: get('/primaire/ecoliers/liste', [StudentsController::class, 'index'])-> name('primaire.ecoliers.liste');
+Route::get('/primaire/ecoliers/pdf', [StudentsController::class, 'downloadPrimaireStudents'])
+    ->name('primaire.ecoliers.liste.pdf');
+Route::get('/', function () {
+    return view('accueil');
+})->name('accueil');
+
 
 // Page classes primaires
 Route::get('/admin/classes/primary/secondary_classes', function () {
