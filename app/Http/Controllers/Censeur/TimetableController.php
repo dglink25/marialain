@@ -39,9 +39,7 @@ class TimetableController extends Controller
     }
 
     public function edit($classId, $id){
-        if (!$this->checkActiveYear() instanceof AcademicYear) {
-            return $this->checkActiveYear();
-        }
+        
         $class = Classe::findOrFail($classId);
         $timetable = Timetable::findOrFail($id);
         $teachers = User::whereHas('role', fn($q) => $q->where('name','teacher'))->get();
@@ -53,9 +51,7 @@ class TimetableController extends Controller
    
 
     public function update(Request $request, $classId, $id){
-        if (!$this->checkActiveYear() instanceof AcademicYear) {
-            return $this->checkActiveYear();
-        }
+        
         $request->validate([
             'teacher_id' => 'required|exists:users,id',
             'subject_id' => 'required|exists:subjects,id',

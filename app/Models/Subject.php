@@ -4,7 +4,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 
 class Subject extends Model{
-    protected $fillable = ['name'];
+    protected $fillable = ['name','academic_year_id'];
 
     public function teachers(){
         return $this->belongsToMany(User::class, 'class_teacher_subject', 'subject_id', 'teacher_id')
@@ -12,8 +12,7 @@ class Subject extends Model{
                     ->withTimestamps();
     }
 
-    public function academicYear()
-    {
+    public function academicYear(){
         return $this->belongsTo(AcademicYear::class);
     }
 

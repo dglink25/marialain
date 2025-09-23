@@ -39,6 +39,8 @@ use App\Http\Controllers\Dprimaire\InvitationPController;
 use App\Http\Controllers\Dprimaire\StudentsController;
 
 
+
+
 /*
 |--------------------------------------------------------------------------
 | Routes publiques
@@ -106,6 +108,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard/secretaire', fn() => view('dashboards.secretaire', ['user' => auth()->user()]))->name('secretaire.dashboard');
 });
 
+Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('students/pending', [StudentController::class, 'pending'])
+        ->name('students.pending');
+});
+
 
 /*
 |--------------------------------------------------------------------------
@@ -131,16 +138,23 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
 
     // Étudiants
     Route::resource('students', StudentController::class);
-    Route::get('students/pending', [StudentValidationController::class, 'index'])->name('students.pending');
+    
     Route::post('students/{student}/validate', [StudentValidationController::class, 'validateStudent'])->name('students.validate');
     Route::get('students/list', [StudentController::class, 'listAlphabetical'])->name('students.list');
 
     // Exports
+    Route::get('students/export/pdf', [StudentController::class, 'exportPdf'])->name('students.export.pdf');
     Route::get('students/export/pdf', [StudentExportController::class, 'exportPdf'])->name('students.export.pdf');
     Route::get('students/export/excel', [StudentExportController::class, 'exportExcel'])->name('students.export.excel');
     Route::get('students/export/all-pdf', [StudentController::class, 'exportAllPdf'])->name('students.export.all.pdf');
-});
 
+    //Validation inscription en attente 
+    Route::get('students/pending', [StudentValidationController::class, 'index'])
+        ->name('students.pending');
+    Route::post('students/{student}/validate', [StudentValidationController::class, 'validateStudent'])
+        ->name('students.validate');
+
+});
 
 /*
 |--------------------------------------------------------------------------

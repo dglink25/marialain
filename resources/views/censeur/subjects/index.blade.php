@@ -2,6 +2,13 @@
 
 @section('content')
     <h1 class="text-2xl font-bold mb-4">Matières</h1>
+    @if(isset($error))
+        <div class="p-3 mb-4 text-sm text-red-700 bg-red-100 rounded-lg">
+            {{ $error }}
+        </div>
+    @endif
+
+
     <form method="POST" action="{{ route('censeur.subjects.store') }}" class="flex space-x-2 mb-6">
         @csrf
         <input type="text" name="name" placeholder="Nom de la matière" class="border p-2 rounded">

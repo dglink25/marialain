@@ -13,6 +13,7 @@ use App\Models\TeacherInvitation;
 use App\Mail\TeacherInvitationMail;
 use App\Models\AcademicYear;
 
+
 class InvitationController extends Controller{
 
     public function checkActiveYear(){
@@ -24,9 +25,25 @@ class InvitationController extends Controller{
         return $activeYear;
     }
     
-    public function index() {
-        $invitations = TeacherInvitation::with('user')->latest()->get();
-        return view('censeur.invitations.index', compact('invitations'));
+    public function index(){
+        // Récupère l'année scolaire active
+        $activeYear = AcademicYear::where('active', true)->first();
+
+        if (!$activeYear) {
+            return view('censeur.invitations.index', [
+                'invitations' => collect(),
+                'activeYear' => null,
+                'error' => "Aucune année scolaire active n’a été trouvée."
+            ]);
+        }
+
+        // Charge uniquement les invitations de cette année
+        $invitations = TeacherInvitation::with('user')
+            ->where('academic_year_id', $activeYear->id)
+            ->latest()
+            ->get();
+
+        return view('censeur.invitations.index', compact('invitations', 'activeYear'));
     }
 
     public function send(Request $request) {
@@ -34,32 +51,61 @@ class InvitationController extends Controller{
             return $this->checkActiveYear();
         }
 
-        $request->validate([
-            'name' => 'required|string',
-            'email' => 'required|email|unique:users,email',
-        ]);
+        try {
 
-        $plainPassword = Str::random(8);
+            $activeYear = AcademicYear::where('active', true)->firstOrFail();
+            // Validation des données
+            $request->validate([
+                'name'  => 'required|string',
+                'email' => 'required|email|unique:users,email',
+                'acedemic_year_id' => $activeYear,
+            ]);
 
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($plainPassword),
-            'role_id' => 6,
-        ]);
+            // Génération mot de passe aléatoire
+            $plainPassword = Str::random(8);
 
-        $invitation = TeacherInvitation::create([
-            'user_id' => $user->id,
-            'name'  => $request->name,   
-            'email' => $request->email, 
-            'token' => Str::random(32),
-            'censeur_id' => Auth::id(),
-        ]);
+            // Création de l'utilisateur
+            $user = User::create([
+                'name'     => $request->name,
+                'email'    => $request->email,
+                'password' => Hash::make($plainPassword),
+                'role_id'  => 6,
+            ]);
 
-        Mail::to($user->email)->send(new TeacherInvitationMail($invitation, $plainPassword));
+            // Création de l'invitation
+            $invitation = TeacherInvitation::create([
+                'user_id'    => $user->id,
+                'name'       => $request->name,   
+                'email'      => $request->email, 
+                'token'      => Str::random(32),
+                'censeur_id' => Auth::id(),
+            ]);
 
-        return back()->with('success', 'Invitation envoyée à '.$user->email);
+            // Envoi de l'email
+            Mail::to($user->email)->send(new TeacherInvitationMail($invitation, $plainPassword));
+
+            return back()->with('success', 'Invitation envoyée à '.$user->email);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Si la validation échoue
+            return redirect()->back()
+                            ->withErrors($e->validator)
+                            ->withInput();
+
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Erreurs liées à la base de données
+            return back()->with('error', 'Erreur base de données : '.$e->getMessage());
+
+        } catch (\Swift_TransportException $e) {
+            // Erreurs liées à l'envoi de mail
+            return back()->with('error', 'Impossible d\'envoyer l\'email : '.$e->getMessage());
+
+        } catch (\Exception $e) {
+            // Toute autre erreur
+            return back()->with('error', 'Une erreur est survenue : '.$e->getMessage());
+        }
     }
+
 
     public function accept($token) {
         if (!$this->checkActiveYear() instanceof AcademicYear) {

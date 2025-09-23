@@ -17,21 +17,32 @@ class ClassController extends Controller{
         return $activeYear;
     }
 
-    public function index(Request $request)
-    {
+
+
+    public function index(Request $request){
+        // Récupérer l'année active
+        $activeYear = AcademicYear::where('active', true)->firstOrFail();
+
+        // Toutes les entités pour le filtre
         $entities = Entity::all();
+
+        // Pour afficher l'année active dans le filtre ou ailleurs
         $years = AcademicYear::where('active', 1)->get();
 
-        $query = Classe::with('entity', 'academicYear');
+        // Récupérer les classes avec relations
+        $query = Classe::with('entity', 'academicYear')
+                    ->where('academic_year_id', $activeYear->id); // Filtrer par année active
 
-        if ($request->has('entity_id') && $request->entity_id != '') {
+        // Filtre par entité si sélectionnée
+        if ($request->filled('entity_id')) {
             $query->where('entity_id', $request->entity_id);
         }
 
         $classes = $query->paginate(10)->withQueryString();
 
-        return view('admin.classes.index', compact('classes', 'entities', 'years'));
+        return view('admin.classes.index', compact('classes', 'entities', 'years', 'activeYear'));
     }
+
 
     public function edit($id){
         if (!$this->checkActiveYear() instanceof AcademicYear) {

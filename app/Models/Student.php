@@ -17,6 +17,7 @@ class Student extends Model{
         'gender',
         'num_educ',
         'entity_id',
+        'academic_year_id',
         'class_id',
         'birth_certificate',
         'vaccination_card',
@@ -29,6 +30,8 @@ class Student extends Model{
         'is_validated',
         'amount_paid',
     ];
+
+    
 
 
     public function entity() {
@@ -60,8 +63,7 @@ class Student extends Model{
         return $this->remaining_fees <= 0;
     }
 
-    public function academicYear()
-    {
+    public function academicYear(){
         return $this->belongsTo(AcademicYear::class);
     }
 }

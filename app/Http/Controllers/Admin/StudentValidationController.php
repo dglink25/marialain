@@ -23,8 +23,15 @@ class StudentValidationController extends Controller{
 
     // Liste des élèves non validés
     public function index(){
-        $students = Student::where('is_validated', false)->get();
-        return view('admin.students.pending', compact('students'));
+        // Récupérer l'année active
+        $activeYear = AcademicYear::where('active', true)->firstOrFail();
+
+        // Récupérer les élèves non validés de l'année active
+        $students = Student::where('is_validated', false)
+                        ->where('academic_year_id', $activeYear->id)
+                        ->get();
+
+        return view('admin.students.pending', compact('students', 'activeYear'));
     }
 
     // Validation et envoi du mail avec reçu
