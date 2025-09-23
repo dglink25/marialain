@@ -5,4 +5,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class Entity extends Model{
     protected $fillable = ['slug', 'name'];
+    
+    public function classes()
+    {
+        return $this->hasMany(Classe::class);
+    }
+
+
 }

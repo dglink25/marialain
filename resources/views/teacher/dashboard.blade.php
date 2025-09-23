@@ -28,17 +28,7 @@
             </div>
         </a>
 
-        <!-- Voir emploi du temps -->
-        <a href="{{ route('teacher.classes') }}?timetable=1"
-           class="flex items-center justify-center bg-white shadow-md rounded-xl p-6 hover:bg-green-50 transform transition hover:-translate-y-1 hover:shadow-xl">
-            <div class="text-center">
-                <div class="w-16 h-16 mx-auto mb-3 flex items-center justify-center rounded-full bg-green-100 text-green-600">
-                    <strong>2</strong>
-                </div>
-                <h2 class="text-xl font-semibold text-gray-800">Emploi du temps</h2>
-                <p class="text-sm text-gray-600 mt-1">Consulter rapidement vos horaires</p>
-            </div>
-        </a>
+    
     </div>
 </div>
 @endsection

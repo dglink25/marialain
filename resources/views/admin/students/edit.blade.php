@@ -122,14 +122,6 @@
                 class="border rounded p-2 w-full" required>
         </div>
 
-        <!-- Frais de scolarité -->
-        <div class="mb-3">
-            <label for="school_fees" class="block text-sm font-medium">Frais de scolarité</label>
-            <input type="number" name="school_fees" id="school_fees" step="1"
-                value="{{ old('school_fees', $student->school_fees) }}" 
-                class="border rounded p-2 w-full" required>
-        </div>
-
         <!-- Téléphone du parent -->
         <div class="mb-3">
             <label for="parent_phone" class="block text-sm font-medium">Téléphone du parent</label>

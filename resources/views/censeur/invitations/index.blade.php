@@ -22,22 +22,32 @@
     <table class="w-full border">
         <thead class="bg-gray-200">
             <tr>
+                <th>N°</th>
                 <th class="p-2">Nom</th>
                 <th class="p-2">Email</th>
                 <th class="p-2">Statut</th>
+                <th>Date d'invitation</th>
+                <th>Date de reponse</th>
             </tr>
         </thead>
         <tbody>
             @foreach($invitations as $inv)
                 <tr class="border-b">
-                    <td class="p-2">{{ $inv->user->name }}</td>
-                    <td class="p-2">{{ $inv->user->email }}</td>
-                    <td class="p-2">
+                    <td class="border px-4 py-2 text-gray-600">{{ $loop->iteration }}</td> 
+                    <td class="border px-4 py-2 text-gray-600">{{ $inv->user->name }}</td>
+                    <td class="border px-4 py-2 text-gray-600">{{ $inv->user->email }}</td>
+                    <td class="border px-4 py-2 text-gray-600">
                         @if($inv->accepted)
                             Acceptée
                         @else
                             En attente
                         @endif
+                    </td>
+                    <td class="border px-4 py-2 text-gray-600">{{ $inv->user->created_at }}</td>
+                    <td>
+                        {{ $inv->accepted_at 
+                            ? \Carbon\Carbon::parse($inv->accepted_at)->format('d/m/Y H:i') 
+                            : '--' }}
                     </td>
                 </tr>
             @endforeach
