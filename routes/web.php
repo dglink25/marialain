@@ -52,6 +52,11 @@ use App\Http\Controllers\Dprimaire\StudentsController;
 */
 
 
+Route::get('/', fn() => view('accueil'))->name('accueil');
+Route::get('/home', fn() => view('welcome'))->name('home');
+
+
+
 Route::get('/admin/entities/{entity}/classes', [EntityController::class, 'getClasses']);
 
 //primaire
@@ -68,8 +73,10 @@ Route::get('/', function () {
     return view('accueil');
 })->name('accueil');
 
+
 Route::get('/', fn() => view('accueil'))->name('accueil');
 Route::get('/home', fn() => view('welcome'))->name('home');
+
 
 
 // Page classes primaires

@@ -3,10 +3,6 @@
 @section('content')
 <div class="container mx-auto py-6">
 
-    <h2 class="text-3xl font-extrabold text-between text-black-700 mb-8">
-        Liste des Classes
-    </h2>
-
     <h1 class="text-2xl font-bold mb-6">Liste des Classes</h1>
 
     @if(isset($error))
@@ -14,7 +10,6 @@
             {{ $error }}
         </div>
     @endif
-
 
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
