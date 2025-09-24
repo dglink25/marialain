@@ -122,6 +122,7 @@
     </div>
      <hr>
     <!-- TITRE -->
+     <h1>Année académique {{ $annee_academique -> name }}</h1>
     <h1>Élèves de la classe : {{ $class->name }}</h1>
 
     <!-- TABLEAU avec colonnes fixes adaptées -->

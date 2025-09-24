@@ -56,17 +56,19 @@ class ClassesprimaireController extends Controller
     public function show(string $id)
     {
         //
+         $annee_academique = AcademicYear::where('active', 1)-> first();
         $class = Classe::with(['students' => function($query) {
             $query->orderBy('last_name')->orderBy('first_name');
         }])->findOrFail($id);
-        return view('primaire.classe.showclass', compact('class'));
+        return view('primaire.classe.showclass', compact('class', 'annee_academique'));
     }
 public function downloadClassStudents($id)
 {
      $class = Classe:: FindorFail($id);
+    $annee_academique = AcademicYear::where('active' , 1)-> first();
     $students = Student::where('id', $class -> id)-> orderBy('last_name')-> orderBy('First_name')-> get();
-    $pdf = Pdf::loadView('primaire.classe.pdf', compact('students', 'class'));
-    return $pdf -> stream('liste_{$class-> name}.pdf');
+    $pdf = Pdf::loadView('primaire.classe.pdf', compact('students', 'class', 'annee_academique'));
+    return $pdf -> download('liste_'. $class-> name. '.pdf');
 }
 
 
