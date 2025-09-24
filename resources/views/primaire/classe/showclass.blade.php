@@ -38,8 +38,8 @@
                 </p>
             </div>
             <div class="p-6 bg-gray-50 rounded-lg border">
-                <p class="text-sm text-gray-500"> Voir l'emploi du temps</p>
-                <p class="text-lg font-semibold text-gray-800">{{ $class->name }}</p>
+                <p class="text-sm text-gray-500"><a href="#">Voir l'emploi du temps</a> </p>
+                
             </div>
         </div>
 
