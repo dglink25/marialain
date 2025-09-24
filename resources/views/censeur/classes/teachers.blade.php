@@ -54,9 +54,10 @@
 
     <!-- Boutons -->
     <div class="d-flex justify-content-between mt-4">
-        <a href="{{ route('censeur.classes.index') }}" class="btn btn-secondary">
-            <i class="bi bi-arrow-left"></i> Retour
-        </a>
+        <button onclick="window.history.back()" 
+            class="px-5 py-2 bg-gray-600 text-white rounded-lg shadow hover:bg-gray-700 transition">
+            Retour
+        </button>
 
         <a href="{{ route('enseignants.export', $class->id) }}" class="btn btn-success">
             <i class="bi bi-download"></i> Télécharger PDF

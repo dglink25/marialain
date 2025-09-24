@@ -142,9 +142,10 @@
 
     <!-- Actions (PDF et Retour) -->
     <div class="d-flex justify-content-between">
-        <a href="{{ route('censeur.classes.index') }}" class="btn btn-secondary">
-            <i class="bi bi-arrow-left me-2"></i>Retour
-        </a>
+        <button onclick="window.history.back()" 
+            class="px-5 py-2 bg-gray-600 text-white rounded-lg shadow hover:bg-gray-700 transition">
+            Retour
+        </button>
         
         <a href="{{ route('censeur.timetables.download', $class->id) }}" class="btn btn-success">
             <i class="bi bi-download me-2"></i>Télécharger PDF

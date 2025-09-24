@@ -116,6 +116,10 @@
                         Supprimer
                     </button>
                 </form>
+                <button onclick="window.history.back()" 
+                    class="px-5 py-2 bg-gray-600 text-white rounded-lg shadow hover:bg-gray-700 transition">
+                    Retour
+                </button>
             @endif
         </div>
     </div>

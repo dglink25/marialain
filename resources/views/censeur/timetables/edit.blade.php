@@ -47,7 +47,10 @@
         </div>
 
         <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 mt-4">Modifier</button>
-        <a href="{{ route('censeur.timetables.index', $class->id) }}" class="inline-block mt-4 text-gray-600 hover:underline">Retour</a>
+        <button onclick="window.history.back()" 
+            class="px-5 py-2 bg-gray-600 text-white rounded-lg shadow hover:bg-gray-700 transition">
+            Retour
+        </button>
     </form>
 </div>
 @endsection

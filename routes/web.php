@@ -36,13 +36,11 @@ use App\Http\Controllers\Teacher\ClassController as TeacherClassController;
 use App\Http\Controllers\Dprimaire\ClassesprimaireController;
 use App\Http\Controllers\Dprimaire\primaryteacherController;
 
-
-
-
+use App\Http\Controllers\SecretaryDashboardController;
 use App\Http\Controllers\Dprimaire\InvitationPController;
 use App\Http\Controllers\Dprimaire\StudentsController;
-
-
+use App\Http\Controllers\StudentMailController;
+use App\Http\Controllers\CenseurDashboardController;
 
 
 /*
@@ -135,10 +133,23 @@ Route::middleware('auth')->group(function () {
 
     // Dashboards par rôle
     Route::get('/dashboard/directeur', fn() => view('dashboards.directeur', ['user' => auth()->user()]))->name('directeur.dashboard');
-    Route::get('/dashboard/censeur', fn() => view('dashboards.censeur', ['user' => auth()->user()]))->name('censeur.dashboard');
+
     Route::get('/dashboard/surveillant', fn() => view('dashboards.surveillant', ['user' => auth()->user()]))->name('surveillant.dashboard');
-    Route::get('/dashboard/secretaire', fn() => view('dashboards.secretaire', ['user' => auth()->user()]))->name('secretaire.dashboard');
+    
+    Route::get('dashboard', [CenseurDashboardController::class, 'index'])->name('censeur.dashboard');
+
 });
+
+//Dashboards Secretaraire
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/dashboard/secretary', [SecretaryDashboardController::class, 'index'])
+        ->name('secretaire.dashboard');
+    Route::get('/students/unpaid', [SecretaryDashboardController::class, 'unpaidStudents'])
+    ->name('students.unpaid');
+    Route::post('/students/unpaid/send-mails', [StudentMailController::class, 'sendToAll'])->name('students.mail.sendAll');
+});
+
 
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('students/pending', [StudentController::class, 'pending'])
