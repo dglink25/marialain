@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
+
     <h1 class="text-2xl font-bold mb-4">Matières</h1>
     @if(isset($error))
         <div class="p-3 mb-4 text-sm text-red-700 bg-red-100 rounded-lg">

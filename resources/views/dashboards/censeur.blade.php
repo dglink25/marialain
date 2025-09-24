@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
+
 <div class="max-w-5xl mx-auto bg-white p-6 rounded-lg shadow">
     <h1 class="text-2xl font-bold mb-4 text-green-600">Dashboard - Censeur</h1>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
