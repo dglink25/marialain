@@ -37,20 +37,11 @@
         <li class="nav-item"><a class="nav-link" href="#a-propos">À propos</a></li>
         <li class="nav-item"><a class="nav-link" href="#programmes">Programmes</a></li>
         <li class="nav-item"><a class="nav-link" href="#cours">Cours</a></li>
-
-        <li class="nav-item"><a class="nav-link" href="#activites">Activités</a></li>
-        <li class="nav-item"><a class="nav-link" href="#admin">Administration</a></li>
-        <li class="nav-item"><a class="nav-link" href="#galerie">Galerie</a></li>
-      </ul>
-    </div>
-    <div class="d-none d-lg-block">
-        <a href="{{ route('students.create') }}" class="btn btn-orange ms-4">S'inscrire</a>
-<!-- 
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
             Ressources
           </a>
-           <ul class="dropdown-menu">
+          <ul class="dropdown-menu">
             <li><a class="dropdown-item" href="#activites">Activités</a></li>
             <li><a class="dropdown-item" href="#admin">Administration</a></li>
             <li><a class="dropdown-item" href="#galerie">Galerie</a></li>
@@ -59,9 +50,8 @@
         <li class="nav-item">
         <a href="#apropos" class="btn btn-orange ms-4">S'inscrire</a>
         </li>
-      </ul>-->
+      </ul>
       
-
     </div>
     
   </div>
@@ -78,8 +68,10 @@
             <div class="col-lg-6 col-12 animate__animated animate__fadeInLeft">
               <div class="text-wrapper">
                 <h2>Bienvenue à l'École CPEG MARIE-ALAIN</h2>
-                <p>Un cadre d’apprentissage stimulant, sécurisé et ouvert à tous.</p>
-                <a href="" class="btn bg-orange mt-2">Voir plus</a>
+                <p>
+                  Le Complexe scolaire Marie-Alain se distingue par un climat éducatif stimulant et bienveillant, où l’autonomie, la discipline et la confiance en soi sont encouragées.
+                </p>
+                <a href="#a-propos" class="btn bg-orange mt-1">Savoir plus</a>
               </div>
             </div>
             <div class="col-lg-6 col-12 animate__animated animate__fadeInRight">
@@ -98,8 +90,10 @@
             <div class="col-lg-6 col-12 animate__animated animate__fadeInLeft">
               <div class="text-wrapper">
                 <h2>Renforcer les connaissances des étudiants</h2>
-                <p>Nous mettons l’accent sur l’excellence académique, la curiosité intellectuelle et le développement des compétences clés.</p>
-                <a href="/activites" class="btn bg-orange">Voir plus</a>
+                <p>
+                  Nous formons des jeunes compétents, responsables et ouverts sur le monde, capables de relever les défis d’une société en constante mutation, tout en restant ancrés dans les valeurs universelles de respect, de travail et de solidarité.
+                </p>
+                <a href="#cours" class="btn bg-orange mt-1">Savoir plus</a>
               </div>
             </div>
             <div class="col-lg-6 col-12 animate__animated animate__fadeInRight">
@@ -118,9 +112,13 @@
             <div class="col-lg-6 col-12 animate__animated animate__fadeInLeft">
               <div class="text-wrapper">
                 <h2>Encadrement pédagogique</h2>
-                <p>Des enseignants passionnés et des méthodes innovantes pour chaque élève.</p>
+                <p>
+                  Notre équipe pédagogique, 
+                    passionnée et attentive, accompagne chaque enfant selon son rythme, en
+                    veillant à l’équilibre entre exigence scolaire et développement personnel.
+                </p>
                 
-                <a href="/pedagogie" class="btn bg-orange">Voir plus</a>
+                <a href="#admin" class="btn bg-orange mt-1">Savoir plus</a>
               </div>
             </div>
             <div class="col-lg-6 col-12 animate__animated animate__fadeInRight">
@@ -153,10 +151,10 @@
       <!-- Texte dynamique -->
       <div class="col-lg-7 col-12 mb-4 mb-lg-0">
         <span class="who-we">Qui somme nous</span>
-        <h2 class="section-title text-start">À propos </h2>
+        <h2 class="section-title text-start mb-4">À propos </h2>
         <div id="ecole-description" class="section-description"></div>
         <blockquote class="founder-quote">
-            “L’éducation est la racine du progrès. À CPEG MARIE-ALAIN, nous cultivons les talents de demain.”
+            “Une mission : former des esprits ouverts et responsables”
         </blockquote>
         <a href="#inscription" class="btn bg-orange mt-3">S'inscrire</a>
       </div>

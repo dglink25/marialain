@@ -1,9 +1,12 @@
 document.addEventListener("DOMContentLoaded", function () {
     const fondateur = "Nom Prénom";
     const texte = `
-    <p>L'École CPEG MARIE-ALAIN a été fondée par <strong>${fondateur}</strong>, avec la vision de créer un environnement éducatif moderne, inclusif et stimulant pour tous les élèves.</p>
-    <p>Depuis sa création, l’école s’engage à offrir une formation de qualité, centrée sur le développement intellectuel, social et émotionnel des enfants. 
-    Grâce à une équipe pédagogique passionnée et des infrastructures adaptées, nous accompagnons chaque élève vers la réussite.</p>
+    <p>Depuis sa création en octobre 2007, le Complexe scolaire Marie-Alain s’impose comme un établissement de référence à Aitchédji Abomey-Calavi, en plaçant le plaisir d’apprendre et l’épanouissement de l’enfant au centre de sa mission éducative.
+    De la Maternelle au Lycée, nous accueillons des classes à effectif raisonné (20 à 25 élèves) afin de garantir un suivi personnalisé et une proximité propice à la réussite de chacun.</p>
+    <p>Notre engagement va bien au-delà de l’acquisition des savoirs. Nous œuvrons chaque jour à développer chez nos élèves :
+     l’excellence académique, à travers des enseignements rigoureux et innovants ;
+    la curiosité intellectuelle, en stimulant l’esprit critique, la créativité et la soif de découverte ;
+    les valeurs humaines, telles que le respect, l’intégrité, la solidarité et le sens du devoir citoyen.</p>
   `;
     document.getElementById("ecole-description").innerHTML = texte;
 });

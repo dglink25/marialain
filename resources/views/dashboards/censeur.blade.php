@@ -1,6 +1,11 @@
 @extends('layouts.app')
 
 @section('content')
+
+@php
+    $pageTitle = 'Tableau de bord Censeur';
+@endphp
+
 <div class="max-w-6xl mx-auto bg-white p-6 rounded-lg shadow">
     <!-- Titre -->
     <h1 class="text-2xl font-bold mb-6 text-green-700">Dashboard - Censeur</h1>
@@ -51,71 +56,6 @@
             </a>
         </div>
     </div>
-
-    <!-- Suivi des professeurs 
-    <div class="p-4 border rounded mb-6">
-        <h2 class="font-semibold text-lg mb-3">Suivi des professeurs</h2>
-        <table class="w-full border-collapse">
-            <thead>
-                <tr class="bg-gray-200 text-left">
-                    <th class="border p-2">Nom</th>
-                    <th class="border p-2">Matières</th>
-                    <th class="border p-2">Classes assignées</th>
-                    <th class="border p-2">Dernière connexion</th>
-                    <th class="border p-2 text-center">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-               
-                <tr>
-                    <td class="border p-2"></td>
-                    <td class="border p-2"></td>
-                    <td class="border p-2"></td>
-                    <td class="border p-2"></td>
-                    <td class="border p-2 text-center">
-                        <a href="" class="text-blue-600 hover:underline">Voir</a>
-                    </td>
-                </tr>
-               
-                <tr>
-                    <td colspan="5" class="border p-2 text-center text-gray-500">Aucun professeur enregistré</td>
-                </tr>
-              
-            </tbody>
-        </table>
-    </div>
--->
-    <!-- Notes en attente 
-    <div class="p-4 border rounded">
-        <h2 class="font-semibold text-lg mb-3">Notes en attente de validation</h2>
-        <table class="w-full border-collapse">
-            <thead>
-                <tr class="bg-gray-200 text-left">
-                    <th class="border p-2">Classe</th>
-                    <th class="border p-2">Matière</th>
-                    <th class="border p-2">Professeur</th>
-                    <th class="border p-2">Statut</th>
-                    <th class="border p-2 text-center">Action</th>
-                </tr>
-            </thead>
-            <tbody>
-               
-                <tr>
-                    <td class="border p-2"></td>
-                    <td class="border p-2"></td>
-                    <td class="border p-2"></td>
-                    <td class="border p-2 text-yellow-600">En attente</td>
-                    <td class="border p-2 text-center">
-                        <a href="" class="text-green-600 hover:underline">Valider</a>
-                    </td>
-                </tr>
-               
-                <tr>
-                    <td colspan="5" class="border p-2 text-center text-gray-500">Aucune note en attente</td>
-                </tr>
-               
-            </tbody> 
-        </table>  -->
     </div>
 </div>
 @endsection

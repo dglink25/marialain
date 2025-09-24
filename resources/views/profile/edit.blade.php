@@ -1,6 +1,9 @@
 @extends('layouts.app')
 
 @section('content')
+@php
+    $pageTitle = 'Profil';
+@endphp
 @if(session('showPasswordForm') || $errors->has('old_password') || $errors->has('password'))
 <script>
     document.getElementById('passwordForm').classList.remove('hidden');
