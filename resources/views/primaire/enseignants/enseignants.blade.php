@@ -2,8 +2,9 @@
 
 @section('content')
 <div class="container mx-auto py-6">
-    <div class="haut" style="display: flex; justify-content: space-between; align-items: center;">
-        <h1 class="text-2xl font-bold mb-6">
+     <h1 class="text-2xl font-bold mb-6">Annéee académique : {{ $annee_academique -> name}} </h1> 
+    <div class="haut" style="display: flex; justify-content: space-between; align-items: center;">   
+    <h1 class="text-1xl font-bold mb-6">
         Liste des enseignants
 
     </h1>
@@ -12,7 +13,7 @@
                            class="bg-blue-600 text-white px-4 py-1 rounded text-center hover:bg-blue-700" style="margin: 10px">
                             Inviter
                         </a>
-         <a href="#"
+         <a href="{{ route('primaire.enseignants.pdf') }}"
                            class="bg-green-600 text-white px-4 py-1 rounded text-center hover:bg-blue-700" style="margin: 10px">
                             Télécharger
                         </a>

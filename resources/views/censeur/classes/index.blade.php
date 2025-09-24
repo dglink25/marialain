@@ -1,43 +1,51 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container mx-auto py-6">
+<body class="bg-gradient-to-br from-blue-50 to-blue-100 text-gray-800 min-h-screen">
+
     <h1 class="text-2xl font-bold mb-6">Liste des Classes</h1>
 
     @if(isset($error))
-        <div class="p-3 mb-4 text-sm text-red-700 bg-red-100 rounded-lg">
+        <div class="p-4 mb-6 text-sm text-red-700 bg-red-100 border border-red-300 rounded-lg">
             {{ $error }}
         </div>
     @endif
 
-
+    <h2 class="text-3xl font-extrabold text-between text-black-700 mb-8">
+        Liste des Classes
+    </h2>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         @foreach($classes as $class)
-            <div class="flex flex-col items-center bg-white shadow rounded-lg p-6">
-                <!-- Cercle avec nom -->
-                <div class="w-32 h-32 rounded-full bg-gray-200 flex items-center justify-center mb-4">
-                    <span class="text-gray-700 font-semibold">{{ $class->name }}</span>
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition duration-300 p-6 flex flex-col justify-between">
+                <!-- En-tête avec icône -->
+                <div class="flex items-center gap-4 mb-4">
+                    <div class="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-lg">
+                        {{ strtoupper(substr($class->name, 0, 2)) }}
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-800">{{ $class->name }}</h3>
                 </div>
 
-                <!-- Boutons -->
-                <div class="flex flex-col space-y-2 w-full">
-                    <a href="{{ route('censeur.classes.students', $class->id) }}"
-                       class="bg-blue-600 text-white px-4 py-2 rounded text-center hover:bg-blue-700">
-                        Liste des élèves
-                    </a>
+                <!-- Actions -->
+                <div class="space-y-3 mt-4">
+                    <div class="flex items-center justify-between bg-gray-50 hover:bg-gray-100 border border-gray-300 rounded-lg px-4 py-2 text-sm text-gray-700 transition">
+                        <span>👥 Liste des élèves</span>
+                        <a href="{{ route('censeur.classes.students', $class->id) }}" class="text-blue-600 font-medium hover:underline">Voir</a>
+                    </div>
 
-                    <a href="{{ route('censeur.classes.timetable', $class->id) }}"
-                       class="bg-green-600 text-white px-4 py-2 rounded text-center hover:bg-green-700">
-                        Voir emploi du temps
-                    </a>
+                    <div class="flex items-center justify-between bg-gray-50 hover:bg-gray-100 border border-gray-300 rounded-lg px-4 py-2 text-sm text-gray-700 transition">
+                        <span>🕒 Emploi du temps</span>
+                        <a href="{{ route('censeur.classes.timetable', $class->id) }}" class="text-green-600 font-medium hover:underline">Consulter</a>
+                    </div>
 
-                    <a href="{{ route('censeur.classes.teachers', $class->id) }}"
-                       class="bg-purple-600 text-white px-4 py-2 rounded text-center hover:bg-purple-700">
-                        Liste des enseignants
-                    </a>
+                    <div class="flex items-center justify-between bg-gray-50 hover:bg-gray-100 border border-gray-300 rounded-lg px-4 py-2 text-sm text-gray-700 transition">
+                        <span>🎓 Liste des enseignants</span>
+                        <a href="{{ route('censeur.classes.teachers', $class->id) }}" class="text-purple-600 font-medium hover:underline">Accéder</a>
+                    </div>
                 </div>
             </div>
         @endforeach
     </div>
 </div>
+
+</body>
 @endsection

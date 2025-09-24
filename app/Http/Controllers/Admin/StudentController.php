@@ -232,47 +232,58 @@ class StudentController extends Controller{
     }
 
     public function index(Request $request){
-        // Récupérer l'année académique active
-        $activeYear = AcademicYear::where('active', true)->first();
+        try {
+            // Récupérer l'année académique active
+            $activeYear = AcademicYear::where('active', true)->first();
 
-        // Construire la requête de base
-        $query = Student::with('entity', 'classe')
-            ->where('is_validated', 1);
+            if (!$activeYear) {
+                return view('admin.students.index', [
+                    'students' => collect(),
+                    'entities' => Entity::all(),
+                    'classes'  => Classe::all(),
+                    'activeYear' => null,
+                    'message' => 'Aucune année académique active pour le moment.'
+                ]);
+            }
 
-        // Filtrer par année active si elle existe
-        if ($activeYear) {
-            $query->where('academic_year_id', $activeYear->id);
+
+            // Construire la requête de base
+            $query = Student::with('entity', 'classe')
+                            ->where('is_validated', 1)
+                            ->where('academic_year_id', $activeYear->id);
+
+            // Filtres optionnels
+            if ($request->filled('search')) {
+                $search = $request->search;
+                $query->where(function ($q) use ($search) {
+                    $q->where('first_name', 'like', "%{$search}%")
+                    ->orWhere('last_name', 'like', "%{$search}%");
+                });
+            }
+
+            if ($request->filled('entity_id')) {
+                $query->where('entity_id', $request->entity_id);
+            }
+
+            if ($request->filled('class_id')) {
+                $query->where('class_id', $request->class_id);
+            }
+
+            if ($request->filled('date')) {
+                $query->whereDate('created_at', $request->date);
+            }
+
+            $students = $query->paginate(10)->withQueryString();
+
+            $entities = Entity::all();
+            $classes  = Classe::all();
+
+            return view('admin.students.index', compact('students', 'entities', 'classes', 'activeYear'));
+
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', '❌ Erreur inattendue : '.$e->getMessage());
         }
-
-        // Filtres optionnels
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('first_name', 'like', "%{$search}%")
-                ->orWhere('last_name', 'like', "%{$search}%");
-            });
-        }
-
-        if ($request->filled('entity_id')) {
-            $query->where('entity_id', $request->entity_id);
-        }
-
-        if ($request->filled('class_id')) {
-            $query->where('class_id', $request->class_id);
-        }
-
-        if ($request->filled('date')) {
-            $query->whereDate('created_at', $request->date);
-        }
-
-        $students = $query->paginate(10)->withQueryString();
-
-        $entities = Entity::all();
-        $classes  = Classe::all();
-
-        return view('admin.students.index', compact('students', 'entities', 'classes'));
     }
-
 
     public function inscription(){
         if (!$this->checkActiveYear() instanceof AcademicYear) {
@@ -360,6 +371,34 @@ class StudentController extends Controller{
 
         // Retourner le zip en téléchargement
         return response()->download($zipFile)->deleteFileAfterSend(true);
+    }
+
+    public function pending(){
+        try {
+            // Vérifier si une année scolaire est active
+            $activeYear = AcademicYear::where('active', true)->first();
+
+            if (!$activeYear) {
+                return view('admin.students.pending', [
+                    'students' => collect(),  // liste vide
+                    'activeYear' => null,
+                    'message' => 'Aucune année scolaire active pour le moment.'
+                ]);
+            }
+
+
+            // Récupérer les élèves non validés de l'année active
+            $students = Student::where('is_validated', false)
+                            ->where('academic_year_id', $activeYear->id)
+                            ->get();
+
+            return view('admin.students.pending', compact('students', 'activeYear'));
+
+        } catch (\Exception $e) {
+            // Gestion d'autres erreurs inattendues
+            dd($e->getMessage());
+            return redirect()->back()->with('error', 'Une erreur est survenue : '.$e->getMessage());
+        }
     }
 
 }

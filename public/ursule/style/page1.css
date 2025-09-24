@@ -1,7 +1,8 @@
 body {
       margin: 0;
-      padding-top: 80px;
+      padding-top: 75px;
       font-family: 'Segoe UI', sans-serif;
+      overflow-x: hidden;
     }
 
     .navbar {
@@ -50,6 +51,13 @@ body {
     background-color: #ff1e00;
     color:white;
   }
+
+  /* Texte */
+.text-wrapper {
+  padding: 40px;
+  color: #333;
+}
+
 @media (max-width: 991px) {
 .nav-link {
     transition: all 0.3s ease;
@@ -73,6 +81,10 @@ body {
     gap: 4px;
     padding: 4px 8px;
   }
+  #accueil{
+    padding-top: 25px;
+  }
+
 }
 /* Section background */
 .carousel-section {
@@ -81,11 +93,6 @@ body {
   min-height: calc(100vh - 100px);
 }
 
-/* Texte */
-.text-wrapper {
-  padding: 40px;
-  color: #333;
-}
 
 .text-wrapper h2 {
   font-size: 2.2rem;
@@ -111,7 +118,20 @@ body {
 background-color: #ff1e00;
 }
 
-
+@media (max-width: 982px) {
+    .btn-orange{
+    color: black !important;
+    font-weight: 500;
+    transition: color 0.3s ease, transform 0.3s ease;
+    border: none;
+    background-color: transparent;
+    margin-left: 5px !important;
+  }
+  .btn-orange:hover{
+    background-color: transparent;
+    color:white;
+  }
+}
 /* Image décorée */
 .image-decor-wrapper {
   position: relative;
@@ -163,11 +183,13 @@ background-color: #ff1e00;
 }
 
 .carousel-control-prev {
-  left: -60px;
+  position: absolute;
+  left: -65px;
 }
 
 .carousel-control-next {
-  right: -60px;
+  position: absolute;
+  right: -65px;
 }
 
 .carousel-control-prev-icon,
@@ -226,6 +248,42 @@ background-color: #ff1e00;
     color: #ea512e;
     font-family: "Sacramento", cursive;
 
+}
+@media (max-width: 390px) {
+  .text-wrapper {
+  padding-left: 20px;
+  padding-right: 20px;
+  }
+  .carousel-control-prev,
+  .carousel-control-next {
+    display: none !important;
+  }
+  .main-img {
+  height: 300px;
+}
+  .decor{
+  width: 30%;
+}
+.decor-1{
+  top: -2%;
+  width: 26%;
+  left:55% ;
+}
+.decor-2{
+  top: 91%;
+  width: 20%;
+}
+.decor-3{
+  top: 92%;
+  width: 40%;
+}
+}
+
+@media (max-width: 768px) {
+  .carousel-control-prev,
+  .carousel-control-next {
+    display: none !important;
+  }
 }
 
 #programmes{
@@ -295,6 +353,12 @@ background-color: #ff1e00;
 }
 .card-body{
     padding: 30px;
+}
+
+@media (max-width: 390px) {
+  #programmes{
+    padding: 80px 0;
+  }
 }
 
   /* Section Cours */
@@ -403,7 +467,7 @@ background-color: #ff1e00;
 
 
 .teacher-img {
-    width: 260px;
+    width: 100%;
     height: 260px;
     object-fit: cover;
 }
@@ -590,6 +654,10 @@ background-color: #ff1e00;
     left: -6px !important;
     right: auto !important;
   }
+  .timeline-item.left {
+  left: 0;
+  text-align: left;
+}
 }
 
 /* gallery */
@@ -606,24 +674,7 @@ background-color: #ff1e00;
   padding-top: 5%;
 }
 
-.footer {
-  position: relative;
-  background-image: url("/ursule/img/footer-bg.jpg");
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  overflow: hidden;
-  z-index: 1;
-  padding-top: 6.5%;
-}
 
-.footer::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-color: rgba(0, 0, 0, 0.85);
-  z-index: 0;
-}
 
 .footer > * {
   position: relative;

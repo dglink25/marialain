@@ -6,6 +6,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
     <link rel="stylesheet" href="{{ asset('ursule/style/page1.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Sacramento&display=swap" rel="stylesheet">
     <script src="{{ asset('ursule/js/js1.js') }}"defer ></script>
     <title>CPEG MARIE-ALAIN</title>
@@ -21,18 +22,13 @@
       <span class="fw-bold text-dark ms-2">CPEG MARIE-ALAIN</span>
     </a>
 
-    <!-- Bloc droit : bouton S'inscrire + hamburger -->
-    <div class="d-flex align-items-center gap-3 d-lg-none">
 
-      <!-- Bouton S'inscrire -->
-      <a href="#apropos" class="btn btn-orange">S'inscrire</a>
 
       <!-- Bouton hamburger -->
       <button class="navbar-toggler " type="button" data-bs-toggle="collapse" data-bs-target="#menuNav">
         <span class="navbar-toggler-icon"></span>
       </button>
 
-    </div>
 
     <!-- Menu -->
     <div class="collapse navbar-collapse" id="menuNav">
@@ -41,14 +37,23 @@
         <li class="nav-item"><a class="nav-link" href="#a-propos">À propos</a></li>
         <li class="nav-item"><a class="nav-link" href="#programmes">Programmes</a></li>
         <li class="nav-item"><a class="nav-link" href="#cours">Cours</a></li>
-        <li class="nav-item"><a class="nav-link" href="#activites">Activités</a></li>
-        <li class="nav-item"><a class="nav-link" href="#admin">Administration</a></li>
-        <li class="nav-item"><a class="nav-link" href="#galerie">Galerie</a></li>
-      </ul>
-    </div>
-    <div class="d-none d-lg-block">
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+            Ressources
+          </a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="#activites">Activités</a></li>
+            <li><a class="dropdown-item" href="#admin">Administration</a></li>
+            <li><a class="dropdown-item" href="#galerie">Galerie</a></li>
+          </ul>
+        </li>
+        <li class="nav-item">
         <a href="{{ route('students.create') }}" class="btn btn-orange ms-4">S'inscrire</a>
+        </li>
+      </ul>
+      
     </div>
+    
   </div>
 </nav>
 
@@ -63,8 +68,10 @@
             <div class="col-lg-6 col-12 animate__animated animate__fadeInLeft">
               <div class="text-wrapper">
                 <h2>Bienvenue à l'École CPEG MARIE-ALAIN</h2>
-                <p>Un cadre d’apprentissage stimulant, sécurisé et ouvert à tous.</p>
-                <a href="" class="btn bg-orange mt-2">Voir plus</a>
+                <p>
+                  Le Complexe scolaire Marie-Alain se distingue par un climat éducatif stimulant et bienveillant, où l’autonomie, la discipline et la confiance en soi sont encouragées.
+                </p>
+                <a href="#a-propos" class="btn bg-orange mt-1">Savoir plus</a>
               </div>
             </div>
             <div class="col-lg-6 col-12 animate__animated animate__fadeInRight">
@@ -83,8 +90,10 @@
             <div class="col-lg-6 col-12 animate__animated animate__fadeInLeft">
               <div class="text-wrapper">
                 <h2>Renforcer les connaissances des étudiants</h2>
-                <p>Nous mettons l’accent sur l’excellence académique, la curiosité intellectuelle et le développement des compétences clés.</p>
-                <a href="/activites" class="btn bg-orange">Voir plus</a>
+                <p>
+                  Nous formons des jeunes compétents, responsables et ouverts sur le monde, capables de relever les défis d’une société en constante mutation, tout en restant ancrés dans les valeurs universelles de respect, de travail et de solidarité.
+                </p>
+                <a href="#cours" class="btn bg-orange mt-1">Savoir plus</a>
               </div>
             </div>
             <div class="col-lg-6 col-12 animate__animated animate__fadeInRight">
@@ -103,9 +112,13 @@
             <div class="col-lg-6 col-12 animate__animated animate__fadeInLeft">
               <div class="text-wrapper">
                 <h2>Encadrement pédagogique</h2>
-                <p>Des enseignants passionnés et des méthodes innovantes pour chaque élève.</p>
+                <p>
+                  Notre équipe pédagogique, 
+                    passionnée et attentive, accompagne chaque enfant selon son rythme, en
+                    veillant à l’équilibre entre exigence scolaire et développement personnel.
+                </p>
                 
-                <a href="/pedagogie" class="btn bg-orange">Voir plus</a>
+                <a href="#admin" class="btn bg-orange mt-1">Savoir plus</a>
               </div>
             </div>
             <div class="col-lg-6 col-12 animate__animated animate__fadeInRight">
@@ -138,10 +151,10 @@
       <!-- Texte dynamique -->
       <div class="col-lg-7 col-12 mb-4 mb-lg-0">
         <span class="who-we">Qui somme nous</span>
-        <h2 class="section-title text-start">À propos </h2>
+        <h2 class="section-title text-start mb-4">À propos </h2>
         <div id="ecole-description" class="section-description"></div>
         <blockquote class="founder-quote">
-            “L’éducation est la racine du progrès. À CPEG MARIE-ALAIN, nous cultivons les talents de demain.”
+            “Une mission : former des esprits ouverts et responsables”
         </blockquote>
         <a href="#inscription" class="btn bg-orange mt-3">S'inscrire</a>
       </div>
@@ -481,20 +494,19 @@
         </p>
       </div>
 
-      <!-- Galerie -->
       <div class="col-md-3">
-        <h5 class="footer-title">Galerie</h5>
+        <h5 class="footer-title"> Localisation</h5>
         <hr class="footer-separator">
-        <div class="footer-gallery">
-          <img src="{{ asset('ursule/img/galerie8.jpeg') }}" alt="Image 1" class="footer-img">
-          <img src="{{ asset('ursule/img/galerie9.jpeg') }}" alt="Image 2" class="footer-img">
-          <img src="{{ asset('ursule/img/galerie10.jpeg') }}" alt="Image 3" class="footer-img">
-          <img src="{{ asset('ursule/img/galerie11.jpeg') }}" alt="Image 4" class="footer-img">
-          <img src="{{ asset('ursule/img/galerie12.jpeg') }}" alt="Image 5" class="footer-img">
-          <img src="{{ asset('ursule/img/galerie1.jpeg') }}" alt="Image 6" class="footer-img">
-          <img src="{{ asset('ursule/img/galerie2.jpeg') }}" alt="Image 7" class="footer-img">
-          <img src="{{ asset('ursule/img/galerie3.jpeg') }}" alt="Image 8" class="footer-img">
-          <img src="{{ asset('ursule/img/galerie4.jpeg') }}" alt="Image 9" class="footer-img">
+        <div class="footer-map">
+          <iframe
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1982.2796390648748!2d2.3295801382923!3d6.450581963616354!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x1024a947e07ab415%3A0x744c26ef40122789!2sComplexe%20Scolaire%20Mari%C3%A9e%20Alain!5e0!3m2!1sfr!2sbj!4v1758535641742!5m2!1sfr!2sbj"
+            width="100%" height="150" style="border:0;" allowfullscreen="" loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade">
+          </iframe>
+          <p class="footer-text">
+            📍Mono, Bénin<br>
+          </p>
+          
         </div>
       </div>
 
@@ -514,11 +526,10 @@
       <div class="col-md-3">
         <h5 class="footer-title">Coordonnées</h5>
         <hr class="footer-separator">
-        <p class="footer-text">
-          Quartier Houégbo, Lokossa<br><br>
-          Mono, Bénin<br><br>
-          📞 +229 97 00 00 00<br><br>
-          ✉️ contact@etablissement.bj
+        <p class="footer-text d-flex flex-column gap-3">
+          <span><i class="bi bi-geo-alt-fill text-danger me-2"></i> Quartier Houégbo, Lokossa</span>
+          <span><i class="bi bi-telephone-fill text-danger me-2"></i> +229 97 00 00 00</span>
+          <span><i class="bi bi-envelope-fill text-danger me-2"></i> contact@etablissement.bj</span>
         </p>
       </div>
 
@@ -530,12 +541,6 @@
     </div>
   </div>
 </footer>
-
-
-
-
-
-
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
 </body>
 </html>

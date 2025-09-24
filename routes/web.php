@@ -35,6 +35,10 @@ use App\Http\Controllers\Teacher\ClassController as TeacherClassController;
 // Primaire
 use App\Http\Controllers\Dprimaire\ClassesprimaireController;
 use App\Http\Controllers\Dprimaire\primaryteacherController;
+
+
+
+
 use App\Http\Controllers\Dprimaire\InvitationPController;
 use App\Http\Controllers\Dprimaire\StudentsController;
 
@@ -46,8 +50,36 @@ use App\Http\Controllers\Dprimaire\StudentsController;
 | Routes publiques
 |--------------------------------------------------------------------------
 */
+
+
 Route::get('/', fn() => view('accueil'))->name('accueil');
 Route::get('/home', fn() => view('welcome'))->name('home');
+
+
+
+Route::get('/admin/entities/{entity}/classes', [EntityController::class, 'getClasses']);
+
+//primaire
+Route:: get('/primaire/classe/classes', [ClassesprimaireController::class, 'index'])-> name('primaire.classe.classes');
+Route:: post('/primaire/classe/classes', [ClassesprimaireController::class, 'store'])-> name('primaire.classe.store');
+Route:: get('/primaire/classe/showclass/{id}', [ClassesprimaireController::class, 'show'])-> name('primaire.classe.showclass');
+Route:: get('/primaire/enseignants/enseignants', [primaryteacherController::class, 'index'])-> name('primaire.enseignants.enseignants');
+Route:: get('/primaire/enseignants/inviter', [InvitationPController::class, 'index'])-> name('primaire.enseignants.inviter');
+Route::post('/primaire/enseignants/inviter', [InvitationPController::class, 'store'])-> name('primaire.enseignants.inviter.store');
+Route:: get('/primaire/ecoliers/liste', [StudentsController::class, 'index'])-> name('primaire.ecoliers.liste');
+Route::get('/primaire/ecoliers/pdf', [StudentsController::class, 'downloadPrimaireStudents'])
+    ->name('primaire.ecoliers.liste.pdf');
+Route::get('/primaire/classe/{id}/pdf', [ClassesprimaireController::class, 'downloadClassStudents'])-> name('primaire.classe.pdf');
+Route::get('/primaire/enseignants/pdf', [primaryteacherController::class, 'downloadTeachersList'])->name('primaire.enseignants.pdf');
+Route::get('/', function () {
+    return view('accueil');
+})->name('accueil');
+
+
+Route::get('/', fn() => view('accueil'))->name('accueil');
+Route::get('/home', fn() => view('welcome'))->name('home');
+
+
 
 // Page classes primaires
 Route::get('/admin/classes/primary/secondary_classes', function () {
@@ -148,9 +180,6 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('students/export/excel', [StudentExportController::class, 'exportExcel'])->name('students.export.excel');
     Route::get('students/export/all-pdf', [StudentController::class, 'exportAllPdf'])->name('students.export.all.pdf');
 
-    //Validation inscription en attente 
-    Route::get('students/pending', [StudentValidationController::class, 'index'])
-        ->name('students.pending');
     Route::post('students/{student}/validate', [StudentValidationController::class, 'validateStudent'])
         ->name('students.validate');
 
@@ -232,6 +261,9 @@ Route::prefix('students')->name('students.')->group(function () {
 Route::middleware(['auth'])->group(function () {
     Route::get('/archives', [ArchiveController::class, 'index'])->name('archives.index');
     Route::get('/archives/{id}', [ArchiveController::class, 'show'])->name('archives.show');
+    Route::get('/{year}/classes/{class}', [ArchiveController::class, 'classStudents'])->name('archives.classes.students');
+    Route::get('/{year}/{class}/timetables', [ArchiveController::class, 'classTimetables'])
+        ->name('archives.class_timetables');
 });
 
 
