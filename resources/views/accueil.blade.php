@@ -48,7 +48,7 @@
           </ul>
         </li>
         <li class="nav-item">
-        <a href="#apropos" class="btn btn-orange ms-4">S'inscrire</a>
+        <a href="{{ route('students.create') }}" class="btn btn-orange ms-4">S'inscrire</a>
         </li>
       </ul>
       

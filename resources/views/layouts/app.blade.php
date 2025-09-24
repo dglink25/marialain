@@ -50,7 +50,7 @@
                 @switch(optional(auth()->user()->role)->name)
                     @case('directeur_primaire')
                         <a href="{{ route('directeur.dashboard') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">📊 Dashboard Directeur</a>
-                        <a href="{{ route('primaire.classes') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">🏫 Gestion des classes</a>
+                        <a href="{{ route('primaire.classe.classes') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">🏫 Gestion des classes</a>
                         <a href="{{ route('primaire.enseignants.enseignants') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">👨‍🏫 Gestion des enseignants</a>
                         @break
 
@@ -113,7 +113,7 @@
             <!-- Top bar -->
             <div class="bg-gray-100 px-6 py-4 flex justify-between items-center shadow-sm border-b">
                 <h2 class="text-lg font-semibold text-gray-800">
-                    {{ $pageTitle ?? 'Accu' }}
+                    {{ $pageTitle ?? 'Accueil' }}
                 </h2>
 
                 <div class="relative">
@@ -127,7 +127,9 @@
                             @auth
                                 {{ auth()->user()->name }}
                             @else
-                                Connexion
+                                <a href="{{ route('login') }}">
+                                    Connexion
+                                </a>
                             @endauth
                         </span>
                     </div>

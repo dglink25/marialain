@@ -28,7 +28,7 @@
                 <td class="px-4 py-2 flex space-x-2">
                     <!-- Voir -->
                     <a href="{{ route('primaire.classe.showclass', $class->id) }}" title="Voir" class="text-blue-600 hover:text-blue-800">
-                        <i class="fas fa-eye"></i>
+                        <i class="fas fa-eye"></i> Voir
                     </a>
                 
                 </td>

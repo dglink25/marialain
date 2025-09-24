@@ -31,8 +31,6 @@ class Student extends Model{
         'amount_paid',
     ];
 
-    
-
 
     public function entity() {
         return $this->belongsTo(Entity::class);
