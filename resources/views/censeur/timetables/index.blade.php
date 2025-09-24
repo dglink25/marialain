@@ -3,7 +3,7 @@
 @section('content')
 <div class="container-fluid p-4 bg-light min-h-screen">
 
-    <h2 class="text-between text-dark mb-4"><strong>Emploi du temps - {{ $class->name }}</strong></h2>
+    <h2 class="text-between text-primary mb-4"><strong>Emploi du temps - {{ $class->name }}</strong></h2>
 
     <!-- Bouton pour afficher le modal -->
     <div class="d-flex justify-content-end mb-4">
@@ -17,7 +17,7 @@
         <div class="modal-dialog modal-md">
             <div class="modal-content">
                 <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title display-7" id="addCourseModalLabel">Ajouter un nouveau cours</h5>
+                    <h5 class="modal-title display-12" id="addCourseModalLabel">Ajouter un nouveau cours</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -157,11 +157,13 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <style>
-    h2.text-between {
+    h2.text-between.text-primary {
     font-size: 2.1rem;  /* augmente la taille */
 }
 
-   
+    h2.text-between.text-primary {
+    font-size: 2.1rem;  /* augmente la taille */
+}
 
     /* Styles personnalisés pour compléter Bootstrap */
     .table {

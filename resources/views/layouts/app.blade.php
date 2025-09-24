@@ -306,6 +306,7 @@
                 @yield('content')
             
             </main>
+
         </div>
     </div>
 
@@ -351,6 +352,7 @@
             }
         });
     </script>
+
             </div>
         </div>
         <nav class="p-4 space-y-1">
@@ -412,10 +414,60 @@
             </button>
             <h1 class="font-semibold text-lg text-gray-800">CPEG MARIE-ALAIN</h1>
         </header>
+
+        
     </div>
 </div>
 
 <script src="https://unpkg.com/flowbite@1.6.5/dist/flowbite.js"></script>
+
+
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/flowbite@1.6.5/dist/flowbite.js"></script>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        // Initialize AOS animation
+        AOS.init({
+            duration: 800,
+            easing: 'ease-in-out',
+            once: true
+        });
+
+        // Hide loading screen when page is loaded
+        window.addEventListener('load', function() {
+            document.getElementById('loading-screen').style.display = 'none';
+        });
+
+        // Mobile menu toggle
+        document.getElementById('mobile-menu-button').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.toggle('hidden');
+        });
+
+        // User dropdown toggle
+        document.getElementById('user-menu-button').addEventListener('click', function() {
+            document.getElementById('user-dropdown').classList.toggle('hidden');
+        });
+
+        // Update current time
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+            document.getElementById('current-time').textContent = timeString;
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        // Highlight active nav link
+        document.querySelectorAll('nav a').forEach(link => {
+            if(link.href === window.location.href) {
+                link.classList.add('active-nav');
+            }
+        });
+    </script>
+
 
 </body>
 </html>

@@ -36,6 +36,9 @@ use App\Http\Controllers\Teacher\ClassController as TeacherClassController;
 use App\Http\Controllers\Dprimaire\ClassesprimaireController;
 use App\Http\Controllers\Dprimaire\primaryteacherController;
 
+
+
+
 use App\Http\Controllers\Dprimaire\InvitationPController;
 use App\Http\Controllers\Dprimaire\StudentsController;
 
@@ -48,8 +51,10 @@ use App\Http\Controllers\Dprimaire\StudentsController;
 |--------------------------------------------------------------------------
 */
 
+
 Route::get('/', fn() => view('accueil'))->name('accueil');
 Route::get('/home', fn() => view('welcome'))->name('home');
+
 
 
 Route::get('/admin/entities/{entity}/classes', [EntityController::class, 'getClasses']);
@@ -67,6 +72,11 @@ Route::get('/primaire/ecoliers/pdf', [StudentsController::class, 'downloadPrimai
 Route::get('/', function () {
     return view('accueil');
 })->name('accueil');
+
+
+Route::get('/', fn() => view('accueil'))->name('accueil');
+Route::get('/home', fn() => view('welcome'))->name('home');
+
 
 
 // Page classes primaires
