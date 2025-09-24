@@ -14,11 +14,12 @@ class ClassesprimaireController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index( Request $request)
     {
         //
+       
         $annee_academique = AcademicYear::where('active', 1)-> first();
-        $classes = Classe::whereHas('entity', function($query){ $query->where('name', 'primaire'); })->with('academicYear')->get();
+        $classes = Classe::whereHas('entity', function($query){ $query->whereIn('name', ['primaire', 'maternelle']); })->with('academicYear')->get();
         
         return view('primaire.classe.classes', compact('classes', 'annee_academique'));
     }

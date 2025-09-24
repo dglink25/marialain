@@ -23,8 +23,7 @@ class primaryteacherController extends Controller
         $query->where('name', 'teacher');
     })->with('classePrimaire') // eager load de la classe du primaire
       ->get();
-
-    return view('primaire.enseignants.enseignants', compact('teachers', 'annee_academique'));
+     return view('primaire.enseignants.enseignants', compact('teachers', 'annee_academique'));
 }
 public function downloadTeachersList(){
    // Récupère tous les enseignants du primaire
