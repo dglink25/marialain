@@ -256,7 +256,7 @@ background-color: #ff1e00;
   }
   .carousel-control-prev,
   .carousel-control-next {
-    display: none;
+    display: none !important;
   }
   .main-img {
   height: 300px;
@@ -277,8 +277,13 @@ background-color: #ff1e00;
   top: 92%;
   width: 40%;
 }
+}
 
-
+@media (max-width: 768px) {
+  .carousel-control-prev,
+  .carousel-control-next {
+    display: none !important;
+  }
 }
 
 #programmes{
@@ -462,7 +467,7 @@ background-color: #ff1e00;
 
 
 .teacher-img {
-    width: 260px;
+    width: 100%;
     height: 260px;
     object-fit: cover;
 }
@@ -669,24 +674,7 @@ background-color: #ff1e00;
   padding-top: 5%;
 }
 
-.footer {
-  position: relative;
-  background-image: url("/ursule/img/footer-bg.jpg");
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  overflow: hidden;
-  z-index: 1;
-  padding-top: 6.5%;
-}
 
-.footer::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-color: rgba(0, 0, 0, 0.85);
-  z-index: 0;
-}
 
 .footer > * {
   position: relative;

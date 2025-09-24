@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
+
     <h1 class="text-2xl font-bold mb-4">Matières</h1>
     @if(isset($error))
         <div class="p-3 mb-4 text-sm text-red-700 bg-red-100 rounded-lg">
@@ -19,7 +20,7 @@
 
         <div class="flex flex-col items-center bg-white shadow rounded-lg p-6">
             <div class="w-32 h-32 rounded-full bg-gray-200 flex items-center justify-center mb-4">
-                <span class="text-gray-700 font-semibold">{{ $subject->id }}</span>
+                <span class="text-gray-700 font-semibold">{{ $loop->iteration }}</span>
             </div>
             <a href="{{ route('subjects.teachers', $subject->id) }}" 
             class="bg-green-600 text-white px-4 py-2 rounded text-center hover:bg-green-700 transition">

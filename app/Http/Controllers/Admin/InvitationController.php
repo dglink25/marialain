@@ -9,10 +9,8 @@ use Illuminate\Support\Facades\Mail;
 use App\Models\AcademicYear;
 use App\Mail\InvitationMail;
 
-class InvitationController extends Controller
-{
-    public function index(Request $request)
-    {
+class InvitationController extends Controller{
+    public function index(Request $request){
         $query = Invitation::with('academicYear', 'inviter');
 
         // Filtrage par entité si demandé
@@ -29,8 +27,8 @@ class InvitationController extends Controller
         return view('admin.invitations.index', compact('invitations', 'years'));
     }
 
-    public function store(Request $request)
-    {
+    public function store(Request $request){
+        $activeYear = AcademicYear::where('active', true)->firstOrFail();
         $request->validate([
             'email' => 'required|email',
             'academic_year_id' => 'required|exists:academic_years,id',
@@ -39,11 +37,11 @@ class InvitationController extends Controller
 
         $token = Str::random(32);
         $invitation = Invitation::create([
-            'email' => $request->email,
-            'academic_year_id' => $request->academic_year_id,
-            'entity' => $request->entity,
-            'token' => $token,
-            'invited_by' => auth()->user()->id, 
+            'email'              => $request->email,
+            'academic_year_id'   => $activeYear->id,
+            'entity'             => $request->entity,
+            'token'              => $token,
+            'invited_by'         => auth()->user()->id, 
         ]);
 
 

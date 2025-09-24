@@ -1,6 +1,11 @@
 @extends('layouts.app')
 
 @section('content')
+
+@php
+    $pageTitle = 'Tableau de bord Censeur';
+@endphp
+
 <div class="max-w-6xl mx-auto bg-white p-6 rounded-lg shadow">
     <!-- Titre -->
     <h1 class="text-2xl font-bold mb-6 text-green-700">Dashboard - Censeur</h1>
