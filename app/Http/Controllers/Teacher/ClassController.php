@@ -5,40 +5,48 @@ namespace App\Http\Controllers\Teacher;
 use App\Http\Controllers\Controller;
 use App\Models\Classe;
 use Illuminate\Support\Facades\Auth;
+use App\Models\AcademicYear;
 
-class ClassController extends Controller
-{
+class ClassController extends Controller{
     // Liste des classes de l’enseignant connecté
-    public function index()
-    {
-        // Récupérer l'enseignant connecté
+    public function index(){
+        
         $teacher = Auth::user();
 
-        // Récupérer les classes via la relation belongsToMany
         $classes = $teacher->classes()->with('teachers')->get();
 
         return view('teacher.classes.index', compact('classes'));
     }
 
     // Liste des élèves d’une classe
-    public function students($classId)
-    {
-        $class = Classe::with('students')->findOrFail($classId);
+    public function students($classId){
+        $activeYear = AcademicYear::where('active', true)->first();
 
-        return view('teacher.classes.students', compact('class'));
+        if (!$activeYear) {
+            return back()->with('error', 'Aucune année scolaire active trouvée.');
+        }
+
+        $class = Classe::with(['students' => function ($query) use ($activeYear) {
+            $query->where('is_validated', 1) 
+                ->where('academic_year_id', $activeYear->id)
+                ->orderBy('last_name')
+                ->orderBy('first_name');
+        }])->findOrFail($classId);
+
+        $students = $class->students;
+
+        return view('teacher.classes.students', compact('class', 'students', 'activeYear'));
     }
 
-    // Emploi du temps d’une classe
-    // Emploi du temps d’une classe
+
+
     public function timetable($classId){
-        // Charger la classe avec ses emplois du temps + relations
+
         $class = Classe::with(['timetables.teacher', 'timetables.subject'])
                     ->findOrFail($classId);
 
-        // Récupérer tous les créneaux de cette classe
         $timetables = $class->timetables;
 
-        // Définir les plages horaires fixes (par ex. 8h → 18h)
         $hours = [
             '07h-08h',
             '08h-09h',

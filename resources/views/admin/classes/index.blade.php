@@ -4,7 +4,14 @@
 <div class="max-w-4xl mx-auto">
     <h1 class="text-2xl font-bold mb-6">Gestion des classes</h1>
 
-    <button id="toggleFormBtn" 
+    @if(!$activeYear)
+        <div class="alert alert-warning">
+            {{ $message }}
+        </div>
+    @else
+
+
+        <button id="toggleFormBtn" 
         class="mb-4 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
         Ajouter une classe
     </button>
@@ -131,4 +138,9 @@
         form.classList.add("hidden");
     });
 </script>
+
+
+    @endif
+
+    
 @endsection

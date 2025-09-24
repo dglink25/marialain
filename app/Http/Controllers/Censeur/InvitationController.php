@@ -47,18 +47,18 @@ class InvitationController extends Controller{
     }
 
     public function send(Request $request) {
-        if (!$this->checkActiveYear() instanceof AcademicYear) {
-            return $this->checkActiveYear();
-        }
-
         try {
+            // Récupère l'année scolaire active
+            $activeYear = AcademicYear::where('active', true)->first();
 
-            $activeYear = AcademicYear::where('active', true)->firstOrFail();
+            if (!$activeYear) {
+                return back()->with('error', 'Aucune année scolaire active trouvée.');
+            }
+
             // Validation des données
             $request->validate([
                 'name'  => 'required|string',
                 'email' => 'required|email|unique:users,email',
-                'acedemic_year_id' => $activeYear,
             ]);
 
             // Génération mot de passe aléatoire
@@ -69,16 +69,17 @@ class InvitationController extends Controller{
                 'name'     => $request->name,
                 'email'    => $request->email,
                 'password' => Hash::make($plainPassword),
-                'role_id'  => 6,
+                'role_id'  => 6, // Censeur / enseignant selon ton besoin
             ]);
 
             // Création de l'invitation
             $invitation = TeacherInvitation::create([
-                'user_id'    => $user->id,
-                'name'       => $request->name,   
-                'email'      => $request->email, 
-                'token'      => Str::random(32),
-                'censeur_id' => Auth::id(),
+                'user_id'          => $user->id,
+                'name'             => $request->name,   
+                'email'            => $request->email, 
+                'token'            => Str::random(32),
+                'academic_year_id' => $activeYear->id, // ✅ insertion de l'année active
+                'censeur_id'       => Auth::id(),
             ]);
 
             // Envoi de l'email
@@ -87,25 +88,20 @@ class InvitationController extends Controller{
             return back()->with('success', 'Invitation envoyée à '.$user->email);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
-            // Si la validation échoue
             return redirect()->back()
                             ->withErrors($e->validator)
                             ->withInput();
 
         } catch (\Illuminate\Database\QueryException $e) {
-            // Erreurs liées à la base de données
             return back()->with('error', 'Erreur base de données : '.$e->getMessage());
 
         } catch (\Swift_TransportException $e) {
-            // Erreurs liées à l'envoi de mail
             return back()->with('error', 'Impossible d\'envoyer l\'email : '.$e->getMessage());
 
         } catch (\Exception $e) {
-            // Toute autre erreur
             return back()->with('error', 'Une erreur est survenue : '.$e->getMessage());
         }
     }
-
 
     public function accept($token) {
         if (!$this->checkActiveYear() instanceof AcademicYear) {

@@ -3,9 +3,9 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Classe extends Model
-{
+class Classe extends Model{
     protected $fillable = [
         'name',
         'academic_year_id',
@@ -41,6 +41,10 @@ class Classe extends Model
     public function timetables()
     {
         return $this->hasMany(Timetable::class, 'class_id');
+    }
+
+    public function classTeacherSubjects(): HasMany{
+        return $this->hasMany(ClassTeacherSubject::class, 'class_id');
     }
 
     

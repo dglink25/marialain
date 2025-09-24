@@ -28,6 +28,12 @@
                     class="text-blue-600 hover:underline">
                     Voir reçu
                     </a>
+<br><br>
+                    <a href="{{ asset('storage/receipts/recu_'.$p->id.'.pdf') }}" 
+                    target="_blank" 
+                    class="text-blue-600 hover:underline" download>
+                    Télécharger
+                    </a>
                 </td>
             </tr>
             @endforeach

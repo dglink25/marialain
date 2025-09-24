@@ -78,6 +78,7 @@
 
     <!-- Tableau d'emploi du temps -->
     <div class="table-responsive border rounded-3 shadow-sm bg-white mb-4">
+        
         <table class="table table-bordered table-hover mb-0">
             <thead class="table-light">
                 <tr>

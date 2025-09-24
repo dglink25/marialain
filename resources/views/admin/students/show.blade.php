@@ -99,26 +99,24 @@
     <br>
 
     <div class="flex justify-between mt-8">
-        <a href="{{ route('admin.students.index') }}" 
-           class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
-            Retour
-        </a>
 
-        <div class="flex space-x-2">
-            <a href="{{ route('admin.students.edit', $student->id) }}" 
-               class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-                Modifier
-            </a>
+            @if(auth()->id() == 8)
+            <div class="flex space-x-2">
+                <a href="{{ route('admin.students.edit', $student->id) }}" 
+                class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                    Modifier
+                </a>
 
-            <form action="{{ route('admin.students.destroy', $student->id) }}" method="POST" 
-                  onsubmit="return confirm('Voulez-vous vraiment supprimer cet étudiant ?');">
-                @csrf
-                @method('DELETE')
-                <button type="submit" 
-                        class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">
-                    Supprimer
-                </button>
-            </form>
+                <form action="{{ route('admin.students.destroy', $student->id) }}" method="POST" 
+                    onsubmit="return confirm('Voulez-vous vraiment supprimer cet étudiant ?');">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" 
+                            class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">
+                        Supprimer
+                    </button>
+                </form>
+            @endif
         </div>
     </div>
 </div>

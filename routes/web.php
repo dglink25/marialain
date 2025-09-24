@@ -168,9 +168,6 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('students/export/excel', [StudentExportController::class, 'exportExcel'])->name('students.export.excel');
     Route::get('students/export/all-pdf', [StudentController::class, 'exportAllPdf'])->name('students.export.all.pdf');
 
-    //Validation inscription en attente 
-    Route::get('students/pending', [StudentValidationController::class, 'index'])
-        ->name('students.pending');
     Route::post('students/{student}/validate', [StudentValidationController::class, 'validateStudent'])
         ->name('students.validate');
 
@@ -252,6 +249,9 @@ Route::prefix('students')->name('students.')->group(function () {
 Route::middleware(['auth'])->group(function () {
     Route::get('/archives', [ArchiveController::class, 'index'])->name('archives.index');
     Route::get('/archives/{id}', [ArchiveController::class, 'show'])->name('archives.show');
+    Route::get('/{year}/classes/{class}', [ArchiveController::class, 'classStudents'])->name('archives.classes.students');
+    Route::get('/{year}/{class}/timetables', [ArchiveController::class, 'classTimetables'])
+        ->name('archives.class_timetables');
 });
 
 

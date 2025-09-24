@@ -208,7 +208,6 @@
                         </a>
                     @endguest
                 </div>
-                >
             </nav>
         </aside>
 
@@ -352,11 +351,8 @@
             }
         });
     </script>
-
             </div>
-
         </div>
-
         <nav class="p-4 space-y-1">
             <a href="{{ route('home') }}" class="flex items-center px-4 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-700 transition">
                 <i class="fa fa-home w-5 text-gray-500"></i> <span class="ml-3">Accueil</span>
@@ -416,8 +412,6 @@
             </button>
             <h1 class="font-semibold text-lg text-gray-800">CPEG MARIE-ALAIN</h1>
         </header>
-
-        
     </div>
 </div>
 

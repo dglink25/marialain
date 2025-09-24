@@ -37,11 +37,20 @@ class ClasseController extends Controller{
 
 
     public function students($classId){
-        $class = Classe::with(['students' => function($query) {
-            $query->where('is_validated', 1)   // ✅ Seulement les élèves validés
-                ->orderBy('last_name')
-                ->orderBy('first_name');
+
+        $activeYear = AcademicYear::where('active', true)->first();
+
+        if (!$activeYear) {
+            return back()->with('error', 'Aucune année scolaire active trouvée.');
+        }
+        
+        $class = Classe::with(['students' => function($query) use ($activeYear) {
+        $query->where('is_validated', 1) 
+              ->where('academic_year_id', $activeYear->id)
+              ->orderBy('last_name')
+              ->orderBy('first_name');
         }])->findOrFail($classId);
+
 
         return view('censeur.classes.students', compact('class'));
     }

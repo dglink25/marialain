@@ -4,7 +4,16 @@
 
 @section('content')
 
-<div class="mb-4">
+@if(!$activeYear)
+    <h1 class="text-xl font-bold">Liste de tous les  élèves de CPEG MARIE-ALAIN</h1>
+    <div class="bg-yellow-100 text-yellow-700 p-3 rounded mb-4">
+        {{ $message }}
+    </div>
+
+@else
+
+
+    <div class="mb-4">
     <form method="GET" action="{{ route('admin.students.index') }}" class="flex flex-wrap gap-2">
         <!-- Recherche -->
         <input type="text" name="search" placeholder="Rechercher un élève"
@@ -162,4 +171,9 @@
 @else
 <p style="color:red"> Une erreur s'est produite lors de l'affichage de cette section <br> Veuillez vous connectez à nouveau pour continuer <a href="{{ route('login') }}" class="block px-3 py-2 rounded bg-blue-600 text-white">Se connecter</a></p>
 @endif 
+
+
+@endif
+
+
 @endsection
