@@ -8,87 +8,98 @@
     <!-- Tailwind + Flowbite -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://unpkg.com/flowbite@1.6.5/dist/flowbite.min.css" rel="stylesheet" />
+    <style>
+        .scrollbar-hide {
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* IE 10+ */
+        }
+    </style>
 </head>
 <body class="antialiased bg-gray-50 text-gray-800">
 
     <div class="flex min-h-screen">
         <!-- Sidebar -->
-        <aside id="sidebar" class="w-64 bg-gray-50 shadow-xl hidden md:block font-sans">
-            <!-- Logo + Titre -->
-            <div class="p-4 flex items-center gap-3 border-b border-gray-200 bg-white">
-                <img src="{{ asset('logo.png') }}" class="h-12" alt="Logo" />
-                <span class="font-bold text-lg text-gray-800">CPEG MARIE-ALAIN</span>
-            </div>
+<aside id="sidebar" class="fixed top-0 left-0 h-screen w-64  bg-[#195af0] text-white shadow-xl z-50 hidden md:block font-sans">
+    <!-- Logo + Titre -->
+    <div class="p-3 flex flex-col items-center gap-2 border-b border-blue-300 bg-[#195af0] text-white">
+        <div class="bg-white rounded-full p-2 shadow">
+            <img src="{{ asset('logo.png') }}" class="h-12 w-12 object-contain rounded-full" alt="Logo" />
+        </div>
+        <span class="font-bold text-lg text-white text-center">CPEG MARIE-ALAIN</span>
+    </div>
 
-            <!-- Navigation -->
-            <nav class="p-4 space-y-1 text-base text-gray-700 font-semibold">
-                <a href="{{ route('home') }}" class="block px-4 py-2 rounded-md hover:bg-blue-100 active:bg-blue-200 transition">
-                    🏠 Accueil
+    <!-- Navigation -->
+     <div class="overflow-y-auto h-[calc(100vh-112px)]  space-y-1 scrollbar-hide">
+        <nav class="p-4 space-y-1 text-base font-medium">
+            <a href="{{ route('home') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">
+                🏠 Accueil
+            </a>
+            <a href="{{ route('students.create') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">
+                📝 Inscription en ligne
+            </a>
+
+            @auth
+                <a href="{{ route('profile.edit') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">
+                    👤 Mon Profil
                 </a>
-                <a href="{{ route('students.create') }}" class="block px-4 py-2 rounded-md hover:bg-blue-100 active:bg-blue-200 transition">
-                    📝 Inscription en ligne
+
+                @switch(optional(auth()->user()->role)->name)
+                    @case('directeur_primaire')
+                        <a href="{{ route('directeur.dashboard') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">📊 Dashboard Directeur</a>
+                        <a href="{{ route('primaire.classes') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">🏫 Gestion des classes</a>
+                        <a href="{{ route('primaire.enseignants.enseignants') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">👨‍🏫 Gestion des enseignants</a>
+                        @break
+
+                    @case('teacher')
+                        <a href="{{ route('teacher.dashboard') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">📚 Dashboard Enseignant</a>
+                        <a href="{{ route('teacher.classes') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">📘 Mes classes</a>
+                        @break
+
+                    @case('censeur')
+                        <a href="{{ route('censeur.dashboard') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">📋 Dashboard Censeur</a>
+                        <a href="{{ route('censeur.invitations.index') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">📨 Invitations enseignants</a>
+                        <a href="{{ route('censeur.subjects.index') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">📖 Matières</a>
+                        <a href="{{ route('censeur.classes.index') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">🗂️ Liste Classes</a>
+                        @break
+
+                    @case('secretaire')
+                        <a href="{{ route('secretaire.dashboard') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">🗃️ Dashboard Secrétaire</a>
+                        <a href="{{ route('admin.students.pending') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">⏳ Inscriptions en attente</a>
+                        <a href="{{ route('admin.students.index') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">👥 Liste Élèves</a>
+                        <a href="{{ route('admin.classes.index') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">🏷️ Gestion des classes</a>
+                        @break
+
+                    @case('super_admin')
+                        <a href="{{ route('admin.dashboard') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">🛠️ Tableau de bord</a>
+                        <a href="{{ route('admin.academic_years.index') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">📆 Années académiques</a>
+                        @break
+
+                    @default
+                        <span class="block px-4 py-4 text-white/70">Rôle non défini</span>
+                @endswitch
+            @endauth
+
+            <!-- Connexion / Déconnexion -->
+            @auth
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button type="submit" class="w-full text-left px-4 py-4 rounded-md text-red-200 hover:bg-red-600 transition">
+                        🔓 Déconnexion
+                    </button>
+                </form>
+            @else
+                <a href="{{ route('login') }}" class="block px-4 py-4 rounded-md bg-white text-[#0388fc] hover:bg-blue-100 transition">
+                    🔐 Connexion
                 </a>
+            @endauth
+        </nav>
+    </div>
+</aside>
 
-                @auth
-                    <a href="{{ route('profile.edit') }}" class="block px-4 py-2 rounded-md hover:bg-gray-200 active:bg-gray-300 transition">
-                        👤 Mon Profil
-                    </a>
-
-                    @switch(optional(auth()->user()->role)->name)
-                        @case('directeur_primaire')
-                            <a href="{{ route('directeur.dashboard') }}" class="block px-4 py-2 rounded-md hover:bg-gray-200 active:bg-gray-300 transition">📊 Dashboard Directeur</a>
-                            <a href="{{ route('primaire.classes') }}" class="block px-4 py-2 rounded-md hover:bg-gray-200 active:bg-gray-300 transition">🏫 Gestion des classes</a>
-                            <a href="{{ route('primaire.enseignants.enseignants') }}" class="block px-4 py-2 rounded-md hover:bg-gray-200 active:bg-gray-300 transition">👨‍🏫 Gestion des enseignants</a>
-                            @break
-
-                        @case('teacher')
-                            <a href="{{ route('teacher.dashboard') }}" class="block px-4 py-2 rounded-md hover:bg-gray-200 active:bg-gray-300 transition">📚 Dashboard Enseignant</a>
-                            <a href="{{ route('teacher.classes') }}" class="block px-4 py-2 rounded-md hover:bg-gray-200 active:bg-gray-300 transition">📘 Mes classes</a>
-                            @break
-
-                        @case('censeur')
-                            <a href="{{ route('censeur.dashboard') }}" class="block px-4 py-2 rounded-md hover:bg-gray-200 active:bg-gray-300 transition">📋 Dashboard Censeur</a>
-                            <a href="{{ route('censeur.invitations.index') }}" class="block px-4 py-2 rounded-md hover:bg-gray-200 active:bg-gray-300 transition">📨 Invitations enseignants</a>
-                            <a href="{{ route('censeur.subjects.index') }}" class="block px-4 py-2 rounded-md hover:bg-gray-200 active:bg-gray-300 transition">📖 Matières</a>
-                            <a href="{{ route('censeur.classes.index') }}" class="block px-4 py-2 rounded-md hover:bg-gray-200 active:bg-gray-300 transition">🗂️ Liste Classes</a>
-                            @break
-
-                        @case('secretaire')
-                            <a href="{{ route('secretaire.dashboard') }}" class="block px-4 py-2 rounded-md hover:bg-gray-200 active:bg-gray-300 transition">🗃️ Dashboard Secrétaire</a>
-                            <a href="{{ route('admin.students.pending') }}" class="block px-4 py-2 rounded-md hover:bg-gray-200 active:bg-gray-300 transition">⏳ Inscriptions en attente</a>
-                            <a href="{{ route('admin.students.index') }}" class="block px-4 py-2 rounded-md hover:bg-gray-200 active:bg-gray-300 transition">👥 Liste Élèves</a>
-                            <a href="{{ route('admin.classes.index') }}" class="block px-4 py-2 rounded-md hover:bg-gray-200 active:bg-gray-300 transition">🏷️ Gestion des classes</a>
-                            @break
-
-                        @case('super_admin')
-                            <a href="{{ route('admin.dashboard') }}" class="block px-4 py-2 rounded-md hover:bg-gray-200 active:bg-gray-300 transition">🛠️ Tableau de bord</a>
-                            <a href="{{ route('admin.academic_years.index') }}" class="block px-4 py-2 rounded-md hover:bg-gray-200 active:bg-gray-300 transition">📆 Années académiques</a>
-                            @break
-
-                        @default
-                            <span class="block px-4 py-2 text-gray-500">Rôle non défini</span>
-                    @endswitch
-                @endauth
-
-                <!-- Connexion / Déconnexion -->
-                @auth
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <button type="submit" class="w-full text-left px-4 py-2 rounded-md text-red-600 hover:bg-red-100 active:bg-red-200 transition">
-                            🔓 Déconnexion
-                        </button>
-                    </form>
-                @else
-                    <a href="{{ route('login') }}" class="block px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800 transition">
-                        🔐 Connexion
-                    </a>
-                @endauth
-            </nav>
-        </aside>
         
 
         <!-- Main content -->
-        <div class="flex-1 flex flex-col">
+        <div class="flex-1 ml-0 md:ml-64 flex flex-col">
             <!-- Mobile header -->
             <header class="md:hidden bg-white shadow p-4 flex justify-between items-center">
                 <button data-drawer-target="sidebar" data-drawer-toggle="sidebar" aria-controls="sidebar" class="p-2 text-gray-600">☰</button>

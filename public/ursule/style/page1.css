@@ -674,24 +674,7 @@ background-color: #ff1e00;
   padding-top: 5%;
 }
 
-.footer {
-  position: relative;
-  background-image: url("/ursule/img/footer-bg.jpg");
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  overflow: hidden;
-  z-index: 1;
-  padding-top: 6.5%;
-}
 
-.footer::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-color: rgba(0, 0, 0, 0.85);
-  z-index: 0;
-}
 
 .footer > * {
   position: relative;
