@@ -44,7 +44,7 @@
                 </a>
 
                 <a href="{{ route('archives.index') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">
-                    Archives
+                    Mes Archives
                 </a>
 
                 @switch(optional(auth()->user()->role)->name)

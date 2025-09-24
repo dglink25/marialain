@@ -3,10 +3,10 @@
 @section('content')
 <div class="container">
     <div class="bg-white shadow-lg rounded-xl p-8 border border-gray-200">
-
+        <h1 class="text-2xl font-bold mb-6">Annéee académique : {{ $annee_academique -> name}} </h1>
         <!-- En-tête -->
         <div class="flex items-center justify-between mb-6">
-            <h1 class="text-2xl font-bold text-gray-800">Liste des élèves - Primaire</h1>
+            <h1 class="text-1xl font-bold text-gray-800">Liste des élèves - Primaire</h1>
             <a href="{{ route('primaire.ecoliers.liste.pdf') }}" 
                class="bg-green-600 text-white px-5 py-2 rounded-lg shadow hover:bg-green-700 transition">
                Télécharger la liste
