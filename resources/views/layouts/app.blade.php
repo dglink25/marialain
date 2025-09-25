@@ -64,7 +64,7 @@
                             <i class="fa fa-school w-5 text-gray-500"></i> 
                             <span class="ml-3">Gestion des classes</span>
                         </a>
-                        <a href="{{ route('primaire.enseignants.enseignants') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">
+                        <a href="{{ route('primaire.enseignants.index') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">
                             <i class="fa fa-chalkboard-teacher w-5 text-gray-500"></i> 
                             <span class="ml-3">Gestion des enseignants</span>
                         </a>

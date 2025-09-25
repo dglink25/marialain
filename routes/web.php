@@ -62,8 +62,6 @@ Route:: get('/primaire/classe/classes', [ClassesprimaireController::class, 'inde
 Route:: post('/primaire/classe/classes', [ClassesprimaireController::class, 'store'])-> name('primaire.classe.store');
 Route:: get('/primaire/classe/showclass/{id}', [ClassesprimaireController::class, 'show'])-> name('primaire.classe.showclass');
 Route:: get('/primaire/enseignants/enseignants', [primaryteacherController::class, 'index'])-> name('primaire.enseignants.enseignants');
-Route:: get('/primaire/enseignants/inviter', [InvitationPController::class, 'index'])-> name('primaire.enseignants.inviter');
-Route::post('/primaire/enseignants/inviter', [InvitationPController::class, 'store'])-> name('primaire.enseignants.inviter.store');
 Route:: get('/primaire/ecoliers/liste', [StudentsController::class, 'index'])-> name('primaire.ecoliers.liste');
 Route::get('/primaire/ecoliers/pdf', [StudentsController::class, 'downloadPrimaireStudents'])
     ->name('primaire.ecoliers.liste.pdf');
@@ -72,6 +70,12 @@ Route::get('/primaire/enseignants/pdf', [primaryteacherController::class, 'downl
 Route::get('/', function () {
     return view('accueil');
 })->name('accueil');
+
+Route::prefix('primaire/enseignants')->name('primaire.enseignants.')->group(function () {
+    Route::get('/', [InvitationPController::class, 'index'])->name('index');
+    Route::post('/send', [InvitationPController::class, 'send'])->name('send');
+    Route::get('/accept/{token}', [InvitationPController::class, 'accept'])->name('accept');
+});
 
 
 Route::get('/', fn() => view('accueil'))->name('accueil');
