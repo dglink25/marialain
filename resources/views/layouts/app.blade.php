@@ -7,12 +7,18 @@
 
     <!-- Tailwind + Flowbite -->
     <script src="https://cdn.tailwindcss.com"></script>
+     <link href="https://unpkg.com/flowbite@1.6.5/dist/flowbite.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <link href="https://unpkg.com/flowbite@1.6.5/dist/flowbite.min.css" rel="stylesheet" />
     <style>
+         body { font-family: 'Inter', sans-serif; }
         .scrollbar-hide {
             scrollbar-width: none; /* Firefox */
             -ms-overflow-style: none; /* IE 10+ */
         }
+
     </style>
 </head>
 <body class="antialiased bg-gray-50 text-gray-800">
@@ -35,7 +41,8 @@
                 🏠 Accueil
             </a>
             <a href="{{ route('students.create') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">
-                📝 Inscription en ligne
+                <i class="fa fa-user-plus w-5 text-gray-500"></i> 
+                <span class="ml-3">Inscription en ligne</span>
             </a>
 
             @auth
@@ -49,25 +56,56 @@
 
                 @switch(optional(auth()->user()->role)->name)
                     @case('directeur_primaire')
-                        <a href="{{ route('directeur.dashboard') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">📊 Dashboard Directeur</a>
-                        <a href="{{ route('primaire.classe.classes') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">🏫 Gestion des classes</a>
-                        <a href="{{ route('primaire.enseignants.enseignants') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">👨‍🏫 Gestion des enseignants</a>
+                        <a href="{{ route('directeur.dashboard') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">
+                            <i class="fa fa-chart-line w-5 text-gray-500"></i> 
+                            <span class="ml-3">Dashboard Directeur</span>
+                        </a>
+                        <a href="{{ route('primaire.classe.classes') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">
+                            <i class="fa fa-school w-5 text-gray-500"></i> 
+                            <span class="ml-3">Gestion des classes</span>
+                        </a>
+                        <a href="{{ route('primaire.enseignants.enseignants') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">
+                            <i class="fa fa-chalkboard-teacher w-5 text-gray-500"></i> 
+                            <span class="ml-3">Gestion des enseignants</span>
+                        </a>
+                        <a href="{{ route('primaire.ecoliers.liste') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">
+                            <i class="fa fa-users w-5 text-gray-500"></i> 
+                            <span class="ml-3">Gestion des écoliers</span>
+                        </a>
                         @break
 
                     @case('teacher')
-                        <a href="{{ route('teacher.dashboard') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">📚 Dashboard Enseignant</a>
-                        <a href="{{ route('teacher.classes') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">📘 Mes classes</a>
+                        <a href="{{ route('teacher.dashboard') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">
+                            <i class="fa fa-book-open w-5 text-gray-500"></i> 
+                            <span class="ml-3">Dashboard Enseignant</span>
+                        </a>
+                        <a href="{{ route('teacher.classes') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">
+                            <i class="fa fa-layer-group w-5 text-gray-500"></i>
+                            <span class="ml-3">Mes classes</span>
+                        </a>
                         @break
 
                     @case('censeur')
-                        <a href="{{ route('censeur.dashboard') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">📋 Dashboard Censeur</a>
-                        <a href="{{ route('censeur.invitations.index') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">📨 Invitations enseignants</a>
-                        <a href="{{ route('censeur.subjects.index') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">📖 Matières</a>
-                        <a href="{{ route('censeur.classes.index') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">🗂️ Liste Classes</a>
+                        <a href="{{ route('censeur.dashboard') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">
+                            <i class="fa fa-tasks w-5 text-gray-500"></i> 
+                            <span class="ml-3">Dashboard Censeur</span>
+                        </a>
+                        <a href="{{ route('censeur.invitations.index') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">Invitations enseignants</a>
+                        <a href="{{ route('censeur.subjects.index') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">Matières</a>
+                        <a href="{{ route('censeur.classes.index') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">Liste Classes</a>
+                        @break
+                    @case('surveillant')
+                        <a href="{{ route('surveillant.dashboard') }}"class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">
+                            <i class="fa fa-tasks w-5 text-gray-500"></i> 
+                            <span class="ml-3">Dashboard Surveillant</span>
+                        </a>
                         @break
 
                     @case('secretaire')
-                        <a href="{{ route('secretaire.dashboard') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">🗃️ Dashboard Secrétaire</a>
+                        <a href="{{ route('secretaire.dashboard') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition"> 
+                            <i class="fa fa-tasks w-5 text-gray-500"></i> 
+                            <span class="ml-3">Dashboard Secrétaire</span>
+                        </a>
                         <a href="{{ route('admin.students.pending') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">⏳ Inscriptions en attente</a>
                         <a href="{{ route('admin.students.index') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">👥 Liste Élèves</a>
                         <a href="{{ route('admin.classes.index') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">🏷️ Gestion des classes</a>
@@ -81,6 +119,11 @@
                     @default
                         <span class="block px-4 py-4 text-white/70">Rôle non défini</span>
                 @endswitch
+                    <a href="{{ route('admin.academic_years.index') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">
+                        <i class="fa fa-user w-5 text-gray-500"></i>
+                        <span class="ml-3">Mon Profil</span>
+                    </a>
+
             @endauth
 
             <!-- Connexion / Déconnexion -->
@@ -105,10 +148,14 @@
         <!-- Main content -->
         <div class="flex-1 ml-0 md:ml-64 flex flex-col">
             <!-- Mobile header -->
-            <header class="md:hidden bg-white shadow p-4 flex justify-between items-center">
-                <button data-drawer-target="sidebar" data-drawer-toggle="sidebar" aria-controls="sidebar" class="p-2 text-gray-600">☰</button>
-                <h1 class="font-semibold">CPEG MARIE-ALAIN</h1>
-            </header>
+
+            <!-- Header mobile -->
+        <header class="md:hidden bg-white border-b shadow-sm p-4 flex justify-between items-center">
+            <button data-drawer-target="sidebar" data-drawer-toggle="sidebar" aria-controls="sidebar" class="p-2 text-gray-600">
+                <i class="fa fa-bars text-xl"></i>
+            </button>
+            <h1 class="font-semibold text-lg text-gray-800">CPEG MARIE-ALAIN</h1>
+        </header>
 
             <!-- Top bar -->
             <div class="bg-gray-100 px-6 py-4 flex justify-between items-center shadow-sm border-b">
@@ -164,25 +211,10 @@
         </div>
     </div>
 
+    
+
+
     <!-- Scripts -->
     <script src="https://unpkg.com/flowbite@1.6.5/dist/flowbite.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const toggle = document.getElementById('userMenuToggle');
-            const dropdown = document.getElementById('userDropdown');
-
-            if (toggle && dropdown) {
-                toggle.addEventListener('click', () => {
-                    dropdown.classList.toggle('hidden');
-                });
-
-                document.addEventListener('click', (e) => {
-                    if (!toggle.contains(e.target) && !dropdown.contains(e.target)) {
-                        dropdown.classList.add('hidden');
-                    }
-                });
-            }
-        });
-    </script>
 </body>
 </html>
