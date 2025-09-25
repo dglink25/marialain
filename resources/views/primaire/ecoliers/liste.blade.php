@@ -75,27 +75,39 @@
                 <thead class="bg-gray-100 text-gray-700 uppercase text-xs">
                     <tr>
                         <th class="px-4 py-3 text-center">N°</th>
+                        <th class="px-4 py-3 text-left">N° Educ master</th>
                         <th class="px-4 py-3 text-left">Nom</th>
                         <th class="px-4 py-3 text-left">Prénom</th>
                         <th class="px-4 py-3 text-left">Classe</th>
-                        <th class="px-4 py-3 text-center">Âge</th>
                         <th class="px-4 py-3 text-center">Sexe</th>
+                        <th class="px-4 py-3 text-center">Date de naissance</th>
+                        <th class="px-4 py-3 text-left">Lieu de naissance</th>
+                        <th class="px-4 py-3 text-center">Tuteur</th>
                         <th class="px-4 py-3 text-left">Email Parent</th>
+                        <th class="px-4 py-3 text-left">Contact</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200">
                     @foreach($students as $student)
                     <tr class="hover:bg-gray-50 transition">
                         <td class="px-4 py-3 text-center">{{ $loop->iteration }}</td>
-                        <td class="px-4 py-3 font-medium text-gray-800">{{ $student->last_name }}</td>
-                        <td class="px-4 py-3 text-gray-800">{{ $student->first_name }}</td>
+                        <td class="px-4 py-3 text-center">{{ $student->num_educ }}</td>
+                        <td class="px-4 py-3 font-medium text-gray-800"> <a href="{{ route('primaire.ecoliers.show', $student-> id) }}">{{ $student->last_name }}</a></td>
+                        <td class="px-4 py-3 font-medium text-gray-800">{{ $student->first_name }}</td>
                         <td class="px-4 py-3 text-gray-800">{{ $student->classe?->name ?? 'Non assignée' }}</td>
-                        <td class="px-4 py-3 text-center text-gray-600">{{ $student->age ?? '-' }}</td>
-                        <td class="px-4 py-3 text-center text-gray-600">{{ ucfirst($student->gender ?? '-') }}</td>
+                        <td class="px-4 py-3 text-gray-800">{{ $student-> gender }}</td>
+                         <td class="px-4 py-3 text-center text-gray-600">{{ $student-> birth_date ?? '-' }}</td>
+                         <td class="px-4 py-3 text-center text-gray-600">{{ $student-> birth_place ?? '-' }}</td>
+                     
+                        <td class="px-4 py-3 text-gray-600">{{ $student->parent_full_name ?? '-' }} {{ $student->parent_phone ?? '-' }}</td>
+                
                         <td class="px-4 py-3 text-gray-600">{{ $student->parent_email ?? '-' }} {{ $student->parent_phone ?? '-' }}</td>
+                        <td class="px-4 py-3 text-gray-600">{{ $student->parent_phone ?? '-' }} {{ $student->parent_phone ?? '-' }}</td>
+                        
                     </tr>
                     @endforeach
                 </tbody>
+                
             </table>
         </div>
         @else
