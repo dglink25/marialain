@@ -1,39 +1,35 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container mx-auto py-6">
-    <h1 class="text-2xl font-bold mb-6">Élèves de la classe : {{ $class->name }}</h1>
+<div class="container mx-auto py-8">
+    <!-- Titre -->
+    <h2 class="text-3xl font-extrabold text-between text-black-700 mb-8">
+        Élèves de la classe : {{ $class->name }}
+    </h2>
 
-    <!-- Bouton pour télécharger en PDF -->
-    <div class="mb-4 flex justify-end">
-        <a href="{{ route('censeur.classes.students.pdf', $class->id) }}" 
-           class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">
-           Télécharger PDF
-        </a>
-    </div>
-
-    <div class="bg-white shadow-md rounded-lg overflow-x-auto">
+    <!-- Tableau -->
+    <div class="bg-white shadow-lg rounded-xl overflow-x-auto">
         @if($class->students->count() > 0)
             <div class="overflow-y-auto max-h-[500px]">
                 <table class="min-w-full border border-gray-300 text-sm table-fixed">
-                    <thead class="bg-gray-100 sticky top-0 z-10">
+                    <thead class="bg-gray-100 sticky top-0 z-10 text-gray-700">
                         <tr>
-                            <th>N°</th>
-                            <th class="border px-4 py-2 text-left w-1/6">N° Éduc Master</th>
-                            <th class="border px-4 py-2 text-left w-1/6">Nom</th>
-                            <th class="border px-4 py-2 text-left w-1/6">Prénoms</th>
-                            <th class="border px-4 py-2 text-left w-1/6">Date de naissance</th>
-                            <th class="border px-4 py-2 text-left">Lieu de naissance</th>
-                            <th class="border px-4 py-2 text-left w-1/6">Sexe</th>
-                            <th class="border px-4 py-2 text-left">Nom parent</th>
-                            <th class="border px-4 py-2 text-left w-1/6">Email parent</th>
-                            <th class="border px-4 py-2 text-left">Téléphone parent</th>
+                            <th class="border px-4 py-3">N°</th>
+                            <th class="border px-4 py-3 w-1/6"><center>N° Éduc Master</center></th>
+                            <th class="border px-4 py-3 w-1/6"><center>Nom</center></th>
+                            <th class="border px-4 py-3 w-1/6">Prénoms</th>
+                            <th class="border px-4 py-3 w-1/6">Date de naissance</th>
+                            <th class="border px-4 py-3">Lieu de naissance</th>
+                            <th class="border px-4 py-3 w-1/12">Sexe</th>
+                            <th class="border px-4 py-3">Nom parent</th>
+                            <th class="border px-4 py-3 w-1/6"><center>Email parent</center></th>
+                            <th class="border px-4 py-3">Téléphone parent</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($class->students->sortBy([['last_name', 'asc'], ['first_name', 'asc']]) as $student)
-                            <tr class="hover:bg-gray-50">
-                                <td>{{ $loop->iteration }}</td> {{-- Numéro automatique --}}
+                            <tr class="hover:bg-gray-50 text-center">
+                                <td class="border px-4 py-2">{{ $loop->iteration }}</td>
                                 <td class="border px-4 py-2">{{ $student->num_educ ?? '-' }}</td>
                                 <td class="border px-4 py-2">{{ $student->last_name }}</td>
                                 <td class="border px-4 py-2">{{ $student->first_name }}</td>
@@ -41,7 +37,7 @@
                                 <td class="border px-4 py-2">{{ $student->birth_place }}</td>
                                 <td class="border px-4 py-2">{{ $student->gender ?? '-' }}</td>
                                 <td class="border px-4 py-2">{{ $student->parent_full_name }}</td>
-                                <td class="border px-4 py-2">{{ $student->parent_email }}</td>
+                                <td class="border px-4 py-2 break-words">{{ $student->parent_email }}</td>
                                 <td class="border px-4 py-2">{{ $student->parent_phone }}</td>
                             </tr>
                         @endforeach
@@ -49,15 +45,22 @@
                 </table>
             </div>
         @else
-            <p class="text-gray-500 p-4">Aucun élève dans cette classe.</p>
+            <p class="text-gray-500 p-6 text-center">Aucun élève dans cette classe.</p>
         @endif
     </div>
-
-    <div class="mt-4">
-        <a href="{{ route('censeur.classes.index') }}" 
-           class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700">
-           Retour
+    <br>
+    <br>
+    <!-- Bouton retour -->
+    <div class="d-flex justify-content-between">
+        <button onclick="window.history.back()" 
+            class="px-5 py-2 bg-gray-600 text-white rounded-lg shadow hover:bg-gray-700 transition">
+            Retour
+        </button>
+        
+        <a href="{{ route('censeur.timetables.download', $class->id) }}" class="btn btn-success">
+            <i class="bi bi-download me-2"></i>Télécharger PDF
         </a>
+    </div>
     </div>
 </div>
 @endsection

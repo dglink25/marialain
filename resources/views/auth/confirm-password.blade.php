@@ -12,107 +12,136 @@
             box-sizing: border-box;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-
+        
         body {
-            height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            background-image: url('https://source.unsplash.com/random/1920x1080/?security,protection');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
+            min-height: 100vh;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+        
+        .container {
+            display: flex;
+            width: 100%;
+            max-width: 900px;
+            height: 550px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        .left-panel {
+            flex: 1;
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            padding: 40px;
             position: relative;
         }
-
-        body::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(13, 45, 62, 0.7);
-            z-index: 0;
+        
+        .logo-container {
+            width: 155px;
+            height: 155px;
+            background: #ffffff;
+            border-radius: 50%;
+            border-radius: 50%;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto 30px auto;
+            padding-top:10px;
+            padding-right:20px  /* <-- centre horizontalement */
         }
 
-        .confirm-container {
-            width: 100%;
-            max-width: 500px;
-            padding: 30px;
-            z-index: 1;
+        
+        .logo-container img {
+            max-width: 150px;
+            max-height: 150px;
+            border-radius: 50%;
+            border-radius: 50%;
+            justify-content: center;
+            align-items: center;
         }
 
-        .confirm-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(8px);
-            border-radius: 12px;
-            padding: 40px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-        }
-
-        .logo-section {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .logo-section img {
-            height: 90px;
-            margin-bottom: 15px;
-        }
-
-        .logo-section h1 {
-            color: #2c3e50;
+        .left-panel h2 {
             font-size: 28px;
-            font-weight: 600;
-            margin-bottom: 5px;
+            margin-bottom: 15px;
+            text-align: center;
         }
-
-        .logo-section p {
-            color: #7f8c8d;
-            font-size: 16px;
-        }
-
-        .info-text {
-            color: #5a6c7d;
+        
+        .left-panel p {
+            text-align: center;
             font-size: 16px;
             line-height: 1.5;
+        }
+        
+        .right-panel {
+            flex: 1;
+            padding: 50px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .welcome-text {
+            margin-bottom: 20px;
+        }
+        
+        .welcome-text h1 {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        
+        .welcome-text p {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .info-text {
+            color: #5a6c7d;
+            font-size: 14px;
+            line-height: 1.5;
             margin-bottom: 25px;
-            text-align: center;
+            text-align: left;
         }
-
+        
         .form-group {
-            margin-bottom: 24px;
+            margin-bottom: 20px;
         }
-
+        
         .form-group label {
             display: block;
+            font-size: 14px;
+            color: #333;
             margin-bottom: 8px;
             font-weight: 500;
-            color: #2c3e50;
-            font-size: 15px;
         }
-
+        
         .input-with-icon {
             position: relative;
         }
-
+        
         .input-with-icon input {
             width: 100%;
-            padding: 14px 50px 14px 45px;
+            padding: 12px 15px 12px 45px;
             border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: all 0.3s;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: border-color 0.3s;
         }
-
+        
         .input-with-icon input:focus {
-            border-color: #3498db;
-            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+            border-color: #2575fc;
             outline: none;
         }
-
+        
         .input-icon {
             position: absolute;
             left: 15px;
@@ -121,105 +150,130 @@
             color: #7f8c8d;
             font-size: 18px;
         }
-
-        .toggle-password {
+        
+        .password-toggle {
             position: absolute;
             right: 15px;
             top: 50%;
             transform: translateY(-50%);
             color: #7f8c8d;
+            font-size: 18px;
             cursor: pointer;
             background: none;
             border: none;
-            font-size: 18px;
-            width: 30px;
-            height: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            outline: none;
         }
-
+        
         .error-message {
             color: #e74c3c;
-            font-size: 14px;
-            margin-top: 6px;
+            font-size: 13px;
+            margin-top: 5px;
+            display: flex;
+            align-items: center;
         }
-
+        
+        .error-message::before {
+            content: "!";
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            width: 16px;
+            height: 16px;
+            background-color: #e74c3c;
+            color: white;
+            border-radius: 50%;
+            margin-right: 6px;
+            font-size: 12px;
+        }
+        
         .session-status {
-            padding: 14px;
-            margin-bottom: 25px;
-            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 20px;
+            border-radius: 4px;
             text-align: center;
-            font-size: 15px;
+            font-size: 14px;
         }
-
+        
         .session-status.success {
             background: #d4edda;
             color: #155724;
             border: 1px solid #c3e6cb;
         }
-
+        
         .session-status.error {
             background: #f8d7da;
             color: #721c24;
             border: 1px solid #f5c6cb;
         }
-
+        
         .submit-button {
-            width: 100%;
-            padding: 15px;
-            background: #3498db;
+            background: #2575fc;
             color: white;
             border: none;
-            border-radius: 8px;
-            font-size: 17px;
-            font-weight: 600;
+            padding: 12px;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 500;
             cursor: pointer;
             transition: background 0.3s;
-            margin-top: 10px;
+            width: 100%;
         }
-
+        
         .submit-button:hover {
-            background: #2980b9;
+            background: #1c64e0;
         }
-
+        
         .back-link {
             text-align: center;
             margin-top: 25px;
         }
-
+        
         .back-link a {
-            color: #3498db;
+            color: #2575fc;
             text-decoration: none;
-            font-size: 15px;
+            font-size: 14px;
             transition: color 0.2s;
         }
-
+        
         .back-link a:hover {
-            color: #2980b9;
             text-decoration: underline;
+            color: #1c64e0;
         }
-
-        @media (max-width: 600px) {
-            .confirm-container {
-                padding: 20px;
+        
+        @media (max-width: 900px) {
+            .container {
+                flex-direction: column;
+                width: 100%;
+                height: auto;
+                max-width: 500px;
             }
             
-            .confirm-card {
+            .left-panel {
+                padding: 30px;
+            }
+            
+            .right-panel {
                 padding: 30px;
             }
         }
     </style>
 </head>
 <body>
-    <div class="confirm-container">
-        <div class="confirm-card">
-            <div class="logo-section">
+    <div class="container">
+        <div class="left-panel">
+            <div class="logo-container">
                 <img src="{{ asset('logo.png') }}" alt="Logo CPEG MARIE-ALAIN">
-                <h1>CPEG MARIE-ALAIN</h1>
-                <p>Confirmation de sécurité</p>
             </div>
-
+            <h2>CPEG MARIE-ALAIN</h2>
+            <p>Confirmation de sécurité</p>
+        </div>
+        
+        <div class="right-panel">
+            <div class="welcome-text">
+                <h1>Zone sécurisée</h1>
+                <p>Confirmation requise pour continuer</p>
+            </div>
+            
             <div class="info-text">
                 Ceci est une zone sécurisée de l'application. Veuillez confirmer votre mot de passe avant de continuer.
             </div>
@@ -240,8 +294,8 @@
                     <div class="input-with-icon">
                         <i class="fas fa-lock input-icon"></i>
                         <input id="password" type="password" name="password" required autocomplete="current-password" placeholder="Votre mot de passe">
-                        <button type="button" class="toggle-password" id="togglePassword">
-                            <i class="far fa-eye"></i>
+                        <button type="button" class="password-toggle" id="password-toggle">
+                            <i class="fas fa-eye"></i>
                         </button>
                     </div>
                     @error('password')
@@ -261,28 +315,20 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const togglePassword = document.querySelector('#togglePassword');
-            const passwordInput = document.querySelector('#password');
-            const eyeIcon = togglePassword.querySelector('i');
+        // Fonctionnalité pour afficher/masquer le mot de passe
+        document.getElementById('password-toggle').addEventListener('click', function() {
+            const passwordInput = document.getElementById('password');
+            const icon = this.querySelector('i');
             
-            // Fonction pour basculer l'affichage du mot de passe
-            togglePassword.addEventListener('click', function() {
-                // Basculer le type de champ
-                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-                passwordInput.setAttribute('type', type);
-                
-                // Changer l'icône
-                if (type === 'text') {
-                    eyeIcon.classList.remove('fa-eye');
-                    eyeIcon.classList.add('fa-eye-slash');
-                    togglePassword.setAttribute('aria-label', 'Masquer le mot de passe');
-                } else {
-                    eyeIcon.classList.remove('fa-eye-slash');
-                    eyeIcon.classList.add('fa-eye');
-                    togglePassword.setAttribute('aria-label', 'Afficher le mot de passe');
-                }
-            });
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
         });
     </script>
 </body>

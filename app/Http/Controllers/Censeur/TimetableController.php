@@ -10,14 +10,29 @@ use App\Models\Subject;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
+use App\Models\AcademicYear;
 
-
-class TimetableController extends Controller
-{
+class TimetableController extends Controller{
     public function index($classId){
-        $class = Classe::findOrFail($classId);
+        // Vérifie s'il existe une année active
+        $activeYear = AcademicYear::where('active', true)->first();
 
+        if (!$activeYear) {
+            return back()->with('error', 'Aucune année scolaire active trouvée.');
+        }
+
+        // Vérifie si la classe existe et appartient à l’année active
+        $class = Classe::where('id', $classId)
+            ->where('academic_year_id', $activeYear->id)
+            ->first();
+
+        if (!$class) {
+            return back()->with('error', 'Classe introuvable pour l’année scolaire active.');
+        }
+
+        // Récupération des emplois du temps pour cette classe et année
         $timetables = Timetable::where('class_id', $classId)
+            ->where('academic_year_id', $activeYear->id)
             ->with('teacher', 'subject')
             ->orderBy('day')
             ->orderBy('start_time')
@@ -25,23 +40,20 @@ class TimetableController extends Controller
 
         // Génération des heures sous forme "07h-08h", "08h-09h", ...
         $hours = [];
-        $start = 7; // 07:00
-        $end = 19;  // 19:00
-
-        for ($h = $start; $h < $end; $h++) {
+        for ($h = 7; $h < 19; $h++) {
             $hours[] = sprintf('%02dh-%02dh', $h, $h + 1);
         }
 
-        $subjects = Subject::all();
+        // Récupère seulement les matières et profs de l’année active
+        $subjects = Subject::where('academic_year_id', $activeYear->id)->get();
         $teachers = User::whereHas('role', fn($q) => $q->where('name', 'teacher'))->get();
 
-        return view('censeur.timetables.index', compact('class', 'hours', 'timetables', 'subjects', 'teachers'));
+        return view('censeur.timetables.index', compact('class', 'hours', 'timetables', 'subjects', 'teachers', 'activeYear'));
     }
 
+
     public function edit($classId, $id){
-        if (!$this->checkActiveYear() instanceof AcademicYear) {
-            return $this->checkActiveYear();
-        }
+        
         $class = Classe::findOrFail($classId);
         $timetable = Timetable::findOrFail($id);
         $teachers = User::whereHas('role', fn($q) => $q->where('name','teacher'))->get();
@@ -50,12 +62,8 @@ class TimetableController extends Controller
         return view('censeur.timetables.edit', compact('class','timetable','teachers','subjects'));
     }
 
-   
-
     public function update(Request $request, $classId, $id){
-        if (!$this->checkActiveYear() instanceof AcademicYear) {
-            return $this->checkActiveYear();
-        }
+        $activeYear = AcademicYear::where('active', true)->firstOrFail();
         $request->validate([
             'teacher_id' => 'required|exists:users,id',
             'subject_id' => 'required|exists:subjects,id',
@@ -124,8 +132,9 @@ class TimetableController extends Controller
                         ->with('success','Créneau modifié avec succès.');
     }
 
-
     public function store(Request $request, $classId){
+        $activeYear = AcademicYear::where('active', true)->firstOrFail();
+
         if (!$this->checkActiveYear() instanceof AcademicYear) {
             return $this->checkActiveYear();
         }
@@ -144,9 +153,11 @@ class TimetableController extends Controller
             'day' => $request->day,
             'start_time' => $request->start_time,
             'end_time' => $request->end_time,
+            'academic_year_id' => $activeYear->id,
         ]);
 
         DB::table('class_teacher_subject')->insert([
+            'academic_year_id' => $activeYear->id,
             'class_id'   => $classId,
             'teacher_id' => $request->teacher_id,
             'subject_id' => $request->subject_id,
@@ -173,9 +184,26 @@ class TimetableController extends Controller
 
     public function downloadPDF($classId){
 
+        $activeYear = AcademicYear::where('active', true)->first();
+
+        if (!$activeYear) {
+            return back()->with('error', 'Aucune année scolaire active trouvée.');
+        }
+
+        // Vérifie si la classe existe et appartient à l’année active
+        $class = Classe::where('id', $classId)
+            ->where('academic_year_id', $activeYear->id)
+            ->first();
+
+        if (!$class) {
+            return back()->with('error', 'Classe introuvable pour l’année scolaire active.');
+        }
+
+
         $class = Classe::findOrFail($classId);
 
         $timetables = Timetable::where('class_id', $classId)
+            ->where('academic_year_id', $activeYear->id)
             ->with('teacher', 'subject')
             ->orderBy('day')
             ->orderBy('start_time')

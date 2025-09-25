@@ -14,7 +14,7 @@ class TeacherInvitation extends Model
     ];
     
     protected $fillable = [
-        'user_id', 'censeur_id', 'token', 'accepted', 'accepted_at'
+        'user_id', 'academic_year_id', 'censeur_id', 'token', 'accepted', 'accepted_at'
     ];
 
     public function user() {
@@ -30,5 +30,9 @@ class TeacherInvitation extends Model
 
     public function censeur() {
         return $this->belongsTo(User::class, 'censeur_id');
+    }
+    public function academicYear()
+    {
+        return $this->belongsTo(AcademicYear::class);
     }
 }

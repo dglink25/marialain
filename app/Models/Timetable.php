@@ -4,10 +4,15 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Timetable extends Model
-{
+class Timetable extends Model{
     protected $fillable = [
-        'class_id','teacher_id','subject_id','day','start_time','end_time'
+        'class_id', 
+        'subject_id', 
+        'teacher_id', 
+        'day', 
+        'start_time', 
+        'end_time', 
+        'academic_year_id'
     ];
 
     public function class()
@@ -23,5 +28,15 @@ class Timetable extends Model
     public function subject()
     {
         return $this->belongsTo(Subject::class, 'subject_id');
+    }
+
+    public function academicYear() {
+        return $this->belongsTo(AcademicYear::class);
+    }
+
+    // Scope pour filtrer automatiquement par année active
+    public function scopeForCurrentYear($query) {
+        $yearId = session('academic_year_id') ?? AcademicYear::where('active', 1)->first()->id;
+        return $query->where('academic_year_id', $yearId);
     }
 }

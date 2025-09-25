@@ -17,6 +17,7 @@
                             <th class="border px-4 py-2 text-left w-1/6">Date de naissance</th>
                             <th class="border px-4 py-2 text-left">Lieu de naissance</th>
                             <th class="border px-4 py-2 text-left w-1/6">Sexe</th>
+                            <th class="border px-4 py-2 text-left w-1/6">Parent/Tuteur</th>
                             <th class="border px-4 py-2 text-left w-1/6">Email parent</th>
                             <th class="border px-4 py-2 text-left">Téléphone parent</th>
                         </tr>
@@ -31,6 +32,7 @@
                                 <td class="border px-4 py-2">{{ $student->birth_date }}</td>
                                 <td class="border px-4 py-2">{{ $student->birth_place }}</td>
                                 <td class="border px-4 py-2">{{ $student->gender ?? '-' }}</td>
+                                <td class="border px-4 py-2">{{ $student->parent_full_name ?? '-' }}</td>
                                 <td class="border px-4 py-2">{{ $student->parent_email }}</td>
                                 <td class="border px-4 py-2">{{ $student->parent_phone }}</td>
                             </tr>

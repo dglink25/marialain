@@ -23,9 +23,32 @@ class StudentValidationController extends Controller{
 
     // Liste des élèves non validés
     public function index(){
-        $students = Student::where('is_validated', false)->get();
-        return view('admin.students.pending', compact('students'));
+        try {
+            // Vérifier si une année scolaire est active
+            $activeYear = AcademicYear::where('active', true)->first();
+
+            if (!$activeYear) {
+                return view('admin.students.pending', [
+                    'students' => collect(),  // liste vide
+                    'activeYear' => null,
+                    'message' => 'Aucune année scolaire active pour le moment.'
+                ]);
+            }
+
+
+            // Récupérer les élèves non validés de l'année active
+            $students = Student::where('is_validated', false)
+                            ->where('academic_year_id', $activeYear->id)
+                            ->get();
+
+            return view('admin.students.pending', compact('student', 'activeYear'));
+
+        } catch (\Exception $e) {
+            // Gestion d'autres erreurs inattendues
+            return redirect()->back()->with('error', 'Une erreur est survenue : '.$e->getMessage());
+        }
     }
+
 
     // Validation et envoi du mail avec reçu
     public function validateStudent(Request $request, Student $student){

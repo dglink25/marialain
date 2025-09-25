@@ -17,21 +17,49 @@ class ClassController extends Controller{
         return $activeYear;
     }
 
+
+
     public function index(Request $request)
     {
-        $entities = Entity::all();
-        $years = AcademicYear::where('active', 1)->get();
+        try {
+            // Vérifier si une année scolaire active existe
+            $activeYear = AcademicYear::where('active', true)->first();
 
-        $query = Classe::with('entity', 'academicYear');
+            if (!$activeYear) {
+                return view('admin.classes.index', [
+                    'classes' => collect(),   // liste vide
+                    'entities' => Entity::all(),
+                    'years' => collect(),
+                    'activeYear' => null,
+                    'message' => 'Aucune année scolaire active pour le moment.'
+                ]);
+            }
 
-        if ($request->has('entity_id') && $request->entity_id != '') {
-            $query->where('entity_id', $request->entity_id);
+
+            // Toutes les entités pour le filtre
+            $entities = Entity::all();
+
+            // On ne garde que l'année active (inutile de faire un get() ici, sauf si tu veux plusieurs actives)
+            $years = AcademicYear::where('active', 1)->get();
+
+            // Récupérer les classes de l'année active
+            $query = Classe::with('entity', 'academicYear')
+                            ->where('academic_year_id', $activeYear->id);
+
+            // Filtre par entité si sélectionnée
+            if ($request->filled('entity_id')) {
+                $query->where('entity_id', $request->entity_id);
+            }
+
+            $classes = $query->paginate(10)->withQueryString();
+
+            return view('admin.classes.index', compact('classes', 'entities', 'years', 'activeYear'));
+
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', '❌ Erreur inattendue : '.$e->getMessage());
         }
-
-        $classes = $query->paginate(10)->withQueryString();
-
-        return view('admin.classes.index', compact('classes', 'entities', 'years'));
     }
+
 
     public function edit($id){
         if (!$this->checkActiveYear() instanceof AcademicYear) {

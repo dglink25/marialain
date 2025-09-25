@@ -1,6 +1,9 @@
 @extends('layouts.app')
 
 @section('content')
+@php
+    $pageTitle = 'Profil';
+@endphp
 @if(session('showPasswordForm') || $errors->has('old_password') || $errors->has('password'))
 <script>
     document.getElementById('passwordForm').classList.remove('hidden');
@@ -12,7 +15,7 @@
 
         <!-- Photo -->
         <div class="flex flex-col items-center">
-            <form action="{{ route('profile.updatePhoto') }}" method="POST" enctype="multipart/form-data">
+            <form action="{{ route('profile.photo') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <label class="cursor-pointer">
                     <input type="file" name="profile_photo" class="hidden" onchange="previewImage(event); this.form.submit()">

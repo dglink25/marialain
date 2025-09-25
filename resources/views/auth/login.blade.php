@@ -12,99 +12,129 @@
             box-sizing: border-box;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-
+        
         body {
-            height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            background-image: url('https://source.unsplash.com/random/1920x1080/?school,education');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
+            min-height: 100vh;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+        
+        .container {
+            display: flex;
+            width: 100%;
+            max-width: 900px;
+            height: 550px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        .left-panel {
+            flex: 1;
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            padding: 40px;
             position: relative;
         }
-
-        body::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(13, 45, 62, 0.7);
-            z-index: 0;
+        
+        .logo-container {
+            width: 155px;
+            height: 155px;
+            background: #ffffff;
+            border-radius: 50%;
+            border-radius: 50%;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto 30px auto;
+            padding-top:10px;
+            padding-right:20px  /* <-- centre horizontalement */
         }
 
-        .login-container {
-            width: 100%;
-            max-width: 500px;
-            padding: 30px;
-            z-index: 1;
+        
+        .logo-container img {
+            max-width: 150px;
+            max-height: 150px;
+            border-radius: 50%;
+            border-radius: 50%;
+            justify-content: center;
+            align-items: center;
         }
 
-        .login-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(8px);
-            border-radius: 12px;
-            padding: 40px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-        }
-
-        .logo-section {
+        
+        .left-panel h2 {
+            font-size: 28px;
+            margin-bottom: 15px;
             text-align: center;
+        }
+        
+        .left-panel p {
+            text-align: center;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+        
+        .right-panel {
+            flex: 1;
+            padding: 50px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .welcome-text {
             margin-bottom: 30px;
         }
-
-        .logo-section img {
-            height: 90px;
-            margin-bottom: 15px;
-        }
-
-        .logo-section h1 {
-            color: #2c3e50;
-            font-size: 28px;
+        
+        .welcome-text h1 {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 8px;
             font-weight: 600;
-            margin-bottom: 5px;
         }
-
-        .logo-section p {
-            color: #7f8c8d;
-            font-size: 16px;
+        
+        .welcome-text p {
+            color: #666;
+            font-size: 14px;
         }
-
+        
         .form-group {
-            margin-bottom: 24px;
+            margin-bottom: 20px;
         }
-
+        
         .form-group label {
             display: block;
+            font-size: 14px;
+            color: #333;
             margin-bottom: 8px;
             font-weight: 500;
-            color: #2c3e50;
-            font-size: 15px;
         }
-
+        
         .input-with-icon {
             position: relative;
         }
-
+        
         .input-with-icon input {
             width: 100%;
-            padding: 14px 15px 14px 45px;
+            padding: 12px 15px 12px 45px;
             border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: all 0.3s;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: border-color 0.3s;
         }
-
+        
         .input-with-icon input:focus {
-            border-color: #3498db;
-            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+            border-color: #2575fc;
             outline: none;
         }
-
+        
         .input-icon {
             position: absolute;
             left: 15px;
@@ -113,110 +143,150 @@
             color: #7f8c8d;
             font-size: 18px;
         }
-
+        
+        .password-toggle {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #7f8c8d;
+            font-size: 18px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            outline: none;
+        }
+        
         .error-message {
             color: #e74c3c;
-            font-size: 14px;
-            margin-top: 6px;
+            font-size: 13px;
+            margin-top: 5px;
+            display: flex;
+            align-items: center;
         }
-
+        
+        .error-message::before {
+            content: "!";
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            width: 16px;
+            height: 16px;
+            background-color: #e74c3c;
+            color: white;
+            border-radius: 50%;
+            margin-right: 6px;
+            font-size: 12px;
+        }
+        
         .session-status {
-            padding: 14px;
-            margin-bottom: 25px;
-            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 20px;
+            border-radius: 4px;
             text-align: center;
-            font-size: 15px;
+            font-size: 14px;
         }
-
+        
         .session-status.success {
             background: #d4edda;
             color: #155724;
             border: 1px solid #c3e6cb;
         }
-
+        
         .session-status.error {
             background: #f8d7da;
             color: #721c24;
             border: 1px solid #f5c6cb;
         }
-
-        .remember-me {
-            display: flex;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .remember-me input {
-            margin-right: 10px;
-            width: 18px;
-            height: 18px;
-        }
-
-        .remember-me label {
-            color: #2c3e50;
-            font-size: 15px;
-        }
-
-        .form-footer {
+        
+        .options {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            margin-bottom: 25px;
+            font-size: 14px;
         }
-
+        
+        .remember-me {
+            display: flex;
+            align-items: center;
+        }
+        
+        .remember-me input {
+            margin-right: 8px;
+            width: 16px;
+            height: 16px;
+        }
+        
+        .remember-me label {
+            color: #333;
+            font-size: 14px;
+        }
+        
         .forgot-password {
-            color: #3498db;
+            color: #2575fc;
             text-decoration: none;
-            font-size: 15px;
             transition: color 0.2s;
+            font-size: 14px;
         }
-
+        
         .forgot-password:hover {
-            color: #2980b9;
             text-decoration: underline;
+            color: #1c64e0;
         }
-
-        .submit-button {
-            padding: 12px 24px;
-            background: #3498db;
+        
+        .login-button {
+            background: #2575fc;
             color: white;
             border: none;
-            border-radius: 8px;
+            padding: 12px;
+            border-radius: 4px;
             font-size: 16px;
-            font-weight: 600;
+            font-weight: 500;
             cursor: pointer;
             transition: background 0.3s;
+            width: 100%;
+            margin-bottom: 20px;
         }
-
-        .submit-button:hover {
-            background: #2980b9;
+        
+        .login-button:hover {
+            background: #1c64e0;
         }
-
-        @media (max-width: 600px) {
-            .login-container {
-                padding: 20px;
+        
+        @media (max-width: 900px) {
+            .container {
+                flex-direction: column;
+                width: 100%;
+                height: auto;
+                max-width: 500px;
             }
             
-            .login-card {
+            .left-panel {
                 padding: 30px;
             }
             
-            .form-footer {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 15px;
+            .right-panel {
+                padding: 30px;
             }
         }
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <div class="login-card">
-            <div class="logo-section">
+    <div class="container">
+        <div class="left-panel">
+            <div class="logo-container">
                 <img src="{{ asset('logo.png') }}" alt="Logo CPEG MARIE-ALAIN">
-                <h1>CPEG MARIE-ALAIN</h1>
-                <p>Connectez-vous à votre espace personnel</p>
             </div>
-
+            <h2>CPEG MARIE-ALAIN</h2>
+            <p>Connectez-vous à votre espace personnel</p>
+        </div>
+        
+        <div class="right-panel">
+            <div class="welcome-text">
+                <h1>Connectez-vous à votre compte</h1>
+                <p></p>
+            </div>
+            
             <!-- Session Status -->
             @if(session('status'))
                 <div class="session-status success">
@@ -232,7 +302,7 @@
                     <label for="email">Adresse Email</label>
                     <div class="input-with-icon">
                         <i class="fas fa-envelope input-icon"></i>
-                        <input id="email" type="email" name="email" value="{{ old('email') }}" required autofocus autocomplete="email" placeholder="Votre adresse email">
+                        <input id="email" type="email" name="email" value="{{ old('email') }}" required autofocus autocomplete="email" placeholder="yourroom@hotmail.com">
                     </div>
                     @error('email')
                         <div class="error-message">{{ $message }}</div>
@@ -244,32 +314,54 @@
                     <label for="password">Mot de passe</label>
                     <div class="input-with-icon">
                         <i class="fas fa-lock input-icon"></i>
-                        <input id="password" type="password" name="password" required autocomplete="current-password" placeholder="Votre mot de passe">
+                        <input id="password" type="password" name="password" required autocomplete="current-password" placeholder="••••••••">
+                        <button type="button" id="password-toggle" class="password-toggle">
+                            <i class="fas fa-eye"></i>
+                        </button>
                     </div>
                     @error('password')
                         <div class="error-message">{{ $message }}</div>
+                    @else
+                        <div class="error-message">Wrong password. Please try again.</div>
                     @enderror
                 </div>
-
-                <!-- Remember Me -->
-                <div class="remember-me">
-                    <input id="remember_me" type="checkbox" name="remember">
-                    <label for="remember_me">Se souvenir de moi</label>
-                </div>
-
-                <div class="form-footer">
+                
+                <div class="options">
+                    <div class="remember-me">
+                        <input id="remember_me" type="checkbox" name="remember">
+                        <label for="remember_me">Se souvenir de moi</label>
+                    </div>
+                    
                     @if (Route::has('password.request'))
                         <a class="forgot-password" href="{{ route('password.request') }}">
                             Mot de passe oublié?
                         </a>
                     @endif
-
-                    <button type="submit" class="submit-button">
-                        Se connecter
-                    </button>
                 </div>
+
+                <button type="submit" class="login-button">
+                    Continue
+                </button>
+                 </div>
             </form>
         </div>
-    </div>
+
+    <script>
+        // Fonctionnalité pour afficher/masquer le mot de passe
+        document.getElementById('password-toggle').addEventListener('click', function() {
+            const passwordInput = document.getElementById('password');
+            const icon = this.querySelector('i');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        });
+    </script>
 </body>
 </html>

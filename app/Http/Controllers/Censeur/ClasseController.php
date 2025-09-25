@@ -7,20 +7,50 @@ use App\Models\Classe;
 use App\Models\User;
 use App\Models\Timetable;
 use Barryvdh\DomPDF\Facade\Pdf; // Import du PDF
+use App\Models\AcademicYear;
 
-class ClasseController extends Controller
-{
+
+class ClasseController extends Controller{
+    
     public function index(){
-        $classes = Classe::where('entity_id', 3)->get();
-        return view('censeur.classes.index', compact('classes'));
+        // Récupère l'année scolaire active
+        $activeYear = AcademicYear::where('active', true)->first();
+
+        if (!$activeYear) {
+            // Si aucune année active, renvoie une vue vide avec un message
+            return view('censeur.classes.index', [
+                'classes' => collect(), // collection vide
+                'activeYear' => null,
+                'error' => "Aucune année scolaire active n’a été trouvée."
+            ]);
+        }
+
+        // Récupère les classes de l'entité 3 pour l'année active
+        $classes = Classe::with(['entity', 'academicYear'])
+            ->where('entity_id', 3)
+            ->where('academic_year_id', $activeYear->id)
+            ->get();
+
+        return view('censeur.classes.index', compact('classes', 'activeYear'));
     }
 
+
+
     public function students($classId){
-        $class = Classe::with(['students' => function($query) {
-            $query->where('is_validated', 1)   // ✅ Seulement les élèves validés
-                ->orderBy('last_name')
-                ->orderBy('first_name');
+
+        $activeYear = AcademicYear::where('active', true)->first();
+
+        if (!$activeYear) {
+            return back()->with('error', 'Aucune année scolaire active trouvée.');
+        }
+        
+        $class = Classe::with(['students' => function($query) use ($activeYear) {
+        $query->where('is_validated', 1) 
+              ->where('academic_year_id', $activeYear->id)
+              ->orderBy('last_name')
+              ->orderBy('first_name');
         }])->findOrFail($classId);
+
 
         return view('censeur.classes.students', compact('class'));
     }
