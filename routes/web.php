@@ -41,7 +41,7 @@ use App\Http\Controllers\Dprimaire\InvitationPController;
 use App\Http\Controllers\Dprimaire\StudentsController;
 use App\Http\Controllers\StudentMailController;
 use App\Http\Controllers\CenseurDashboardController;
-
+use App\Http\Controllers\SurveillantController;
 
 /*
 |--------------------------------------------------------------------------
@@ -291,3 +291,22 @@ Route::get('/classes/{class}/enseignants/export', [ClasseController::class, 'exp
 
 // Sujet -> enseignants
 Route::get('subjects/{subject}/teachers', [SubjectController::class, 'teachers'])->name('subjects.teachers');
+
+
+// Surveillant
+Route::middleware(['auth'])->prefix('surveillant')->group(function () {
+    // Liste des classes
+    Route::get('/classes', [SurveillantController::class, 'classesList'])->name('surveillant.classes');
+
+    // Attribuer conduite à une classe
+    Route::post('/classes/{id}/conducts', [SurveillantController::class, 'assignConducts'])->name('surveillant.classes.conducts');
+
+    // Voir élèves d'une classe
+    Route::get('/classes/{id}/students', [SurveillantController::class, 'classStudents'])->name('surveillant.classes.students');
+
+    // Punir un élève
+    Route::post('/students/{id}/punish', [SurveillantController::class, 'punish'])->name('surveillant.students.punish');
+
+    // Historique des punitions d’un élève
+    Route::get('/students/{id}/punishments', [SurveillantController::class, 'punishmentsHistory'])->name('surveillant.students.history');
+});

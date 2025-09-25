@@ -66,5 +66,21 @@ class Student extends Model{
         return $this->belongsTo(AcademicYear::class, 'academic_year_id');
     }
 
+    public function punishments()
+    {
+        return $this->hasMany(Punishment::class);
+    }
+
+    public function conducts()
+    {
+        return $this->hasMany(Conduct::class);
+    }
+
+
+    // 🔹 Accesseur pour le nom complet
+    public function getFullNameAttribute(): string
+    {
+        return "{$this->last_name} {$this->first_name}";
+    }
     
 }

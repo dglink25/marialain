@@ -99,6 +99,7 @@
                             <i class="fa fa-tasks w-5 text-gray-500"></i> 
                             <span class="ml-3">Dashboard Surveillant</span>
                         </a>
+                        <a href="{{ route('surveillant.classes') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">Voir liste des classes</a>
                         @break
 
                     @case('secretaire')
@@ -160,7 +161,7 @@
             <!-- Top bar -->
             <div class="bg-gray-100 px-6 py-4 flex justify-between items-center shadow-sm border-b">
                 <h2 class="text-lg font-semibold text-gray-800">
-                    {{ $pageTitle ?? 'Accueil' }}
+                    {{ $pageTitle ?? (isset($activeYear) ? $activeYear->name : 'Accueil') }}
                 </h2>
 
                 <div class="relative">
@@ -206,6 +207,22 @@
 
             <!-- Page content -->
             <main class="flex-1 p-6">
+            @if(session('success'))
+                <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+                    {{ session('success') }}
+                </div>
+            @endif
+            {{-- Messages d'erreur --}}
+            @if($errors->any())
+                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                    <ul class="list-disc pl-5">
+                        @foreach($errors->all() as $error)
+                            {{ $error }}
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
                 @yield('content')
             </main>
         </div>
