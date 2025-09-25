@@ -98,6 +98,8 @@ class StudentsController extends Controller
     public function show(string $id)
     {
         //
+        $student = Student:: FindorFail($id);
+        return view('primaire.ecoliers.show', compact('student'));
     }
 
     /**
