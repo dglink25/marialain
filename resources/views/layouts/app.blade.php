@@ -38,26 +38,25 @@
      <div class="overflow-y-auto h-[calc(100vh-112px)]  space-y-1 scrollbar-hide">
         <nav class="p-4 space-y-1 text-base font-medium">
             <a href="{{ route('home') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">
-                🏠 Accueil
+                <i class="fa fa-home"></i> 
+                <span class="ml-3">Accueil</span>
             </a>
             <a href="{{ route('students.create') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">
-                <i class="fa fa-user-plus w-5 text-gray-500"></i> 
+                <i class="fa fa-user-plus "></i> 
                 <span class="ml-3">Inscription en ligne</span>
             </a>
 
             @auth
-                <a href="{{ route('profile.edit') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">
-                    👤 Mon Profil
-                </a>
 
                 <a href="{{ route('archives.index') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">
-                    Mes Archives
+                    <i class="fas fa-archive"></i>
+                    <span class="ml-3">Mes Archives</span>
                 </a>
 
                 @switch(optional(auth()->user()->role)->name)
                     @case('directeur_primaire')
                         <a href="{{ route('directeur.dashboard') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">
-                            <i class="fa fa-chart-line w-5 text-gray-500"></i> 
+                            <i class="fas fa-tachometer-alt"></i>
                             <span class="ml-3">Dashboard Directeur</span>
                         </a>
                         <a href="{{ route('primaire.classe.classes') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">
@@ -76,7 +75,7 @@
 
                     @case('teacher')
                         <a href="{{ route('teacher.dashboard') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">
-                            <i class="fa fa-book-open w-5 text-gray-500"></i> 
+                            <i class="fas fa-tachometer-alt"></i> 
                             <span class="ml-3">Dashboard Enseignant</span>
                         </a>
                         <a href="{{ route('teacher.classes') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">
@@ -87,40 +86,55 @@
 
                     @case('censeur')
                         <a href="{{ route('censeur.dashboard') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">
-                            <i class="fa fa-tasks w-5 text-gray-500"></i> 
+                            <i class="fas fa-tachometer-alt"></i> 
                             <span class="ml-3">Dashboard Censeur</span>
                         </a>
-                        <a href="{{ route('censeur.invitations.index') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">Invitations enseignants</a>
-                        <a href="{{ route('censeur.subjects.index') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">Matières</a>
-                        <a href="{{ route('censeur.classes.index') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">Liste Classes</a>
+                        <a href="{{ route('censeur.invitations.index') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">
+                            <span >Invitations enseignants</span>
+                        </a>
+                        <a href="{{ route('censeur.subjects.index') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">
+                            <i class="fas fa-book-open"></i>
+                            <span class="ml-3">Matières</span>
+                        </a>
+                        <a href="{{ route('censeur.classes.index') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">
+                            
+                            Liste Classes
+
+                        </a>
                         @break
                     @case('surveillant')
                         <a href="{{ route('surveillant.dashboard') }}"class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">
-                            <i class="fa fa-tasks w-5 text-gray-500"></i> 
+                            <i class="fas fa-tachometer-alt"></i> 
                             <span class="ml-3">Dashboard Surveillant</span>
                         </a>
                         @break
 
                     @case('secretaire')
                         <a href="{{ route('secretaire.dashboard') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition"> 
-                            <i class="fa fa-tasks w-5 text-gray-500"></i> 
+                            <i class="fas fa-tachometer-alt"></i> 
                             <span class="ml-3">Dashboard Secrétaire</span>
                         </a>
-                        <a href="{{ route('admin.students.pending') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">⏳ Inscriptions en attente</a>
-                        <a href="{{ route('admin.students.index') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">👥 Liste Élèves</a>
-                        <a href="{{ route('admin.classes.index') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">🏷️ Gestion des classes</a>
+                        <a href="{{ route('admin.students.pending') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">Inscriptions en attente</a>
+                        <a href="{{ route('admin.students.index') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition"> Liste Élèves</a>
+                        <a href="{{ route('admin.classes.index') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition"> Gestion des classes</a>
                         @break
 
                     @case('super_admin')
-                        <a href="{{ route('admin.dashboard') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">🛠️ Tableau de bord</a>
-                        <a href="{{ route('admin.academic_years.index') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">📆 Années académiques</a>
+                        <a href="{{ route('admin.dashboard') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition"> 
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span class="ml-3">Tableau de bord</span>
+                        </a>
+                        <a href="{{ route('admin.academic_years.index') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">
+                             <i class="fas fa-calendar-alt"></i>
+                            <span class="ml-3">Années académiques</span>
+                        </a>
                         @break
 
                     @default
                         <span class="block px-4 py-4 text-white/70">Rôle non défini</span>
                 @endswitch
-                    <a href="{{ route('admin.academic_years.index') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">
-                        <i class="fa fa-user w-5 text-gray-500"></i>
+                    <a href="{{ route('profile.edit') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">
+                        <i class="fa fa-user "></i>
                         <span class="ml-3">Mon Profil</span>
                     </a>
 
@@ -131,12 +145,14 @@
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
                     <button type="submit" class="w-full text-left px-4 py-4 rounded-md text-red-200 hover:bg-red-600 transition">
-                        🔓 Déconnexion
+                        <i class="fas fa-sign-out-alt"></i>
+                         <span class="ml-3">Déconnexion</span>
                     </button>
                 </form>
             @else
                 <a href="{{ route('login') }}" class="block px-4 py-4 rounded-md bg-white text-[#0388fc] hover:bg-blue-100 transition">
-                    🔐 Connexion
+                    <i class="fas fa-sign-in-alt"></i>
+                    <span class="ml-3">Connexion</span>
                 </a>
             @endauth
         </nav>
