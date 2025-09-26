@@ -1,6 +1,9 @@
 @extends('layouts.app')
 
 @section('content')
+@php
+    $pageTitle = 'Attribution des enseignants';
+@endphp
 <div class="p-6">
     <h1 class="text-2xl font-bold mb-4">Attribution des enseignants</h1>
 
