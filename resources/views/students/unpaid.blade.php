@@ -41,11 +41,6 @@
                 Envoyer mails de rappel
             </button>
         </form>
-
-        <button onclick="window.history.back()" 
-            class="px-5 py-2 bg-gray-600 text-white rounded-lg shadow hover:bg-gray-700 transition">
-            Retour
-        </button>
     </div>
 
     {{-- Table responsive --}}
@@ -91,6 +86,12 @@
             </tbody>
         </table>
     </div>
+    <br>
+    <br>
+     <button onclick="window.history.back()" 
+            class="px-5 py-2 bg-gray-600 text-white rounded-lg shadow hover:bg-gray-700 transition">
+            Retour
+        </button>
 </div>
 
 {{-- JS pour afficher "Veuillez patienter" --}}
