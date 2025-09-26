@@ -39,9 +39,9 @@ class User extends Authenticatable
 
     protected $casts = ['email_verified_at' => 'datetime'];
     public function classePrimaire()
-{
-    return $this->hasOne(Classe::class, 'teacher_id');
-}
+    {
+        return $this->hasOne(Classe::class, 'teacher_id');
+    }
 
 
     public function role()
@@ -71,5 +71,11 @@ class User extends Authenticatable
     {
         return $this->hasMany(TeacherInvitation::class, 'user_id');
     }
+
+    public function classe()
+    {
+        return $this->hasOne(Classe::class, 'teacher_id');
+    }
+
 
 }

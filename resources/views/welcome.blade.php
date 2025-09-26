@@ -1,9 +1,10 @@
 @extends('layouts.app')
 
 @section('content')
-@php
-    $pageTitle = 'Acceuil';
-@endphp
+
+@auth
+    
+
 <!-- Page Header -->
 <header class="bg-white shadow p-6 mb-6 rounded-lg" data-aos="fade-down">
     <h1 class="text-3xl font-bold text-gray-800">Bienvenue {{ auth()->user()->name ?? 'Utilisateur' }} !</h1>
@@ -62,7 +63,56 @@
         </div>
     </div>
 </section>
+@else
+
+<!-- Présentation École -->
+<div class="relative grid grid-cols-12 gap-5 items-center  mt-10 px-5 lg:px-0 rounded-lg shadow-sm bg-blue-50" data-aos="fade-up">
+  <!-- Texte de présentation : 8 colonnes sur 12 -->
+  <div class="col-span-12 md:col-span-9 space-y-6">
+    <h2 class="text-4xl font-extrabold text-gray-900 leading-tight tracking-tight">
+      Bienvenue à l'École MARIE ALAIN
+    </h2>
+    <p class="text-gray-700 text-lg leading-relaxed">
+      De la maternelle à la terminale, une plateforme unique pour la gestion des inscriptions, du personnel enseignant et du suivi académique.
+    </p>
+    <ul class="space-y-4 text-gray-800 text-base">
+      <li class="flex items-center gap-3">
+        <i class="fas fa-user-tie text-blue-700 text-xl"></i>
+        <span class="font-medium">Gestion des recrutements</span>
+      </li>
+      <li class="flex items-center gap-3">
+        <i class="fas fa-user-graduate text-blue-700 text-xl"></i>
+        <span class="font-medium">Inscription & suivi des élèves</span>
+      </li>
+      <li class="flex items-center gap-3">
+        <i class="fas fa-chalkboard-teacher text-blue-700 text-xl"></i>
+        <span class="font-medium">Gestion des classes et des entités</span>
+      </li>
+    </ul>
+  </div>
+
+  <!-- Bloc image : 4 colonnes sur 12 + position absolue -->
+    <div class="col-span-12 md:col-span-3 flex flex-col items-center mt-6 md:mt-0">
+        <img src="{{ asset('logo.png') }}" alt="Logo de l'école" class="h-32.5 w-auto mb-6 max-w-xs ">
+  </div>
+</div>
+
+<section class=" py-9 px-6 ">
+  <div class="max-w-4xl mx-auto text-center space-y-6">
+    <h3 class="text-2xl font-bold text-gray-900">
+      Veuillez vous connecter
+    </h3>
+    <p class="text-gray-700 text-lg">
+      Pour accéder à votre espace de travail sécurisé, connectez-vous avec vos identifiants.
+    </p>
+    <a href="{{ route('login') }}"
+       class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg shadow transition duration-300">
+      Se connecter
+    </a>
+  </div>
+</section>
 
 
 
+@endauth
 @endsection

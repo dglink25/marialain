@@ -8,13 +8,20 @@ use Illuminate\Support\Facades\Hash;
 
 class AdminAuthController extends Controller
 {
-    public function index()
-    {
+    public function index(){
         $academicYearsCount = \App\Models\AcademicYear::count();
         $classesCount = \App\Models\Classe::count();
         $invitationsCount = \App\Models\Invitation::count();
 
         return view('admin.dashboard', compact('academicYearsCount','classesCount','invitationsCount'));
+    }
+
+    public function accueil(){
+        $academicYearsCount = \App\Models\AcademicYear::count();
+        $classesCount = \App\Models\Classe::count();
+        $invitationsCount = \App\Models\Invitation::count();
+
+        return view('welcome', compact('academicYearsCount','classesCount','invitationsCount'));
     }
 
 

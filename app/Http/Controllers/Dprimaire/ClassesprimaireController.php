@@ -9,20 +9,34 @@ use App\Models\AcademicYear;
 use Barryvdh\DomPDF\Facade\Pdf; // Import du PDF
 
 use App\Models\Student;
-class ClassesprimaireController extends Controller
-{
+class ClassesprimaireController extends Controller{
     /**
      * Display a listing of the resource.
      */
-    public function index( Request $request)
-    {
-        //
-       
-        $annee_academique = AcademicYear::where('active', 1)-> first();
-        $classes = Classe::whereHas('entity', function($query){ $query->whereIn('name', ['primaire', 'maternelle']); })->with('academicYear')->get();
-        
-        return view('primaire.classe.classes', compact('classes', 'annee_academique'));
+    public function index(Request $request){
+        try {
+            // Vérifier l'année académique active
+            $annee_academique = AcademicYear::where('active', 1)->first();
+
+            if (!$annee_academique) {
+                return back()->with('error', 'Aucune année académique active trouvée.');
+            }
+
+            // Récupérer les classes primaire + maternelle avec leurs enseignants
+            $classes = Classe::where('academic_year_id', $annee_academique->id)
+                ->whereHas('entity', function ($query) {
+                    $query->whereIn('name', ['primaire', 'maternelle']);
+                })
+                ->with(['academicYear', 'teacher']) // 🔑 Relation teacher ajoutée
+                ->get();
+
+            return view('primaire.classe.classes', compact('classes', 'annee_academique'));
+        } catch (\Exception $e) {
+            // Gestion des exceptions générales
+            return back()->with('error', 'Erreur lors du chargement des classes : ' . $e->getMessage());
+        }
     }
+
 
     /**
      * Show the form for creating a new resource.
@@ -35,8 +49,7 @@ class ClassesprimaireController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
-    {
+    public function store(Request $request){
         //
         $request-> validate([
             'name'=> 'required|max:255',
@@ -54,8 +67,7 @@ class ClassesprimaireController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
-    {
+    public function show(string $id){
         //
          $annee_academique = AcademicYear::where('active', 1)-> first();
         $class = Classe::with(['students' => function($query) {
@@ -63,14 +75,14 @@ class ClassesprimaireController extends Controller
         }])->findOrFail($id);
         return view('primaire.classe.showclass', compact('class', 'annee_academique'));
     }
-public function downloadClassStudents($id)
-{
-     $class = Classe:: FindorFail($id);
-    $annee_academique = AcademicYear::where('active' , 1)-> first();
-    $students = Student::where('id', $class -> id)-> orderBy('last_name')-> orderBy('First_name')-> get();
-    $pdf = Pdf::loadView('primaire.classe.pdf', compact('students', 'class', 'annee_academique'));
-    return $pdf -> download('liste_'. $class-> name. '.pdf');
-}
+
+    public function downloadClassStudents($id){
+        $class = Classe:: FindorFail($id);
+        $annee_academique = AcademicYear::where('active' , 1)-> first();
+        $students = Student::where('id', $class -> id)-> orderBy('last_name')-> orderBy('First_name')-> get();
+        $pdf = Pdf::loadView('primaire.classe.pdf', compact('students', 'class', 'annee_academique'));
+        return $pdf -> download('liste_'. $class-> name. '.pdf');
+    }
 
 
     /**

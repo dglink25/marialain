@@ -147,10 +147,10 @@
 
 <section id="a-propos" class="section-apropos py-5">
   <div class="container">
-    <div class="row align-items-center">
+    <div class="row align-items-center  ">
 
       <!-- Texte dynamique -->
-      <div class="col-lg-7 col-12 mb-4 mb-lg-0">
+      <div class="col-lg-7 col-12 mb-4 mb-lg-0" style="text-align: justify;">
         <span class="who-we">Qui somme nous</span>
         <h2 class="section-title text-start mb-4">À propos </h2>
         <div id="ecole-description" class="section-description"></div>
@@ -173,6 +173,7 @@
 <section id="programmes" class="py-5 ">
   <div class="container">
     <div class="text-center mb-5">
+      <p class="who-we text-center">Notre programme</p>
       <h2 class="fw-bold">Nos Programmes</h2>
       <p class="text-muted">Au Complexe scolaire Marie-Alain, nous croyons que chaque enfant possède un potentiel unique qui ne demande qu’à être révélé et cultivé. Notre mission est d’offrir à chaque élève un accompagnement attentif et personnalisé, où l’écoute, l’encouragement et le respect de son rythme constituent les bases de l’apprentissage.</p>
     </div>
@@ -190,7 +191,7 @@
                 <span class="fw-semibold text-muted">Contribution annuelle</span>
                 <span class="badge rounded-pill bg-gradient-orange">50 000 – 100 000 FCFA</span>
             </div>
-            <a href="#inscription" class="btn btn-glass btn-sm mt-4 w-70">Rejoindre le programme</a>
+            <a href="{{ route('students.create') }}" class="btn btn-glass btn-sm mt-4 w-70">Rejoindre le programme</a>
           </div>
         </div>
       </div>
@@ -207,7 +208,7 @@
                 <span class="fw-semibold text-muted">Contribution annuelle</span>
                 <span class="badge rounded-pill bg-gradient-orange">50 000 – 100 000 FCFA</span>
             </div>
-            <a href="#inscription" class="btn btn-glass mt-4 w-70">Rejoindre le programme</a>
+            <a href="{{ route('students.create') }}" class="btn btn-glass mt-4 w-70">Rejoindre le programme</a>
           </div>
         </div>
       </div>
@@ -224,7 +225,7 @@
                 <span class="fw-semibold text-muted">Contribution annuelle</span>
                 <span class="badge rounded-pill bg-gradient-orange">50 000 – 100 000 FCFA</span>
             </div>
-            <a href="#inscription" class="btn btn-glass mt-4 w-70">Rejoindre le programme</a>
+            <a href="{{ route('students.create') }}" class="btn btn-glass mt-4 w-70">Rejoindre le programme</a>
           </div>
         </div>
       </div>
