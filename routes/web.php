@@ -73,6 +73,7 @@ Route::get('/primaire/enseignants/pdf', [primaryteacherController::class, 'downl
 Route::get('/', function () {
     return view('accueil');
 })->name('accueil');
+Route:: get('/primaire/ecoliers/{id}/show', [StudentsController::class, 'show'])-> name('primaire.ecoliers.show');
 
 Route::prefix('primaire/enseignants')->name('primaire.enseignants.')->group(function () {
     Route::get('/', [InvitationPController::class, 'index'])->name('index');
