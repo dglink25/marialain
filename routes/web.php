@@ -187,6 +187,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
     // Dashboard
     Route::get('/dashboard', [AdminAuthController::class, 'index'])->name('dashboard');
+    Route::get('/home', [AdminAuthController::class, 'accueil'])->name('accueil');
     Route::post('/admins', [AdminAuthController::class, 'createAdmin'])->name('admins.store');
 
     // Entités

@@ -2,6 +2,9 @@
 
 @section('content')
 
+@auth
+    
+
 <!-- Page Header -->
 <header class="bg-white shadow p-6 mb-6 rounded-lg" data-aos="fade-down">
     <h1 class="text-3xl font-bold text-gray-800">Bienvenue {{ auth()->user()->name ?? 'Utilisateur' }} !</h1>
@@ -60,7 +63,7 @@
         </div>
     </div>
 </section>
-
+@else
 <!-- Présentation École -->
 <div class="grid md:grid-cols-2 gap-12 items-center mb-12" data-aos="fade-up">
     <div class="space-y-6">
@@ -84,5 +87,5 @@
         </a>
     </div>
 </div>
-
+@endauth
 @endsection

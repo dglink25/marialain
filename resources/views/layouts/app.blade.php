@@ -82,83 +82,12 @@
                         @break
                     @default
                 @endswitch
-
-                @if(!isset($entityName))
-                @switch(optional(auth()->user()->role)->name)
-                    @case('directeur_primaire')
-                        <a href="{{ route('directeur.dashboard') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">
-                            <i class="fa fa-chart-line w-5 text-gray-500"></i> 
-                            <span class="ml-3">Dashboard Directeur</span>
-                        </a>
-                        <a href="{{ route('primaire.classe.classes') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">
-                            <i class="fa fa-school w-5 text-gray-500"></i> 
-                            <span class="ml-3">Gestion des classes</span>
-                        </a>
-                        <a href="{{ route('primaire.enseignants.index') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">
-                            <i class="fa fa-chalkboard-teacher w-5 text-gray-500"></i> 
-                            <span class="ml-3">Gestion des enseignants</span>
-                        </a>
-                        <a href="{{ route('primaire.ecoliers.liste') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">
-                            <i class="fa fa-users w-5 text-gray-500"></i> 
-                            <span class="ml-3">Gestion des écoliers</span>
-                        </a>
-                        @break
-                    @case('teacher')
-                        <a href="{{ route('teacher.dashboard') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">
-                            <i class="fa fa-book-open w-5 text-gray-500"></i> 
-                            <span class="ml-3">Dashboard Enseignant</span>
-                        </a>
-                        <a href="{{ route('teacher.classes') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">
-                            <i class="fa fa-layer-group w-5 text-gray-500"></i>
-                            <span class="ml-3">Mes classes</span>
-                        </a>
-                        @break
-                    
-                    @case('censeur')
-                        <a href="{{ route('censeur.dashboard') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">
-                            <i class="fa fa-tasks w-5 text-gray-500"></i> 
-                            <span class="ml-3">Dashboard Censeur</span>
-                        </a>
-                        <a href="{{ route('censeur.invitations.index') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">Invitations enseignants</a>
-                        <a href="{{ route('censeur.subjects.index') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">Matières</a>
-                        <a href="{{ route('censeur.classes.index') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">Liste Classes</a>
-                        @break
-                    @case('surveillant')
-                        <a href="{{ route('surveillant.dashboard') }}"class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">
-                            <i class="fa fa-tasks w-5 text-gray-500"></i> 
-                            <span class="ml-3">Dashboard Surveillant</span>
-                        </a>
-                        <a href="{{ route('surveillant.classes') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">Voir liste des classes</a>
-                        @break
-
-                    @case('secretaire')
-                        <a href="{{ route('secretaire.dashboard') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition"> 
-                            <i class="fa fa-tasks w-5 text-gray-500"></i> 
-                            <span class="ml-3">Dashboard Secrétaire</span>
-                        </a>
-                        <a href="{{ route('admin.students.pending') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">⏳ Inscriptions en attente</a>
-                        <a href="{{ route('admin.students.index') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">👥 Liste Élèves</a>
-                        <a href="{{ route('admin.classes.index') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">🏷️ Gestion des classes</a>
-                        @break
-
-                    @case('super_admin')
-                        <a href="{{ route('admin.dashboard') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">🛠️ Tableau de bord</a>
-                        <a href="{{ route('admin.academic_years.index') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">📆 Années académiques</a>
-                        @break
-
-                    @default
-                        <span class="block px-4 py-4 text-white/70">Rôle non défini</span>
-                @endswitch
-                @endif
-                    <a href="{{ route('admin.academic_years.index') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">
-                        <i class="fa fa-user w-5 text-gray-500"></i>
-                        <span class="ml-3">Mon Profil</span>
                     <a href="{{ route('archives.index') }}" class="block px-3 py-3 rounded-md hover:bg-[#63c6ff70] transition">
                         <i class="fas fa-archive"></i>
                         <span class="ml-2">Mes Archives</span>
 
                     </a>
-
+                    @if(!isset($entityName))
                     @switch(optional(auth()->user()->role)->name)
                         @case('directeur_primaire')
                             <a href="{{ route('directeur.dashboard') }}" class="block px-3 py-3 rounded-md hover:bg-[#63c6ff70] transition">
@@ -249,6 +178,7 @@
                         @default
                             <span class="block px-3 py-3 text-white/70">Rôle non défini</span>
                     @endswitch
+                    @endif
                         <a href="{{ route('profile.edit') }}" class="block px-3 py-3 rounded-md hover:bg-[#63c6ff70] transition">
                             <i class="fa fa-user "></i>
                             <span class="ml-3">Mon Profil</span>
@@ -285,11 +215,11 @@
             <!-- Top bar -->
             <div class="bg-gray-100 px-6 py-3 flex justify-between items-center shadow-sm border-b">
                 <h2 class="text-lg font-semibold text-gray-800">
-                    {{ $pageTitle ?? (isset($activeYear) ? $activeYear->name : 'Accueil') }}
+                    {{ $pageTitle ??  'Accueil' }}
                 </h2>
                 <!-- Année centrée -->
                 <div class="absolute left-1/2 transform -translate-x-1/2 text-gray-600 text-sm font-medium">
-                    {{ now()->year }}
+                    {{ $pageTitle ?? (isset($activeYear) ? $activeYear->name : 'Accueil') }}
                 </div>
                 <div class="relative">
                     <div id="userMenuToggle" class="flex items-center gap-2 cursor-pointer  rounded-md hover:bg-gray-50 transition">
@@ -393,3 +323,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
 </body>
 </html>
+
+
+
+
+
+
+
+
