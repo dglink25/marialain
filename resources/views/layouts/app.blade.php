@@ -66,14 +66,12 @@
                 
                 @switch($entityName)
                     @case('Primaire')
-                        <a href="{{ route('teacher.dashboard') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">
-                            <i class="fa fa-book-open w-5 text-gray-500"></i> 
-                            <span class="ml-3">Dashboard Enseignant Primaire</span>
-                        </a>
-                        <a href="{{ route('teacher.classes.primaire') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">
+                        <a href="{{ route('schedules.index') }}" 
+                        class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">
                             <i class="fa fa-layer-group w-5 text-gray-500"></i>
-                            <span class="ml-3">Ma classes</span>
+                            <span class="ml-3">Emploi du temps</span>
                         </a>
+
 
                         <a href="{{ route('teacher.subjects.primaire') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">
                             <i class="fa fa-layer-group w-5 text-gray-500"></i>

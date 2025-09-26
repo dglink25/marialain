@@ -46,5 +46,11 @@ class Classe extends Model{
         return $this->hasMany(ClassTeacherSubject::class, 'class_id');
     }
 
+    public function schedules()
+    {
+        return $this->hasMany(Schedule::class);
+    }
+
+
     
 }

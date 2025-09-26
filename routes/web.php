@@ -44,6 +44,7 @@ use App\Http\Controllers\CenseurDashboardController;
 use App\Http\Controllers\SurveillantController;
 use App\Http\Controllers\Teacher\PrimaireClasseController;
 use App\Http\Controllers\Teacher\PrimaireSubjectController;
+use App\Http\Controllers\Teacher\PrimaireScheduleController;
 
 
 /*
@@ -138,6 +139,15 @@ Route::prefix('primaire')->name('primaire.')->group(function () {
     Route::get('ecoliers/liste', [StudentsController::class, 'index'])->name('ecoliers.liste');
     Route::get('ecoliers/pdf', [StudentsController::class, 'downloadPrimaireStudents'])->name('ecoliers.liste.pdf');
 });
+Route::get('teacher/primaire/schedules/download', [PrimaireScheduleController::class, 'downloadPdf'])
+     ->name('schedules.download');
+// Page pour voir l'emploi du temps d'une classe (directeur)
+Route::get('teacher/primaire/schedules/{classe}', [PrimaireScheduleController::class, 'directeur'])
+     ->name('schedules.ind');
+
+Route::prefix('teacher/primaire')->middleware('auth')->group(function () {
+    Route::resource('schedules', \App\Http\Controllers\Teacher\PrimaireScheduleController::class);
+});
 
 
 /*
@@ -172,7 +182,6 @@ Route::middleware(['auth'])->group(function () {
     ->name('students.unpaid');
     Route::post('/students/unpaid/send-mails', [StudentMailController::class, 'sendToAll'])->name('students.mail.sendAll');
 });
-
 
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('students/pending', [StudentController::class, 'pending'])
