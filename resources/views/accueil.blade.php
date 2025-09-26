@@ -6,6 +6,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
     <link rel="stylesheet" href="{{ asset('ursule/style/page1.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Sacramento&display=swap" rel="stylesheet">
     <script src="{{ asset('ursule/js/js1.js') }}"defer ></script>
@@ -173,14 +174,14 @@
   <div class="container">
     <div class="text-center mb-5">
       <h2 class="fw-bold">Nos Programmes</h2>
-      <p class="text-muted">Des parcours pédagogiques adaptés à chaque âge, enrichis par des méthodes modernes et des environnements stimulants.</p>
+      <p class="text-muted">Au Complexe scolaire Marie-Alain, nous croyons que chaque enfant possède un potentiel unique qui ne demande qu’à être révélé et cultivé. Notre mission est d’offrir à chaque élève un accompagnement attentif et personnalisé, où l’écoute, l’encouragement et le respect de son rythme constituent les bases de l’apprentissage.</p>
     </div>
 
     <div class="row g-4">
       <!-- Maternelle -->
       <div class="col-md-4">
         <div class="card h-100 shadow-sm border-0 programme-card">
-          <img src="{{ asset('ursule/img/ecole2.jpeg') }}" class="card-img-top" alt="Programme Maternelle">
+          <img src="{{ asset('ursule/img/marternelle.png') }}" class="card-img-top" alt="Programme Maternelle">
           <div class="card-body">
             <h5 class="card-title text-orange">Maternelle</h5>
             <p class="card-text">Éveil sensoriel, jeux éducatifs et socialisation dans un cadre bienveillant.</p>
@@ -197,7 +198,7 @@
       <!-- Primaire -->
       <div class="col-md-4">
         <div class="card h-100 shadow-sm border-0 programme-card">
-          <img src="{{ asset('ursule/img/ecole2.jpeg') }}" class="card-img-top" alt="Programme Primaire">
+          <img src="{{ asset('ursule/img/galerie12.jpeg') }}" class="card-img-top" alt="Programme Primaire">
           <div class="card-body">
             <h5 class="card-title text-orange">Primaire</h5>
             <p class="card-text">Maîtrise des fondamentaux, initiation aux langues et aux sciences.</p>
@@ -214,7 +215,7 @@
       <!-- Collège -->
       <div class="col-md-4">
         <div class="card h-100 shadow-sm border-0 programme-card">
-          <img src="{{ asset('ursule/img/ecole2.jpeg') }}" class="card-img-top" alt="Programme Collège">
+          <img src="{{ asset('ursule/img/galerie10.jpeg') }}" class="card-img-top" alt="Programme Collège">
           <div class="card-body">
             <h5 class="card-title text-orange">Collège</h5>
             <p class="card-text">Renforcement académique, projets interdisciplinaires et ouverture numérique.</p>
@@ -235,7 +236,7 @@
   <div class="container">
     <p class="who-we text-center">Cours</p>
     <h2 class="text-center mb-4">Nos Cours</h2>
-    <p class="text-center mb-5">Découvrez les matières enseignées dans notre établissement, avec leur description et les niveaux concernés.</p>
+    <p class="text-center mb-5">Découvrez quelque matières enseignées dans notre établissement, avec leur description et les niveaux concernés.</p>
 
     <div class="row g-4" id="coursList">
       <!-- Cartes visibles par défaut -->
@@ -244,7 +245,10 @@
           <div class="card-body">
             <h5 class="cours-title"><span class="bg-3">01</span>Mathématiques</h5>
             <p class="cours-text">Étude des nombres, calculs, géométrie, logique et résolution de problèmes.</p>
-            <p class="cours-niveau">📘 Primaire, 🎓 Collège</p>
+            <p class="cours-niveau">
+              <i class="fas fa-book text-warning ms-3 me-2"></i> Primaire
+              <i class="fas fa-graduation-cap text-warning ms-3 me-2"></i> Collège
+            </p>
           </div>
         </div>
       </div>
@@ -254,20 +258,30 @@
           <div class="card-body">
             <h5 class="cours-title"><span class="bg-3">02</span>Français</h5>
             <p class="cours-text">Lecture, écriture, grammaire, vocabulaire, expression orale et écrite.</p>
-            <p class="cours-niveau">🧒 Maternelle, 📘 Primaire, 🎓 Collège</p>
+            <p class="cours-niveau">
+              <i class="fas fa-child text-warning me-2"></i> Maternelle
+              <i class="fas fa-book text-warning ms-3 me-2"></i> Primaire
+              <i class="fas fa-graduation-cap text-warning ms-3 me-2"></i> Collège
+            </p>
           </div>
         </div>
       </div>
 
-      <div class="col-md-4">
-        <div class="cours-card h-100">
-          <div class="card-body">
-            <h5 class="cours-title"><span class="bg-3">03</span>Sciences</h5>
-            <p class="cours-text">Découverte du vivant, des phénomènes naturels et de l’environnement.</p>
-            <p class="cours-niveau">📘 Primaire</p>
-          </div>
-        </div>
-      </div>
+<div class="col-md-4">
+  <div class="cours-card h-100">
+    <div class="card-body">
+      <h5 class="cours-title">
+        <span class="bg-3">03</span> Espagnol
+      </h5>
+      <p class="cours-text">
+        Apprentissage de la langue espagnole : vocabulaire, grammaire, expression orale et écrite.
+      </p>
+      <p class="cours-niveau">
+        <i class="fas fa-graduation-cap text-warning ms-3 me-2"></i> Collège
+      </p>
+    </div>
+  </div>
+</div>
 
       <!-- Bloc caché -->
       <div class="collapse" id="moreCourses">
@@ -277,7 +291,10 @@
               <div class="card-body">
                 <h5 class="cours-title"><span class="bg-3">04</span>Histoire-Géographie</h5>
                 <p class="cours-text">Compréhension du passé, des civilisations et des repères géographiques.</p>
-                <p class="cours-niveau">📘 Primaire, 🎓 Collège</p>
+                <p class="cours-niveau">
+                  <i class="fas fa-book text-warning ms-3 me-2"></i> Primaire
+                  <i class="fas fa-graduation-cap text-warning ms-3 me-2"></i> Collège
+                </p>
               </div>
             </div>
           </div>
@@ -288,7 +305,10 @@
               <div class="card-body">
                 <h5 class="cours-title"><span class="bg-3">06</span>Anglais</h5>
                 <p class="cours-text">Initiation et approfondissement de la langue anglaise : vocabulaire, grammaire, expression.</p>
-                <p class="cours-niveau">📘 Primaire, 🎓 Collège</p>
+                <p class="cours-niveau">
+                  <i class="fas fa-book text-warning ms-3 me-2"></i> Primaire
+                  <i class="fas fa-graduation-cap text-warning ms-3 me-2"></i> Collège
+                </p>
               </div>
             </div>
           </div>
@@ -299,7 +319,11 @@
               <div class="card-body">
                 <h5 class="cours-title"><span class="bg-3">08</span>Éducation Physique</h5>
                 <p class="cours-text">Activités sportives pour développer la motricité, la coordination et l’esprit d’équipe.</p>
-                <p class="cours-niveau">🧒 Maternelle, 📘 Primaire, 🎓 Collège</p>
+                <p class="cours-niveau">
+                  <i class="fas fa-child text-warning me-2"></i> Maternelle
+                  <i class="fas fa-book text-warning ms-3 me-2"></i> Primaire
+                  <i class="fas fa-graduation-cap text-warning ms-3 me-2"></i> Collège
+                </p>
               </div>
             </div>
           </div>
@@ -309,7 +333,9 @@
               <div class="card-body">
                 <h5 class="cours-title"><span class="bg-3">09</span>Physique-Chimie</h5>
                 <p class="cours-text">Étude des phénomènes physiques, lois scientifiques et réactions chimiques.</p>
-                <p class="cours-niveau">🎓 Collège</p>
+                <p class="cours-niveau">
+                  <i class="fas fa-graduation-cap text-warning ms-3 me-2"></i> Collège
+                </p>
               </div>
             </div>
           </div>
@@ -319,7 +345,9 @@
               <div class="card-body">
                 <h5 class="cours-title"><span class="bg-3">10</span>Langage oral</h5>
                 <p class="cours-text">Développement du vocabulaire, de l’écoute et de l’expression orale.</p>
-                <p class="cours-niveau">🧒 Maternelle</p>
+                <p class="cours-niveau">
+                  <i class="fas fa-child text-warning me-2"></i> Maternelle
+                </p>
               </div>
             </div>
           </div>
@@ -329,7 +357,9 @@
               <div class="card-body">
                 <h5 class="cours-title"><span class="bg-3">11</span>Éveil sensoriel</h5>
                 <p class="cours-text">Activités pour stimuler les sens, la curiosité et la motricité fine.</p>
-                <p class="cours-niveau">🧒 Maternelle</p>
+                <p class="cours-niveau">
+                  <i class="fas fa-child text-warning me-2"></i> Maternelle
+                </p>
               </div>
             </div>
           </div>
@@ -351,12 +381,15 @@
   <div class="container">
     <p class="who-we text-center">Les activités que nous organisons</p>
     <h2 class="section-title" > Nos Activités</h2>
+    <p class="text-center mb-5">
+      Le Complexe scolaire Marie-Alain propose un large éventail d’activités extra-scolaires, soigneusement sélectionnées pour répondre aux besoins et aux passions de chaque enfant.
+    </p>
     <div class="timeline">
 
       <!-- Activité 1 -->
       <div class="timeline-item left">
         <div class="timeline-content">
-          <h4>Remise des Prix aux Lauréats 🏆</h4>
+          <h4>Remise des Prix aux Lauréats <i class="fas fa-trophy text-orange"></i></h4>
           <p>Célébration des élèves méritants avec trophées et reconnaissance publique.</p>
         </div>
       </div>
@@ -364,16 +397,23 @@
       <!-- Activité 2 -->
       <div class="timeline-item right">
         <div class="timeline-content">
-          <h4>Journée Culturelle 🎭</h4>
-          <p>Expositions, spectacles et valorisation des cultures locales.</p>
+          <h4>Sports collectifs et individuels <i class="fas fa-futbol text-orange"></i></h4>
+          <p>Football, basketball, athlétisme, gymnastique, arts martiaux… pour renforcer la coordination, l’endurance et l’esprit d’équipe.</p>
         </div>
       </div>
 
       <!-- Activité 3 -->
       <div class="timeline-item left">
         <div class="timeline-content">
-          <h4>Club de Musique 🎶</h4>
-          <p>Pratique instrumentale, chant et participation à des événements artistiques.</p>
+          <h4>Activités artistiques <i class="fas fa-palette text-orange"></i></h4>
+          <p>Danse, théâtre, arts plastiques, musique et chant, pour éveiller la sensibilité, stimuler l’imagination et favoriser l’expression des émotions .</p>
+        </div>
+      </div>
+
+      <div class="timeline-item right">
+        <div class="timeline-content">
+          <h4>Ateliers culturels et scientifiques <i class="fas fa-flask text-orange"></i></h4>
+          <p>clubs de lecture, d’écriture, d’informatique, d’échecs ou de sciences, pour encourager la curiosité intellectuelle et le goût de l’exploration.</p>
         </div>
       </div>
 
