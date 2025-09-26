@@ -304,9 +304,7 @@
                         <i class="fas fa-envelope input-icon"></i>
                         <input id="email" type="email" name="email" value="{{ old('email') }}" required autofocus autocomplete="email" placeholder="yourroom@hotmail.com">
                     </div>
-                    @error('email')
-                        <div class="error-message">{{ $message }}</div>
-                    @enderror
+                   
                 </div>
 
                 <!-- Password -->
@@ -319,11 +317,6 @@
                             <i class="fas fa-eye"></i>
                         </button>
                     </div>
-                    @error('password')
-                        <div class="error-message">{{ $message }}</div>
-                    @else
-                        <div class="error-message">Wrong password. Please try again.</div>
-                    @enderror
                 </div>
                 
                 <div class="options">
@@ -340,7 +333,7 @@
                 </div>
 
                 <button type="submit" class="login-button">
-                    Continue
+                    Se connecter
                 </button>
                  </div>
             </form>
