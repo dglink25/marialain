@@ -41,6 +41,9 @@ use App\Http\Controllers\Dprimaire\InvitationPController;
 use App\Http\Controllers\Dprimaire\StudentsController;
 use App\Http\Controllers\StudentMailController;
 use App\Http\Controllers\CenseurDashboardController;
+use App\Http\Controllers\SurveillantController;
+use App\Http\Controllers\Teacher\PrimaireClasseController;
+use App\Http\Controllers\Teacher\PrimaireSubjectController;
 
 
 /*
@@ -62,8 +65,6 @@ Route:: get('/primaire/classe/classes', [ClassesprimaireController::class, 'inde
 Route:: post('/primaire/classe/classes', [ClassesprimaireController::class, 'store'])-> name('primaire.classe.store');
 Route:: get('/primaire/classe/showclass/{id}', [ClassesprimaireController::class, 'show'])-> name('primaire.classe.showclass');
 Route:: get('/primaire/enseignants/enseignants', [primaryteacherController::class, 'index'])-> name('primaire.enseignants.enseignants');
-Route:: get('/primaire/enseignants/inviter', [InvitationPController::class, 'index'])-> name('primaire.enseignants.inviter');
-Route::post('/primaire/enseignants/inviter', [InvitationPController::class, 'store'])-> name('primaire.enseignants.inviter.store');
 Route:: get('/primaire/ecoliers/liste', [StudentsController::class, 'index'])-> name('primaire.ecoliers.liste');
 Route::get('/primaire/ecoliers/pdf', [StudentsController::class, 'downloadPrimaireStudents'])
     ->name('primaire.ecoliers.liste.pdf');
@@ -73,6 +74,27 @@ Route::get('/', function () {
     return view('accueil');
 })->name('accueil');
 Route:: get('/primaire/ecoliers/{id}/show', [StudentsController::class, 'show'])-> name('primaire.ecoliers.show');
+
+Route::prefix('primaire/enseignants')->name('primaire.enseignants.')->group(function () {
+    Route::get('/', [InvitationPController::class, 'index'])->name('index');
+    Route::post('/send', [InvitationPController::class, 'send'])->name('send');
+    Route::get('/accept/{token}', [InvitationPController::class, 'accept'])->name('accept');
+});
+
+//enseignants primaires
+Route::middleware(['auth'])
+    ->prefix('teacher/primaire')
+    ->name('teacher.')
+    ->group(function () {
+        Route::get('/subjects', [PrimaireSubjectController::class, 'index'])->name('subjects.primaire');
+        Route::post('/subjects', [PrimaireSubjectController::class, 'store'])->name('subjects.store');
+        Route::put('/subjects/{subject}', [PrimaireSubjectController::class, 'update'])->name('subjects.update');
+        Route::delete('/subjects/{subject}', [PrimaireSubjectController::class, 'destroy'])->name('subjects.destroy');
+    });
+Route::middleware(['auth'])->prefix('teacher/primaire')->name('teacher.')->group(function () {
+    Route::get('/classes', [PrimaireClasseController::class, 'index'])->name('classes.primaire');
+    Route::get('/subjects', [PrimaireSubjectController::class, 'index'])->name('subjects.primaire');
+});
 
 
 Route::get('/', fn() => view('accueil'))->name('accueil');
@@ -166,6 +188,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
     // Dashboard
     Route::get('/dashboard', [AdminAuthController::class, 'index'])->name('dashboard');
+    Route::get('/home', [AdminAuthController::class, 'accueil'])->name('accueil');
     Route::post('/admins', [AdminAuthController::class, 'createAdmin'])->name('admins.store');
 
     // Entités
@@ -292,3 +315,22 @@ Route::get('/classes/{class}/enseignants/export', [ClasseController::class, 'exp
 
 // Sujet -> enseignants
 Route::get('subjects/{subject}/teachers', [SubjectController::class, 'teachers'])->name('subjects.teachers');
+
+
+// Surveillant
+Route::middleware(['auth'])->prefix('surveillant')->group(function () {
+    // Liste des classes
+    Route::get('/classes', [SurveillantController::class, 'classesList'])->name('surveillant.classes');
+
+    // Attribuer conduite à une classe
+    Route::post('/classes/{id}/conducts', [SurveillantController::class, 'assignConducts'])->name('surveillant.classes.conducts');
+
+    // Voir élèves d'une classe
+    Route::get('/classes/{id}/students', [SurveillantController::class, 'classStudents'])->name('surveillant.classes.students');
+
+    // Punir un élève
+    Route::post('/students/{id}/punish', [SurveillantController::class, 'punish'])->name('surveillant.students.punish');
+
+    // Historique des punitions d’un élève
+    Route::get('/students/{id}/punishments', [SurveillantController::class, 'punishmentsHistory'])->name('surveillant.students.history');
+});

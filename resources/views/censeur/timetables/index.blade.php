@@ -1,6 +1,9 @@
 @extends('layouts.app')
 
 @section('content')
+@php
+    $pageTitle = 'Emploi du temps';
+@endphp
 <div class="container-fluid p-4 bg-light min-h-screen">
 
     <h2 class="text-between text-primary mb-4"><strong>Emploi du temps - {{ $class->name }}</strong></h2>

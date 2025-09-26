@@ -1,6 +1,9 @@
 @extends('layouts.app')
 
 @section('content')
+@php
+    $pageTitle = 'Classes ';
+@endphp
 <body class="bg-gradient-to-br from-blue-50 to-blue-100 text-gray-800 min-h-screen">
 
     <h1 class="text-2xl font-bold mb-6">Liste des Classes</h1>
