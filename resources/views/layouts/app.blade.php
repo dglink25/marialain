@@ -54,6 +54,34 @@
                     Mes Archives
                 </a>
 
+                @php
+                    $user = auth()->user();
+                    $firstClasse = $user->classe()->with('entity')->first();
+                    $entityName = $firstClasse->entity->name ?? null;
+
+                    //dd($firstClasse, $entityName);
+                @endphp
+                
+                @switch($entityName)
+                    @case('Primaire')
+                        <a href="{{ route('teacher.dashboard') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">
+                            <i class="fa fa-book-open w-5 text-gray-500"></i> 
+                            <span class="ml-3">Dashboard Enseignant Primaire</span>
+                        </a>
+                        <a href="{{ route('teacher.classes.primaire') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">
+                            <i class="fa fa-layer-group w-5 text-gray-500"></i>
+                            <span class="ml-3">Ma classes</span>
+                        </a>
+
+                        <a href="{{ route('teacher.subjects.primaire') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">
+                            <i class="fa fa-layer-group w-5 text-gray-500"></i>
+                            <span class="ml-3">Gestion matières</span>
+                        </a>
+                        @break
+                    @default
+                @endswitch
+
+                @if(!isset($entityName))
                 @switch(optional(auth()->user()->role)->name)
                     @case('directeur_primaire')
                         <a href="{{ route('directeur.dashboard') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">
@@ -73,7 +101,6 @@
                             <span class="ml-3">Gestion des écoliers</span>
                         </a>
                         @break
-
                     @case('teacher')
                         <a href="{{ route('teacher.dashboard') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">
                             <i class="fa fa-book-open w-5 text-gray-500"></i> 
@@ -84,7 +111,7 @@
                             <span class="ml-3">Mes classes</span>
                         </a>
                         @break
-
+                    
                     @case('censeur')
                         <a href="{{ route('censeur.dashboard') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">
                             <i class="fa fa-tasks w-5 text-gray-500"></i> 
@@ -120,6 +147,7 @@
                     @default
                         <span class="block px-4 py-4 text-white/70">Rôle non défini</span>
                 @endswitch
+                @endif
                     <a href="{{ route('admin.academic_years.index') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">
                         <i class="fa fa-user w-5 text-gray-500"></i>
                         <span class="ml-3">Mon Profil</span>

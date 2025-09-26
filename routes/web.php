@@ -42,6 +42,9 @@ use App\Http\Controllers\Dprimaire\StudentsController;
 use App\Http\Controllers\StudentMailController;
 use App\Http\Controllers\CenseurDashboardController;
 use App\Http\Controllers\SurveillantController;
+use App\Http\Controllers\Teacher\PrimaireClasseController;
+use App\Http\Controllers\Teacher\PrimaireSubjectController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -75,6 +78,21 @@ Route::prefix('primaire/enseignants')->name('primaire.enseignants.')->group(func
     Route::get('/', [InvitationPController::class, 'index'])->name('index');
     Route::post('/send', [InvitationPController::class, 'send'])->name('send');
     Route::get('/accept/{token}', [InvitationPController::class, 'accept'])->name('accept');
+});
+
+//enseignants primaires
+Route::middleware(['auth'])
+    ->prefix('teacher/primaire')
+    ->name('teacher.')
+    ->group(function () {
+        Route::get('/subjects', [PrimaireSubjectController::class, 'index'])->name('subjects.primaire');
+        Route::post('/subjects', [PrimaireSubjectController::class, 'store'])->name('subjects.store');
+        Route::put('/subjects/{subject}', [PrimaireSubjectController::class, 'update'])->name('subjects.update');
+        Route::delete('/subjects/{subject}', [PrimaireSubjectController::class, 'destroy'])->name('subjects.destroy');
+    });
+Route::middleware(['auth'])->prefix('teacher/primaire')->name('teacher.')->group(function () {
+    Route::get('/classes', [PrimaireClasseController::class, 'index'])->name('classes.primaire');
+    Route::get('/subjects', [PrimaireSubjectController::class, 'index'])->name('subjects.primaire');
 });
 
 

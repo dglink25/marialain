@@ -43,10 +43,14 @@ class InvitationPController extends Controller
             ->orderBy('name')
             ->get();
 
-        $invitations = TeacherInvitation::with('user', 'classe')
+        $invitations = TeacherInvitation::with(['user', 'classe'])
             ->where('academic_year_id', $activeYear->id)
+            ->whereHas('user', function ($q) {
+                $q->where('classe_id', '!=', 0);
+            })
             ->latest()
             ->get();
+
 
         return view('primaire.enseignants.index', compact('classes', 'invitations', 'activeYear'));
     }
@@ -89,6 +93,14 @@ class InvitationPController extends Controller
                 'censeur_id' => auth()->id(),
                 'classe_id' => $data['classe'] ?? null,
             ]);
+
+            if (!empty($data['classe'])) {
+                $classe = Classe::find($data['classe']);
+                if ($classe) {
+                    $classe->teacher_id = $user->id;
+                    $classe->save();
+                }
+            }
 
             // 5) envoyer mail (non-queued pour debug ; ensuite tu pourras queue)
             Mail::to($user->email)->send(new TeacherPInvitationMail($invitation, $plainPassword));
