@@ -15,5 +15,9 @@ class Subject extends Model{
     public function academicYear(){
         return $this->belongsTo(AcademicYear::class);
     }
+    public function schedules(){
+        return $this->hasMany(Schedule::class);
+    }
+
 
 }
