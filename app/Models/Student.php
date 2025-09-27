@@ -83,6 +83,7 @@ class Student extends Model{
         return "{$this->last_name} {$this->first_name}";
     }
 
+
     public function grades() {
         return $this->hasMany(Grade::class);
     }
@@ -102,7 +103,6 @@ class Student extends Model{
     {
         return $this->belongsTo(Classe::class);
     }
-
 
     
 }
