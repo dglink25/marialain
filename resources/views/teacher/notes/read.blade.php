@@ -6,6 +6,12 @@
         Lecture Notes - {{ ucfirst($type) }} {{ $num }} - Classe {{ $classe->name }}
     </h1>
 
+    @if(session('success'))
+        <div class="bg-green-100 text-green-800 px-4 py-2 rounded mb-4">
+            {{ session('success') }}
+        </div>
+    @endif
+
     <table class="w-full border-collapse border">
         <thead>
             <tr class="bg-gray-100">
@@ -14,6 +20,7 @@
                 <th class="px-3 py-2 border">Prénom</th>
                 <th class="px-3 py-2 border">Sexe</th>
                 <th class="px-3 py-2 border">Note</th>
+                <th class="px-3 py-2 border">Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -25,6 +32,12 @@
                 <td class="px-3 py-2 border">{{ $student->gender }}</td>
                 <td class="px-3 py-2 border">
                     {{ $student->grades->first()->value ?? '00' }}
+                </td>
+                <td class="px-3 py-2 border flex space-x-2">
+                    <a href="{{ route('teacher.classes.notes.edit', [$classe->id, $type, $num]) }}"
+                       class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm">
+                       Modifier
+                    </a>
                 </td>
             </tr>
             @endforeach

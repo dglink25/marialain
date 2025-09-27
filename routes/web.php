@@ -363,6 +363,19 @@ Route::middleware(['auth'])->prefix('teacher')->name('teacher.')->group(function
     Route::get('/classes/{id}/notes/{type}/{num}/create', [App\Http\Controllers\Teacher\NoteController::class, 'create'])->name('classes.notes.create');
     Route::post('/classes/{id}/notes/{type}/{num}', [App\Http\Controllers\Teacher\NoteController::class, 'store'])->name('classes.notes.store');
     Route::get('classes/{class}/notes/read/{type}/{num}', [App\Http\Controllers\Teacher\GradeController::class, 'read'])->name('classes.notes.read');
+
+    // Formulaire modification des notes
+    Route::get('/teacher/classes/{id}/notes/{type}/{num}/edit', [App\Http\Controllers\Teacher\NoteController::class, 'edit'])
+        ->name('classes.notes.edit');
+
+    // Mettre à jour les notes
+    Route::put('/teacher/classes/{id}/notes/{type}/{num}/update', [App\Http\Controllers\Teacher\NoteController::class, 'update'])
+        ->name('classes.notes.update');
+
+    // Supprimer toutes les notes de ce type/séquence
+    Route::delete('/teacher/classes/{id}/notes/{type}/{num}/delete', [App\Http\Controllers\Teacher\NoteController::class, 'destroy'])
+        ->name('classes.notes.destroy');
+
     // Calcul des moyennes
     Route::post('/classes/{id}/notes/calc/interrogations', [App\Http\Controllers\Teacher\NoteController::class, 'calcInterro'])->name('classes.notes.calc.interro');
     Route::post('/classes/{id}/notes/calc/trimestre', [App\Http\Controllers\Teacher\NoteController::class, 'calcTrimestre'])->name('classes.notes.calc.trimestre');

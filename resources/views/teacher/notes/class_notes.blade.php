@@ -38,7 +38,9 @@
                     <th rowspan="2" class="px-3 py-2 border">Moy. I</th>
                     <th rowspan="2" class="px-3 py-2 border">Coef</th>
                     <th colspan="2" class="px-3 py-2 border text-center">Devoirs</th>
-                    <th rowspan="2" class="px-3 py-2 border">Moy. Matière</th>
+                    <th rowspan="2" class="px-3 py-2 border">Moy./20</th>
+                    <th rowspan="2" class="px-3 py-2 border">Moy.Coef</th>
+                    <th rowspan="2" class="px-3 py-2 border">Rang</th>
                 </tr>
                 <tr class="bg-gray-100 text-gray-600">
                     <th class="px-2 py-1 border">I1</th>
@@ -66,7 +68,7 @@
                         {{-- Interrogations --}}
                         @for($i = 0; $i < 5; $i++)
                             <td class="px-2 py-1 border text-center">
-                                {{ $grades['interrogation'][$i] ?? '-' }}
+                                {{ $grades['interros'][$i+1] ?? '-' }}
                             </td>
                         @endfor
 
@@ -83,13 +85,19 @@
                         {{-- Devoirs --}}
                         @for($i = 0; $i < 2; $i++)
                             <td class="px-2 py-1 border text-center">
-                                {{ $grades['devoirs'][$i] ?? '-' }}
+                                {{ $grades['devoirs'][$i+1] ?? '-' }}
                             </td>
                         @endfor
 
                         {{-- Moyenne matière --}}
                         <td class="px-2 py-1 border text-center font-bold text-blue-600">
+                            {{ $grades['moyenne'] ?? '-' }}
+                        </td>
+                        <td class="px-2 py-1 border text-center font-bold text-blue-600">
                             {{ $grades['moyenneMat'] ?? '-' }}
+                        </td>
+                        <td class="px-2 py-1 border text-center font-bold text-blue-600">
+                            {{ $grades['rang'] ?? '-' }}
                         </td>
                     </tr>
                 @endforeach
