@@ -1,6 +1,9 @@
 @extends('layouts.app')
 
 @section('content')
+@php
+    $pageTitle = 'Invitations des enseignants';
+@endphp
 <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
     <h1 class="text-3xl font-bold mb-6">Invitations des enseignants</h1>
 

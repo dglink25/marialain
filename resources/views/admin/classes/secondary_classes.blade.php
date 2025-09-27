@@ -1,6 +1,9 @@
 @extends('layouts.app')
 
 @section('content')
+@php
+    $pageTitle = 'Liste des classe';
+@endphp
 <div class="container mx-auto py-6">
     <h1 class="text-2xl font-bold mb-6">Liste des Classes</h1>
 

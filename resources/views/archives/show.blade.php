@@ -1,6 +1,9 @@
 @extends('layouts.app')
 
 @section('content')
+@php
+    $pageTitle = 'Archives - {{ $year->name }}';
+@endphp
 <div class="bg-white p-6 rounded shadow">
 
     <h1 class="text-2xl font-bold mb-6">Archives - {{ $year->name }}</h1>

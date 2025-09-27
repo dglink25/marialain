@@ -1,6 +1,9 @@
 @extends('layouts.app')
 
 @section('content')
+@php
+    $pageTitle = 'Élèves de la classe';
+@endphp
 <div class="bg-white p-6 rounded shadow">
     <h1 class="text-2xl font-bold mb-6">
         Élèves de la classe {{ $class->name }} ({{ $year->name }})

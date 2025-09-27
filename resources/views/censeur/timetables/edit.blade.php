@@ -1,6 +1,9 @@
 @extends('layouts.app')
 
 @section('content')
+@php
+    $pageTitle = 'Modifier un créneau';
+@endphp
 <div class="p-6 max-w-3xl mx-auto bg-white shadow rounded">
     <h1 class="text-xl font-bold mb-4">Modifier un créneau - {{ $class->name }}</h1>
 

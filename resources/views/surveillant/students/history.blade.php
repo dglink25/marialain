@@ -1,6 +1,9 @@
 @extends('layouts.app')
 
 @section('content')
+@php
+    $pageTitle = 'Cahier de punition';
+@endphp
 <div class="container mx-auto py-6 px-4">
     <h1 class="text-3xl font-bold mb-6 text-center">Cahier de punition - {{ $student->full_name }}</h1>
 

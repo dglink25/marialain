@@ -246,6 +246,9 @@
     </style>
 </head>
 <body>
+@php
+    $pageTitle = 'Réinitialisation';
+@endphp
     <div class="container">
         <div class="left-panel">
             <div class="logo-container">

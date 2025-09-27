@@ -2,6 +2,9 @@
 @extends('layouts.app')
 
 @section('content')
+@php
+    $pageTitle = 'Validation inscription';
+@endphp
 <div class="max-w-lg mx-auto bg-white shadow p-6 rounded">
     <h1 class="text-xl font-bold mb-4">Validation inscription : {{ $student->first_name }} {{ $student->last_name }}</h1>
 

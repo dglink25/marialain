@@ -3,6 +3,9 @@
 @section('title', 'Liste des étudiants')
 
 @section('content')
+@php
+    $pageTitle = 'Liste des élèves';
+@endphp
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
     @if(!$activeYear)
         <div class="bg-white border border-gray-200 rounded-lg p-6 mb-6">

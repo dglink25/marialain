@@ -1,6 +1,9 @@
 @extends('layouts.app')
 
 @section('content')
+@php
+    $pageTitle = 'Inscrire un élève';
+@endphp
 <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
     <!-- En-tête compact -->
     <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3 mb-4">

@@ -1,6 +1,9 @@
 @extends('layouts.app')
 
 @section('content')
+@php
+    $pageTitle = 'Historique de paiements';
+@endphp
 <div class="container mx-auto py-6">
     <h1 class="text-2xl font-bold mb-6">Historique de paiements de {{ $student->last_name }} {{ $student->first_name }}</h1>
 

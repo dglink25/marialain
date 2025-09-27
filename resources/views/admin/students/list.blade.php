@@ -1,6 +1,9 @@
 @extends('layouts.app')
 
 @section('content')
+@php
+    $pageTitle = 'Liste alphabétique';
+@endphp
 @if(auth()->check())
 <div class="max-w-6xl mx-auto p-6 bg-white rounded-lg shadow">
     <div class="flex justify-between items-center mb-6">

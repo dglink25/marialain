@@ -1,5 +1,8 @@
 @extends('layouts.app')
 @section('content')
+@php
+    $pageTitle = 'Liste des classes du Primaire';
+@endphp
 <div>
 @if(session('error'))
         <div class="bg-red-100 text-red-700 p-3 rounded mb-4">{{ session('error') }}</div>

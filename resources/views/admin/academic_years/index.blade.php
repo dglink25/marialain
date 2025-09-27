@@ -1,6 +1,9 @@
 @extends('layouts.app')
 
 @section('content')
+@php
+    $pageTitle = 'Gestion des années';
+@endphp
 <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
     <!-- En-tête -->
     <div class="mb-8">

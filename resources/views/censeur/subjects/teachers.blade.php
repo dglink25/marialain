@@ -3,6 +3,9 @@
 @section('title', 'Enseignants de '.$subject->name)
 
 @section('content')
+@php
+    $pageTitle = 'Enseignants';
+@endphp
 <div class="bg-white shadow-md rounded-lg p-6 overflow-x-auto">
     <h1 class="text-2xl font-bold mb-4">Enseignants de la matière : {{ $subject->name }}</h1>
 

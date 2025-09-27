@@ -13,6 +13,7 @@
     <title>CPEG MARIE-ALAIN</title>
 </head>
 <body>
+  
       <!-- Barre de navigation -->
 <nav class="navbar navbar-expand-lg p-3">
   <div class="container-fluid container-lg d-flex align-items-center justify-content-between">
