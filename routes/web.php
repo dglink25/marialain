@@ -44,8 +44,9 @@ use App\Http\Controllers\CenseurDashboardController;
 use App\Http\Controllers\SurveillantController;
 use App\Http\Controllers\Teacher\PrimaireClasseController;
 use App\Http\Controllers\Teacher\PrimaireSubjectController;
-
-
+use App\Http\Controllers\Teacher\PrimaireScheduleController;
+use App\Http\Controllers\Teacher\NoteController;
+use App\Http\Controllers\Teacher\GradeController;
 /*
 |--------------------------------------------------------------------------
 | Routes publiques
@@ -73,6 +74,7 @@ Route::get('/primaire/enseignants/pdf', [primaryteacherController::class, 'downl
 Route::get('/', function () {
     return view('accueil');
 })->name('accueil');
+Route:: get('/primaire/ecoliers/{id}/show', [StudentsController::class, 'show'])-> name('primaire.ecoliers.show');
 
 Route::prefix('primaire/enseignants')->name('primaire.enseignants.')->group(function () {
     Route::get('/', [InvitationPController::class, 'index'])->name('index');
@@ -137,6 +139,15 @@ Route::prefix('primaire')->name('primaire.')->group(function () {
     Route::get('ecoliers/liste', [StudentsController::class, 'index'])->name('ecoliers.liste');
     Route::get('ecoliers/pdf', [StudentsController::class, 'downloadPrimaireStudents'])->name('ecoliers.liste.pdf');
 });
+Route::get('teacher/primaire/schedules/download', [PrimaireScheduleController::class, 'downloadPdf'])
+     ->name('schedules.download');
+// Page pour voir l'emploi du temps d'une classe (directeur)
+Route::get('teacher/primaire/schedules/{classe}', [PrimaireScheduleController::class, 'directeur'])
+     ->name('schedules.ind');
+
+Route::prefix('teacher/primaire')->middleware('auth')->group(function () {
+    Route::resource('schedules', \App\Http\Controllers\Teacher\PrimaireScheduleController::class);
+});
 
 
 /*
@@ -172,7 +183,6 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/students/unpaid/send-mails', [StudentMailController::class, 'sendToAll'])->name('students.mail.sendAll');
 });
 
-
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('students/pending', [StudentController::class, 'pending'])
         ->name('students.pending');
@@ -187,6 +197,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
     // Dashboard
     Route::get('/dashboard', [AdminAuthController::class, 'index'])->name('dashboard');
+    Route::get('/home', [AdminAuthController::class, 'accueil'])->name('accueil');
     Route::post('/admins', [AdminAuthController::class, 'createAdmin'])->name('admins.store');
 
     // Entités
@@ -209,7 +220,6 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
 
     // Exports
     Route::get('students/export/pdf', [StudentController::class, 'exportPdf'])->name('students.export.pdf');
-    Route::get('students/export/pdf', [StudentExportController::class, 'exportPdf'])->name('students.export.pdf');
     Route::get('students/export/excel', [StudentExportController::class, 'exportExcel'])->name('students.export.excel');
     Route::get('students/export/all-pdf', [StudentController::class, 'exportAllPdf'])->name('students.export.all.pdf');
 
@@ -332,3 +342,26 @@ Route::middleware(['auth'])->prefix('surveillant')->group(function () {
     // Historique des punitions d’un élève
     Route::get('/students/{id}/punishments', [SurveillantController::class, 'punishmentsHistory'])->name('surveillant.students.history');
 });
+
+/*
+
+Gestion notes côté enseignants
+
+*/
+
+Route::get('classes/{class}/notes', [NoteController::class, 'showClassNotes'])->name('teacher.classes.notes.list');
+
+Route::middleware(['auth'])->prefix('teacher')->name('teacher.')->group(function () {
+
+    // Notes
+    Route::get('/classes/{id}/notes', [App\Http\Controllers\Teacher\NoteController::class, 'index'])->name('classes.notes');
+    
+    // Insertion des notes
+    Route::get('/classes/{id}/notes/{type}/{num}/create', [App\Http\Controllers\Teacher\NoteController::class, 'create'])->name('classes.notes.create');
+    Route::post('/classes/{id}/notes/{type}/{num}', [App\Http\Controllers\Teacher\NoteController::class, 'store'])->name('classes.notes.store');
+    Route::get('classes/{class}/notes/read/{type}/{num}', [App\Http\Controllers\Teacher\GradeController::class, 'read'])->name('classes.notes.read');
+    // Calcul des moyennes
+    Route::post('/classes/{id}/notes/calc/interrogations', [App\Http\Controllers\Teacher\NoteController::class, 'calcInterro'])->name('classes.notes.calc.interro');
+    Route::post('/classes/{id}/notes/calc/trimestre', [App\Http\Controllers\Teacher\NoteController::class, 'calcTrimestre'])->name('classes.notes.calc.trimestre');
+});
+

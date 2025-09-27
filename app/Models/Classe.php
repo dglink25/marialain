@@ -46,5 +46,26 @@ class Classe extends Model{
         return $this->hasMany(ClassTeacherSubject::class, 'class_id');
     }
 
+    public function schedules()
+    {
+        return $this->hasMany(Schedule::class);
+    }
+
+    public function subjects()
+    {
+        return $this->hasMany(Subject::class, 'classe_id'); 
+        // 'classe_id' est la colonne de la table subjects qui référence la classe
+    }
+    // Dans Classe.php
+    public function subject()
+    {
+        return $this->belongsToMany(Subject::class, 'class_teacher_subject', 'class_id', 'subject_id')
+                    ->withPivot('teacher_id')
+                    ->withTimestamps();
+    }
+
+
+
+
     
 }
