@@ -4,9 +4,8 @@
 <div class="container mx-auto py-8">
     <!-- Titre -->
     <h2 class="text-3xl font-extrabold text-between text-black-700 mb-8">
-        Élèves de la classe : {{ $class->name }}
+        Liste des Classes
     </h2>
-
     <!-- Tableau -->
     <div class="bg-white shadow-lg rounded-xl overflow-x-auto">
         @if($class->students->count() > 0)

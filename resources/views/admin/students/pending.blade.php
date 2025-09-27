@@ -1,86 +1,105 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="max-w-5xl mx-auto">
-    <h1 class="text-2xl font-bold mb-6">Élèves en attente de validation</h1>
+<div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <!-- En-tête compact -->
+    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3 mb-4">
+        <h1 class="text-xl lg:text-2xl font-bold text-gray-800 whitespace-nowrap">Élèves en attente</h1>
+        <div class="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
+            <a href="{{ route('admin.students.create') }}" 
+               class="bg-blue-600 text-white px-3 py-2 rounded text-sm hover:bg-blue-500 transition whitespace-nowrap text-center">
+                Inscrire un élève
+            </a>
+        </div>
+    </div>
 
     @if(!$activeYear)
-        <div class="alert alert-warning">
+        <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-4 text-sm">
             {{ $message }}
         </div>
     @else
-            <div class="mb-4 flex justify-end">
-                <a href="{{ route('admin.students.create') }}" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-500">Inscrire un élève</a>
+        @if(session('success'))
+            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4 text-sm">
+                {{ session('success') }}
             </div>
+        @endif
 
-            @if(session('success'))
-                <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-                    {{ session('success') }}
-                </div>
-            @endif
-
-            
-
-
-            <table class="min-w-full bg-white border rounded-lg">
-                <thead>
-                    <tr class="bg-gray-100 text-left text-sm font-semibold">
-                        <th class="border px-4 py-2">N°</th>
-                        <th class="border px-4 py-2" rowspan="2">N° Éduc Master</th>
-                        <th class="border px-4 py-2">Nom</th>
-                        <th class="border px-4 py-2">Prénoms</th>
-                        <th class="border px-4 py-2" rowspan="2">Sexe</th>
-                        <th class="border px-4 py-2" rowspan="2">Niveau</th>
-                        <th class="border px-4 py-2" rowspan="2">Classe</th>
-                        <th class="border px-4 py-2" rowspan="2">Date de naissance</th>
-                        <th class="border px-4 py-2" rowspan="2">Parents/Tuteurs</th>
-                        <th class="border px-4 py-2" rowspan="2">Date d'inscription</th>
-                        <th class="border px-4 py-2">Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($students as $student)
-                        <tr>
-                            <td class="border px-4 py-2">{{ $loop->iteration }}</td>
-                            <td class="border px-4 py-2">{{ $student->num_educ ?? '- -' }}</td>
-                            <td class="border px-4 py-2">
-                                <a href="{{ route('admin.students.show', $student->id) }}" class="text-blue-600 hover:underline">
-                                    {{ $student->last_name }}
-                                </a>
-                            </td>
-                            <td class="border px-4 py-2">
-                                <a href="{{ route('admin.students.show', $student->id) }}" class="text-blue-600 hover:underline">
-                                    {{ $student->first_name }}
-                                </a>
-                            </td>
-                            <td class="border px-4 py-2">{{ $student->gender ?? '- -' }}</td>
-                            <td class="border px-4 py-2">{{ $student->entity->name ?? '-' }}</td>
-                            <td class="border px-4 py-2">{{ $student->classe->name ?? '' }}</td>
-                            <td class="border px-4 py-2">{{ $student->birth_date }}</td>
-                            <td class="border px-4 py-2">{{ $student->parent_full_name ?? ' - - ' }} <br> {{ $student->parent_phone ?? ' - - ' }}</td>
-                            <td class="border px-4 py-2">{{ $student->created_at }}</td>
-                            <td class="border px-4 py-2">
-                                <form method="POST" action="{{ route('admin.students.validate', $student) }}" class="flex space-x-2">
-                                    @csrf
-                                    <input type="number" name="amount_paid" class="border rounded p-1 w-32" placeholder="Montant payé" required>
-                                    <button type="submit" class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700">Valider</button>
-                                </form>
-                            </td>
+        <!-- Tableau compact -->
+        <div class="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full bg-white text-xs lg:text-sm">
+                    <thead>
+                        <tr class="bg-gray-50 border-b">
+                            <th class="px-2 py-2 text-left font-semibold text-gray-600 whitespace-nowrap">N°</th>
+                            <th class="px-2 py-2 text-left font-semibold text-gray-600 whitespace-nowrap">N° Éduc</th>
+                            <th class="px-2 py-2 text-left font-semibold text-gray-600 whitespace-nowrap">Nom</th>
+                            <th class="px-2 py-2 text-left font-semibold text-gray-600 whitespace-nowrap">Prénoms</th>
+                            <th class="px-2 py-2 text-left font-semibold text-gray-600 whitespace-nowrap">Sexe</th>
+                            <th class="px-2 py-2 text-left font-semibold text-gray-600 whitespace-nowrap">Niveau</th>
+                            <th class="px-2 py-2 text-left font-semibold text-gray-600 whitespace-nowrap">Classe</th>
+                            <th class="px-2 py-2 text-left font-semibold text-gray-600 whitespace-nowrap">Naissance</th>
+                            <th class="px-2 py-2 text-left font-semibold text-gray-600 whitespace-nowrap">Parents</th>
+                            <th class="px-2 py-2 text-left font-semibold text-gray-600 whitespace-nowrap">Inscription</th>
+                            <th class="px-2 py-2 text-left font-semibold text-gray-600 whitespace-nowrap"><center>Action</center></th>
                         </tr>
-                    @empty
-                        <tr>
-                            <td colspan="5" class="text-center text-gray-500 py-4">Aucun élève en attente</td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        @forelse($students as $student)
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-2 py-2 whitespace-nowrap text-center">{{ $loop->iteration }}</td>
+                                <td class="px-2 py-2 whitespace-nowrap">{{ $student->num_educ ?? '-' }}</td>
+                                <td class="px-2 py-2 whitespace-nowrap font-medium text-blue-600">
+                                    <a href="{{ route('admin.students.show', $student->id) }}" class="hover:underline">
+                                        {{ $student->last_name }}
+                                    </a>
+                                </td>
+                                <td class="px-2 py-2 whitespace-nowrap font-medium text-blue-600">
+                                    <a href="{{ route('admin.students.show', $student->id) }}" class="hover:underline">
+                                        {{ $student->first_name }}
+                                    </a>
+                                </td>
+                                <td class="px-2 py-2 whitespace-nowrap text-center">{{ $student->gender ?? '-' }}</td>
+                                <td class="px-2 py-2 whitespace-nowrap">{{ $student->entity->name ?? '-' }}</td>
+                                <td class="px-2 py-2 whitespace-nowrap">{{ $student->classe->name ?? '' }}</td>
+                                <td class="px-2 py-2 whitespace-nowrap">{{ $student->birth_date }}</td>
+                                <td class="px-2 py-2">
+                                    <div class="whitespace-nowrap">{{ $student->parent_full_name ?? '-' }}</div>
+                                    <div class="text-gray-600 text-xs">{{ $student->parent_phone ?? '-' }}</div>
+                                </td>
+                                <td class="px-2 py-2 whitespace-nowrap">{{ $student->created_at->format('d/m/Y') }}</td>
+                                <td class="px-2 py-2 whitespace-nowrap">
+                                    <form method="POST" action="{{ route('admin.students.validate', $student) }}" class="space-y-1">
+                                        @csrf
+                                        <input type="number" 
+                                               name="amount_paid" 
+                                               class="border border-gray-300 rounded px-2 py-1 w-20 text-xs"
+                                               placeholder="Montant" 
+                                               required
+                                               min="0">
+                                        <button type="submit" 
+                                                class="bg-green-500 text-white px-0 py-1 rounded text-xs hover:bg-green-800 w-full">
+                                            Valider
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="11" class="px-4 py-6 text-center text-gray-500">
+                                    Aucun élève en attente
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
         </div>
-
-        <button onclick="window.history.back()" 
-            class="px-5 py-2 bg-gray-600 text-white rounded-lg shadow hover:bg-gray-700 transition">
-            Retour
-        </button>
+        <br>
+        <br>
+          <button onclick="window.history.back()" 
+                    class="bg-gray-600 text-white px-3 py-2 rounded text-sm hover:bg-gray-700 transition whitespace-nowrap text-center">
+                Retour
+            </button>
     @endif
-
-    
+</div>
 @endsection
