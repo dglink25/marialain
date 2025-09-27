@@ -139,7 +139,7 @@
                             </a>
                             <a href="{{ route('censeur.invitations.index') }}" class="block px-3 py-3 rounded-md hover:bg-[#63c6ff70] transition">
                                 <i class="fas fa-chalkboard-teacher"></i>
-                                <span class="ml-2">Invitations enseignants</span>
+                                <span class="ml-2">Invitations </span>
                             </a>
                             <a href="{{ route('censeur.subjects.index') }}" class="block px-3 py-3 rounded-md hover:bg-[#63c6ff70] transition">
                                 <i class="fas fa-book-open"></i>
@@ -165,7 +165,7 @@
                             </a>
                             <a href="{{ route('admin.students.pending') }}" class="block px-3 py-3 rounded-md hover:bg-[#63c6ff70] transition">
                                 <i class="fas fa-edit"></i>
-                                <span class="ml-2">Inscriptions en attente</span>
+                                <span class="ml-2">Attente</span>
                             </a>
                             <a href="{{ route('admin.students.index') }}" class="block px-3 py-3 rounded-md hover:bg-[#63c6ff70] transition"> 
                                 <i class="fas fa-list"></i>
@@ -231,6 +231,8 @@
                 <h2 class="text-lg font-semibold text-gray-800">
 
             <div class="fixed left-0 w-full md:left-64 md:w-[calc(100%-16rem)] z-40 bg-gray-100 px-6 py-3 flex justify-between items-center shadow-sm border-b top-16 md:top-0">                <h2 class="text-lg font-semibold text-gray-800">
+            <div class="fixed left-0 w-full md:left-64 md:w-[calc(100%-16rem)] z-40 bg-gray-100 px-6 py-3 flex justify-between items-center shadow-sm border-b top-16 md:top-0">               
+                <h2 class="text-lg font-semibold text-gray-800">
                  
                     {{ $pageTitle ??  'Accueil' }}
                 </h2>
@@ -282,8 +284,10 @@
 
             <!-- Page content -->
 
+
             <main class="flex-1 p-6">
 
+            <main class="flex-1 p-6 mt-20 md:mt-10 pt-20 ">
             @if(session('success'))
                 <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
                     {{ session('success') }}
