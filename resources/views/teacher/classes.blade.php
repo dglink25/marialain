@@ -28,6 +28,10 @@
                            class="bg-green-600 text-white px-4 py-2 rounded text-center hover:bg-green-700">
                             Voir emploi du temps
                         </a>
+                        <a href="{{ route('teacher.classes.notes', $class->id) }}"
+                           class="bg-green-600 text-white px-4 py-2 rounded text-center hover:bg-green-700">
+                            Notes
+                        </a>
                     </div>
                 </div>
             @endforeach

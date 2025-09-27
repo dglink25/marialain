@@ -22,15 +22,7 @@ class StudentExportController extends Controller
         return view('admin.students.list', compact('entities'));
     }
 
-    public function exportPdf()
-    {
-        $entities = Entity::with(['classes.students' => function($q){
-            $q->orderBy('last_name')->orderBy('first_name');
-        }])->get();
 
-        $pdf = PDF::loadView('admin.students.pdf', compact('entities'));
-        return $pdf->download('liste_etudiants.pdf');
-    }
 
     public function exportExcel()
     {

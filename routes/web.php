@@ -45,8 +45,10 @@ use App\Http\Controllers\CenseurDashboardController;
 use App\Http\Controllers\SurveillantController;
 use App\Http\Controllers\Teacher\PrimaireClasseController;
 use App\Http\Controllers\Teacher\PrimaireSubjectController;
-use App\Http\Controllers\Teacher\PrimaireScheduleController;
 
+use App\Http\Controllers\Teacher\PrimaireScheduleController;
+use App\Http\Controllers\Teacher\NoteController;
+use App\Http\Controllers\Teacher\GradeController;
 
 /*
 |--------------------------------------------------------------------------
@@ -57,7 +59,8 @@ use App\Http\Controllers\Teacher\PrimaireScheduleController;
 
 Route::get('/', fn() => view('accueil'))->name('accueil');
 //Route::get('/home', fn() => view('welcome'))->name('home');
-Route::get('/welcome', [WelcomeController::class, 'index'])->name('welcome');
+
+Route::get('/home', [WelcomeController::class, 'index'])->name('home');
 
 
 
@@ -222,7 +225,6 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
 
     // Exports
     Route::get('students/export/pdf', [StudentController::class, 'exportPdf'])->name('students.export.pdf');
-    Route::get('students/export/pdf', [StudentExportController::class, 'exportPdf'])->name('students.export.pdf');
     Route::get('students/export/excel', [StudentExportController::class, 'exportExcel'])->name('students.export.excel');
     Route::get('students/export/all-pdf', [StudentController::class, 'exportAllPdf'])->name('students.export.all.pdf');
 
@@ -344,4 +346,29 @@ Route::middleware(['auth'])->prefix('surveillant')->group(function () {
 
     // Historique des punitions d’un élève
     Route::get('/students/{id}/punishments', [SurveillantController::class, 'punishmentsHistory'])->name('surveillant.students.history');
+
 });
+
+/*
+
+Gestion notes côté enseignants
+
+*/
+
+Route::get('classes/{class}/notes', [NoteController::class, 'showClassNotes'])->name('teacher.classes.notes.list');
+
+Route::middleware(['auth'])->prefix('teacher')->name('teacher.')->group(function () {
+
+    // Notes
+    Route::get('/classes/{id}/notes', [App\Http\Controllers\Teacher\NoteController::class, 'index'])->name('classes.notes');
+    
+    // Insertion des notes
+    Route::get('/classes/{id}/notes/{type}/{num}/create', [App\Http\Controllers\Teacher\NoteController::class, 'create'])->name('classes.notes.create');
+    Route::post('/classes/{id}/notes/{type}/{num}', [App\Http\Controllers\Teacher\NoteController::class, 'store'])->name('classes.notes.store');
+    Route::get('classes/{class}/notes/read/{type}/{num}', [App\Http\Controllers\Teacher\GradeController::class, 'read'])->name('classes.notes.read');
+    // Calcul des moyennes
+    Route::post('/classes/{id}/notes/calc/interrogations', [App\Http\Controllers\Teacher\NoteController::class, 'calcInterro'])->name('classes.notes.calc.interro');
+    Route::post('/classes/{id}/notes/calc/trimestre', [App\Http\Controllers\Teacher\NoteController::class, 'calcTrimestre'])->name('classes.notes.calc.trimestre');
+});
+
+

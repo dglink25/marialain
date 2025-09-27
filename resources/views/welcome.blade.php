@@ -15,6 +15,63 @@
             </p>
         </header>
 
+        <!-- Statistiques -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8" data-aos="fade-up">
+            <div class="bg-blue-50 p-6 rounded-lg border border-blue-100 flex flex-col items-start">
+                <div class="flex items-center justify-between w-full">
+                    <h3 class="font-semibold text-blue-800">Élèves inscrits</h3>
+                    <i class="fas fa-users text-blue-500 text-2xl"></i>
+                </div>
+                <p class="text-3xl font-bold mt-4 text-blue-700">{{ \App\Models\Student::count() }}</p>
+                <p class="text-sm text-blue-600 mt-1">
+                    {{ \App\Models\Student::whereDate('created_at', now()->subDay())->count() }} nouveaux hier
+                </p>
+            </div>
+
+            <div class="bg-green-50 p-6 rounded-lg border border-green-100 flex flex-col items-start">
+                <div class="flex items-center justify-between w-full">
+                    <h3 class="font-semibold text-green-800">Enseignants</h3>
+                    <i class="fas fa-chalkboard-teacher text-green-500 text-2xl"></i>
+                </div>
+                <p class="text-3xl font-bold mt-4 text-green-700">{{ \App\Models\User::count() }}</p>
+                <p class="text-sm text-green-600 mt-1">+{{ \App\Models\User::whereDate('created_at', now()->subDay())->count() }} nouveaux hier</p>
+            </div>
+
+            <div class="bg-purple-50 p-6 rounded-lg border border-purple-100 flex flex-col items-start">
+                <div class="flex items-center justify-between w-full">
+                    <h3 class="font-semibold text-purple-800">Classes</h3>
+                    <i class="fas fa-school text-purple-500 text-2xl"></i>
+                </div>
+                <p class="text-3xl font-bold mt-4 text-purple-700">{{ \App\Models\Classe::count() }}</p>
+                <p class="text-sm text-purple-600 mt-1">{{ \App\Models\Classe::whereDate('created_at', now()->subDay())->count() }} nouvelles hier</p>
+            </div>
+        </div>
+
+        <!-- Vos actions (section ajoutée) -->
+        <section class="mb-8" data-aos="fade-up">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Vos actions</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
+                    <h3 class="font-semibold text-gray-700">👥 Gérer sa communauté</h3>
+                    <p class="text-sm text-gray-500 mt-2">Invitez des enseignants, attribuez des classes et gérez les accès.</p>
+                    {{-- Exemple de lien (décommenter/swap si tu as une route) --}}
+                    {{-- <a href="{{ route('users.index') }}" class="text-sm text-blue-600 mt-3 block">Gérer les utilisateurs →</a> --}}
+                </div>
+
+                <div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
+                    <h3 class="font-semibold text-gray-700">📊 Gestion scolarité</h3>
+                    <p class="text-sm text-gray-500 mt-2">Suivi des inscriptions, validations et paiements de scolarité.</p>
+                    {{-- <a href="{{ route('admin.students.pending') }}" class="text-sm text-blue-600 mt-3 block">Voir les inscriptions →</a> --}}
+                </div>
+
+                <div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
+                    <h3 class="font-semibold text-gray-700">💳 Inscriptions & dons</h3>
+                    <p class="text-sm text-gray-500 mt-2">Gérez les contributions, les reçus et les historiques de paiement.</p>
+                    {{-- <a href="#" class="text-sm text-blue-600 mt-3 block">Gérer les paiements →</a> --}}
+                </div>
+            </div>
+        </section>
+
         <!-- Contenu spécifique selon rôle -->
         @switch($role)
             @case('directeur_primaire')
@@ -23,7 +80,7 @@
                         <h3 class="font-semibold text-blue-800 flex items-center gap-2">
                             <i class="fas fa-school"></i> Classes du Primaire
                         </h3>
-                        <p class="text-3xl font-bold mt-4 text-blue-700">{{ $primaryClassCount }}</p>
+                        <p class="text-3xl font-bold mt-4 text-blue-700">{{ \App\Models\Classe::count() }}</p>
                         <a href="{{ route('primaire.classe.classes') }}" class="text-sm text-blue-600 mt-2 block">Gérer</a>
                     </div>
 
@@ -31,15 +88,15 @@
                         <h3 class="font-semibold text-green-800 flex items-center gap-2">
                             <i class="fas fa-chalkboard-teacher"></i> Enseignants
                         </h3>
-                        <p class="text-3xl font-bold mt-4 text-green-700">{{ $primaryTeacherCount }}</p>
+                        <p class="text-3xl font-bold mt-4 text-green-700">{{ \App\Models\User::whereHas('role', fn($q)=>$q->where('name','teacher'))->count() }}</p>
                         <a href="{{ route('primaire.enseignants.enseignants') }}" class="text-sm text-green-600 mt-2 block">Inviter & gérer</a>
                     </div>
 
                     <div class="bg-purple-50 p-6 rounded-lg border border-purple-100">
                         <h3 class="font-semibold text-purple-800 flex items-center gap-2">
-                            <i class="fas fa-users"></i> Élèves
+                            <i class="fas fa-users"></i> Écoliers
                         </h3>
-                        <p class="text-3xl font-bold mt-4 text-purple-700">{{ $primaryStudentsCount  }}</p>
+                        <p class="text-3xl font-bold mt-4 text-purple-700">{{ \App\Models\Student::count() }}</p>
                         <a href="{{ route('primaire.ecoliers.liste') }}" class="text-sm text-purple-600 mt-2 block">Voir la liste</a>
                     </div>
                 </div>
@@ -85,33 +142,6 @@
                     Votre rôle n’est pas encore défini. Contactez un administrateur.
                 </div>
         @endswitch
-
-        <!-- Vos actions (section ajoutée) -->
-        <section class="mb-8" data-aos="fade-up">
-            <h2 class="text-xl font-bold text-gray-800 mb-4">Vos actions</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
-                    <h3 class="font-semibold text-gray-700">👥 Gérer sa communauté</h3>
-                    <p class="text-sm text-gray-500 mt-2">Invitez des enseignants, attribuez des classes et gérez les accès.</p>
-                    {{-- Exemple de lien (décommenter/swap si tu as une route) --}}
-                    {{-- <a href="{{ route('users.index') }}" class="text-sm text-blue-600 mt-3 block">Gérer les utilisateurs →</a> --}}
-                </div>
-
-                <div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
-                    <h3 class="font-semibold text-gray-700">📊 Gestion scolarité</h3>
-                    <p class="text-sm text-gray-500 mt-2">Suivi des inscriptions, validations et paiements de scolarité.</p>
-                    {{-- <a href="{{ route('admin.students.pending') }}" class="text-sm text-blue-600 mt-3 block">Voir les inscriptions →</a> --}}
-                </div>
-
-                <div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
-                    <h3 class="font-semibold text-gray-700">💳 Inscriptions & dons</h3>
-                    <p class="text-sm text-gray-500 mt-2">Gérez les contributions, les reçus et les historiques de paiement.</p>
-                    {{-- <a href="#" class="text-sm text-blue-600 mt-3 block">Gérer les paiements →</a> --}}
-                </div>
-            </div>
-        </section>
-
-     
 
     @else
         <!-- Page d’accueil publique -->

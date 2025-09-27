@@ -115,11 +115,17 @@
 
     <!-- Contenu principal -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Colonne de gauche (2/3 de largeur) -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Ici vous pouvez ajouter d'autres sections comme le calendrier, les activités récentes, etc. -->
+            <div class="bg-white shadow rounded-lg border border-gray-200 p-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Espace pour contenu supplémentaire</h3>
+                <p class="text-gray-600">Cette zone peut contenir des graphiques, un calendrier, ou d'autres informations importantes.</p>
+            </div>
+        </div>
 
-
-        <!-- Colonne de droite -->
-        <div class="space-y-6">
-
+        <!-- Colonne de droite - Actions Rapides (1/3 de largeur) -->
+        <div class="lg:col-span-1 space-y-6">
             <!-- Actions Rapides -->
             <div class="bg-white shadow rounded-lg border border-gray-200">
                 <div class="px-6 py-4 border-b border-gray-200">
@@ -146,11 +152,9 @@
                     </div>
                 </div>
             </div>
-
         </div>
     </div>
 </div>
-
 <style>
     /* Animation pour les cartes */
     .bg-white {

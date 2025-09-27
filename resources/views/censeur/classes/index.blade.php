@@ -4,9 +4,7 @@
 @php
     $pageTitle = 'Classes ';
 @endphp
-<body class="bg-gradient-to-br from-blue-50 to-blue-100 text-gray-800 min-h-screen">
 
-    <h1 class="text-2xl font-bold mb-6">Liste des Classes</h1>
 
     @if(isset($error))
         <div class="p-4 mb-6 text-sm text-red-700 bg-red-100 border border-red-300 rounded-lg">
@@ -48,7 +46,16 @@
             </div>
         @endforeach
     </div>
-</div>
 
+    <br>
+    <br>
+    <br>
+    <div class="d-flex justify-content-between">
+        <button onclick="window.history.back()" 
+            class="px-5 py-2 bg-gray-600 text-white rounded-lg shadow hover:bg-gray-700 transition">
+            Retour
+        </button>
+    </div>
+</div>
 </body>
 @endsection

@@ -27,10 +27,7 @@ class welcomeController extends Controller
                 })
                 -> count();
                 //nombre d'elèves au primaire
-            $primaryStudentsCount = Student::where( 'academic_year_id', $annee_academique -> id)
-            -> whereHas('classe.entity', function ($q) {
-                $q->whereHas('name', 'primaire');
-                })->count();
+            $primaryStudentsCount = 2;
             
             //récupérer les enseignants du primaire
                 $primaryTeacherCount =2;

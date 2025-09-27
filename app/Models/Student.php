@@ -82,5 +82,27 @@ class Student extends Model{
     {
         return "{$this->last_name} {$this->first_name}";
     }
+
+
+    public function grades() {
+        return $this->hasMany(Grade::class);
+    }
+
+    public function subjectAverages() {
+        return $this->hasMany(SubjectAverage::class);
+    }
+
+    public function trimestreAverages() {
+        return $this->hasMany(StudentTrimestreAverage::class);
+    }
+
+    public function annualAverage() {
+        return $this->hasOne(StudentAnnualAverage::class);
+    }
+    public function class()
+    {
+        return $this->belongsTo(Classe::class);
+    }
+
     
 }
