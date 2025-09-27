@@ -11,6 +11,7 @@ use App\Http\Controllers\InvitationResponseController;
 use App\Http\Controllers\StudentPaymentController;
 use App\Http\Controllers\ArchiveController;
 use App\Http\Controllers\WelcomeController;
+use App\Http\Controllers\DashboardPrimaireController;
 
 // Admin
 use App\Http\Controllers\Admin\AdminAuthController;
@@ -76,6 +77,7 @@ Route::get('/primaire/ecoliers/pdf', [StudentsController::class, 'downloadPrimai
     ->name('primaire.ecoliers.liste.pdf');
 Route::get('/primaire/classe/{id}/pdf', [ClassesprimaireController::class, 'downloadClassStudents'])-> name('primaire.classe.pdf');
 Route::get('/primaire/enseignants/pdf', [primaryteacherController::class, 'downloadTeachersList'])->name('primaire.enseignants.pdf');
+Route::get('/primaire/enseignants/{id}/show', [primaryteacherController::class, 'show'])-> name('primaire.enseignants.show');
 Route::get('/', function () {
     return view('accueil');
 })->name('accueil');
@@ -170,7 +172,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/profil/photo', [ProfileController::class, 'updatePhoto'])->name('profile.photo');
 
     // Dashboards par rôle
-    Route::get('/dashboard/directeur', fn() => view('dashboards.directeur', ['user' => auth()->user()]))->name('directeur.dashboard');
+
+    Route::get('/dashboard/directeur', [DashboardPrimaireController::class, 'index'])->name('directeur.dashboard');
 
     Route::get('/dashboard/surveillant', fn() => view('dashboards.surveillant', ['user' => auth()->user()]))->name('surveillant.dashboard');
     

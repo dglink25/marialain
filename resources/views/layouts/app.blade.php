@@ -287,7 +287,7 @@
 
             <main class="flex-1 p-6">
 
-            <main class="flex-1 p-6 mt-20 md:mt-10 pt-20 ">
+            <main class="flex-1 p-6 mt-20 md:mt-3 pt-20 ">
             @if(session('success'))
                 <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
                     {{ session('success') }}
