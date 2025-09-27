@@ -92,16 +92,30 @@
                         <a href="{{ route('teacher.subjects.primaire') }}" class="block px-4 py-4 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('teacher.subjects.primaire') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
                             <i class="fa fa-layer-group w-5 text-gray-500"></i>
                             <span class="ml-3">Matières</span>
-
                         </a>
                         @break
+            
+
+                    @case('Secondaire')
+
+                        <a href="{{ route('teacher.dashboard') }}" class="block px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('teacher.dashboard') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
+                            <i class="fas fa-tachometer-alt"></i> 
+                            <span class="ml-2">Dashboard </span>
+                        </a>
+                        <a href="{{ route('teacher.classes') }}" class="block px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('teacher.classes') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
+                            <i class="fa fa-layer-group w-5 text-gray-500"></i>
+                            <span class="ml-2">Classes</span>
+                        </a>
+                            
+                        @break
                     @default
+
                 @endswitch
                     <a href="{{ route('archives.index') }}" class="block px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('archives.index') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
                         <i class="fas fa-archive"></i>
                         <span class="ml-2">Mes Archives</span>
-
                     </a>
+                    
                     @if(!isset($entityName))
                     @switch(optional(auth()->user()->role)->name)
                         @case('directeur_primaire')
@@ -150,7 +164,6 @@
                             <a href="{{ route('censeur.classes.index') }}" class="block px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('censeur.classes.index') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
                                 <i class="fas fa-list"></i>
                                 <span class="ml-2"> Classes</span>
-
                             </a>
                             @break
                         @case('surveillant')
@@ -205,6 +218,7 @@
 
                         @default
                             <span class="block px-3 py-3 text-white/70">Rôle non défini</span>
+                            @break
                     @endswitch
                     @endif
                         <a href="{{ route('profile.edit') }}" class="block px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('profile.edit') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
@@ -294,10 +308,6 @@
             </div>
 
             <!-- Page content -->
-
-
-         
-
             <main class="flex-1 p-6 mt-20 md:mt-10 pt-20 ">
             @if(session('success'))
                 <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
