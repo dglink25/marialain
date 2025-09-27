@@ -44,9 +44,11 @@ use App\Http\Controllers\CenseurDashboardController;
 use App\Http\Controllers\SurveillantController;
 use App\Http\Controllers\Teacher\PrimaireClasseController;
 use App\Http\Controllers\Teacher\PrimaireSubjectController;
+
 use App\Http\Controllers\Teacher\PrimaireScheduleController;
 use App\Http\Controllers\Teacher\NoteController;
 use App\Http\Controllers\Teacher\GradeController;
+
 /*
 |--------------------------------------------------------------------------
 | Routes publiques
@@ -341,6 +343,7 @@ Route::middleware(['auth'])->prefix('surveillant')->group(function () {
 
     // Historique des punitions d’un élève
     Route::get('/students/{id}/punishments', [SurveillantController::class, 'punishmentsHistory'])->name('surveillant.students.history');
+
 });
 
 /*
@@ -364,4 +367,5 @@ Route::middleware(['auth'])->prefix('teacher')->name('teacher.')->group(function
     Route::post('/classes/{id}/notes/calc/interrogations', [App\Http\Controllers\Teacher\NoteController::class, 'calcInterro'])->name('classes.notes.calc.interro');
     Route::post('/classes/{id}/notes/calc/trimestre', [App\Http\Controllers\Teacher\NoteController::class, 'calcTrimestre'])->name('classes.notes.calc.trimestre');
 });
+
 

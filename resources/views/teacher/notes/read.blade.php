@@ -22,7 +22,7 @@
                 <td class="px-3 py-2 border">{{ $loop->iteration }}</td>
                 <td class="px-3 py-2 border">{{ $student->last_name }}</td>
                 <td class="px-3 py-2 border">{{ $student->first_name }}</td>
-                <td class="px-3 py-2 border">{{ $student->first_gender }}</td>
+                <td class="px-3 py-2 border">{{ $student->gender }}</td>
                 <td class="px-3 py-2 border">
                     {{ $student->grades->first()->value ?? '00' }}
                 </td>

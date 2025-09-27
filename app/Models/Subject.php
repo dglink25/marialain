@@ -4,6 +4,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 
 class Subject extends Model{
+
     protected $fillable = ['name','academic_year_id', 'coefficient', 'classe_id'];
 
     public function teachers(){

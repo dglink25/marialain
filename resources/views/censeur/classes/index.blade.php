@@ -4,7 +4,6 @@
 @php
     $pageTitle = 'Classes ';
 @endphp
-<body class="bg-gradient-to-br from-blue-50 to-blue-100 text-gray-800 min-h-screen">
 
 
     @if(isset($error))
@@ -47,6 +46,7 @@
             </div>
         @endforeach
     </div>
+
     <br>
     <br>
     <br>

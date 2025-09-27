@@ -18,6 +18,7 @@
             <th class="px-4 py-2 text-left">Classe</th>
             <th class="px-4 py-2 text-left">Enseignant</th>
             <th class="px-4 py-2 text-left">Emploie du temps</th>
+
             <th class="px-4 py-2 text-left">Visiter</th>
         </tr>
     </thead>
@@ -27,6 +28,7 @@
                 <td class="px-4 py-2">{{ $index + 1 }}</td>
                 <td class="px-4 py-2 font-semibold text-gray-800">{{ $class->name }}</td>
                 <td class="px-4 py-2">{{ $class->teacher?->name ?? 'Non assigné' }}</td>
+
                 <td class="px-4 py-2 flex space-x-2">
     <!-- Consulter emploi du temps -->
     <a href="{{ route('schedules.ind', $class->id) }}" 
@@ -35,7 +37,6 @@
        Consulter
     </a>
 </td>
-
                 <td class="px-4 py-2 flex space-x-2">
                     <!-- Voir -->
                     <a href="{{ route('primaire.classe.showclass', $class->id) }}" title="Voir" class="text-blue-600 hover:text-blue-800">

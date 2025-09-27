@@ -25,7 +25,7 @@
 <body class="antialiased bg-gray-50 text-gray-800">
 
     <!-- Mobile header -->
-<header class="md:hidden bg-white shadow p-4 pb-2 flex justify-between items-center">
+<header class="fixed top-0 left-0 w-full z-50 md:hidden bg-white  p-4 flex justify-between items-center h-16">        
     <h1 class="font-semibold pl-2">CPEG MARIE-ALAIN</h1>
     <button id="sidebarToggle" class="p-2 text-gray-600"><i class="fas fa-bars w-4"></i></button>
     
@@ -35,7 +35,7 @@
     <aside id="sidebar" class="fixed top-0 left-0 h-screen w-64 bg-[#195af0] text-white shadow-xl z-50 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out">
         
         <!-- Logo + Titre -->
-        <div class="p-3 flex flex-col items-center gap-2 border-b border-blue-300 bg-[#195af0] text-white">
+        <div class=" p-3 flex flex-col items-center gap-2 border-b border-blue-300 bg-[#195af0] text-white">
             <div class="bg-white rounded-full p-2 shadow">
                 <img src="{{ asset('logo.png') }}" class="h-12 w-12 object-contain rounded-full" alt="Logo" />
             </div>
@@ -51,7 +51,7 @@
                 </a>
                 <a href="{{ route('students.create') }}" class="block px-3 py-3 rounded-md hover:bg-[#63c6ff70] transition">
                     <i class="fa fa-user-plus "></i> 
-                    <span class="ml-2">Inscription en ligne</span>
+                    <span class="ml-2">Inscription </span>
                 </a>
 
                 @auth
@@ -66,6 +66,7 @@
                 
                 @switch($entityName)
                     @case('Primaire')
+
                         <a href="{{ route('schedules.index') }}" 
                         class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">
                             <i class="fa fa-layer-group w-5 text-gray-500"></i>
@@ -76,6 +77,20 @@
                         <a href="{{ route('teacher.subjects.primaire') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">
                             <i class="fa fa-layer-group w-5 text-gray-500"></i>
                             <span class="ml-3">Gestion matières</span>
+
+                        <a href="{{ route('teacher.dashboard') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">
+                            <i class="fa fa-book-open w-5 text-gray-500"></i> 
+                            <span class="ml-3">Dashboard </span>
+                        </a>
+                        <a href="{{ route('teacher.classes.primaire') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">
+                            <i class="fa fa-layer-group w-5 text-gray-500"></i>
+                            <span class="ml-3">Ma classes</span>
+                        </a>
+
+                        <a href="{{ route('teacher.subjects.primaire') }}" class="block px-4 py-4 rounded-md hover:bg-[#63c6ff70] transition">
+                            <i class="fa fa-layer-group w-5 text-gray-500"></i>
+                            <span class="ml-3">Matières</span>
+
                         </a>
                         @break
                     @default
@@ -90,41 +105,41 @@
                         @case('directeur_primaire')
                             <a href="{{ route('directeur.dashboard') }}" class="block px-3 py-3 rounded-md hover:bg-[#63c6ff70] transition">
                                 <i class="fas fa-tachometer-alt"></i>
-                                <span class="ml-3">Dashboard Directeur</span>
+                                <span class="ml-3">Dashboard </span>
                             </a>
                             <a href="{{ route('primaire.classe.classes') }}" class="block px-3 py-3 rounded-md hover:bg-[#63c6ff70] transition">
                                 <i class="fa fa-school w-5 text-gray-500"></i> 
-                                <span class="ml-3">Gestion des classes</span>
+                                <span class="ml-3">Classes</span>
                             </a>
                             <a href="{{ route('primaire.enseignants.enseignants') }}" class="block px-3 py-3 rounded-md hover:bg-[#63c6ff70] transition">
                                 <i class="fa fa-chalkboard-teacher w-5 text-gray-500"></i> 
-                                <span class="ml-3">Gestion des enseignants</span>
+                                <span class="ml-3">Enseignants</span>
                             </a>
                             <a href="{{ route('primaire.ecoliers.liste') }}" class="block px-3 py-3 rounded-md hover:bg-[#63c6ff70] transition">
                                 <i class="fa fa-users w-5 text-gray-500"></i> 
-                                <span class="ml-3">Gestion des écoliers</span>
+                                <span class="ml-3">Ecoliers</span>
                             </a>
                             @break
 
                         @case('teacher')
                             <a href="{{ route('teacher.dashboard') }}" class="block px-3 py-3 rounded-md hover:bg-[#63c6ff70] transition">
                                 <i class="fas fa-tachometer-alt"></i> 
-                                <span class="ml-2">Dashboard Enseignant</span>
+                                <span class="ml-2">Dashboard </span>
                             </a>
                             <a href="{{ route('teacher.classes') }}" class="block px-3 py-3 rounded-md hover:bg-[#63c6ff70] transition">
                                 <i class="fa fa-layer-group w-5 text-gray-500"></i>
-                                <span class="ml-2">Mes classes</span>
+                                <span class="ml-2">Classes</span>
                             </a>
                             @break
 
                         @case('censeur')
                             <a href="{{ route('censeur.dashboard') }}" class="block px-3 py-3 rounded-md hover:bg-[#63c6ff70] transition">
                                 <i class="fas fa-tachometer-alt"></i> 
-                                <span class="ml-2">Dashboard Censeur</span>
+                                <span class="ml-2">Dashboard </span>
                             </a>
                             <a href="{{ route('censeur.invitations.index') }}" class="block px-3 py-3 rounded-md hover:bg-[#63c6ff70] transition">
                                 <i class="fas fa-chalkboard-teacher"></i>
-                                <span class="ml-2">Invitations enseignants</span>
+                                <span class="ml-2">Invitations </span>
                             </a>
                             <a href="{{ route('censeur.subjects.index') }}" class="block px-3 py-3 rounded-md hover:bg-[#63c6ff70] transition">
                                 <i class="fas fa-book-open"></i>
@@ -132,33 +147,33 @@
                             </a>
                             <a href="{{ route('censeur.classes.index') }}" class="block px-3 py-3 rounded-md hover:bg-[#63c6ff70] transition">
                                 <i class="fas fa-list"></i>
-                                <span class="ml-2">Liste Classes</span>
+                                <span class="ml-2"> Classes</span>
 
                             </a>
                             @break
                         @case('surveillant')
                             <a href="{{ route('surveillant.dashboard') }}"class="block px-3 py-3 rounded-md hover:bg-[#63c6ff70] transition">
                                 <i class="fas fa-tachometer-alt"></i> 
-                                <span class="ml-2">Dashboard Surveillant</span>
+                                <span class="ml-2">Dashboard </span>
                             </a>
                             @break
 
                         @case('secretaire')
                             <a href="{{ route('secretaire.dashboard') }}" class="block px-3 py-3 rounded-md hover:bg-[#63c6ff70] transition"> 
                                 <i class="fas fa-tachometer-alt"></i> 
-                                <span class="ml-3">Dashboard Secrétaire</span>
+                                <span class="ml-3">Dashboard </span>
                             </a>
                             <a href="{{ route('admin.students.pending') }}" class="block px-3 py-3 rounded-md hover:bg-[#63c6ff70] transition">
                                 <i class="fas fa-edit"></i>
-                                <span class="ml-2">Inscriptions en attente</span>
+                                <span class="ml-2">Attente</span>
                             </a>
                             <a href="{{ route('admin.students.index') }}" class="block px-3 py-3 rounded-md hover:bg-[#63c6ff70] transition"> 
                                 <i class="fas fa-list"></i>
-                                <span class="ml-2">Liste Élèves</span>
+                                <span class="ml-2"> Élèves</span>
                             </a>
                             <a href="{{ route('admin.classes.index') }}" class="block px-3 py-3 rounded-md hover:bg-[#63c6ff70] transition">
                                  <i class="fas fa-school"></i>
-                                <span class="ml-2">Gestion des classes</span>
+                                <span class="ml-2">Classes</span>
                             </a>
                             @break
 
@@ -206,18 +221,24 @@
         
 
         <!-- Main content -->
-        <div class="flex-1 ml-0 md:ml-64 flex flex-col">
+        <div class="flex-1 ml-0 md:ml-64 flex flex-col ">
         
 
 
             <!-- Top bar -->
+
             <div class="bg-gray-100 px-6 py-3 flex justify-between items-center shadow-sm border-b">
                 <h2 class="text-lg font-semibold text-gray-800">
+
+            <div class="fixed left-0 w-full md:left-64 md:w-[calc(100%-16rem)] z-40 bg-gray-100 px-6 py-3 flex justify-between items-center shadow-sm border-b top-16 md:top-0">                <h2 class="text-lg font-semibold text-gray-800">
+            <div class="fixed left-0 w-full md:left-64 md:w-[calc(100%-16rem)] z-40 bg-gray-100 px-6 py-3 flex justify-between items-center shadow-sm border-b top-16 md:top-0">               
+                <h2 class="text-lg font-semibold text-gray-800">
+                 
                     {{ $pageTitle ??  'Accueil' }}
                 </h2>
                 <!-- Année centrée -->
                 <div class="absolute left-1/2 transform -translate-x-1/2 text-gray-600 text-sm font-medium">
-                    {{ $pageTitle ?? (isset($activeYear) ? $activeYear->name : 'Accueil') }}
+                    {{ (isset($activeYear) ? $activeYear->name : 'Na') }}
                 </div>
                 <div class="relative">
                     <div id="userMenuToggle" class="flex items-center gap-2 cursor-pointer  rounded-md hover:bg-gray-50 transition">
@@ -262,7 +283,11 @@
             </div>
 
             <!-- Page content -->
+
+
             <main class="flex-1 p-6">
+
+            <main class="flex-1 p-6 mt-20 md:mt-10 pt-20 ">
             @if(session('success'))
                 <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
                     {{ session('success') }}
@@ -281,6 +306,11 @@
 
                 @yield('content')
             </main>
+            <footer class="bg-white py-6 border-t">
+                <div class="text-center text-sm text-gray-600">
+                    &copy; 2025 CPEG MARIE-ALAIN — Tous droits réservés.
+                </div>
+            </footer>
         </div>
     </div>
 
