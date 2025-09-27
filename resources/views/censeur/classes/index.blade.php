@@ -56,6 +56,6 @@
             Retour
         </button>
     </div>
-</div>
+
 </body>
 @endsection

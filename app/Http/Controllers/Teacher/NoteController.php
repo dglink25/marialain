@@ -71,12 +71,24 @@ class NoteController extends Controller{
         $activeYear = AcademicYear::where('active', true)->firstOrFail();
         $classe = Classe::with('students')->findOrFail($classId);
 
+        // ⚡ récupérer le subject_id assigné à l'enseignant pour cette classe
+        $subjectPivot = DB::table('class_teacher_subject')
+            ->where('class_id', $classId)
+            ->where('teacher_id', Auth::id())
+            ->first();
+
+        if (!$subjectPivot) {
+            return back()->with('error', 'Aucune matière assignée à cet enseignant pour cette classe.');
+        }
+
+        $subjectId = $subjectPivot->subject_id;
+
         foreach ($classe->students as $student) {
             if (isset($request->notes[$student->id])) {
                 Grade::updateOrCreate(
                     [
                         'student_id' => $student->id,
-                        'subject_id' => $request->subject_id, // ⚠️ à récupérer dynamiquement selon la matière
+                        'subject_id' => $subjectId,  
                         'type' => $type,
                         'sequence' => $num,
                         'class_id' => $classId,
@@ -90,20 +102,79 @@ class NoteController extends Controller{
             }
         }
 
-        return redirect()->route('teacher.classes.notes', $classId)->with('success', 'Notes enregistrées.');
+        return redirect()->route('teacher.classes.notes', $classId)
+            ->with('success', 'Notes enregistrées.');
     }
 
-    public function list($classId){
-        $activeYear = AcademicYear::where('active', true)->first();
-        if (!$activeYear) {
-            return back()->with('error', 'Aucune année académique active trouvée.');
-        }
 
-        $classe = Classe::with(['students' => function ($q) {
-            $q->orderBy('last_name')->orderBy('first_name');
+    public function edit($classId, $type, $num){
+        $activeYear = AcademicYear::where('active', true)->firstOrFail();
+
+        $classe = Classe::with(['students.grades' => function($q) use ($type, $num, $activeYear){
+            $q->where('type', $type)
+              ->where('sequence', $num)
+              ->where('academic_year_id', $activeYear->id);
         }])->findOrFail($classId);
 
-        return view('teacher.notes.list', compact('classe', 'activeYear'));
+        return view('teacher.notes.edit', compact('classe','type','num'));
+    }
+
+    // Mettre à jour les notes
+    public function update(Request $request, $classId, $type, $num){
+        $request->validate([
+            'notes.*' => 'nullable|min:0|max:20'
+        ]);
+        $activeYear = AcademicYear::where('active', true)->firstOrFail();
+
+        // Récupérer subject_id de l'enseignant pour cette classe
+        $subject = DB::table('class_teacher_subject')
+            ->where('class_id', $classId)
+            ->where('teacher_id', Auth::id())
+            ->first();
+
+        if (!$subject) {
+            return back()->with('error','Aucune matière assignée à cet enseignant.');
+        }
+
+        foreach ($request->notes as $studentId => $value) {
+            Grade::updateOrCreate(
+                [
+                    'student_id' => $studentId,
+                    'subject_id' => $subject->subject_id,
+                    'type' => $type,
+                    'sequence' => $num,
+                    'class_id' => $classId,
+                    'academic_year_id' => $activeYear->id
+                ],
+                ['value' => $value]
+            );
+        }
+
+        return redirect()->route('teacher.classes.notes.read', [$classId, $type, $num])
+                         ->with('success','Notes mises à jour avec succès.');
+    }
+
+    // Supprimer toutes les notes pour ce type/séquence
+    public function destroy($classId, $type, $num){
+        $activeYear = AcademicYear::where('active', true)->firstOrFail();
+        $subject = DB::table('class_teacher_subject')
+            ->where('class_id', $classId)
+            ->where('teacher_id', Auth::id())
+            ->first();
+
+        if (!$subject) {
+            return back()->with('error','Aucune matière assignée à cet enseignant.');
+        }
+
+        Grade::where('class_id', $classId)
+            ->where('subject_id', $subject->subject_id)
+            ->where('type', $type)
+            ->where('sequence', $num)
+            ->where('academic_year_id', $activeYear->id)
+            ->delete();
+
+        return redirect()->route('teacher.classes.notes.read', [$classId, $type, $num])
+                         ->with('success','Toutes les notes ont été supprimées.');
     }
 
     public function showClassNotesAll($classId){
@@ -152,118 +223,108 @@ class NoteController extends Controller{
         return view('teacher.notes.class_notes', compact('classe', 'gradesData', 'activeYear'));
     }
 
-    public function showClassNotes($classId){
-        // 1) année active
+   public function showClassNotes($classId){
+        // 1) année académique active
         $activeYear = AcademicYear::where('active', true)->first();
         if (!$activeYear) {
             return back()->with('error', 'Aucune année académique active trouvée.');
         }
 
-        // 2) récupérer la classe + élèves
+        // 2) récupérer la classe avec les élèves
         $classe = Classe::with(['students' => function ($q) {
             $q->orderBy('last_name')->orderBy('first_name');
         }])->findOrFail($classId);
 
-        // 3) id enseignant connecté
+        // 3) récupérer les matières liées à l’enseignant connecté
         $teacherId = Auth::id();
 
-        // 4) détecter la table pivot et les colonnes disponibles
-        $possiblePivotTables = [
-            'class_teacher_subjects',
-            'class_teacher_subject',
-            'classe_subject_teacher',
-            'classe_subjects',
-            'class_subject_teacher',
-            'class_subjects',
-        ];
+        // Vérifier table pivot existante
+        $pivotTable = 'class_teacher_subject'; // adapter si nécessaire
 
-        $pivotTable = null;
-        foreach ($possiblePivotTables as $t) {
-            if (Schema::hasTable($t)) { $pivotTable = $t; break; }
-        }
-
-        if (! $pivotTable) {
-            return back()->with('error', "Table pivot introuvable (class <-> subject <-> teacher). Créez `class_teacher_subjects` ou adaptez la configuration.");
-        }
-
-        // identifier colonnes possibles dans la pivot
-        $classCols = ['classe_id','class_id','classe','class'];
-        $subjectCols = ['subject_id','matiere_id','subject','matiere'];
-        $teacherCols = ['teacher_id','user_id','teacher','user'];
-
-        $classCol = null; $subjectCol = null; $teacherCol = null;
-
-        foreach ($classCols as $c) { if (Schema::hasColumn($pivotTable, $c)) { $classCol = $c; break; } }
-        foreach ($subjectCols as $c) { if (Schema::hasColumn($pivotTable, $c)) { $subjectCol = $c; break; } }
-        foreach ($teacherCols as $c) { if (Schema::hasColumn($pivotTable, $c)) { $teacherCol = $c; break; } }
-
-        if (! $classCol || ! $subjectCol || ! $teacherCol) {
-            return back()->with('error', "La table pivot `$pivotTable` existe mais les colonnes attendues sont manquantes (attendues: ".implode(',', $classCols)." | ".implode(',', $subjectCols)." | ".implode(',', $teacherCols).").");
-        }
-
-        // 5) récupérer les subject_ids liés à cette classe pour l'enseignant
         $subjectIds = DB::table($pivotTable)
-            ->where($classCol, $classId)
-            ->where($teacherCol, $teacherId)
-            ->pluck($subjectCol)
+            ->where('class_id', $classId)
+            ->where('teacher_id', $teacherId)
+            ->pluck('subject_id')
             ->unique()
             ->toArray();
 
         if (empty($subjectIds)) {
-            return back()->with('error', "Aucune matière assignée à cet enseignant pour cette classe (vérifiez la table pivot `$pivotTable`).");
+            return back()->with('error', "Aucune matière assignée à cet enseignant pour cette classe.");
         }
 
-        // 6) charger les matières sélectionnées
         $subjects = Subject::whereIn('id', $subjectIds)->get();
-        if ($subjects->isEmpty()) {
-            return back()->with('error', "Les matières liées via la pivot existent mais n'ont pas été trouvées dans la table `subjects`.");
-        }
 
-        // 7) préparer les notes par élève × matière
+        // 4) préparation des notes par élève × matière
         $gradesData = [];
+
         foreach ($classe->students as $student) {
             $studentGrades = [];
+
             foreach ($subjects as $subject) {
+
+                // récupérer toutes les notes de l’élève pour cette matière et cette année
                 $grades = Grade::where('student_id', $student->id)
                     ->where('subject_id', $subject->id)
                     ->where('academic_year_id', $activeYear->id)
                     ->get();
 
-                $interros = $grades->where('type', 'interrogation')->sortBy('sequence')->pluck('value')->toArray();
-                $devoirs  = $grades->where('type', 'devoir')->sortBy('sequence')->pluck('value')->toArray();
+                // préparation des tableaux
+                $interros = [];
+                $devoirs = [];
 
-                $moyenneInterro = count($interros) > 0 ? round(array_sum($interros) / count($interros), 2) : null;
-                $coef = $subject->coefficient ?? ($subject->coef ?? 1);
-                $moyenneMat = null;
-                // calcul simple : moyenneInterro + moyenne devoirs / 2 (si données présentes)
-                if ($moyenneInterro !== null) {
-                    $moyDevoirs = count($devoirs) > 0 ? (array_sum($devoirs) / count($devoirs)) : null;
-                    if ($moyDevoirs !== null) {
-                        $avg = ($moyenneInterro + $moyDevoirs) / 2;
-                        $moyenneMat = round($avg * $coef, 2);
+                foreach ($grades as $grade) {
+                    if ($grade->type === 'interrogation') {
+                        $interros[$grade->sequence] = $grade->value; // clé = numéro de l’interro
+                    }
+                    if ($grade->type === 'devoir') {
+                        $devoirs[$grade->sequence] = $grade->value; // clé = numéro du devoir
                     }
                 }
 
+                // ordonner par séquence
+                ksort($interros);
+                ksort($devoirs);
+
+                // calcul des moyennes
+                $moyenneInterro = count($interros) > 0 ? round(array_sum($interros) / count($interros), 2) : null;
+                $moyenneDevoir = count($devoirs) > 0 ? round(array_sum($devoirs) / count($devoirs), 2) : null;
+
+                $coef = $subject->coefficient ?? 1;
+
+                $moyenneMat = null;
+                if ($moyenneInterro !== null && $moyenneDevoir !== null) {
+                    $moyenneMat = round((($moyenneInterro + $moyenneDevoir) / 2) * $coef, 2);
+                }
+
+                $moyenne = null;
+                if ($moyenneInterro !== null && $moyenneDevoir !== null) {
+                    $moyenne = round((($moyenneInterro + $moyenneDevoir) / 2), 2);
+                }
+
                 $studentGrades[$subject->id] = [
-                    'interros' => $interros,
-                    'devoirs' => $devoirs,
+                    'interros' => $interros,       // [1 => note1, 2 => note2, ...]
+                    'devoirs' => $devoirs,         // [1 => note1, 2 => note2]
                     'moyenneInterro' => $moyenneInterro,
                     'coef' => $coef,
+                    'moyenne' => $moyenne,
                     'moyenneMat' => $moyenneMat,
                     'subject' => $subject,
                 ];
             }
+        
+
             $gradesData[$student->id] = $studentGrades;
         }
 
-        // 8) envoyer à la vue
+        // 5) envoyer à la vue
         return view('teacher.notes.class_notes', [
             'classe' => $classe,
-            'subjects' => $subjects,        // matières de l'enseignant (pratique en blade)
+            'subjects' => $subjects,
             'gradesData' => $gradesData,
             'activeYear' => $activeYear,
         ]);
     }
+
 
     public function calcInterro($classId){
         // ⚡ calculer moyenne interro par élève (minimum 2 notes)

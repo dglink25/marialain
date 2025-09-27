@@ -34,10 +34,11 @@
                 </h2>
 
                 <div class="flex flex-col space-y-2">
-                    <a href="{{ route('teacher.classes.notes.create', [$classe->id, 'interrogation', $i]) }}"
+                    <a href="{{ route('teacher.classes.notes.create', [$classe->id, 'interrogation', $i,]) }}"
                        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-center font-medium transition">
                         Ajouter
                     </a>
+
 
                     <a href="{{ route('teacher.classes.notes.read', [$classe->id, 'interrogation', $i]) }}"
                        class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded text-center font-medium transition">
