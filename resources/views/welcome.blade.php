@@ -23,7 +23,7 @@
                         <h3 class="font-semibold text-blue-800 flex items-center gap-2">
                             <i class="fas fa-school"></i> Classes du Primaire
                         </h3>
-                        <p class="text-3xl font-bold mt-4 text-blue-700">{{ \App\Models\Classe::count() }}</p>
+                        <p class="text-3xl font-bold mt-4 text-blue-700">{{ $primaryClassCount }}</p>
                         <a href="{{ route('primaire.classe.classes') }}" class="text-sm text-blue-600 mt-2 block">Gérer</a>
                     </div>
 
@@ -31,7 +31,7 @@
                         <h3 class="font-semibold text-green-800 flex items-center gap-2">
                             <i class="fas fa-chalkboard-teacher"></i> Enseignants
                         </h3>
-                        <p class="text-3xl font-bold mt-4 text-green-700">{{ \App\Models\User::whereHas('role', fn($q)=>$q->where('name','teacher'))->count() }}</p>
+                        <p class="text-3xl font-bold mt-4 text-green-700">{{ $primaryTeacherCount }}</p>
                         <a href="{{ route('primaire.enseignants.enseignants') }}" class="text-sm text-green-600 mt-2 block">Inviter & gérer</a>
                     </div>
 
@@ -39,7 +39,7 @@
                         <h3 class="font-semibold text-purple-800 flex items-center gap-2">
                             <i class="fas fa-users"></i> Élèves
                         </h3>
-                        <p class="text-3xl font-bold mt-4 text-purple-700">{{ \App\Models\Student::count() }}</p>
+                        <p class="text-3xl font-bold mt-4 text-purple-700">{{ $primaryStudentsCount  }}</p>
                         <a href="{{ route('primaire.ecoliers.liste') }}" class="text-sm text-purple-600 mt-2 block">Voir la liste</a>
                     </div>
                 </div>

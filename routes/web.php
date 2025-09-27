@@ -10,6 +10,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\InvitationResponseController;
 use App\Http\Controllers\StudentPaymentController;
 use App\Http\Controllers\ArchiveController;
+use App\Http\Controllers\WelcomeController;
 
 // Admin
 use App\Http\Controllers\Admin\AdminAuthController;
@@ -55,7 +56,8 @@ use App\Http\Controllers\Teacher\PrimaireScheduleController;
 
 
 Route::get('/', fn() => view('accueil'))->name('accueil');
-Route::get('/home', fn() => view('welcome'))->name('home');
+//Route::get('/home', fn() => view('welcome'))->name('home');
+Route::get('/welcome', [WelcomeController::class, 'index'])->name('welcome');
 
 
 
@@ -99,7 +101,7 @@ Route::middleware(['auth'])->prefix('teacher/primaire')->name('teacher.')->group
 
 
 Route::get('/', fn() => view('accueil'))->name('accueil');
-Route::get('/home', fn() => view('welcome'))->name('home');
+//Route::get('/home', fn() => view('welcome'))->name('home');
 
 
 

@@ -45,7 +45,7 @@
         <!-- Navigation -->
         <div class="overflow-y-auto h-[calc(100vh-112px)]  space-y-1 scrollbar-hide">
             <nav class="p-4 space-y-1 text-base font-medium">
-                <a href="{{ route('home') }}" class="block px-3 py-3 rounded-md hover:bg-[#63c6ff70] transition">
+                <a href="{{ route('welcome') }}" class="block px-3 py-3 rounded-md hover:bg-[#63c6ff70] transition">
                     <i class="fa fa-home"></i> 
                     <span class="ml-2">Accueil</span>
                 </a>
