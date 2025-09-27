@@ -27,12 +27,10 @@ class welcomeController extends Controller
                 })
                 -> count();
                 //nombre d'elèves au primaire
-            $primaryStudentsCount = 2;
+            $primaryStudentsCount = Student::where('academic_year_id', $annee_academique-> id)
+            -> whereHas('entity', function($q){ $q-> whereIn('name', ['primaire', 'maternelle'] );})-> count();;
             
-            //récupérer les enseignants du primaire
-                $primaryTeacherCount =2;
-                return view('welcome', compact('primaryStudentsCount', 'primaryTeacherCount', 'primaryClassCount'));
-
+           
         } catch (\Exception $e) {
             // Gestion des exceptions générales
             return back()->with('error', 'Erreur lors du chargement des classes : ' . $e->getMessage());

@@ -22,7 +22,7 @@
                     <h3 class="font-semibold text-blue-800">Élèves inscrits</h3>
                     <i class="fas fa-users text-blue-500 text-2xl"></i>
                 </div>
-                <p class="text-3xl font-bold mt-4 text-blue-700">{{ \App\Models\Student::count() }}</p>
+                <p class="text-3xl font-bold mt-4 text-blue-700">{{ $primaryStudentsCount }}</p>
                 <p class="text-sm text-blue-600 mt-1">
                     {{ \App\Models\Student::whereDate('created_at', now()->subDay())->count() }} nouveaux hier
                 </p>
@@ -33,8 +33,8 @@
                     <h3 class="font-semibold text-green-800">Enseignants</h3>
                     <i class="fas fa-chalkboard-teacher text-green-500 text-2xl"></i>
                 </div>
-                <p class="text-3xl font-bold mt-4 text-green-700">{{ \App\Models\User::count() }}</p>
-                <p class="text-sm text-green-600 mt-1">+{{ \App\Models\User::whereDate('created_at', now()->subDay())->count() }} nouveaux hier</p>
+                <p class="text-3xl font-bold mt-4 text-green-700">{{ $primaryTeacherCount }}</p>
+               
             </div>
 
             <div class="bg-purple-50 p-6 rounded-lg border border-purple-100 flex flex-col items-start">
@@ -42,7 +42,7 @@
                     <h3 class="font-semibold text-purple-800">Classes</h3>
                     <i class="fas fa-school text-purple-500 text-2xl"></i>
                 </div>
-                <p class="text-3xl font-bold mt-4 text-purple-700">{{ \App\Models\Classe::count() }}</p>
+                <p class="text-3xl font-bold mt-4 text-purple-700">{{ $primaryClassCount }}</p>
                 <p class="text-sm text-purple-600 mt-1">{{ \App\Models\Classe::whereDate('created_at', now()->subDay())->count() }} nouvelles hier</p>
             </div>
         </div>
