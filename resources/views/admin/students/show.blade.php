@@ -2,129 +2,202 @@
 
 @section('content')
 @if(auth()->check())
-<div class="max-w-3xl mx-auto bg-white p-6 rounded-lg shadow-md">
-    <h1 class="text-2xl font-bold mb-6">Détails sur l'élève {{ $student->last_name }} {{ $student->first_name }}</h1>
-
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-            <p class="text-sm text-gray-500">Nom</p>
-            <p class="text-lg font-semibold">{{ $student->last_name }}</p>
+<div class="max-w-6xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
+    <!-- En-tête avec fond dégradé -->
+    <div class="bg-gradient-to-r from-blue-600 to-blue-800 px-8 py-6 text-white">
+        <div class="flex justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-bold">Fiche Élève</h1>
+                <p class="text-blue-100 mt-2">Détails complets de l'élève</p>
+            </div>
+            <div class="bg-white/10 backdrop-blur-sm rounded-full p-3">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                </svg>
+            </div>
         </div>
-
-        <div>
-            <p class="text-sm text-gray-500">Prénoms</p>
-            <p class="text-lg font-semibold">{{ $student->first_name }}</p>
-        </div>
-
-        <div>
-            <p class="text-sm text-gray-500">N° Éduc Master</p>
-            <p class="text-lg font-semibold">{{ $student->classe->num_educ ?? 'Manquant' }}</p>
-        </div>
-
-        <div>
-            <p class="text-sm text-gray-500">Sexe</p>
-            <p class="text-lg font-semibold">{{ $student->classe->gender ?? 'Manquant' }}</p>
-        </div>
-
-        <div>
-            <p class="text-sm text-gray-500">Date de naissance</p>
-            <p class="text-lg font-semibold">{{ $student->birth_date }}</p>
-        </div>
-
-        <div>
-            <p class="text-sm text-gray-500">Lieu de naissance</p>
-            <p class="text-lg font-semibold">{{ $student->birth_place }}</p>
-        </div>
-
-        <div>
-            <p class="text-sm text-gray-500">Niveau</p>
-            <p class="text-lg font-semibold">{{ $student->entity->name ?? 'N/A' }}</p>
-        </div>
-
-        <div>
-            <p class="text-sm text-gray-500">Classe</p>
-            <p class="text-lg font-semibold">{{ $student->classe->name ?? 'N/A' }}</p>
-        </div>
-
-        <div>
-            <p class="text-sm text-gray-500">Parent/Yuteur</p>
-            <p class="text-lg font-semibold">{{ $student->classe->parent_full_name ?? 'Manquant' }}</p>
-        </div>
-
-        <div>
-            <p class="text-sm text-gray-500">Téléphone Parent/Yuteur </p>
-            <p class="text-lg font-semibold">{{ $student->classe->parent_phone ?? 'Manquant' }}</p>
-        </div>
-
-        <div>
-            <p class="text-sm text-gray-500">Téléphone Parent/Yuteur </p>
-            <p class="text-lg font-semibold">{{ $student->classe->parent_email ?? 'Manquant' }}</p>
-        </div>
-
-        <div>
-            <p class="text-sm text-gray-500">Age </p>
-            <p class="text-lg font-semibold">{{ $student->classe->age ?? 'Manquant' }}</p>
-        </div>
-
-        <div>
-            <p class="text-sm text-gray-500">Date d'inscription</p>
-            <p class="text-lg font-semibold">{{ $student->classe->created_at ?? 'Manquant' }}</p>
-        </div>
-
-        <div>
-            <p class="text-sm text-gray-500">Dernier modification</p>
-            <p class="text-lg font-semibold">{{ $student->classe->updated_at ?? '- -' }}</p>
-        </div>
-
-        <div>
-            <p class="text-sm text-gray-500">Frais de scolarité total payés</p>
-            <p class="text-lg font-semibold">{{ number_format($student->total_paid,2) }} FCFA</p>
-        </div>
-
-        
-        
-
     </div>
-    <br>
-    <br>
 
-    <hr>
+    <!-- Informations principales -->
+    <div class="px-8 py-6 border-b border-gray-200">
+        <div class="flex items-center space-x-4">
+            <div class="bg-blue-100 text-blue-800 rounded-full p-4">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                </svg>
+            </div>
+            <div>
+                <h2 class="text-2xl font-bold text-gray-900">{{ $student->last_name }} {{ $student->first_name }}</h2>
+                <p class="text-gray-600">{{ $student->classe->name ?? 'Classe non assignée' }}</p>
+            </div>
+        </div>
+    </div>
 
-    <br>
+    <!-- Grille d'informations organisée par sections -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 p-8">
+        <!-- Section Identité -->
+        <div class="lg:col-span-1">
+            <div class="bg-gray-50 rounded-lg p-6 shadow-sm">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                    </svg>
+                    Identité
+                </h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-sm font-medium text-gray-500">Nom complet</label>
+                        <p class="text-gray-900 font-semibold">{{ $student->last_name }} {{ $student->first_name }}</p>
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-gray-500">Sexe</label>
+                        <p class="text-gray-900 font-semibold">{{ $student->classe->gender ?? 'Non spécifié' }}</p>
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-gray-500">Date de naissance</label>
+                        <p class="text-gray-900 font-semibold">{{ $student->birth_date }}</p>
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-gray-500">Lieu de naissance</label>
+                        <p class="text-gray-900 font-semibold">{{ $student->birth_place }}</p>
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-gray-500">Âge</label>
+                        <p class="text-gray-900 font-semibold">{{ $student->classe->age ?? 'Non spécifié' }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-    <h2 class="text-lg font-semibold mb-2">Documents</h2>
+        <!-- Section Scolarité -->
+        <div class="lg:col-span-1">
+            <div class="bg-gray-50 rounded-lg p-6 shadow-sm">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z" transform="translate(0 6)"/>
+                    </svg>
+                    Scolarité
+                </h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-sm font-medium text-gray-500">N° Éduc Master</label>
+                        <p class="text-gray-900 font-semibold">{{ $student->classe->num_educ ?? 'Non attribué' }}</p>
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-gray-500">Niveau</label>
+                        <p class="text-gray-900 font-semibold">{{ $student->entity->name ?? 'N/A' }}</p>
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-gray-500">Classe</label>
+                        <p class="text-gray-900 font-semibold">{{ $student->classe->name ?? 'N/A' }}</p>
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-gray-500">Date d'inscription</label>
+                        <p class="text-gray-900 font-semibold">
+                            {{ $student->classe->created_at ? $student->classe->created_at->format('d/m/Y') : 'Non spécifié' }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-    <br>
-    <hr>
-    <br>
+        <!-- Section Contacts & Finances -->
+        <div class="lg:col-span-1">
+            <div class="bg-gray-50 rounded-lg p-6 shadow-sm">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                    </svg>
+                    Contacts & Finances
+                </h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-sm font-medium text-gray-500">Parent/Tuteur</label>
+                        <p class="text-gray-900 font-semibold">{{ $student->classe->parent_full_name ?? 'Non renseigné' }}</p>
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-gray-500">Téléphone</label>
+                        <p class="text-gray-900 font-semibold">{{ $student->classe->parent_phone ?? 'Non renseigné' }}</p>
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-gray-500">Email</label>
+                        <p class="text-gray-900 font-semibold">{{ $student->classe->parent_email ?? 'Non renseigné' }}</p>
+                    </div>
+                    <div class="pt-2 border-t border-gray-200">
+                        <label class="text-sm font-medium text-gray-500">Total payé</label>
+                        <p class="text-xl font-bold text-green-600">{{ number_format($student->total_paid, 2) }} FCFA</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    <div class="flex justify-between mt-8">
+    <!-- Section Documents -->
+    <div class="px-8 py-6 border-t border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <svg class="w-5 h-5 mr-2 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            Documents
+        </h3>
+        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <p class="text-yellow-800 text-sm">Section documents en cours de développement...</p>
+        </div>
+    </div>
 
-            @if(auth()->id() == 8)
-            <div class="flex space-x-2">
+    <!-- Actions -->
+    <div class="px-8 py-6 bg-gray-50 border-t border-gray-200">
+        <div class="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
+            <div class="text-sm text-gray-600">
+                Dernière modification : {{ $student->classe->updated_at ? $student->classe->updated_at->format('d/m/Y à H:i') : '--' }}
+            </div>
+            
+            <div class="flex space-x-3">
+                <button onclick="window.history.back()" 
+                        class="px-6 py-2 bg-gray-600 text-white rounded-lg shadow hover:bg-gray-700 transition duration-200 flex items-center">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                    </svg>
+                    Retour
+                </button>
+                
+                @if(auth()->id() == 8)
                 <a href="{{ route('admin.students.edit', $student->id) }}" 
-                class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                   class="px-6 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition duration-200 flex items-center">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    </svg>
                     Modifier
                 </a>
-
+                
                 <form action="{{ route('admin.students.destroy', $student->id) }}" method="POST" 
-                    onsubmit="return confirm('Voulez-vous vraiment supprimer cet étudiant ?');">
+                      onsubmit="return confirm('Voulez-vous vraiment supprimer cet étudiant ?');">
                     @csrf
                     @method('DELETE')
                     <button type="submit" 
-                            class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">
+                            class="px-6 py-2 bg-red-600 text-white rounded-lg shadow hover:bg-red-700 transition duration-200 flex items-center">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
                         Supprimer
                     </button>
                 </form>
-                <button onclick="window.history.back()" 
-                    class="px-5 py-2 bg-gray-600 text-white rounded-lg shadow hover:bg-gray-700 transition">
-                    Retour
-                </button>
-            @endif
+                @endif
+            </div>
         </div>
     </div>
 </div>
 @else
-<p style="color:red"> Une erreur s'est produite lors de l'affichage de cette section <br> Veuillez vous connectez à nouveau pour continuer <a href="{{ route('login') }}" class="block px-3 py-2 rounded bg-blue-600 text-white">Se connecter</a></p>
+<div class="max-w-md mx-auto mt-8 bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+    <svg class="w-12 h-12 text-red-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+    </svg>
+    <h3 class="text-lg font-semibold text-red-800 mb-2">Session expirée</h3>
+    <p class="text-red-600 mb-4">Veuillez vous reconnecter pour continuer</p>
+    <a href="{{ route('login') }}" class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
+        Se connecter
+    </a>
+</div>
 @endif
 @endsection

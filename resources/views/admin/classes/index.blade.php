@@ -4,7 +4,7 @@
 <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
     <!-- En-tête principal -->
     <div class="mb-8">
-        <h1 class="text-2xl lg:text-3xl font-bold text-gray-800 mb-2">Gestion des classes</h1>
+        <h1 class="text-2xl lg:text-2xl font-bold text-gray-800 mb-2">Gestion des classes</h1>
         <p class="text-gray-600">Administration des classes - CPEG MARIE-ALAIN</p>
     </div>
 

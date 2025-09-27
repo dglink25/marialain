@@ -51,6 +51,7 @@
                         <i class="fas fa-paper-plane"></i>
                         Envoyer mails de rappel à tous
                     </button>
+                    <p>:pour non payement de contribution au parents</p>
                 </form>
             </div>
 
@@ -158,7 +159,7 @@
                                     <td class="px-3 py-3 whitespace-nowrap text-gray-900">{{ $student->num_educ ?? '-' }}</td>
                                     <td class="px-3 py-3 whitespace-nowrap font-medium text-blue-600">
                                         <a href="{{ route('admin.students.show', $student->id) }}" class="hover:underline flex items-center gap-1">
-                                            <i class="fas fa-eye text-xs"></i>
+                                            
                                             {{ \Illuminate\Support\Str::limit($student->last_name, 12) }}
                                         </a>
                                     </td>
