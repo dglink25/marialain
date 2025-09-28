@@ -22,7 +22,7 @@
         </div>
         <div class="bg-white bg-opacity-10 p-3 md:p-4 rounded-xl w-full md:w-auto">
             <p class="text-xs sm:text-sm">Année académique active</p>
-            <p class="text-base sm:text-lg lg:text-lg font-semibold">2023-2024</p>
+            <p class="text-base sm:text-lg lg:text-lg font-semibold">2025-2026</p>
         </div>
     </div>
 </header>
