@@ -6,15 +6,15 @@
 @endphp
 <div class="container-fluid p-4 bg-light min-h-screen">
 
-    <h2 class="text-between text-primary mb-4"><strong>Emploi du temps - {{ $class->name }}</strong></h2>
+    <h2 class="text-between mb-4"><strong>Emploi du temps - {{ $class->name }}</strong></h2>
 
     <!-- Bouton pour afficher le modal -->
     <div class="d-flex justify-content-end mb-4">
-        <button type="button" class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#addCourseModal">
+        <button type="button" class="btn btn-outline-primary btn-lg" data-bs-toggle="modal" data-bs-target="#addCourseModal">
             <i class="bi bi-plus-circle me-2"></i>Ajouter un cours
         </button>
     </div>
-
+    
     <!-- Modal Bootstrap pour l'ajout de cours -->
     <div class="modal fade" id="addCourseModal" tabindex="-1" aria-labelledby="addCourseModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-md">

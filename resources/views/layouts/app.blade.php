@@ -70,27 +70,27 @@
                     @case('Primaire')
 
                         <a href="{{ route('schedules.index') }}" 
-                        class="block px-4 py-4 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('schedules.index') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
-                            <i class="fa fa-layer-group w-5 text-gray-500"></i>
-                            <span class="ml-3">Emploi du temps</span>
+                        class="block px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('schedules.index') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
+                            <i class="fa fa-layer-group"></i>
+                            <span class="ml-3">Planning</span>
                         </a>
 
 
-                        <a href="{{ route('teacher.subjects.primaire') }}" class="block px-4 py-4 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('teacher.subjects.primaire') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
-                            <i class="fa fa-layer-group w-5 text-gray-500"></i>
-                            <span class="ml-3">Gestion matières</span>
+                        <a href="{{ route('teacher.subjects.primaire') }}" class="block px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('teacher.subjects.primaire') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
+                            <i class="fa fa-layer-group"></i>
+                            <span class="ml-3">Matières</span>
 
-                        <a href="{{ route('teacher.dashboard') }}" class="block px-4 py-4 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('teacher.dashboard') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
-                            <i class="fa fa-book-open w-5 text-gray-500"></i> 
+                        <a href="{{ route('teacher.dashboard') }}" class="block px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('teacher.dashboard') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
+                            <i class="fa fa-book-open "></i> 
                             <span class="ml-3">Dashboard </span>
                         </a>
-                        <a href="{{ route('teacher.classes.primaire') }}" class="block px-4 py-4 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('teacher.classes.primaire') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
-                            <i class="fa fa-layer-group w-5 text-gray-500"></i>
+                        <a href="{{ route('teacher.classes.primaire') }}" class="block px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('teacher.classes.primaire') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
+                            <i class="fa fa-layer-group "></i>
                             <span class="ml-3">Ma classes</span>
                         </a>
 
-                        <a href="{{ route('teacher.subjects.primaire') }}" class="block px-4 py-4 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('teacher.subjects.primaire') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
-                            <i class="fa fa-layer-group w-5 text-gray-500"></i>
+                        <a href="{{ route('teacher.subjects.primaire') }}" class="block px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('teacher.subjects.primaire') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
+                            <i class="fa fa-layer-group "></i>
                             <span class="ml-3">Matières</span>
 
                         </a>
