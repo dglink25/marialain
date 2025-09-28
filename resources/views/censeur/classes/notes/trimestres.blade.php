@@ -1,0 +1,27 @@
+@extends('layouts.app')
+
+@php
+    $pageTitle = "Trimestre";
+@endphp
+
+@section('content')
+<div class="container py-6">
+    <h1 class="text-2xl font-bold mb-6">Trimestres - Classe {{ $classe->name }}</h1>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        @foreach($trimestres as $t)
+            <div class="p-4 bg-white rounded shadow text-center">
+                <h2 class="font-semibold text-lg">Trimestre {{ $t }}</h2>
+                <a href="{{ route('censeur.permissions.index', $classe->id) }}"
+                   class="mt-3 inline-block bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+                    Gérer autorisations
+                </a>
+                <a href="{{ route('teacher.classes.trimestres.eleves', [$classe->id, $t]) }}"
+                   class="mt-3 inline-block bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+                    Liste élèves
+                </a>
+            </div>
+        @endforeach
+    </div>
+</div>
+@endsection

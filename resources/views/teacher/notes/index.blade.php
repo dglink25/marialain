@@ -1,11 +1,16 @@
 @extends('layouts.app')
 
 @section('content')
+
+@php
+    $pageTitle = "Notes";
+@endphp
+
 <div class="container mx-auto py-6">
 
     <div class="flex justify-between items-center mb-4">
-        <h1 class="text-2xl font-bold mb-6">Notes - Classe {{ $classe->name }}</h1>
-        <a href="{{ route('teacher.classes.notes.list', $classe->id) }}"
+        <h1 class="text-2xl font-bold mb-6"> Fiche de Notes {{ $classe->name }} / Trimestre {{ $trimestre }}</h1>
+        <a href="{{ route('teacher.classes.notes.list', [$classe->id, $trimestre]) }}"
         class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 text-center">
         Voir toutes les notes
         </a>
@@ -34,13 +39,13 @@
                 </h2>
 
                 <div class="flex flex-col space-y-2">
-                    <a href="{{ route('teacher.classes.notes.create', [$classe->id, 'interrogation', $i,]) }}"
+                    <a href="{{ route('teacher.classes.notes.create', [$classe->id, 'interrogation', $i, $trimestre]) }}"
                        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-center font-medium transition">
                         Ajouter
                     </a>
 
 
-                    <a href="{{ route('teacher.classes.notes.read', [$classe->id, 'interrogation', $i]) }}"
+                    <a href="{{ route('teacher.classes.notes.read', [$classe->id, 'interrogation', $i, $trimestre]) }}"
                        class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded text-center font-medium transition">
                         Lire
                     </a>
@@ -56,12 +61,12 @@
                 </h2>
 
                 <div class="flex flex-col space-y-2">
-                    <a href="{{ route('teacher.classes.notes.create', [$classe->id, 'devoir', $i]) }}"
+                    <a href="{{ route('teacher.classes.notes.create', [$classe->id, 'devoir', $i, $trimestre]) }}"
                        class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded text-center font-medium transition">
                         Ajouter
                     </a>
 
-                    <a href="{{ route('teacher.classes.notes.read', [$classe->id, 'devoir', $i]) }}"
+                    <a href="{{ route('teacher.classes.notes.read', [$classe->id, 'devoir', $i, $trimestre]) }}"
                        class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded text-center font-medium transition">
                         Lire
                     </a>
@@ -69,31 +74,7 @@
             </div>
         @endfor
 
-        {{-- Calcul moyenne interro --}}
-        <form method="POST" action="{{ route('teacher.classes.notes.calc.interro', $classe->id) }}"
-              class="bg-white rounded-lg shadow p-4 flex flex-col">
-            @csrf
-            <h2 class="text-lg font-semibold text-gray-800 mb-3">
-                Moyenne Interrogations
-            </h2>
-            <button type="submit"
-                class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-center font-medium transition">
-                Calculer
-            </button>
-        </form>
-
-        {{-- Calcul moyenne trimestrielle --}}
-        <form method="POST" action="{{ route('teacher.classes.notes.calc.trimestre', $classe->id) }}"
-              class="bg-white rounded-lg shadow p-4 flex flex-col">
-            @csrf
-            <h2 class="text-lg font-semibold text-gray-800 mb-3">
-                Moyenne Trimestrielle
-            </h2>
-            <button type="submit"
-                class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-center font-medium transition">
-                Calculer
-            </button>
-        </form>
+        
     </div>
 </div>
 @endsection

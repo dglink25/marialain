@@ -96,7 +96,7 @@
         </div>
         <br>
         <br>
-          <button onclick="window.history.back()" 
+            <button onclick="window.history.back()" 
                     class="bg-gray-600 text-white px-3 py-2 rounded text-sm hover:bg-gray-700 transition whitespace-nowrap text-center">
                 Retour
             </button>

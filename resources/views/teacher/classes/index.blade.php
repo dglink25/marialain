@@ -20,10 +20,13 @@
                            class="bg-green-600 text-white px-4 py-2 rounded-md text-sm hover:bg-green-700">
                             Emploi du temps
                         </a>
-                        <a href="{{ route('teacher.classes.notes', $class->id) }}"
-                           class="bg-green-600 text-white px-4 py-2 rounded text-center hover:bg-green-700">
-                            Notes
-                        </a>
+                        <div class="mt-4">
+                            <a href="{{ route('teacher.classes.notes.trimestres', $class->id) }}"
+                            class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">
+                                Liste des trimestres
+                            </a>
+                        </div>
+
                     </div>
                 </div>
             @endforeach

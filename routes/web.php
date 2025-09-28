@@ -27,6 +27,7 @@ use App\Http\Controllers\Censeur\InvitationController as CenseurInvitationContro
 use App\Http\Controllers\Censeur\SubjectController;
 use App\Http\Controllers\Censeur\AssignmentController;
 use App\Http\Controllers\Censeur\TimetableController;
+use App\Http\Controllers\Censeur\NoteController as CenseurNoteController;
 
 // Teacher
 use App\Http\Controllers\Teacher\DashboardController;
@@ -244,7 +245,26 @@ Route::post('/inscription', [StudentController::class, 'store'])->name('students
 | Zone Censeur
 |--------------------------------------------------------------------------
 */
+
+//Gestion de notes Censeur
+Route::get('/classes', [CenseurNoteController::class, 'index'])->name('censeur.notes.index');
+Route::get('/classes/{classId}/students/{studentId}/bulletin/{trimestre}', 
+    [App\Http\Controllers\Censeur\NoteController::class, 'bulletin']
+)->name('teacher.classes.students.bulletin');
+
+Route::get('/classes/{classId}/trimestres/{trimestre}/eleves', 
+    [App\Http\Controllers\Censeur\NoteController::class, 'listeEleves']
+)->name('teacher.classes.trimestres.eleves');
+
 Route::prefix('censeur')->name('censeur.')->middleware('auth')->group(function () {
+
+    // Voir les trimestres d’une classe
+    Route::get('/classes/{id}/trimestres', [CenseurNoteController::class, 'trimestres'])->name('classes.trimestres');
+
+    // Gérer les permissions de saisie des notes
+    Route::get('/permissions/{classId}', [CenseurNoteController::class, 'permissions'])->name('permissions.index');
+    Route::post('/permissions/{classId}/{trimestre}/toggle', [CenseurNoteController::class, 'toggle'])->name('permissions.toggle');
+
     // Invitations enseignants
     Route::get('/invitations', [CenseurInvitationController::class, 'index'])->name('invitations.index');
     Route::post('/invitations', [CenseurInvitationController::class, 'send'])->name('invitations.send');
@@ -268,6 +288,7 @@ Route::prefix('censeur')->name('censeur.')->middleware('auth')->group(function (
     Route::put('classes/{classId}/timetables/{id}', [TimetableController::class, 'update'])->name('timetables.update');
     Route::delete('classes/{classId}/timetables/{id}', [TimetableController::class, 'destroy'])->name('timetables.destroy');
     Route::get('classes/{class}/timetables/download', [TimetableController::class, 'downloadPDF'])->name('timetables.download');
+    
 });
 
 
@@ -352,28 +373,34 @@ Gestion notes côté enseignants
 
 */
 
-Route::get('classes/{class}/notes', [NoteController::class, 'showClassNotes'])->name('teacher.classes.notes.list');
+Route::get('classes/{class}/{trimestre}/notes', [NoteController::class, 'showClassNotes'])->name('teacher.classes.notes.list');
 
 Route::middleware(['auth'])->prefix('teacher')->name('teacher.')->group(function () {
 
-    // Notes
-    Route::get('/classes/{id}/notes', [App\Http\Controllers\Teacher\NoteController::class, 'index'])->name('classes.notes');
+    
+    Route::get('/classes/{id}/notes/trimestres', [App\Http\Controllers\Teacher\NoteController::class, 'chooseTrimestre'])
+        ->name('classes.notes.trimestres');
+        
+    // Notes par trimestre
+    Route::get('/classes/{id}/notes/{trimestre}', [App\Http\Controllers\Teacher\NoteController::class, 'index'])
+        ->name('classes.notes');
     
     // Insertion des notes
-    Route::get('/classes/{id}/notes/{type}/{num}/create', [App\Http\Controllers\Teacher\NoteController::class, 'create'])->name('classes.notes.create');
-    Route::post('/classes/{id}/notes/{type}/{num}', [App\Http\Controllers\Teacher\NoteController::class, 'store'])->name('classes.notes.store');
-    Route::get('classes/{class}/notes/read/{type}/{num}', [App\Http\Controllers\Teacher\GradeController::class, 'read'])->name('classes.notes.read');
+    Route::get('/classes/{id}/notes/{type}/{num}/{trimestre}/create', [App\Http\Controllers\Teacher\NoteController::class, 'create'])->name('classes.notes.create');
+    Route::post('/classes/{id}/notes/{type}/{num}/{trimestre}', [App\Http\Controllers\Teacher\NoteController::class, 'store'])->name('classes.notes.store');
+    Route::get('classes/{class}/notes/read/{type}/{num}/{trimestre}', [App\Http\Controllers\Teacher\NoteController::class, 'read'])->name('classes.notes.read');
 
     // Formulaire modification des notes
-    Route::get('/teacher/classes/{id}/notes/{type}/{num}/edit', [App\Http\Controllers\Teacher\NoteController::class, 'edit'])
+    Route::get('/teacher/classes/{id}/notes/{type}/{num}/{trimestre}/edit', [App\Http\Controllers\Teacher\NoteController::class, 'edit'])
         ->name('classes.notes.edit');
 
     // Mettre à jour les notes
-    Route::put('/teacher/classes/{id}/notes/{type}/{num}/update', [App\Http\Controllers\Teacher\NoteController::class, 'update'])
+    Route::put('/teacher/classes/{id}/notes/{type}/{num}/{trimestre}/update', [App\Http\Controllers\Teacher\NoteController::class, 'update'])
         ->name('classes.notes.update');
 
+
     // Supprimer toutes les notes de ce type/séquence
-    Route::delete('/teacher/classes/{id}/notes/{type}/{num}/delete', [App\Http\Controllers\Teacher\NoteController::class, 'destroy'])
+    Route::delete('/teacher/classes/{id}/notes/{type}/{num}/{trimestre}/delete', [App\Http\Controllers\Teacher\NoteController::class, 'destroy'])
         ->name('classes.notes.destroy');
 
     // Calcul des moyennes

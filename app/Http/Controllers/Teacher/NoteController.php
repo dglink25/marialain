@@ -14,18 +14,62 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 class NoteController extends Controller{
-    public function index($classId){
+
+    public function index($classId, $trimestre){
         $activeYear = AcademicYear::where('active', true)->first();
         if (!$activeYear) {
             return back()->with('error', 'Aucune année académique active trouvée.');
         }
 
-        $classe = Classe::with('students')->findOrFail($classId);
+        // Vérifier si le censeur a autorisé la saisie pour cette classe et trimestre
+        $permission = \App\Models\NotePermission::where('class_id', $classId)
+            
+            ->where('trimestre', $trimestre)
+            ->first();
 
-        return view('teacher.notes.index', compact('classe', 'activeYear'));
+        if (!$permission || $permission->is_open != 1) {
+            return back()->with('error', "La saisie des notes n'est pas encore autorisée pour ce trimestre.");
+        }
+
+        $classe = Classe::with(['students.grades' => function ($q) use ($activeYear, $trimestre) {
+            $q->where('academic_year_id', $activeYear->id)
+            ->where('trimestre', $trimestre);
+        }])->findOrFail($classId);
+
+        // Vérifier si des notes existent
+        $hasNotes = $classe->students->flatMap->grades->isNotEmpty();
+
+        return view('teacher.notes.index', compact('classe', 'activeYear', 'trimestre', 'hasNotes'));
     }
 
-    public function create($classId, $type, $num){
+
+    public function read($classId, $type, $num, $trimestre){
+        $activeYear = AcademicYear::where('active', true)->first();
+        if (!$activeYear) {
+            return back()->with('error', 'Pas d\'année académique active.');
+        }
+
+        $classe = Classe::with(['students' => function($q) use ($activeYear, $type, $num, $trimestre) {
+            $q->orderBy('last_name')
+            ->with(['grades' => function($q2) use ($activeYear, $type, $num, $trimestre) {
+                $q2->where('type', $type)
+                    ->where('sequence', $num)
+                    ->where('trimestre', $trimestre)
+                    ->where('academic_year_id', $activeYear->id);
+            }]);
+        }])->findOrFail($classId);
+
+        return view('teacher.notes.read', compact('classe', 'type', 'num', 'trimestre'));
+    }
+
+
+
+    public function chooseTrimestre($classId){
+        $classe = Classe::findOrFail($classId);
+        return view('teacher.notes.trimestres', compact('classe'));
+    }
+
+    public function create($classId, $type, $num, $trimestre){
         $activeYear = AcademicYear::where('active', true)->first();
         if (!$activeYear) {
             return back()->with('error', 'Pas d\'année académique active.');
@@ -59,11 +103,11 @@ class NoteController extends Controller{
             return back()->with('error', "Les notes pour $type $num ont déjà été saisies pour cette classe. Vous ne pouvez pas les ajouter à nouveau.");
         }
 
-        return view('teacher.notes.create', compact('classe', 'type', 'num'));
+        return view('teacher.notes.create', compact('classe', 'type', 'num', 'trimestre'));
     }
 
 
-    public function store(Request $request, $classId, $type, $num){
+    public function store(Request $request, $classId, $type, $num, $trimestre){
         $request->validate([
             'notes.*' => 'nullable|numeric|min:0|max:20',
         ]);
@@ -92,7 +136,7 @@ class NoteController extends Controller{
                         'type' => $type,
                         'sequence' => $num,
                         'class_id' => $classId,
-                        'trimestre' => $request->trimestre,
+                        'trimestre' => $trimestre,
                         'academic_year_id' => $activeYear->id,
                     ],
                     [
@@ -102,25 +146,31 @@ class NoteController extends Controller{
             }
         }
 
-        return redirect()->route('teacher.classes.notes', $classId)
+        return redirect()->route('teacher.classes.notes', [$classe->id, $trimestre])
             ->with('success', 'Notes enregistrées.');
     }
 
 
-    public function edit($classId, $type, $num){
+    public function edit($classId, $type, $num, $trimestre){
         $activeYear = AcademicYear::where('active', true)->firstOrFail();
 
-        $classe = Classe::with(['students.grades' => function($q) use ($type, $num, $activeYear){
-            $q->where('type', $type)
-              ->where('sequence', $num)
-              ->where('academic_year_id', $activeYear->id);
+        $classe = Classe::with(['students' => function($q) use ($type, $num, $activeYear, $trimestre) {
+            $q->orderBy('last_name')
+            ->orderBy('first_name')
+            ->with(['grades' => function($q2) use ($type, $num, $activeYear, $trimestre) {
+                $q2->where('type', $type)
+                    ->where('sequence', $num)
+                    ->where('trimestre', $trimestre)
+                    ->where('academic_year_id', $activeYear->id);
+            }]);
         }])->findOrFail($classId);
 
-        return view('teacher.notes.edit', compact('classe','type','num'));
+        return view('teacher.notes.edit', compact('classe','type','num','trimestre'));
     }
 
+
     // Mettre à jour les notes
-    public function update(Request $request, $classId, $type, $num){
+    public function update(Request $request, $classId, $type, $num, $trimestre){
         $request->validate([
             'notes.*' => 'nullable|min:0|max:20'
         ]);
@@ -143,6 +193,7 @@ class NoteController extends Controller{
                     'subject_id' => $subject->subject_id,
                     'type' => $type,
                     'sequence' => $num,
+                    'trimestre' => $trimestre,
                     'class_id' => $classId,
                     'academic_year_id' => $activeYear->id
                 ],
@@ -150,12 +201,12 @@ class NoteController extends Controller{
             );
         }
 
-        return redirect()->route('teacher.classes.notes.read', [$classId, $type, $num])
+        return redirect()->route('teacher.classes.notes.read', [$classId, $type, $num, $trimestre])
                          ->with('success','Notes mises à jour avec succès.');
     }
 
     // Supprimer toutes les notes pour ce type/séquence
-    public function destroy($classId, $type, $num){
+    public function destroy($classId, $type, $num, $trimestre){
         $activeYear = AcademicYear::where('active', true)->firstOrFail();
         $subject = DB::table('class_teacher_subject')
             ->where('class_id', $classId)
@@ -173,11 +224,11 @@ class NoteController extends Controller{
             ->where('academic_year_id', $activeYear->id)
             ->delete();
 
-        return redirect()->route('teacher.classes.notes.read', [$classId, $type, $num])
+        return redirect()->route('teacher.classes.notes.read', [$classId, $type, $num, $trimestre])
                          ->with('success','Toutes les notes ont été supprimées.');
     }
 
-    public function showClassNotesAll($classId){
+    public function showClassNotesAll($classId, $trimestre){
         $activeYear = AcademicYear::where('active', true)->first();
         if (!$activeYear) {
             return back()->with('error', 'Aucune année académique active trouvée.');
@@ -195,6 +246,7 @@ class NoteController extends Controller{
                 $grades = Grade::where('student_id', $student->id)
                     ->where('subject_id', $subject->id)
                     ->where('academic_year_id', $activeYear->id)
+                    ->where('trimestre', $trimestre)
                     ->get();
 
                 $interros = $grades->where('type', 'interrogation')->sortBy('sequence')->pluck('value')->toArray();
@@ -220,10 +272,10 @@ class NoteController extends Controller{
             dd($gradesData);
         }
 
-        return view('teacher.notes.class_notes', compact('classe', 'gradesData', 'activeYear'));
+        return view('teacher.notes.class_notes', compact('classe', 'gradesData', 'activeYear', 'trimestre'));
     }
 
-   public function showClassNotes($classId){
+    public function showClassNotes($classId, $trimestre){
         // 1) année académique active
         $activeYear = AcademicYear::where('active', true)->first();
         if (!$activeYear) {
@@ -266,6 +318,7 @@ class NoteController extends Controller{
                 $grades = Grade::where('student_id', $student->id)
                     ->where('subject_id', $subject->id)
                     ->where('academic_year_id', $activeYear->id)
+                    ->where('trimestre', $trimestre)
                     ->get();
 
                 // préparation des tableaux
@@ -322,6 +375,7 @@ class NoteController extends Controller{
             'subjects' => $subjects,
             'gradesData' => $gradesData,
             'activeYear' => $activeYear,
+            'trimestre'  => $trimestre,
         ]);
     }
 

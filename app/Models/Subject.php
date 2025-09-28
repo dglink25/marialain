@@ -36,6 +36,12 @@ class Subject extends Model{
         return $this->hasMany(SubjectAverage::class);
     }
 
+    public function classes()
+    {
+        return $this->belongsToMany(Classe::class, 'class_teacher_subject', 'subject_id', 'class_id');
+    }
+
+
 
 
 }

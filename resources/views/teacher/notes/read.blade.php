@@ -2,8 +2,13 @@
 
 @section('content')
 <div class="container mx-auto py-6">
+
+@php
+    $pageTitle = "Lecteur Notes";
+@endphp
+
     <h1 class="text-2xl font-bold mb-6">
-        Lecture Notes - {{ ucfirst($type) }} {{ $num }} - Classe {{ $classe->name }}
+        Notes - {{ ucfirst($type) }} {{ $num }} - Classe {{ $classe->name }} / Trimestre {{ $trimestre }}
     </h1>
 
     @if(session('success'))
@@ -34,7 +39,7 @@
                     {{ $student->grades->first()->value ?? '00' }}
                 </td>
                 <td class="px-3 py-2 border flex space-x-2">
-                    <a href="{{ route('teacher.classes.notes.edit', [$classe->id, $type, $num]) }}"
+                    <a href="{{ route('teacher.classes.notes.edit', [$classe->id, $type, $num, $trimestre]) }}"
                        class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm">
                        Modifier
                     </a>
@@ -45,7 +50,7 @@
     </table>
 
     <div class="mt-6">
-        <a href="{{ route('teacher.classes.notes', $classe->id) }}"
+        <a href="{{ route('teacher.classes.notes', [$classe->id, $trimestre]) }}"
            class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700">
            Retour
         </a>

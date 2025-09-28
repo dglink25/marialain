@@ -1,14 +1,19 @@
 @extends('layouts.app')
 
 @section('content')
+
+@php
+    $pageTitle = "Récapitulatif Notes";
+@endphp
+
 <div class="p-6">
     {{-- Titre --}}
     <div class="mb-6 text-center">
         <h1 class="text-2xl font-bold text-gray-800">
-            Notes - Classe {{ $classe->nom }}
+            Notes - Classe {{ $classe->name }}
         </h1>
         <p class="text-gray-600">
-            Année académique : <span class="font-semibold">{{ $activeYear->name ?? $activeYear->label ?? 'N/A' }}</span>
+            Année académique : <span class="font-semibold">{{ $activeYear->name ?? $activeYear->label ?? 'N/A' }} / Trimestre {{ $trimestre }}</span>
         </p>
         {{-- Matières de l’enseignant --}}
         @foreach($subjects as $subject)

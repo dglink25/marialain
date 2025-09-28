@@ -1,12 +1,17 @@
 @extends('layouts.app')
 
 @section('content')
+
+@php
+    $pageTitle = "Edite Notes";
+@endphp
+
 <div class="container mx-auto py-6">
     <h1 class="text-2xl font-bold mb-6">
-        Modifier Notes - {{ ucfirst($type) }} {{ $num }} - Classe {{ $classe->name }}
+        Modifier Notes {{ ucfirst($type) }} {{ $num }} - Classe {{ $classe->name }} /  Trimestre {{ $trimestre }}
     </h1>
 
-    <form action="{{ route('teacher.classes.notes.update', [$classe->id, $type, $num]) }}" method="POST">
+    <form action="{{ route('teacher.classes.notes.update', [$classe->id, $type, $num, $trimestre]) }}" method="POST">
         @csrf
         <table class="w-full border-collapse border mb-4">
             <thead>
@@ -37,7 +42,7 @@
 
         <div class="flex space-x-2">
             <!-- Formulaire pour soumettre les modifications -->
-            <form action="{{ route('teacher.classes.notes.update', [$classe->id, $type, $num]) }}" method="POST">
+            <form action="{{ route('teacher.classes.notes.update', [$classe->id, $type, $num, $trimestre]) }}" method="POST">
                 @csrf
                 @method('PUT') <!-- ou PATCH selon ta route -->
             
@@ -48,7 +53,7 @@
             </form>
 
             <!-- Formulaire pour supprimer toutes les notes -->
-            <form action="{{ route('teacher.classes.notes.destroy', [$classe->id, $type, $num]) }}" method="POST" onsubmit="return confirm('Voulez-vous vraiment supprimer toutes les notes ?')">
+            <form action="{{ route('teacher.classes.notes.destroy', [$classe->id, $type, $num, $trimestre]) }}" method="POST" onsubmit="return confirm('Voulez-vous vraiment supprimer toutes les notes ?')">
                 @csrf
                 @method('DELETE')
                 <button type="submit"
@@ -57,7 +62,7 @@
                 </button>
             </form>
 
-            <a href="{{ route('teacher.classes.notes.read', [$classe->id, $type, $num]) }}"
+            <a href="{{ route('teacher.classes.notes.read', [$classe->id, $type, $num, $trimestre]) }}"
                class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700">
                Retour
             </a>
