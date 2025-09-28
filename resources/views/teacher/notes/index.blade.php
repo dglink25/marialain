@@ -1,6 +1,9 @@
 @extends('layouts.app')
 
 @section('content')
+@php
+    $pageTitle = 'Notes';
+@endphp
 <div class="container mx-auto py-6">
 
     <div class="flex justify-between items-center mb-4">

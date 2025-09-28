@@ -1,6 +1,9 @@
 @extends('layouts.app')
 
 @section('content')
+@php
+    $pageTitle = 'Notes';
+@endphp
 <div class="p-6">
     {{-- Titre --}}
     <div class="mb-6 text-center">

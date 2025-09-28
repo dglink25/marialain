@@ -1,6 +1,9 @@
 @extends('layouts.app')
 
 @section('content')
+@php
+    $pageTitle = 'Saisie des notes';
+@endphp
 <div class="container mx-auto py-6">
     <h1 class="text-xl font-bold mb-4">
         Saisie des notes - {{ ucfirst($type) }} {{ $num }} - Classe {{ $classe->name }}
