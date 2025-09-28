@@ -17,8 +17,8 @@ COPY --from=composer:2.6 /usr/bin/composer /usr/bin/composer
 RUN composer install --no-dev --optimize-autoloader --no-scripts
 
 # Générer APP_KEY et exécuter package:discover
-RUN php artisan key:generate --ansi
-RUN php artisan package:discover --ansi
+#RUN php artisan key:generate --ansi
+#RUN php artisan package:discover --ansi
 
 EXPOSE 10000
 CMD php artisan serve --host 0.0.0.0 --port 10000
