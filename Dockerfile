@@ -1,21 +1,27 @@
 # Base PHP + Apache
 FROM php:8.2-apache
 
-# Installer les extensions PHP nécessaires à Laravel
+# Installer extensions nécessaires
 RUN apt-get update && apt-get install -y \
     libpng-dev \
+    libjpeg62-turbo-dev \
+    libfreetype6-dev \
     libonig-dev \
     libxml2-dev \
-    zip unzip \
+    libzip-dev \
+    unzip \
+    zip \
+    git \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath gd zip
 
-# Copier le projet
+# Copier projet
 COPY . /var/www/html
 
 # Installer Composer
 COPY --from=composer:2.6 /usr/bin/composer /usr/bin/composer
 
-# Installer les dépendances Laravel
+# Installer dépendances Laravel
 RUN composer install --no-dev --optimize-autoloader
 
 # Permissions correctes
