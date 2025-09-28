@@ -22,7 +22,7 @@ COPY . /var/www/html
 COPY --from=composer:2.6 /usr/bin/composer /usr/bin/composer
 
 # Installer dépendances Laravel
-RUN composer install --no-dev --optimize-autoloader
+RUN composer install
 
 # Permissions correctes
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
