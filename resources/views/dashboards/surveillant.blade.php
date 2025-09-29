@@ -185,61 +185,6 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Points de surveillance -->
-            <div class="bg-white shadow rounded-lg border border-gray-200">
-                <div class="px-6 py-4 border-b border-gray-200">
-                    <h3 class="">Points de Surveillance</h3>
-                </div>
-                <div class="p-6">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="p-4 border rounded-lg">
-                            <div class="flex items-center mb-2">
-                                <i class="fas fa-door-open text-green-600 mr-2"></i>
-                                <span class="font-medium">Entrée principale</span>
-                            </div>
-                            <p class="text-sm text-gray-600">Contrôle des entrées/sorties</p>
-                            <div class="mt-2 flex items-center text-sm text-gray-500">
-                                <i class="fas fa-user mr-1"></i>
-                                <span>Surveillant: Vous</span>
-                            </div>
-                        </div>
-                        <div class="p-4 border rounded-lg">
-                            <div class="flex items-center mb-2">
-                                <i class="fas fa-utensils text-blue-600 mr-2"></i>
-                                <span class="font-medium">Réfectoire</span>
-                            </div>
-                            <p class="text-sm text-gray-600">Heure du déjeuner</p>
-                            <div class="mt-2 flex items-center text-sm text-gray-500">
-                                <i class="fas fa-user mr-1"></i>
-                                <span>Surveillant: M. Gbedjissi</span>
-                            </div>
-                        </div>
-                        <div class="p-4 border rounded-lg">
-                            <div class="flex items-center mb-2">
-                                <i class="fas fa-basketball-ball text-purple-600 mr-2"></i>
-                                <span class="font-medium">Cour de récréation</span>
-                            </div>
-                            <p class="text-sm text-gray-600">Récréations du matin</p>
-                            <div class="mt-2 flex items-center text-sm text-gray-500">
-                                <i class="fas fa-user mr-1"></i>
-                                <span>Surveillant: Mme Adjo</span>
-                            </div>
-                        </div>
-                        <div class="p-4 border rounded-lg">
-                            <div class="flex items-center mb-2">
-                                <i class="fas fa-book text-yellow-600 mr-2"></i>
-                                <span class="font-medium">CDI/Bibliothèque</span>
-                            </div>
-                            <p class="text-sm text-gray-600">Étude et recherche</p>
-                            <div class="mt-2 flex items-center text-sm text-gray-500">
-                                <i class="fas fa-user mr-1"></i>
-                                <span>Surveillant: M. Agossou</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
 
         <!-- Colonne de droite -->
@@ -269,48 +214,7 @@
                         </a>
                     </div>
                 </div>
-            </div>
-
-            <!-- Tâches en Attente -->
-          
-            <!-- Horaires de surveillance -->
-            <div class="bg-white shadow rounded-lg border border-gray-200">
-                <div class="px-6 py-4 border-b border-gray-200">
-                    <h3 class="">Vos Horaires Aujourd'hui</h3>
-                </div>
-                <div class="p-4">
-                    <div class="space-y-3">
-                        <div class="flex justify-between items-center p-2">
-                            <div class="flex items-center">
-                                <i class="fas fa-sun text-yellow-500 mr-3"></i>
-                                <span>Matin</span>
-                            </div>
-                            <span class="text-sm font-medium">07:30 - 12:00</span>
-                        </div>
-                        <div class="flex justify-between items-center p-2">
-                            <div class="flex items-center">
-                                <i class="fas fa-utensils text-orange-500 mr-3"></i>
-                                <span>Pause déjeuner</span>
-                            </div>
-                            <span class="text-sm font-medium">12:00 - 13:30</span>
-                        </div>
-                        <div class="flex justify-between items-center p-2">
-                            <div class="flex items-center">
-                                <i class="fas fa-cloud-sun text-blue-500 mr-3"></i>
-                                <span>Après-midi</span>
-                            </div>
-                            <span class="text-sm font-medium">13:30 - 17:00</span>
-                        </div>
-                        <div class="flex justify-between items-center p-2 bg-green-50 rounded">
-                            <div class="flex items-center">
-                                <i class="fas fa-door-closed text-green-500 mr-3"></i>
-                                <span class="font-medium">Fermeture</span>
-                            </div>
-                            <span class="text-sm font-medium">17:00 - 17:30</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            </div> 
         </div>
     </div>
 </div>

@@ -21,7 +21,7 @@
                 <!-- En-tête avec icône -->
                 <div class="flex items-center gap-4 mb-4">
                     <div class="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-lg">
-                        {{ strtoupper(substr($class->name, 0, 2)) }}
+                        {{ preg_match('/\d+/', $class->name, $m) ? $m[0] : strtoupper(substr($class->name, 0, 2)) }}
                     </div>
                     <h3 class="text-xl font-semibold text-gray-800">{{ $class->name }}</h3>
                 </div>
