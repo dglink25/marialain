@@ -16,8 +16,7 @@ class AppServiceProvider extends ServiceProvider{
     }
 
     public function boot(): void{
-        $activeYear = AcademicYear::where('active', true)->first();
-        View::share('activeYear', $activeYear);
+        //
     }
 
     

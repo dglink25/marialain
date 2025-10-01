@@ -12,14 +12,16 @@
         @foreach($trimestres as $t)
             <div class="p-4 bg-white rounded shadow text-center">
                 <h2 class="font-semibold text-lg">Trimestre {{ $t }}</h2>
-                <a href="{{ route('censeur.permissions.index', $classe->id) }}"
-                   class="mt-3 inline-block bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
-                    Gérer autorisations
-                </a>
                 <a href="{{ route('teacher.classes.trimestres.eleves', [$classe->id, $t]) }}"
-                   class="mt-3 inline-block bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
-                    Liste élèves
+                   class="mt-3 inline-block bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700">
+                    Elèves
                 </a>
+                
+               <a href="{{ route('censeur.classes.trimestre.matiere', [$classe->id, $t]) }}"
+                class="mt-3 inline-block bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">
+                    Matières
+                </a>
+
             </div>
         @endforeach
     </div>

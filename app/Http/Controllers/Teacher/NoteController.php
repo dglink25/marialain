@@ -42,13 +42,12 @@ class NoteController extends Controller{
         return view('teacher.notes.index', compact('classe', 'activeYear', 'trimestre', 'hasNotes'));
     }
 
-
     public function read($classId, $type, $num, $trimestre){
         $activeYear = AcademicYear::where('active', true)->first();
         if (!$activeYear) {
             return back()->with('error', 'Pas d\'année académique active.');
         }
-
+        
         $classe = Classe::with(['students' => function($q) use ($activeYear, $type, $num, $trimestre) {
             $q->orderBy('last_name')
             ->with(['grades' => function($q2) use ($activeYear, $type, $num, $trimestre) {
@@ -61,8 +60,6 @@ class NoteController extends Controller{
 
         return view('teacher.notes.read', compact('classe', 'type', 'num', 'trimestre'));
     }
-
-
 
     public function chooseTrimestre($classId){
         $classe = Classe::findOrFail($classId);
@@ -150,7 +147,6 @@ class NoteController extends Controller{
             ->with('success', 'Notes enregistrées.');
     }
 
-
     public function edit($classId, $type, $num, $trimestre){
         $activeYear = AcademicYear::where('active', true)->firstOrFail();
 
@@ -167,7 +163,6 @@ class NoteController extends Controller{
 
         return view('teacher.notes.edit', compact('classe','type','num','trimestre'));
     }
-
 
     // Mettre à jour les notes
     public function update(Request $request, $classId, $type, $num, $trimestre){

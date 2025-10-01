@@ -6,6 +6,7 @@
 @endphp
 <div class="container py-6">
     <h1 class="text-2xl font-bold mb-6">Gestion des autorisations - {{ $classe->name }}</h1>
+    
 
     <table class="w-full border-collapse border">
         <thead>

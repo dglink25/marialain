@@ -7,6 +7,54 @@
     $pageTitle = "Lecteur Notes";
 @endphp
 
+    @auth
+    @if (Auth::id() == 6)
+        <h1 class="text-2xl font-bold mb-6">
+        Notes - {{ ucfirst($type) }} {{ $num }} - Classe {{ $classe->name }} / Trimestre {{ $trimestre }}
+    </h1>
+
+    @if(session('success'))
+        <div class="bg-green-100 text-green-800 px-4 py-2 rounded mb-4">
+            {{ session('success') }}
+        </div>
+    @endif
+
+    <table class="w-full border-collapse border">
+        <thead>
+            <tr class="bg-gray-100">
+                <th class="px-3 py-2 border">N°</th>
+                <th class="px-3 py-2 border">Nom</th>
+                <th class="px-3 py-2 border">Prénom</th>
+                <th class="px-3 py-2 border">Sexe</th>
+                <th class="px-3 py-2 border">Note</th>
+                <th class="px-3 py-2 border">Enrégistré</th>
+                <th class="px-3 py-2 border">Modifié</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($classe->students as $student)
+            <tr class="border-b">
+                <td class="px-3 py-2 border">{{ $loop->iteration }}</td>
+                <td class="px-3 py-2 border">{{ $student->last_name }}</td>
+                <td class="px-3 py-2 border">{{ $student->first_name }}</td>
+                <td class="px-3 py-2 border">{{ $student->gender }}</td>
+                <td class="px-3 py-2 border">
+                    {{ $student->grades->first()->value ?? '00' }}
+                </td>
+                <td class="px-3 py-2 border">
+                    {{ $student->grades->first()->created_at ?? '--' }}
+                </td>
+                <td class="px-3 py-2 border">
+                    {{ $student->grades->first()->updated_at ?? '--' }}
+                </td>
+            </tr>
+            @endforeach
+        </tbody>
+    </table>
+
+
+    @else
+
     <h1 class="text-2xl font-bold mb-6">
         Notes - {{ ucfirst($type) }} {{ $num }} - Classe {{ $classe->name }} / Trimestre {{ $trimestre }}
     </h1>
@@ -55,5 +103,10 @@
            Retour
         </a>
     </div>
+
+    @endif
+    @endauth
+
+
 </div>
 @endsection

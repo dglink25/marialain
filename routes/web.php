@@ -252,9 +252,22 @@ Route::get('/classes/{classId}/students/{studentId}/bulletin/{trimestre}',
     [App\Http\Controllers\Censeur\NoteController::class, 'bulletin']
 )->name('teacher.classes.students.bulletin');
 
+// Notes par trimestre
+Route::get('/censeur/classes/{id}/notes/{trimestre}', [App\Http\Controllers\Censeur\NoteController::class, 'notes_trimestre'])
+    ->name('censeur.classes.notes');
+
+Route::get('/censeur/classes/{classId}/trimestres/{trimestre}/matieres', 
+    [App\Http\Controllers\Censeur\NoteController::class, 'matiere']
+)->name('censeur.classes.trimestre.matiere');
+
+Route::get('censeur/classes/{class}/{trimestre}/{subject}/notes', 
+    [App\Http\Controllers\Censeur\NoteController::class, 'showClassNote']
+)->name('censeur.classes.notes.list');
+
 Route::get('/classes/{classId}/trimestres/{trimestre}/eleves', 
     [App\Http\Controllers\Censeur\NoteController::class, 'listeEleves']
 )->name('teacher.classes.trimestres.eleves');
+
 
 Route::prefix('censeur')->name('censeur.')->middleware('auth')->group(function () {
 
