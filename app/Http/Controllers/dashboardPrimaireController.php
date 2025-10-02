@@ -25,16 +25,27 @@ class dashboardPrimaireController extends Controller
             }
 
             // Récupérer les classes primaire + maternelle avec leurs enseignants
+            $classes = Classe::where('academic_year_id', $annee_academique->id)
+                ->whereHas('entity', function ($query) {
+                    $query->whereIn('slug', ['primaire', 'maternelle']);
+                })
+                ->with('students', 'teacher') // Charger les enseignants associés
+                ->get();
+            //nombre d'elèves au primaire
             $primaryClassCount = Classe::where('academic_year_id', $annee_academique->id)
                 ->whereHas('entity', function ($query) {
-                    $query->whereIn('name', ['primaire', 'maternelle']);
+                    $query->whereIn('slug', ['primaire', 'maternelle']);
                 })
                 ->count();
             //nombre d'elèves au primaire
             $primaryStudentsCount = Student::where('academic_year_id', $annee_academique->id)
                 ->whereHas('entity', function ($q) {
-                    $q->whereIn('name', ['primaire', 'maternelle']);
+                    $q->whereIn('slug', ['primaire', 'maternelle']);
                 })->count();
+                $students = Student::where('academic_year_id', $annee_academique->id)
+                ->whereHas('entity', function ($q) {
+                    $q->whereIn('slug', ['primaire', 'maternelle']);
+                })->get();
             //récupérer les enseignants du primaire
             $primaryTeacherCount = User::whereHas('role', function ($q) {
                 $q->where('name', 'teacher');
@@ -45,10 +56,20 @@ class dashboardPrimaireController extends Controller
                     })
                         ->where('academic_year_id', $annee_academique->id);
                 })->with('classePrimaire')->count();
-           return view('dashboards.directeur', compact('user', '$primaryClassCount', 'primaryStudentsCount', 'primaryTeacherCount'));   } catch (\Exception $e) {
+           return view('dashboards.directeur', compact('user', 'students', 'primaryClassCount', 'primaryStudentsCount', 'primaryTeacherCount', 'annee_academique', 'classes'));   } catch (\Exception $e) {
             // Gestion des exceptions générales
             return back()->with('error', 'Erreur lors du chargement des classes : ' . $e->getMessage());
         }
     }
-
+public function show(string $id){
+        //
+         $annee_academique = AcademicYear::where('active', 1)-> first();
+         if(!$annee_academique){
+            return back()-> with('error', 'Aucune année académique active trouvée.');
+         }
+        $class = Classe::with(['students' => function($query) {
+            $query->orderBy('last_name')->orderBy('first_name');
+        }])->findOrFail($id);
+        return view('primaire.classe.showclass', compact('class', 'annee_academique'));
+    }
 }

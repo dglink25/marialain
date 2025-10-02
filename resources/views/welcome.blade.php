@@ -56,7 +56,7 @@ $role = optional($user->role)->name;
         <div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
             <h3 class="font-semibold text-gray-700">👩‍🏫 Gestion des enseignants</h3>
             <p class="text-sm text-gray-500 mt-2">Attribuez les classes aux enseignants et suivez leurs affectations.</p>
-            <a href="{{ url('/primaire/enseignants/liste') }}" class="text-sm text-blue-600 mt-3 block">
+            <a href="{{ route('primaire.enseignants.enseignants') }}" class="text-sm text-blue-600 mt-3 block">
                 Gérer les enseignants →
             </a>
         </div>
@@ -64,7 +64,7 @@ $role = optional($user->role)->name;
         <div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
             <h3 class="font-semibold text-gray-700">📚 Gestion des classes</h3>
             <p class="text-sm text-gray-500 mt-2">Consultez les classes du primaire et leur répartition.</p>
-            <a href="{{ url('/primaire/classes/liste') }}" class="text-sm text-blue-600 mt-3 block">
+            <a href="{{ route('primaire.classe.classes') }}" class="text-sm text-blue-600 mt-3 block">
                 Voir les classes →
             </a>
         </div>
@@ -72,7 +72,7 @@ $role = optional($user->role)->name;
         <div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
             <h3 class="font-semibold text-gray-700">👨‍👩‍👧 Suivi des élèves</h3>
             <p class="text-sm text-gray-500 mt-2">Consultez les inscriptions, résultats et suivis académiques.</p>
-            <a href="{{ url('/primaire/ecoliers/liste') }}" class="text-sm text-blue-600 mt-3 block">
+            <a href="{{ route('primaire.ecoliers.liste') }}" class="text-sm text-blue-600 mt-3 block">
                 Gérer les élèves →
             </a>
         </div>

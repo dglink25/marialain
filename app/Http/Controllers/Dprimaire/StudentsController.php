@@ -23,11 +23,10 @@ class StudentsController extends Controller
     }
 
     // On démarre la requête
-    $query = Student::whereHas('classe', function ($q) {
-        $q->whereHas('entity', function ($q2) {
-            $q2->whereIn('name', ['primaire','maternelle']); // ne garde que les élèves du primaire
-        });
-    });
+    $query =  Student::where('academic_year_id', $annee_academique->id)
+                ->whereHas('entity', function ($q) {
+                    $q->whereIn('slug', ['primaire', 'maternelle']);
+                }); 
 
     // Filtres dynamiques
     if ($request->filled('classe')) {
@@ -61,7 +60,7 @@ class StudentsController extends Controller
     // Pour le menu déroulant des classes
             $classes = Classe::where('academic_year_id', $annee_academique->id)
                 ->whereHas('entity', function ($query) {
-                    $query->whereIn('name', ['primaire', 'maternelle']);
+                    $query->whereIn('slug', ['primaire', 'maternelle']);
                 })
                 ->get();
 
@@ -71,11 +70,11 @@ class StudentsController extends Controller
     public function downloadPrimaireStudents()
     {
         $students = Student::whereHas('classe.entity', function ($query) {
-            $query->where('name', 'primaire');
+            $query->whereIn('slug', ['primaire', 'maternelle'] );
         })->with('classe')->orderBy('last_name')->orderBy('first_name')->get();
 
         // Si tu veux afficher juste "Primaire"
-        $class = (object) ['name' => 'Primaire'];
+        $class = (object) ['slug' => ['primaire', 'maternelle']];
 
         $pdf = Pdf::loadView('primaire.ecoliers.pdf', compact('students', 'class'));
         return $pdf->download('liste_des_eleves.pdf');

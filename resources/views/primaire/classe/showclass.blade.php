@@ -74,7 +74,7 @@
                                      
                                     <td class="px-5 py-4 text-center text-gray-600">{{ $loop->iteration }}</td>
                                     <td class="px-5 py-4 text-center text-gray-600">{{ $student->num_educ ?? '-' }}</td>
-                                    <td class="px-5 py-4 font-medium text-gray-600">{{ $student->last_name }}</td>
+                                    <td class="px-5 py-4 font-medium text-gray-600">  <a href=" {{ route('primaire.ecoliers.show', $student->id) }}">{{ $student->last_name }}</a></td>
                                     <td class="px-5 py-4 font-medium text-gray-600">{{ $student->first_name }}</td>
                                     <td class="px-5 py-4 font-medium text-gray-600">{{ $student->gender ?? '-' }}</td>
                                     <td class="px-5 py-4 font-medium text-gray-600">{{ $student->birth_date }}</td>

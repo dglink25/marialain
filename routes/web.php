@@ -79,6 +79,8 @@ Route::get('/primaire/ecoliers/pdf', [StudentsController::class, 'downloadPrimai
 Route::get('/primaire/classe/{id}/pdf', [ClassesprimaireController::class, 'downloadClassStudents'])-> name('primaire.classe.pdf');
 Route::get('/primaire/enseignants/pdf', [primaryteacherController::class, 'downloadTeachersList'])->name('primaire.enseignants.pdf');
 Route::get('/primaire/enseignants/{id}/show', [primaryteacherController::class, 'show'])-> name('primaire.enseignants.show');
+Route::get('/primaire/ecoliers/{id}/show', [ClassesprimaireController::class, 'showStudent'])->name('primaire.ecoliers.show');
+    
 Route::get('/', function () {
     return view('accueil');
 })->name('accueil');
@@ -177,6 +179,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard/directeur', [DashboardPrimaireController::class, 'index'])->name('directeur.dashboard');
 
     Route::get('/dashboard/surveillant', fn() => view('dashboards.surveillant', ['user' => auth()->user()]))->name('surveillant.dashboard');
+    Route::get('/primaire/classe/{id}/showclass', [dashboardPrimaireController::class, 'show'])->name('primaire.classe.show');
     
     Route::get('dashboard', [CenseurDashboardController::class, 'index'])->name('censeur.dashboard');
 

@@ -15,13 +15,13 @@
                 <p class="mt-1 text-sm text-gray-600">Bienvenue, {{ $user->name }}. Gestion du cycle primaire.</p>
             </div>
             <div class="mt-4 md:mt-0 bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
-                <p class="text-sm text-gray-600">Année scolaire: <span class="font-medium">2023-2024</span></p>
+                <p class="text-sm text-gray-600">Année scolaire: <span class="font-medium">{{ $annee_academique-> name }}</span></p>
             </div>
         </div>
     </div>
 
     <!-- Cartes de statistiques -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         <!-- Élèves du primaire -->
         <div class="bg-white overflow-hidden shadow rounded-lg border border-gray-200 hover:shadow-md transition-shadow duration-300">
             <div class="p-5">
@@ -34,7 +34,8 @@
                     <div class="ml-5 w-0 flex-1">
                         <dl>
                             <dt class="text-sm font-medium text-gray-500 truncate">Élèves primaire</dt>
-                            <dd class="text-lg font-medium text-gray-900"> $primaryStudentsCount</dd>
+                            <dd class="text-lg font-medium text-gray-900">{{ $primaryStudentsCount }} </dd>
+                           
                         </dl>
                     </div>
                 </div>
@@ -59,7 +60,7 @@
                     <div class="ml-5 w-0 flex-1">
                         <dl>
                             <dt class="text-sm font-medium text-gray-500 truncate">Enseignants</dt>
-                            <dd class="text-lg font-medium text-gray-900">$primaryTeacherCount</dd>
+                            <dd class="text-lg font-medium text-gray-900">{{ $primaryTeacherCount }}</dd>
                         </dl>
                     </div>
                 </div>
@@ -84,7 +85,7 @@
                     <div class="ml-5 w-0 flex-1">
                         <dl>
                             <dt class="text-sm font-medium text-gray-500 truncate">Classes</dt>
-                            <dd class="text-lg font-medium text-gray-900"> $primaryClassCount</dd>
+                            <dd class="text-lg font-medium text-gray-900"> {{ $primaryClassCount }} </dd>
                         </dl>
                     </div>
                 </div>
@@ -135,28 +136,20 @@
                 </div>
                 <div class="p-6">
                     <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        @foreach(['CI', 'CP', 'CE1', 'CE2', 'CM1', 'CM2'] as $niveau)
+                        @foreach($classes as $classe)
                         <div class="text-center p-4 bg-gray-50 rounded-lg">
                             <div class="text-2xl font-bold text-blue-600">
-                                @switch($niveau)
-                                    @case('CI') 3 @break
-                                    @case('CP') 3 @break
-                                    @case('CE1') 3 @break
-                                    @case('CE2') 3 @break
-                                    @case('CM1') 3 @break
-                                    @case('CM2') 3 @break
-                                @endswitch
+                              <a href=" {{ route('primaire.classe.show', $classe->id) }}">{{ $classe->name }}</a> 
+                              
                             </div>
-                            <div class="text-sm text-gray-600">Classes de {{ $niveau }}</div>
+                            @if($classe->teacher)
+                            <div class="text-sm text-gray-600 mt-1">Prof: {{ $classe->teacher->name }} </div>
+                            @else
+                            <div class="text-sm text-gray-600 mt-1 text-red-600 font-semibold">Aucun enseignant assigné</div>
+                            @endif
+                            
                             <div class="text-xs text-gray-500 mt-1">
-                                @switch($niveau)
-                                    @case('CI') ~25 élèves/classe @break
-                                    @case('CP') ~28 élèves/classe @break
-                                    @case('CE1') ~26 élèves/classe @break
-                                    @case('CE2') ~27 élèves/classe @break
-                                    @case('CM1') ~25 élèves/classe @break
-                                    @case('CM2') ~29 élèves/classe @break
-                                @endswitch
+                                {{ $classe->students->count() }} élèves
                             </div>
                         </div>
                         @endforeach
@@ -187,10 +180,7 @@
                             <i class="fas fa-users mr-3"></i>
                             <span>Voir les écoliers</span>
                         </a>
-                        <a href="#" class="flex items-center p-3 rounded-lg bg-yellow-50 text-yellow-700 hover:bg-yellow-100 transition duration-200">
-                            <i class="fas fa-envelope mr-3"></i>
-                            <span>Inviter enseignants</span>
-                        </a>
+                        
                     </div>
                 </div>
             </div>
