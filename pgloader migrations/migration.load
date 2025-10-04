@@ -1,0 +1,27 @@
+LOAD DATABASE
+     FROM mysql://root:ton_motdepasselocal@localhost/marialain_db
+     INTO postgresql://neondb_owner:npg_ObVH0RZ8krdE@ep-green-wave-advzq6sq-pooler.c-2.us-east-1.aws.neon.tech/neondb
+
+WITH include no drop,
+     create tables,
+     create indexes,
+     reset sequences,
+     data only
+
+SET work_mem to '16MB',
+    maintenance_work_mem to '512 MB',
+    search_path to 'public'
+
+CAST
+    type datetime to timestamptz drop default drop not null,
+    type date to date drop default drop not null,
+    type tinyint to smallint,
+    type int unsigned to bigint,
+    type varchar to text
+;
+
+ALTER SCHEMA 'marialain_db' RENAME TO 'public';
+
+-- Options globales
+WORKERS = 4
+CONCURRENCY = 1
