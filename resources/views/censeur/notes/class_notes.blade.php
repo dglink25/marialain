@@ -16,8 +16,14 @@
             Année académique : <span class="font-semibold">{{ $activeYear->name ?? $activeYear->label ?? 'N/A' }} / Trimestre {{ $trimestre }}</span>
         </p>
             <h2 class="text-lg font-semibold text-blue-700 mt-4">
-                Matière : {{ $subject->name }} (Coef {{ $subject->coefficient ?? 1 }})
+                Matière : {{ $subjects->name }} (Coef : {{ $subjects->coefficient ?? 1 }})
             </h2>
+
+            <a href="{{ route('censeur.notes.export.pdf', [$classe->id, $trimestre, $subjects->id]) }}" 
+   class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+   Télécharger PDF
+</a>
+
         
     </div>
 
@@ -57,12 +63,9 @@
             </thead>
             <tbody>
                 @foreach($classe->students as $student)
-                   
                     @php
-                        $subject = $subject->first();
-                        $grades = $subject ? ($gradesData[$student->id][$subject->id] ?? null) : null;
+                        $grades = $gradesData[$student->id][$subjects->id] ?? null;
                     @endphp
-
                     <tr class="hover:bg-gray-50">
                         <td class="px-3 py-2 border text-center">{{ $loop->iteration }}</td>
                         <td class="px-3 py-2 border">{{ $student->last_name }}</td>
@@ -70,9 +73,9 @@
                         <td class="px-3 py-2 border text-center">{{ $student->gender }}</td>
 
                         {{-- Interrogations --}}
-                        @for($i = 0; $i < 5; $i++)
+                        @for($i = 1; $i <= 5; $i++)
                             <td class="px-2 py-1 border text-center">
-                                {{ $grades['interros'][$i+1] ?? '-' }}
+                                {{ $grades['interros'][$i] ?? '-' }}
                             </td>
                         @endfor
 
@@ -83,13 +86,13 @@
 
                         {{-- Coefficient --}}
                         <td class="px-2 py-1 border text-center">
-                            {{ $grades['coef'] ?? ($subject->coefficient ?? 1) }}
+                            {{ $grades['coef'] ?? ($subjects->coefficient ?? 1) }}
                         </td>
 
                         {{-- Devoirs --}}
-                        @for($i = 0; $i < 2; $i++)
+                        @for($i = 1; $i <= 2; $i++)
                             <td class="px-2 py-1 border text-center">
-                                {{ $grades['devoirs'][$i+1] ?? '-' }}
+                                {{ $grades['devoirs'][$i] ?? '-' }}
                             </td>
                         @endfor
 
@@ -106,6 +109,7 @@
                     </tr>
                 @endforeach
             </tbody>
+
         </table>
     </div>
 </div>

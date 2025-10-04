@@ -8,8 +8,7 @@ use App\Models\Classe;
 use App\Models\User;
 use App\Models\AcademicYear;
 
-class welcomeController extends Controller
-{
+class welcomeController extends Controller{
     //
     public function index()
     {

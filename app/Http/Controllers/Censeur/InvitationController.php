@@ -40,6 +40,7 @@ class InvitationController extends Controller{
         // Charge uniquement les invitations de cette année
         $invitations = TeacherInvitation::with('user')
             ->where('academic_year_id', $activeYear->id)
+            ->where('censeur_id', 6)
             ->latest()
             ->get();
 

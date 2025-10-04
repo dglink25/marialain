@@ -10,7 +10,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\InvitationResponseController;
 use App\Http\Controllers\StudentPaymentController;
 use App\Http\Controllers\ArchiveController;
-use App\Http\Controllers\WelcomeController;
+use App\Http\Controllers\welcomeController;
 use App\Http\Controllers\DashboardPrimaireController;
 
 // Admin
@@ -52,6 +52,7 @@ use App\Http\Controllers\Teacher\PrimaireScheduleController;
 use App\Http\Controllers\Teacher\NoteController;
 use App\Http\Controllers\Teacher\GradeController;
 
+
 /*
 |--------------------------------------------------------------------------
 | Routes publiques
@@ -62,9 +63,7 @@ use App\Http\Controllers\Teacher\GradeController;
 Route::get('/', fn() => view('accueil'))->name('accueil');
 //Route::get('/home', fn() => view('welcome'))->name('home');
 
-Route::get('/home', [WelcomeController::class, 'index'])->name('home');
-
-
+Route::get('/home', [App\Http\Controllers\welcomeController::class, 'index'])->name('home');
 
 Route::get('/admin/entities/{entity}/classes', [EntityController::class, 'getClasses']);
 
@@ -258,9 +257,25 @@ Route::get('/classes/{classId}/students/{studentId}/bulletin/{trimestre}',
     [App\Http\Controllers\Censeur\NoteController::class, 'bulletin']
 )->name('teacher.classes.students.bulletin');
 
+//Téléchargement excel et pdf 
+Route::get('/censeur/classes/{classId}/trimestres/{trimestre}/notes/pdf', [App\Http\Controllers\Censeur\NoteController::class, 'telechargerPDF'])
+    ->name('censeur.classes.notes.pdf');
+
+Route::get('/censeur/classes/{classId}/trimestres/{trimestre}/notes/excel', [App\Http\Controllers\Censeur\NoteController::class, 'telechargerExcel'])
+    ->name('censeur.classes.notes.excel');
+
+Route::get('/censeur/classes/{classId}/students/{studentId}/bulletin/{trimestre}/pdf',
+    [App\Http\Controllers\Censeur\NoteController::class, 'downloadPdf']
+)->name('censeur.classes.notes.bulletin.pdf');
+
+
 // Notes par trimestre
-Route::get('/censeur/classes/{id}/notes/{trimestre}', [App\Http\Controllers\Censeur\NoteController::class, 'notes_trimestre'])
+Route::get('/censeur/classes/{id}/notes/{trimestre}/{subjectId}', [App\Http\Controllers\Censeur\NoteController::class, 'notes_trimestre'])
     ->name('censeur.classes.notes');
+
+Route::get('/censeur/classes/{classId}/trimestres/{trimestre}/subjects/{subjectId}/notes/pdf', 
+    [App\Http\Controllers\Censeur\NoteController::class, 'exportNotesPDF']
+)->name('censeur.notes.export.pdf');
 
 Route::get('/censeur/classes/{classId}/trimestres/{trimestre}/matieres', 
     [App\Http\Controllers\Censeur\NoteController::class, 'matiere']
@@ -274,6 +289,9 @@ Route::get('/classes/{classId}/trimestres/{trimestre}/eleves',
     [App\Http\Controllers\Censeur\NoteController::class, 'listeEleves']
 )->name('teacher.classes.trimestres.eleves');
 
+Route::post('/censeur/classes/{classe}/subjects/{subject}/coefficient', 
+    [App\Http\Controllers\Censeur\NoteController::class, 'setCoefficient']
+)->name('censeur.subjects.coefficient');
 
 Route::prefix('censeur')->name('censeur.')->middleware('auth')->group(function () {
 
@@ -309,7 +327,6 @@ Route::prefix('censeur')->name('censeur.')->middleware('auth')->group(function (
     Route::get('classes/{class}/timetables/download', [TimetableController::class, 'downloadPDF'])->name('timetables.download');
     
 });
-
 
 /*
 |--------------------------------------------------------------------------

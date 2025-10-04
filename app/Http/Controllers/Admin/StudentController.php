@@ -297,8 +297,15 @@ class StudentController extends Controller{
 
 
     public function exportPdf(Request $request){
+
+        $activeYear = AcademicYear::where('active', true)->first();
+        if (!$activeYear) {
+            return back()->with('error', 'Aucune année académique active trouvée.');
+        }
+
         $query = Student::with('entity', 'classe')
-            ->where('is_validated', 1); // uniquement les validés
+            ->where('is_validated', 1)
+            ->where('academic_year_id', $activeYear->id); // uniquement les validés
 
         $className = 'Toutes les classes';
 
@@ -312,7 +319,8 @@ class StudentController extends Controller{
             }
         }
 
-        $students = $query->orderBy('last_name')
+        $students = $query
+                        ->orderBy('last_name')
                         ->orderBy('first_name')
                         ->get();
 
@@ -330,9 +338,16 @@ class StudentController extends Controller{
 
 
     public function exportAllPdf(){
+
+        $activeYear = AcademicYear::where('active', true)->first();
+        if (!$activeYear) {
+            return back()->with('error', 'Aucune année académique active trouvée.');
+        }
+
         // Récupérer toutes les classes avec leurs élèves validés
-        $classes = \App\Models\Classe::with(['students' => function($q) {
+        $classes = \App\Models\Classe::with(['students' => function($q) use ($activeYear) {
             $q->where('is_validated', 1)
+            ->where('academic_year_id', $activeYear->id)
             ->orderBy('last_name')
             ->orderBy('first_name');
         }])->get();

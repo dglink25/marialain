@@ -37,6 +37,7 @@ class SubjectController extends Controller{
         $activeYear = AcademicYear::where('active', true)->firstOrFail();
         Subject::create([
             'name'             => $request->name,
+            'coefficient'      => 1,
             'academic_year_id' => $activeYear->id,
         ]);
         

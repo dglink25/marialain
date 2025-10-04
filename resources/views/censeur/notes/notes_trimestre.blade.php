@@ -9,7 +9,7 @@
 <div class="container mx-auto py-6">
 
     <div class="flex justify-between items-center mb-4">
-        <h1 class="text-2xl font-bold mb-6"> Fiche de  Notes {{ $subject}} Classe {{ $classe->name }} / Trimestre {{ $trimestre }}</h1>
+        <h1 class="text-2xl font-bold mb-6"> Fiche de  Notes {{ $subject->name}} Classe {{ $classe->name }} / Trimestre {{ $trimestre }}</h1>
         <a href="{{ route('censeur.classes.notes.list', [$classe->id, $trimestre, $subject]) }}"
         class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 text-center">
         Voir toutes les notes

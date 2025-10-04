@@ -20,6 +20,7 @@
             <h2 class="text-lg font-semibold text-blue-700 mt-4">
                 Matière : {{ $subject->name }} (Coef {{ $subject->coefficient ?? 1 }})
             </h2>
+            
         @endforeach
     </div>
 

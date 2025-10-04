@@ -44,18 +44,21 @@ class NoteController extends Controller{
 
     public function read($classId, $type, $num, $trimestre){
         $activeYear = AcademicYear::where('active', true)->first();
+
         if (!$activeYear) {
             return back()->with('error', 'Pas d\'année académique active.');
         }
-        
+
         $classe = Classe::with(['students' => function($q) use ($activeYear, $type, $num, $trimestre) {
-            $q->orderBy('last_name')
-            ->with(['grades' => function($q2) use ($activeYear, $type, $num, $trimestre) {
-                $q2->where('type', $type)
-                    ->where('sequence', $num)
-                    ->where('trimestre', $trimestre)
-                    ->where('academic_year_id', $activeYear->id);
-            }]);
+            $q->where('academic_year_id', $activeYear->id)
+                ->orderBy('last_name')
+                ->where('is_validated', 1)
+                ->with(['grades' => function($q2) use ($activeYear, $type, $num, $trimestre) {
+                    $q2->where('type', $type)
+                        ->where('sequence', $num)
+                        ->where('trimestre', $trimestre)
+                        ->where('academic_year_id', $activeYear->id);
+                }]);
         }])->findOrFail($classId);
 
         return view('teacher.notes.read', compact('classe', 'type', 'num', 'trimestre'));
@@ -72,8 +75,11 @@ class NoteController extends Controller{
             return back()->with('error', 'Pas d\'année académique active.');
         }
 
-        $classe = Classe::with(['students' => function ($q) {
-            $q->orderBy('last_name')->orderBy('first_name');
+        $classe = Classe::with(['students' => function ($query) use ($activeYear) {
+            $query->where('is_validated', 1) 
+                ->where('academic_year_id', $activeYear->id)
+                ->orderBy('last_name')
+                ->orderBy('first_name');
         }])->findOrFail($classId);
 
         // Validation : ne pas ajouter Interro2 si Interro1 vide
@@ -151,14 +157,16 @@ class NoteController extends Controller{
         $activeYear = AcademicYear::where('active', true)->firstOrFail();
 
         $classe = Classe::with(['students' => function($q) use ($type, $num, $activeYear, $trimestre) {
-            $q->orderBy('last_name')
-            ->orderBy('first_name')
-            ->with(['grades' => function($q2) use ($type, $num, $activeYear, $trimestre) {
-                $q2->where('type', $type)
-                    ->where('sequence', $num)
-                    ->where('trimestre', $trimestre)
-                    ->where('academic_year_id', $activeYear->id);
-            }]);
+            $q->where('academic_year_id', $activeYear->id)
+                ->where('is_validated', 1)
+                ->orderBy('last_name')
+                ->orderBy('first_name')
+                ->with(['grades' => function($q2) use ($type, $num, $activeYear, $trimestre) {
+                    $q2->where('type', $type)
+                        ->where('sequence', $num)
+                        ->where('trimestre', $trimestre)
+                        ->where('academic_year_id', $activeYear->id);
+                }]);
         }])->findOrFail($classId);
 
         return view('teacher.notes.edit', compact('classe','type','num','trimestre'));
@@ -278,9 +286,11 @@ class NoteController extends Controller{
         }
 
         // 2) récupérer la classe avec les élèves
-        $classe = Classe::with(['students' => function ($q) {
-            $q->orderBy('last_name')->orderBy('first_name');
-        }])->findOrFail($classId);
+        $classe = Classe::with(['students' => function ($q) use ($activeYear) {
+            $q->where('is_validated', 1)
+              ->where('academic_year_id', $activeYear->id)
+              ->orderBy('last_name')->orderBy('first_name');
+            }])->findOrFail($classId);
 
         // 3) récupérer les matières liées à l’enseignant connecté
         $teacherId = Auth::id();
@@ -357,11 +367,38 @@ class NoteController extends Controller{
                     'moyenne' => $moyenne,
                     'moyenneMat' => $moyenneMat,
                     'subject' => $subject,
+                    'rang' => null,
                 ];
+
+                if ($moyenne !== null) {
+                    $classeMoyennes[$student->id] = $moyenne;
+                }
             }
-        
 
             $gradesData[$student->id] = $studentGrades;
+        }
+
+        if (!empty($classeMoyennes)) {
+            // Trier du plus grand au plus petit
+            arsort($classeMoyennes);
+
+            $rank = 1;
+            $previousMoyenne = null;
+            $sameRankCount = 0;
+
+            foreach ($classeMoyennes as $studentId => $moyenne) {
+                if ($moyenne === $previousMoyenne) {
+                    // même moyenne → même rang
+                    $sameRankCount++;
+                } else {
+                    // nouvelle moyenne → rang suivant
+                    $rank += $sameRankCount;
+                    $sameRankCount = 1;
+                }
+
+                $gradesData[$studentId][$subject->id]['rang'] = $rank;
+                $previousMoyenne = $moyenne;
+            }
         }
 
         // 5) envoyer à la vue

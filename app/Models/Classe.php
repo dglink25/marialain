@@ -64,6 +64,12 @@ class Classe extends Model{
                     ->withTimestamps();
     }
 
+    public function subjectss(){
+        return $this->belongsToMany(Subject::class, 'subjects')
+                    ->withPivot('coefficient')
+                    ->withTimestamps();
+    }
+
 
 
 

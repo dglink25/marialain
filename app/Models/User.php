@@ -81,6 +81,9 @@ class User extends Authenticatable
         return $this->hasMany(Schedule::class, 'teacher_id');
     }
 
+    public function invitationTeacher(){
+        return $this->hasOne(TeacherInvitation::class, 'user_id');
+    }
 
 
 }
