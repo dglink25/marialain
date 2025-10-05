@@ -267,7 +267,7 @@
                 </h2>
                 <!-- Année centrée -->
                 <div class="absolute left-1/2 transform -translate-x-1/2 text-gray-600 text-sm font-medium">
-                    {{ (isset($activeYear) ? $activeYear->name : 'Na') }}
+                    {{ (isset($activeYear) ? $activeYear->name : '--') }}
                 </div>
                 <div class="relative">
                     <div id="userMenuToggle" class="flex items-center gap-2 cursor-pointer  rounded-md hover:bg-gray-50 transition">

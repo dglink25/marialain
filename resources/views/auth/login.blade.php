@@ -297,28 +297,36 @@
             <form method="POST" action="{{ route('login') }}">
                 @csrf
 
-                <!-- Email Address -->
-                <div class="form-group">
-                    <label for="email">Adresse Email</label>
-                    <div class="input-with-icon">
-                        <i class="fas fa-envelope input-icon"></i>
-                        <input id="email" type="email" name="email" value="{{ old('email') }}" required autofocus autocomplete="email" placeholder="yourroom@hotmail.com">
-                    </div>
-                   
-                </div>
+               <!-- Email Address -->
+                    <div class="form-group">
+                        <label for="email">Adresse Email</label>
+                        <div class="input-with-icon">
+                            <i class="fas fa-envelope input-icon"></i>
+                            <input id="email" type="email" name="email" value="{{ old('email') }}" required autofocus autocomplete="email" placeholder="yourroom@hotmail.com">
+                        </div>
 
-                <!-- Password -->
-                <div class="form-group">
-                    <label for="password">Mot de passe</label>
-                    <div class="input-with-icon">
-                        <i class="fas fa-lock input-icon"></i>
-                        <input id="password" type="password" name="password" required autocomplete="current-password" placeholder="••••••••">
-                        <button type="button" id="password-toggle" class="password-toggle">
-                            <i class="fas fa-eye"></i>
-                        </button>
+                        @error('email')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
                     </div>
-                </div>
-                
+
+                    <!-- Password -->
+                    <div class="form-group">
+                        <label for="password">Mot de passe</label>
+                        <div class="input-with-icon">
+                            <i class="fas fa-lock input-icon"></i>
+                            <input id="password" type="password" name="password" required autocomplete="current-password" placeholder="••••••••">
+                            <button type="button" id="password-toggle" class="password-toggle">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+
+                        @error('password')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                                    
                 <div class="options">
                     <div class="remember-me">
                         <input id="remember_me" type="checkbox" name="remember">
@@ -331,6 +339,11 @@
                         </a>
                     @endif
                 </div>
+                                @if(session('error'))
+                    <div class="session-status error">
+                        {{ session('error') }}
+                    </div>
+                @endif
 
                 <button type="submit" class="login-button">
                     Se connecter

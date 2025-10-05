@@ -175,7 +175,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/dashboard/directeur', [DashboardPrimaireController::class, 'index'])->name('directeur.dashboard');
 
-    Route::get('/dashboard/surveillant', fn() => view('dashboards.surveillant', ['user' => auth()->user()]))->name('surveillant.dashboard');
+   // Route::get('/dashboard/surveillant', fn() => view('dashboards.surveillant', ['user' => auth()->user()]))->name('surveillant.dashboard');
     
     Route::get('dashboard', [CenseurDashboardController::class, 'index'])->name('censeur.dashboard');
 
