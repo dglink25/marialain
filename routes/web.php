@@ -177,6 +177,8 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/dashboard/surveillant', [SurveillantController::class, 'surveillant'])->name('surveillant.dashboard');
     
+   // Route::get('/dashboard/surveillant', fn() => view('dashboards.surveillant', ['user' => auth()->user()]))->name('surveillant.dashboard');
+
     
     Route::get('dashboard', [CenseurDashboardController::class, 'index'])->name('censeur.dashboard');
 

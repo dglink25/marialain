@@ -22,9 +22,59 @@
             -ms-overflow-style: none; /* IE 10+ */
         }
 
+        /* Loader styles */
+        #page-loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.3s ease;
+        }
+        
+        .loader-content {
+            text-align: center;
+            background-color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .loader-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .loader-hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body class="antialiased bg-gray-50 text-gray-800">
+
+    <!-- Page Loader -->
+    <div id="page-loader">
+        <div class="loader-content">
+            <div class="loader-spinner"></div>
+            <p class="text-gray-700 font-medium">Veuillez patienter...</p>
+        </div>
+    </div>
 
     <!-- Mobile header -->
 <header class="fixed top-0 left-0 w-full z-50 md:hidden bg-white  p-4 flex justify-between items-center h-16">        
@@ -258,7 +308,7 @@
         
 
         <!-- Main content -->
-        <div class="flex-1 ml-0 md:ml-64 flex flex-col ">
+        <div class="flex-1 ml-0 md:ml-64 flex flex-col min-h-screen">
         
 
 
@@ -271,7 +321,7 @@
                 </h2>
                 <!-- Année centrée -->
                 <div class="absolute left-1/2 transform -translate-x-1/2 text-gray-600 text-sm font-medium">
-                    {{ (isset($activeYear) ? $activeYear->name : 'Na') }}
+                    {{ (isset($activeYear) ? $activeYear->name : '--') }}
                 </div>
                 <div class="relative">
                     <div id="userMenuToggle" class="flex items-center gap-2 cursor-pointer  rounded-md hover:bg-gray-50 transition">
@@ -316,7 +366,7 @@
             </div>
 
             <!-- Page content -->
-            <main class="flex-1 p-6 mt-20 md:mt-10 pt-20 ">
+            <main class="flex-1 p-6 mt-20 md:mt-10 pt-20 pb-24 md:pb-6">
 
             @if(session('success'))
                 <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
@@ -336,9 +386,13 @@
 
                 @yield('content')
             </main>
-            <footer class="bg-white py-6 border-t">
-                <div class="text-center text-sm text-gray-600">
-                    &copy; 2025 CPEG MARIE-ALAIN — Tous droits réservés.
+            
+            <!-- Footer -->
+            <footer class="bg-white border-t py-4 mt-auto">
+                <div class="container mx-auto px-4">
+                    <div class="text-center text-sm text-gray-600">
+                        &copy; 2025 CPEG MARIE-ALAIN — Tous droits réservés.
+                    </div>
                 </div>
             </footer>
         </div>
@@ -373,6 +427,37 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 });
+
+// Masquer le loader une fois la page chargée
+window.addEventListener('load', function() {
+    const loader = document.getElementById('page-loader');
+    if (loader) {
+        // Ajouter un délai pour une meilleure expérience utilisateur
+        setTimeout(function() {
+            loader.classList.add('loader-hidden');
+            // Supprimer complètement l'élément après l'animation
+            setTimeout(function() {
+                if (loader.parentNode) {
+                    loader.parentNode.removeChild(loader);
+                }
+            }, 300);
+        }, 500);
+    }
+});
+
+// Gestion des liens pour afficher le loader lors de la navigation
+document.addEventListener('click', function(e) {
+    const target = e.target.closest('a');
+    if (target && target.href && !target.hasAttribute('data-no-loader')) {
+        // Vérifier si c'est un lien interne (même domaine)
+        if (target.hostname === window.location.hostname) {
+            const loader = document.getElementById('page-loader');
+            if (loader) {
+                loader.classList.remove('loader-hidden');
+            }
+        }
+    }
+});
 </script>
 
     <!-- Scripts -->
@@ -381,11 +466,3 @@ document.addEventListener('DOMContentLoaded', function () {
     @yield('scripts')
 </body>
 </html>
-
-
-
-
-
-
-
-

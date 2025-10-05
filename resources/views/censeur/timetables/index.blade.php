@@ -10,7 +10,7 @@
 
     <!-- Bouton pour afficher le modal -->
    <div class="d-flex justify-content-end mb-3">
-        <button type="button" class="btn btn-primary border border-blue-600" data-bs-toggle="modal" data-bs-target="#addCourseModal">
+        <button type="button" class="btn btn-primary-border-blue-600 border border-blue-600" data-bs-toggle="modal" data-bs-target="#addCourseModal">
             <i class="bi bi-plus-circle me-2"></i>Ajouter un cours
         </button>
    </div>
