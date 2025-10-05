@@ -42,7 +42,8 @@ class welcomeController extends Controller{
                         ->where('academic_year_id', $annee_academique->id);
                 })->with('classePrimaire')->count();
             return view('welcome', compact('primaryStudentsCount', 'primaryClassCount', 'primaryTeacherCount'));
-        } catch (\Exception $e) {
+        } 
+        catch (\Exception $e) {
             // Gestion des exceptions générales
             return back()->with('error', 'Erreur lors du chargement des classes : ' . $e->getMessage());
         }

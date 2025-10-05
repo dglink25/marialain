@@ -172,8 +172,12 @@
                             @break
                         @case('surveillant')
                             <a href="{{ route('surveillant.dashboard') }}"class="block px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('surveillant.dashboard') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
-                                <i class="fas fa-tachometer-alt"></i> 
+                                <i class="fas fa-list"></i>
                                 <span class="ml-2">Dashboard </span>
+                            </a>
+                            <a href="{{ route('surveillant.classes') }}"class="block px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('surveillant.dashboard') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
+                                <i class="fas fa-tachometer-alt"></i> 
+                                <span class="ml-2">Classes</span>
                             </a>
                             @break
 

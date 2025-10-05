@@ -4,7 +4,17 @@
 @php
     $pageTitle = 'Profil';
 @endphp
-
+    {{-- Messages flash --}}
+    @if(session('error'))
+        <div class="bg-red-100 text-red-800 p-4 rounded mb-4">
+            {{ session('error') }}
+        </div>
+    @endif
+    @if(session('success'))
+        <div class="bg-green-100 text-green-800 p-4 rounded mb-4">
+            {{ session('success') }}
+        </div>
+    @endif
 <div class="max-w-5xl mx-auto bg-white p-4 sm:p-6 lg:p-8 rounded-lg">
     <!-- En-tête -->
     <div class="text-center mb-8">
