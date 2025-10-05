@@ -571,52 +571,52 @@
     </section>
 
     <section id="admin" class="teachers-section p-5">
-        <div class="container-fluid text-center">
-            <p class="who-we text-center">Nos membres d'administration</p>
-            <h2 class="mb-4"  >Nos dirigeants</h2>
-            <div class="row g-4 justify-content-center">
-                <div class="col-md-6 col-lg-3">
-                    <div class="teacher-card text-center p-3 rounded ">
-                        <div class="image">
-                            <img src="{{ asset('ursule/img/ecole1.jpeg') }}" alt="Glims Bond" class="teacher-img rounded-circle" style="width: 150px; height: 150px; object-fit: cover;">
-                        </div>
-                        <h5 class="teacher-name mt-3">Nom Prenom</h5>
-                        <p class="teacher-title">Statut</p>
+    <div class="container-fluid text-center">
+        <p class="who-we text-center">Nos membres d'administration</p>
+        <h2 class="mb-4">Nos dirigeants</h2>
+        <div class="row g-3 justify-content-center">
+            <div class="col-md-6 col-lg-3">
+                <div class="teacher-card text-center p-2 rounded">
+                    <div class="image">
+                        <img src="{{ asset('ursule/img/ecole1.jpeg') }}" alt="Glims Bond" class="teacher-img" style="width: 200px; height: 200px; object-fit: cover; border-radius: 50%; border: 2px solid #e9ecef;">
                     </div>
+                    <h5 class="teacher-name mt-3">Nom Prenom</h5>
+                    <p class="teacher-title">Statut</p>
                 </div>
+            </div>
 
-                <div class="col-md-6 col-lg-3">
-                    <div class="teacher-card text-center p-3 rounded ">
-                        <div class="image">
-                            <img src="{{ asset('ursule/img/ecole1.jpeg') }}" alt="Glims Bond" class="teacher-img rounded-circle" style="width: 150px; height: 150px; object-fit: cover;">
-                        </div>
-                        <h5 class="teacher-name mt-3">Nom Prenom</h5>
-                        <p class="teacher-title">Statut</p>
+            <div class="col-md-6 col-lg-3">
+                <div class="teacher-card text-center p-2 rounded">
+                    <div class="image">
+                        <img src="{{ asset('ursule/img/ecole1.jpeg') }}" alt="Glims Bond" class="teacher-img" style="width: 200px; height: 200px; object-fit: cover; border-radius: 50%; border: 2px solid #e9ecef;">
                     </div>
+                    <h5 class="teacher-name mt-3">Nom Prenom</h5>
+                    <p class="teacher-title">Statut</p>
                 </div>
+            </div>
 
-                <div class="col-md-6 col-lg-3">
-                    <div class="teacher-card text-center p-3 rounded ">
-                        <div class="image">
-                            <img src="{{ asset('ursule/img/ecole1.jpeg') }}" alt="Glims Bond" class="teacher-img rounded-circle" style="width: 150px; height: 150px; object-fit: cover;">
-                        </div>
-                        <h5 class="teacher-name mt-3">Nom Prenom</h5>
-                        <p class="teacher-title">Staut</p>
+            <div class="col-md-6 col-lg-3">
+                <div class="teacher-card text-center p-2 rounded">
+                    <div class="image">
+                        <img src="{{ asset('ursule/img/ecole1.jpeg') }}" alt="Glims Bond" class="teacher-img" style="width: 200px; height: 200px; object-fit: cover; border-radius: 50%; border: 2px solid #e9ecef;">
                     </div>
+                    <h5 class="teacher-name mt-3">Nom Prenom</h5>
+                    <p class="teacher-title">Statut</p>
                 </div>
+            </div>
 
-                <div class="col-md-6 col-lg-3">
-                    <div class="teacher-card text-center p-3 rounded ">
-                        <div class="image">
-                            <img src="{{ asset('ursule/img/ecole1.jpeg') }}" alt="Glims Bond" class="teacher-img rounded-circle" style="width: 150px; height: 150px; object-fit: cover;">
-                        </div>
-                        <h5 class="teacher-name">Nom Prenom</h5>
-                        <p class="teacher-title">Statut</p>
+            <div class="col-md-6 col-lg-3">
+                <div class="teacher-card text-center p-2 rounded">
+                    <div class="image">
+                        <img src="{{ asset('ursule/img/ecole1.jpeg') }}" alt="Glims Bond" class="teacher-img" style="width: 200px; height: 200px; object-fit: cover; border-radius: 50%; border: 2px solid #e9ecef;">
                     </div>
+                    <h5 class="teacher-name mt-3">Nom Prenom</h5>
+                    <p class="teacher-title">Statut</p>
                 </div>
             </div>
         </div>
-    </section>
+    </div>
+</section>
 
     <section id="galerie">
         <div class="container">
@@ -715,12 +715,42 @@
                 <div class="col-md-3">
                     <h5 class="footer-title">Contact</h5>
                     <hr class="footer-separator">
-                    <form>
-                        <input type="text" class="form-control form-control-sm mb-3" placeholder="Nom">
-                        <input type="email" class="form-control form-control-sm mb-3" placeholder="Email">
-                        <textarea class="form-control form-control-sm mb-3" rows="2" placeholder="Message"></textarea>
+                    <form id="contactForm">
+                        @csrf
+                        <input type="text" name="name" class="form-control form-control-sm mb-3" placeholder="Nom" required>
+                        <input type="email" name="email" class="form-control form-control-sm mb-3" placeholder="Email" required>
+                        <textarea name="message" class="form-control form-control-sm mb-3" rows="2" placeholder="Message" required></textarea>
                         <button type="submit" class="btn btn-sm btn-danger w-100">Envoyer</button>
                     </form>
+
+                    <div id="formResponse" class="mt-3"></div>
+
+                    <script>
+                    document.getElementById('contactForm').addEventListener('submit', async function (e) {
+                        e.preventDefault();
+
+                        const form = e.target;
+                        const responseDiv = document.getElementById('formResponse');
+                        const formData = new FormData(form);
+
+                        // Envoi AJAX
+                        const response = await fetch("{{ route('contact.send') }}", {
+                            method: "POST",
+                            headers: { "X-CSRF-TOKEN": "{{ csrf_token() }}" },
+                            body: formData
+                        });
+
+                        const result = await response.json();
+
+                        if (result.success) {
+                            responseDiv.innerHTML = `<div class="alert alert-success">${result.message}</div>`;
+                            form.reset();
+                        } else {
+                            responseDiv.innerHTML = `<div class="alert alert-danger">${result.message}</div>`;
+                        }
+                    });
+                    </script>
+
                 </div>
 
                 <!-- Coordonnées -->
@@ -730,7 +760,7 @@
                     <p class="footer-text d-flex flex-column gap-3">
                         <span><i class="bi bi-geo-alt-fill text-danger me-2"></i> Quartier Aitchédji Abomey-Calavi, Bénin</span>
                         <span><i class="bi bi-telephone-fill text-danger me-2"></i> +229 01 97 21 20 45</span>
-                        <span><i class="bi bi-envelope-fill text-danger me-2"></i> contact@etablissement.bj</span>
+                        <span><i class="bi bi-envelope-fill text-danger me-2"></i> cpegmariealain@gmail.com</span>
                     </p>
                 </div>
             </div>

@@ -51,7 +51,7 @@
                     </div>
                     <div>
                         <label class="text-sm font-medium text-gray-500">Sexe</label>
-                        <p class="text-gray-900 font-semibold">{{ $student->classe->gender ?? 'Non spécifié' }}</p>
+                        <p class="text-gray-900 font-semibold">{{ $student->gender ?? 'Non spécifié' }}</p>
                     </div>
                     <div>
                         <label class="text-sm font-medium text-gray-500">Date de naissance</label>
@@ -60,10 +60,6 @@
                     <div>
                         <label class="text-sm font-medium text-gray-500">Lieu de naissance</label>
                         <p class="text-gray-900 font-semibold">{{ $student->birth_place }}</p>
-                    </div>
-                    <div>
-                        <label class="text-sm font-medium text-gray-500">Âge</label>
-                        <p class="text-gray-900 font-semibold">{{ $student->classe->age ?? 'Non spécifié' }}</p>
                     </div>
                 </div>
             </div>
@@ -82,7 +78,7 @@
                 <div class="space-y-4">
                     <div>
                         <label class="text-sm font-medium text-gray-500">N° Éduc Master</label>
-                        <p class="text-gray-900 font-semibold">{{ $student->classe->num_educ ?? 'Non attribué' }}</p>
+                        <p class="text-gray-900 font-semibold">{{ $student->num_educ ?? 'Non attribué' }}</p>
                     </div>
                     <div>
                         <label class="text-sm font-medium text-gray-500">Niveau</label>
@@ -114,15 +110,15 @@
                 <div class="space-y-4">
                     <div>
                         <label class="text-sm font-medium text-gray-500">Parent/Tuteur</label>
-                        <p class="text-gray-900 font-semibold">{{ $student->classe->parent_full_name ?? 'Non renseigné' }}</p>
+                        <p class="text-gray-900 font-semibold">{{ $student->parent_full_name ?? 'Non renseigné' }}</p>
                     </div>
                     <div>
                         <label class="text-sm font-medium text-gray-500">Téléphone</label>
-                        <p class="text-gray-900 font-semibold">{{ $student->classe->parent_phone ?? 'Non renseigné' }}</p>
+                        <p class="text-gray-900 font-semibold">{{ $student->parent_phone ?? 'Non renseigné' }}</p>
                     </div>
                     <div>
                         <label class="text-sm font-medium text-gray-500">Email</label>
-                        <p class="text-gray-900 font-semibold">{{ $student->classe->parent_email ?? 'Non renseigné' }}</p>
+                        <p class="text-gray-900 font-semibold">{{ $student->parent_email ?? 'Non renseigné' }}</p>
                     </div>
                     <div class="pt-2 border-t border-gray-200">
                         <label class="text-sm font-medium text-gray-500">Total payé</label>

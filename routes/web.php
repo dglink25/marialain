@@ -51,6 +51,7 @@ use App\Http\Controllers\Teacher\PrimaireSubjectController;
 use App\Http\Controllers\Teacher\PrimaireScheduleController;
 use App\Http\Controllers\Teacher\NoteController;
 use App\Http\Controllers\Teacher\GradeController;
+use App\Http\Controllers\ContactController;
 
 
 /*
@@ -67,6 +68,7 @@ Route::get('/home', [App\Http\Controllers\welcomeController::class, 'index'])->n
 
 Route::get('/admin/entities/{entity}/classes', [EntityController::class, 'getClasses']);
 
+Route::post('/contact/send', [ContactController::class, 'send'])->name('contact.send');
 //primaire
 Route:: get('/primaire/classe/classes', [ClassesprimaireController::class, 'index'])-> name('primaire.classe.classes');
 Route:: post('/primaire/classe/classes', [ClassesprimaireController::class, 'store'])-> name('primaire.classe.store');
