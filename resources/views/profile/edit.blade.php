@@ -28,20 +28,20 @@
             @csrf
             <label class="cursor-pointer inline-block">
                 <input type="file" name="profile_photo" class="hidden" onchange="previewImage(event); this.form.submit()">
-                <div class="relative">
-                    <div class="w-24 h-24 sm:w-32 sm:h-32 rounded-full overflow-hidden border-2 border-gray-200 flex items-center justify-center">
+                 <div class="relative">
+                   <div class="w-24 h-24 sm:w-32 sm:h-32 rounded-full overflow-hidden border-2 border-gray-200 flex items-center justify-center">
                         <img id="preview"
-                             src="{{ asset('storage/'.$user->profile_photo) ?? asset('default-avatar.png') }}"
-                             onerror="this.src='{{ asset('default-avatar.png') }}';"
-                             class="w-full h-full object-cover"
-                             alt="Photo de profil">
-                    </div>
+                            src="{{ $user->profile_photo ? asset('storage/'.$user->profile_photo) : asset('logo.png') }}"
+                            onerror="this.src='{{ asset('logo.png') }}';"
+                            class="w-full h-full object-cover"
+                            alt="Photo de profil">
+                    </div> 
                     <div class="absolute bottom-0 right-0 bg-blue-100 rounded-full p-1">
                         <i class="fas fa-camera text-blue-600 text-xs"></i>
                     </div>
-                </div>
+                </div>  
                 <span class="text-sm text-gray-500 mt-2 block">Cliquer pour changer</span>
-            </label>
+            </label> 
             @if($user->profile_photo)
                 <button type="submit" name="remove_photo" value="1" 
                         class="mt-3 px-3 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600 transition duration-200 flex items-center gap-1 mx-auto">
@@ -50,7 +50,7 @@
                 </button>
             @endif
         </form>
-    </div>
+    </div> 
 
     <!-- Formulaire principal -->
     <form method="POST" action="{{ route('profile.update') }}" enctype="multipart/form-data" class="space-y-6">
