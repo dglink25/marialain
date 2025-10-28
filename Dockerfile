@@ -26,14 +26,6 @@ COPY --from=composer:2.6 /usr/bin/composer /usr/bin/composer
 # Installer les dépendances Laravel (sans exécuter les scripts)
 RUN composer install --no-dev --optimize-autoloader --no-scripts
 
-RUN php artisan config:clear
-RUN php artisan cache:clear
-RUN php artisan route:clear
-RUN php artisan view:clear
-RUN php artisan optimize:clear
-RUN php artisan config:cache
-
-
 # Exposer le port attendu par Render et définir la variable PORT
 EXPOSE 10000
 ENV PORT=10000
