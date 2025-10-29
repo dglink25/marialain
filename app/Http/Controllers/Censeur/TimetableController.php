@@ -48,8 +48,8 @@ class TimetableController extends Controller{
         $subjects = Subject::where('academic_year_id', $activeYear->id)
                             ->where('coefficient', '>', 0)
                             ->get();
-        $teachers = User::whereHas('role', fn($q) => $q->where('name', 'teacher'))
-                        ->whereHas('invitationTeacher', fn($q) => $q->where('censeur_id', 6))
+        $teachers = User::whereHas('role', fn($q) => $q->where('id', 8))
+                        ->whereHas('invitationTeacher', fn($q) => $q->where('censeur_id', 4))
                         ->get();
 
         return view('censeur.timetables.index', compact('class', 'hours', 'timetables', 'subjects', 'teachers', 'activeYear'));
@@ -61,8 +61,8 @@ class TimetableController extends Controller{
         $activeYear = AcademicYear::where('active', true)->first();
         $class = Classe::findOrFail($classId);
         $timetable = Timetable::findOrFail($id);
-        $teachers = User::whereHas('role', fn($q) => $q->where('name', 'teacher'))
-                        ->whereHas('invitationTeacher', fn($q) => $q->where('censeur_id', 6))
+        $teachers = User::whereHas('role', fn($q) => $q->where('id', 8))
+                        ->whereHas('invitationTeacher', fn($q) => $q->where('censeur_id', 4))
                         ->get();
 
         $subjects = Subject::where('academic_year_id', $activeYear->id)

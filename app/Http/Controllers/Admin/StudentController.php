@@ -52,7 +52,7 @@ class StudentController extends Controller{
             'birth_place'           => 'required|string|max:255',
             'entity_id'             => 'required|exists:entities,id',
             'classe_id'             => 'required|exists:classes,id',
-            'birth_certificate'     => 'required|max:2048',
+            'birth_certificate'     => 'nullable|max:2048',
             'vaccination_card'      => 'nullable|max:2048',
             'previous_report_card'  => 'nullable|max:2048',
             'diploma_certificate'   => 'nullable|max:2048',
