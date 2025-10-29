@@ -70,7 +70,7 @@ class InvitationController extends Controller{
                 'name'     => $request->name,
                 'email'    => $request->email,
                 'password' => Hash::make($plainPassword),
-                'role_id'  => 6, // Censeur / enseignant selon ton besoin
+                'role_id'  => 8, // Censeur / enseignant selon ton besoin
             ]);
 
             // Création de l'invitation

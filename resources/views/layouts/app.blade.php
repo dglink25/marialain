@@ -108,59 +108,70 @@
                             
                 @auth
 
-                @php
-                    $user = auth()->user();
-                    $firstClasse = $user->classe()->with('entity')->first();
-                    $entityName = $firstClasse->entity->name ?? null;
+                @auth
+                    @php
+                        $user = auth()->user();
 
-                    //dd($firstClasse, $entityName);
-                @endphp
-                
-                @switch($entityName)
-                    @case('Primaire')
+                        // Vérifie si l'utilisateur connecté est associé à une invitation où censeur_id = 4
+                        $isCenseur = \Illuminate\Support\Facades\DB::table('teacher_invitations')
+                            ->where('user_id', $user->id)
+                            ->where('censeur_id', 4)
+                            ->exists();
 
+                        // Vérifie si l'utilisateur connecté est associé à une invitation où censeur_id = 4
+                        $isnotCenseur = \Illuminate\Support\Facades\DB::table('teacher_invitations')
+                            ->where('user_id', $user->id)
+                            ->where('censeur_id', 3)
+                            ->exists();
+                    @endphp
+
+                    @if ($isCenseur)
+                        {{-- 🔹 Menu censeur_id = 4 --}}
+                        <a href="{{ route('teacher.dashboard') }}" 
+                        class="block px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('teacher.dashboard') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
+                            <i class="fas fa-tachometer-alt"></i> 
+                            <span class="ml-2">Dashboard</span>
+                        </a>
+
+                        <a href="{{ route('teacher.classes') }}" 
+                        class="block px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('teacher.classes') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
+                            <i class="fa fa-layer-group w-5 text-gray-500"></i>
+                            <span class="ml-2">Classes</span>
+                        </a>
+                    @elseif ($isnotCenseur)
+                        {{-- 🔹 Menu par défaut --}}
                         <a href="{{ route('schedules.index') }}" 
                         class="block px-4 py-4 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('schedules.index') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
                             <i class="fa fa-layer-group w-5 text-gray-500"></i>
                             <span class="ml-3">Emploi du temps</span>
                         </a>
 
-
-                        <a href="{{ route('teacher.subjects.primaire') }}" class="block px-4 py-4 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('teacher.subjects.primaire') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
+                        <a href="{{ route('teacher.subjects.primaire') }}" 
+                        class="block px-4 py-4 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('teacher.subjects.primaire') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
                             <i class="fa fa-layer-group w-5 text-gray-500"></i>
                             <span class="ml-3">Gestion matières</span>
+                        </a>
 
-                        <a href="{{ route('teacher.dashboard') }}" class="block px-4 py-4 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('teacher.dashboard') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
+                        <a href="{{ route('teacher.dashboard') }}" 
+                        class="block px-4 py-4 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('teacher.dashboard') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
                             <i class="fa fa-book-open w-5 text-gray-500"></i> 
-                            <span class="ml-3">Dashboard </span>
-                        </a>
-                        <a href="{{ route('teacher.classes.primaire') }}" class="block px-4 py-4 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('teacher.classes.primaire') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
-                            <i class="fa fa-layer-group w-5 text-gray-500"></i>
-                            <span class="ml-3">Ma classes</span>
+                            <span class="ml-3">Dashboard</span>
                         </a>
 
-                        <a href="{{ route('teacher.subjects.primaire') }}" class="block px-4 py-4 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('teacher.subjects.primaire') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
+                        <a href="{{ route('teacher.classes.primaire') }}" 
+                        class="block px-4 py-4 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('teacher.classes.primaire') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
+                            <i class="fa fa-layer-group w-5 text-gray-500"></i>
+                            <span class="ml-3">Ma classe</span>
+                        </a>
+
+                        <a href="{{ route('teacher.subjects.primaire') }}" 
+                        class="block px-4 py-4 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('teacher.subjects.primaire') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
                             <i class="fa fa-layer-group w-5 text-gray-500"></i>
                             <span class="ml-3">Matières</span>
                         </a>
-                        @break
-            
+                    @endif
+                @endauth
 
-                    @case('Secondaire')
-
-                        <a href="{{ route('teacher.dashboard') }}" class="block px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('teacher.dashboard') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
-                            <i class="fas fa-tachometer-alt"></i> 
-                            <span class="ml-2">Dashboard </span>
-                        </a>
-                        <a href="{{ route('teacher.classes') }}" class="block px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('teacher.classes') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
-                            <i class="fa fa-layer-group w-5 text-gray-500"></i>
-                            <span class="ml-2">Classes</span>
-                        </a>
-                            
-                        @break
-                    @default
-
-                @endswitch
                     <a href="{{ route('archives.index') }}" class="block px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('archives.index') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
                         <i class="fas fa-archive"></i>
                         <span class="ml-2">Mes Archives</span>
@@ -275,7 +286,7 @@
                             @break
 
                         @default
-                            <span class="block px-3 py-3 text-white/70">Rôle non défini</span>
+                            
                             @break
                     @endswitch
                     @endif

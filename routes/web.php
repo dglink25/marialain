@@ -53,6 +53,17 @@ use App\Http\Controllers\Teacher\NoteController;
 use App\Http\Controllers\Teacher\GradeController;
 use App\Http\Controllers\ContactController;
 
+// Pour tester la page 400
+Route::get('/test-400', function () {
+    abort(400);
+});
+
+// Pour tester la page 500
+Route::get('/test-500', function () {
+    abort(500);
+});
+
+
 Route::get('/payments/{payment}/receipt', [StudentController::class, 'downloadReceipt'])
     ->name('payments.receipt');
 
