@@ -182,7 +182,7 @@ class StudentController extends Controller{
             'birth_date' => 'required|date',
             'birth_place' => 'required|string',
             'entity_id' => 'required|exists:entities,id',
-            'class_id' => 'required|exists:classes,id',
+            'class_id' => 'nullable|exists:classes,id',
             'birth_certificate' => 'nullable|mimes:pdf|max:2048',
             'vaccination_card' => 'nullable|mimes:pdf|max:2048',
             'previous_report_card' => 'nullable|mimes:pdf|max:2048',
