@@ -53,6 +53,8 @@ use App\Http\Controllers\Teacher\NoteController;
 use App\Http\Controllers\Teacher\GradeController;
 use App\Http\Controllers\ContactController;
 
+Route::get('/payments/{payment}/receipt', [StudentController::class, 'downloadReceipt'])
+    ->name('payments.receipt');
 
 /*
 |--------------------------------------------------------------------------

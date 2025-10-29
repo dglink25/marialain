@@ -128,7 +128,7 @@
                                     <p class="text-sm text-gray-600">Document d'identification</p>
                                 </div>
                             </div>
-                            <a href="{{ asset('storage/'.$user->id_card_file) }}" target="_blank" 
+                            <a href="{{ $user->id_card_file }}" target="_blank" 
                                class="inline-flex items-center px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200 text-sm">
                                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -150,7 +150,7 @@
                                     <p class="text-sm text-gray-600">Identifiant Fiscal Unique</p>
                                 </div>
                             </div>
-                            <a href="{{ asset('storage/'.$user->ifu_file) }}" target="_blank" 
+                            <a href="{{ $user->ifu_file }}" target="_blank" 
                                class="inline-flex items-center px-3 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-200 text-sm">
                                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -172,7 +172,7 @@
                                     <p class="text-sm text-gray-600">Relevé d'Identité Bancaire</p>
                                 </div>
                             </div>
-                            <a href="{{ asset('storage/'.$user->rib_file) }}" target="_blank" 
+                            <a href="{{ $user->rib_file }}" target="_blank" 
                                class="inline-flex items-center px-3 py-1 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition duration-200 text-sm">
                                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>

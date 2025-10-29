@@ -89,7 +89,7 @@
 
       <!-- Entité et Classe -->
       <div>
-        <label class="block text-sm font-semibold text-gray-700 mb-1">Entité</label>
+        <label class="block text-sm font-semibold text-gray-700 mb-1">Niveau</label>
         <select name="entity_id" id="entity_id" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none" required>
           <option value="">Sélectionnez une entité</option>
           @foreach($entities as $entity)
@@ -107,23 +107,23 @@
       <!-- Carnet de vaccination -->
       <div id="vaccination_card_div" class="hidden md:col-span-2">
         <label class="block text-sm font-semibold text-gray-700 mb-1">Carnet de vaccination (PDF)</label>
-        <input type="file" name="vaccination_card" accept="application/pdf" class="w-full border border-gray-300 rounded-lg px-4 py-2">
+        <input type="file" name="vaccination_card" accept="image/*" class="w-full border border-gray-300 rounded-lg px-4 py-2">
       </div>
 
       <!-- Documents -->
       <div class="md:col-span-2">
         <label class="block text-sm font-semibold text-gray-700 mb-1">Acte de naissance (PDF)</label>
-        <input type="file" name="birth_certificate" accept="application/pdf" class="w-full border border-gray-300 rounded-lg px-4 py-2" required>
+        <input type="file" name="birth_certificate" accept="image/*" class="w-full border border-gray-300 rounded-lg px-4 py-2" required>
       </div>
 
       <div class="md:col-span-2">
         <label class="block text-sm font-semibold text-gray-700 mb-1">Bulletin de notes année antérieure (PDF)</label>
-        <input type="file" name="previous_report_card" accept="application/pdf" class="w-full border border-gray-300 rounded-lg px-4 py-2">
+        <input type="file" name="previous_report_card" accept="image/*" class="w-full border border-gray-300 rounded-lg px-4 py-2">
       </div>
 
       <div class="md:col-span-2">
         <label class="block text-sm font-semibold text-gray-700 mb-1">Relevé de notes diplôme obtenu (optionnel)</label>
-        <input type="file" name="diploma_certificate" accept="application/pdf" class="w-full border border-gray-300 rounded-lg px-4 py-2">
+        <input type="file" name="diploma_certificate" accept="image/*" class="w-full border border-gray-300 rounded-lg px-4 py-2">
         <p class="text-xs text-gray-500 mt-1">Pour les élèves de 6ème ou 2nde uniquement</p>
       </div>
 

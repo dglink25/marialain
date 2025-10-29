@@ -135,12 +135,57 @@
             <svg class="w-5 h-5 mr-2 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
             </svg>
-            Documents
+            Documents de l’élève
         </h3>
-        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <p class="text-yellow-800 text-sm">Section documents en cours de développement...</p>
+
+        <div class="grid md:grid-cols-2 gap-4">
+            @php
+                $docs = [
+                    'Acte de naissance' => $student->birth_certificate ?? null,
+                    'Carnet de vaccination' => $student->vaccination_card ?? null,
+                    'Relevé de notes' => $student->previous_report_card ?? null,
+                    'Diplôme' => $student->diploma_certificate ?? null,
+                ];
+            @endphp
+
+            @foreach ($docs as $label => $url)
+                <div class="bg-white border rounded-lg shadow-sm p-4 mb-3">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-sm font-semibold text-gray-700">{{ ucfirst(str_replace('_', ' ', $label)) }}</h3>
+
+                        @if ($url)
+                            <a href="{{ $url }}" target="_blank"
+                            class="inline-flex items-center px-3 py-2 text-sm text-white bg-orange-600 rounded-lg hover:bg-orange-700 transition">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                Ouvrir
+                            </a>
+                        @endif
+                    </div>
+
+                    @if ($url)
+                        
+                            <img src="{{ $url }}" alt="{{ $label }}"
+                                class="w-full h-64 object-contain rounded-lg border my-2">
+                        
+
+                        {{-- ⬇️ Bouton de téléchargement --}}
+                        <div class="mt-2">
+                            <a href="{{ $url }}" download
+                            class="inline-block px-3 py-2 bg-orange-600 text-white text-sm rounded-lg hover:bg-orange-700">
+                                Télécharger
+                            </a>
+                        </div>
+                    @else
+                        <p class="text-sm text-gray-400 italic mt-2">Aucun document disponible</p>
+                    @endif
+                </div>
+            @endforeach
         </div>
     </div>
+
 
     <!-- Actions -->
     <div class="px-8 py-6 bg-gray-50 border-t border-gray-200">

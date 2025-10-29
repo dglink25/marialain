@@ -172,7 +172,8 @@
                                     <td class="px-3 py-3 whitespace-nowrap text-gray-900">{{ \Illuminate\Support\Str::limit($student->entity->name ?? '-', 8) }}</td>
                                     <td class="px-3 py-3 whitespace-nowrap text-gray-900">{{ \Illuminate\Support\Str::limit($student->classe->name ?? '-', 8) }}</td>
                                     <td class="px-3 py-3 whitespace-nowrap text-gray-900">
-                                        <div class="font-medium">{{ $student->school_fees_paid ?? '-' }} FCFA</div>
+                                        <div class="font-medium">{{ number_format($student->total_paid, 2) }} FCFA</div>
+                                        
                                         <a href="{{ route('students.payments.index', $student->id) }}" 
                                             class="text-blue-600 hover:text-blue-800 text-xs flex items-center gap-1 mt-1">
                                             <i class="fas fa-list"></i>

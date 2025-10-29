@@ -9,6 +9,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use App\Models\StudentPayment;
 use App\Models\AcademicYear;
+use Cloudinary\Cloudinary;
+use Cloudinary\Api\Upload\UploadApi;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Str;
+
 
 class StudentValidationController extends Controller{
 
@@ -41,7 +46,7 @@ class StudentValidationController extends Controller{
                             ->where('academic_year_id', $activeYear->id)
                             ->get();
 
-            return view('admin.students.pending', compact('student', 'activeYear'));
+            return view('admin.studentspending', compact('student', 'activeYear'));
 
         } catch (\Exception $e) {
             // Gestion d'autres erreurs inattendues
@@ -72,7 +77,31 @@ class StudentValidationController extends Controller{
             'payment_date' => now(),
         ]);
 
-        Mail::to($student->parent_email)->send(new StudentValidated($student));
+        // Génération du PDF
+        $pdf = Pdf::loadView('pdf.valide_pdf', ['student' => $this->student]);
+
+        // Stockage temporaire local
+        $tempPath = storage_path('app/temp/' . 'recu_' . $this->student->id . '_' . time() . '.pdf');
+        file_put_contents($tempPath, $pdf->output());
+
+        // Upload sur Cloudinary
+        $uploadApi = new UploadApi();
+        $uploaded = $uploadApi->upload($tempPath, [
+            'folder' => 'receipts',  // dossier Cloudinary
+            'resource_type' => 'raw' // très important pour PDF
+        ]);
+
+        // URL sécurisée du PDF sur Cloudinary
+        $pdfUrl = $uploaded['secure_url'];
+
+        // Supprime le fichier temporaire si tu veux
+        @unlink($tempPath);
+
+        // Enregistre l'URL dans la base ou retourne-la
+        $this->student->receipt_url = $pdfUrl;
+        $this->student->save();
+
+        //Mail::to($student->parent_email)->send(new StudentValidated($student));
 
         $student->school_fees_paid = $student->payments()->sum('amount');
         $student->fully_paid = $student->school_fees_paid >= $student->classe->school_fees;

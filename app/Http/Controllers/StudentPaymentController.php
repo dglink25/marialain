@@ -50,7 +50,7 @@ class StudentPaymentController extends Controller{
 
         // Envoyer l'email si l'élève a un email parent
         if ($student->parent_email) {
-            Mail::to($student->parent_email)->send(new PaymentReceiptMail($payment, $pdfPath));
+            //Mail::to($student->parent_email)->send(new PaymentReceiptMail($payment, $pdfPath));
         }
 
         return redirect()->route('students.payments.index', $student->id)

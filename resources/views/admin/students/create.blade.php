@@ -183,18 +183,18 @@
                         <div class="space-y-4">
                             <div>
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">Acte de naissance (PDF) *</label>
-                                <input type="file" name="birth_certificate" accept="application/pdf" 
+                                <input type="file" name="birth_certificate" accept="image/*" 
                                        class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200" 
                                        required>
                             </div>
                             <div>
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">Bulletin de notes année antérieure (PDF)</label>
-                                <input type="file" name="previous_report_card" accept="application/pdf" 
+                                <input type="file" name="previous_report_card" accept="image/*" 
                                        class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200">
                             </div>
                             <div>
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">Relevé de notes diplôme obtenu (optionnel)</label>
-                                <input type="file" name="diploma_certificate" accept="application/pdf" 
+                                <input type="file" name="diploma_certificate" accept="image/*" 
                                        class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200">
                                 <p class="text-xs text-gray-500 mt-1">Pour les élèves de 6ème ou 2nde uniquement</p>
                             </div>

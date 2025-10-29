@@ -12,7 +12,8 @@ use Illuminate\Support\Facades\Hash;
 use Smalot\PdfParser\Parser;
 use App\Models\User;
 use Illuminate\Support\Facades\Storage;
-
+use Cloudinary\Api\Upload\UploadApi;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 class ProfileController extends Controller{
     public function edit() {
@@ -50,7 +51,6 @@ class ProfileController extends Controller{
     public function update(Request $request){
         $user = auth()->user();
 
-        // Valider uniquement ce qui est fourni
         $data = $request->validate([
             'name' => 'nullable|string',
             'email' => 'nullable|email',
@@ -63,56 +63,83 @@ class ProfileController extends Controller{
             'nationality' => 'nullable|string',
             'profile_photo' => 'nullable|image|max:2048',
 
-            'id_card_file' => 'nullable|mimes:pdf|max:2048',
-            'birth_certificate_file' => 'nullable|mimes:pdf|max:2048',
-            'diploma_file' => 'nullable|mimes:pdf|max:2048',
-            'ifu_file' => 'nullable|mimes:pdf|max:2048',
-            'rib_file' => 'nullable|mimes:pdf|max:2048',
+            'id_card_file' => 'nullable|file|max:2048',
+            'birth_certificate_file' => 'nullable|file|max:2048',
+            'diploma_file' => 'nullable|file|max:2048',
+            'ifu_file' => 'nullable|file|max:2048',
+            'rib_file' => 'nullable|file|max:2048',
         ]);
 
-        // Photo de profil
+        // 1️⃣ Photo de profil sur Cloudinary
         if ($request->hasFile('profile_photo')) {
-            $data['profile_photo'] = $request->file('profile_photo')->store('profiles','public');
+            // Supprimer l’ancienne si elle existe
+            if ($user->profile_photo) {
+                (new UploadApi())->destroy($user->profile_photo);
+            }
+
+            $uploaded = Cloudinary::upload($request->file('profile_photo')->getRealPath(), [
+                'folder' => 'profiles',
+            ]);
+
+            $data['profile_photo'] = $uploaded['secure_url'];
+            $data['profile_photo'] = $uploaded['public_id'];
         }
 
-        // PDF parser
         $parser = new \Smalot\PdfParser\Parser();
 
+        // 2️⃣ Autres fichiers sur Cloudinary
         foreach (['id_card_file','birth_certificate_file','diploma_file','ifu_file','rib_file'] as $field) {
             if ($request->hasFile($field)) {
-                $path = $request->file($field)->store('enseignants','public');
-                $data[$field] = $path;
 
-                $pdf = $parser->parseFile($request->file($field)->getPathName());
-                $text = $pdf->getText();
+                $uploadApi = new UploadApi();
+                $uploaded = $uploadApi->upload(
+                    $request->file($field)->getRealPath(), [
+                        'folder' => 'enseignants',
+                        'resource_type' => 'auto', // 👈 IMPORTANT : gère PDF, images, vidéos, etc.
+                    ]
+                );
 
-                if ($field === 'ifu_file' && preg_match('/\b\d{13}\b/', $text, $matches)) {
-                    $data['ifu_number'] = $matches[0];
-                }
-                if ($field === 'id_card_file' && preg_match('/[A-Z0-9]{6,}/', $text, $matches)) {
-                    $data['id_card_number'] = $matches[0];
-                }
+                $data[$field] = $uploaded['secure_url'];
+
+                // Extraction texte si PDF
+                //$pdf = $parser->parseFile($request->file($field)->getPathName());
+                //$text = $pdf->getText();
             }
         }
 
-        // Mettre à jour uniquement les champs fournis
         $user->update(array_filter($data, fn($value) => $value !== null));
 
         return back()->with('success','Profil mis à jour avec succès.');
     }
+
 
     public function updatePhoto(Request $request) {
         $user = Auth::user();
 
         // Mettre à jour la photo si un fichier est envoyé
         if ($request->hasFile('profile_photo')) {
-            // Supprimer l'ancienne photo si elle existe
-            if ($user->profile_photo && Storage::disk('public')->exists($user->profile_photo)) {
-                Storage::disk('public')->delete($user->profile_photo);
+            // Supprimer l'ancienne photo sur Cloudinary si elle existe
+            if ($user->profile_photo) {
+                try {
+                    $uploadApi = new UploadApi();
+                    $uploadApi->destroy($user->profile_photo);
+                } catch (\Exception $e) {
+                    \Log::error('Erreur suppression photo Cloudinary : ' . $e->getMessage());
+                }
             }
 
-            $path = $request->file('profile_photo')->store('profiles', 'public');
-            $user->profile_photo = $path;
+            // Upload sur Cloudinary
+            $file = $request->file('profile_photo');
+            $uploadApi = new UploadApi();
+            $uploaded = $uploadApi->upload($file->getRealPath(), [
+                'folder' => 'profiles',   // dossier Cloudinary
+                'overwrite' => true,
+                'resource_type' => 'image',
+            ]);
+
+            // Enregistrer l'URL et le public_id pour suppression future
+            $user->profile_photo = $uploaded['secure_url'];
+            $user->profile_photo = $uploaded['public_id'];
             $user->save();
 
             return back()->with('success', 'Photo mise à jour avec succès.');
@@ -120,9 +147,15 @@ class ProfileController extends Controller{
 
         // Supprimer la photo si le bouton est cliqué
         if ($request->get('remove_photo')) {
-            if ($user->profile_photo && Storage::disk('public')->exists($user->profile_photo)) {
-                Storage::disk('public')->delete($user->profile_photo);
+            if ($user->profile_photo) {
+                try {
+                    $uploadApi = new UploadApi();
+                    $uploadApi->destroy($user->profile_photo);
+                } catch (\Exception $e) {
+                    \Log::error('Erreur suppression photo Cloudinary : ' . $e->getMessage());
+                }
             }
+            $user->profile_photo = null;
             $user->profile_photo = null;
             $user->save();
 
@@ -131,5 +164,6 @@ class ProfileController extends Controller{
 
         return back()->with('info', 'Aucune modification effectuée.');
     }
+
 
 }

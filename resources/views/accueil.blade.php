@@ -203,7 +203,6 @@
                         </a>
                         <ul class="dropdown-menu">
                             <li><a class="dropdown-item" href="#activites">Activités</a></li>
-                            <li><a class="dropdown-item" href="#admin">Administration</a></li>
                             <li><a class="dropdown-item" href="#galerie">Galerie</a></li>
                         </ul>
                     </li>
@@ -279,7 +278,7 @@
                             </div>
                             <div class="col-lg-6 col-12 animate__animated animate__fadeInRight">
                                 <div class="image-decor-wrapper position-relative">
-                                    <img src="{{ asset('ursule/img/ecole3.jpeg') }}" class="main-img img-fluid" alt="Pédagogie">
+                                    <img src="{{ asset('ursule/img/galerie1.jpeg') }}" class="main-img img-fluid" alt="Pédagogie">
                                 </div>
                             </div>
                         </div>
@@ -315,7 +314,7 @@
                 <!-- Image animée -->
                 <div class="col-lg-5 col-12 text-center">
                     <div class="image-wrapper">
-                        <img src="{{ asset('ursule/img/ecole3.jpeg') }}" alt="Fondateur" class="img-wave-border">
+                        <img src="{{ asset('ursule/img/istockphoto-1339122137-612x612.jpg') }}" alt="Fondateur" class="img-wave-border">
                     </div>
                 </div>
             </div>
@@ -569,54 +568,6 @@
             </div>
         </div>
     </section>
-
-    <section id="admin" class="teachers-section p-5">
-    <div class="container-fluid text-center">
-        <p class="who-we text-center">Nos membres d'administration</p>
-        <h2 class="mb-4">Nos dirigeants</h2>
-        <div class="row g-3 justify-content-center">
-            <div class="col-md-6 col-lg-3">
-                <div class="teacher-card text-center p-2 rounded">
-                    <div class="image">
-                        <img src="{{ asset('ursule/img/ecole1.jpeg') }}" alt="Glims Bond" class="teacher-img" style="width: 200px; height: 200px; object-fit: cover; border-radius: 50%; border: 2px solid #e9ecef;">
-                    </div>
-                    <h5 class="teacher-name mt-3">Nom Prenom</h5>
-                    <p class="teacher-title">Statut</p>
-                </div>
-            </div>
-
-            <div class="col-md-6 col-lg-3">
-                <div class="teacher-card text-center p-2 rounded">
-                    <div class="image">
-                        <img src="{{ asset('ursule/img/ecole1.jpeg') }}" alt="Glims Bond" class="teacher-img" style="width: 200px; height: 200px; object-fit: cover; border-radius: 50%; border: 2px solid #e9ecef;">
-                    </div>
-                    <h5 class="teacher-name mt-3">Nom Prenom</h5>
-                    <p class="teacher-title">Statut</p>
-                </div>
-            </div>
-
-            <div class="col-md-6 col-lg-3">
-                <div class="teacher-card text-center p-2 rounded">
-                    <div class="image">
-                        <img src="{{ asset('ursule/img/ecole1.jpeg') }}" alt="Glims Bond" class="teacher-img" style="width: 200px; height: 200px; object-fit: cover; border-radius: 50%; border: 2px solid #e9ecef;">
-                    </div>
-                    <h5 class="teacher-name mt-3">Nom Prenom</h5>
-                    <p class="teacher-title">Statut</p>
-                </div>
-            </div>
-
-            <div class="col-md-6 col-lg-3">
-                <div class="teacher-card text-center p-2 rounded">
-                    <div class="image">
-                        <img src="{{ asset('ursule/img/ecole1.jpeg') }}" alt="Glims Bond" class="teacher-img" style="width: 200px; height: 200px; object-fit: cover; border-radius: 50%; border: 2px solid #e9ecef;">
-                    </div>
-                    <h5 class="teacher-name mt-3">Nom Prenom</h5>
-                    <p class="teacher-title">Statut</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
 
     <section id="galerie">
         <div class="container">

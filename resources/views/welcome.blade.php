@@ -115,7 +115,7 @@
         </div>
 
         <div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
-            <h3 class="font-semibold text-gray-700">👨‍👩‍👧 Suivi des élèves</h3>
+            <h3 class="font-semibold text-gray-700">Suivi des élèves</h3>
             <p class="text-sm text-gray-500 mt-2">Consultez les inscriptions, résultats et suivis académiques.</p>
             <a href="{{ url('/primaire/ecoliers/liste') }}" class="text-sm text-blue-600 mt-3 block">
                 Gérer les élèves →
@@ -165,7 +165,7 @@
   <!-- Texte de présentation : 8 colonnes sur 12 -->
   <div class="col-span-12 md:col-span-9 space-y-6">
     <h2 class="text-4xl font-extrabold text-gray-900 leading-tight tracking-tight">
-      Bienvenue à l'École MARIE ALAIN
+      Bienvenue à l'École MARIE-ALAIN
     </h2>
     <p class="text-gray-700 text-lg leading-relaxed">
       De la maternelle à la terminale, une plateforme unique pour la gestion des inscriptions, du personnel enseignant et du suivi académique.

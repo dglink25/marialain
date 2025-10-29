@@ -2,6 +2,24 @@
 
 @section('content')
 <div class="container mx-auto py-8 px-4">
+
+@if ($errors->any())
+    <div class="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-lg mb-6">
+      <ul class="list-disc pl-5 space-y-1">
+        @foreach ($errors->all() as $error)
+          <li>{{ $error }}</li>
+        @endforeach
+      </ul>
+    </div>
+  @endif
+
+  @if (session('error'))
+    <div class="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-lg mb-6">
+      {{ session('error') }}
+    </div>
+  @endif
+
+
     <!-- En-tête de page -->
     <div class="flex justify-between items-center mb-8">
         <div>
@@ -96,14 +114,15 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <div class="flex space-x-3">
-                                <a href="{{ asset('storage/receipts/recu_'.$p->id.'.pdf') }}" 
-                                   download 
-                                   class="text-green-600 hover:text-green-900 flex items-center transition duration-150">
+                                <a href="{{ route('payments.receipt', $p->id) }}" 
+                                class="text-green-600 hover:text-green-900 flex items-center transition duration-150">
                                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                            d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                     </svg>
-                                    Télécharger
+                                    Télécharger le reçu
                                 </a>
+
                             </div>
                         </td>
                     </tr>

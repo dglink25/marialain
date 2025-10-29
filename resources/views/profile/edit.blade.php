@@ -27,21 +27,47 @@
         <form action="{{ route('profile.photo') }}" method="POST" enctype="multipart/form-data" class="text-center">
             @csrf
             <label class="cursor-pointer inline-block">
-                <input type="file" name="profile_photo" class="hidden" onchange="previewImage(event); this.form.submit()">
-                 <div class="relative">
-                   <div class="w-24 h-24 sm:w-32 sm:h-32 rounded-full overflow-hidden border-2 border-gray-200 flex items-center justify-center">
-                        <img id="preview"
-                            src="{{ $user->profile_photo ? asset('storage/'.$user->profile_photo) : asset('logo.png') }}"
-                            onerror="this.src='{{ asset('logo.png') }}';"
+                <!-- Input invisible -->
+                <input 
+                    type="file" 
+                    name="profile_photo" 
+                    accept="image/*"
+                    class="hidden" 
+                    onchange="previewImage(event); this.form.submit()"
+                >
+
+                <!-- Conteneur de l’image -->
+                <div class="relative">
+                    <div class="w-24 h-24 sm:w-32 sm:h-32 rounded-full overflow-hidden border-2 border-gray-200 flex items-center justify-center bg-gray-50">
+                        <img 
+                            id="preview"
+                            src="{{ $user->profile_photo ?? asset('avata.png') }}"
+                            onerror="this.src='{{ asset('avata.png') }}';"
                             class="w-full h-full object-cover"
-                            alt="Photo de profil">
+                            alt="Photo de profil"
+                        >
                     </div> 
+
+                    <!-- Icône appareil photo -->
                     <div class="absolute bottom-0 right-0 bg-blue-100 rounded-full p-1">
                         <i class="fas fa-camera text-blue-600 text-xs"></i>
                     </div>
                 </div>  
+
                 <span class="text-sm text-gray-500 mt-2 block">Cliquer pour changer</span>
-            </label> 
+            </label>
+
+            <!-- Script pour la prévisualisation -->
+            <script>
+            function previewImage(event) {
+                const preview = document.getElementById('preview');
+                const file = event.target.files[0];
+                if (file) {
+                    preview.src = URL.createObjectURL(file);
+                }
+            }
+            </script>
+ 
             @if($user->profile_photo)
                 <button type="submit" name="remove_photo" value="1" 
                         class="mt-3 px-3 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600 transition duration-200 flex items-center gap-1 mx-auto">
@@ -137,11 +163,11 @@
                         <i class="fas fa-id-card"></i>
                         Carte d'identité (PDF)
                     </label>
-                    <input type="file" name="id_card_file" accept="application/pdf" 
+                    <input type="file" name="id_card_file" accept="image/*" 
                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
                     @if($user->id_card_file)
                         <div class="mt-2 flex items-center gap-2">
-                            <a href="{{ asset('storage/'.$user->id_card_file) }}" target="_blank" 
+                            <a href="{{ $user->id_card_file }}" target="_blank" 
                                class="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1">
                                 <i class="fas fa-eye"></i>
                                 Voir le document
@@ -156,11 +182,11 @@
                         <i class="fas fa-birthday-cake"></i>
                         Acte de naissance (PDF)
                     </label>
-                    <input type="file" name="birth_certificate_file" accept="application/pdf" 
+                    <input type="file" name="birth_certificate_file" accept="image/*" 
                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
                     @if($user->birth_certificate_file)
                         <div class="mt-2 flex items-center gap-2">
-                            <a href="{{ asset('storage/'.$user->birth_certificate_file) }}" target="_blank" 
+                            <a href="{{ $user->birth_certificate_file }}" target="_blank" 
                                class="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1">
                                 <i class="fas fa-eye"></i>
                                 Voir le document
@@ -175,11 +201,11 @@
                         <i class="fas fa-graduation-cap"></i>
                         Diplôme (PDF)
                     </label>
-                    <input type="file" name="diploma_file" accept="application/pdf" 
+                    <input type="file" name="diploma_file" accept="image/*" 
                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
                     @if($user->diploma_file)
                         <div class="mt-2 flex items-center gap-2">
-                            <a href="{{ asset('storage/'.$user->diploma_file) }}" target="_blank" 
+                            <a href="{{ $user->diploma_file }}" target="_blank" 
                                class="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1">
                                 <i class="fas fa-eye"></i>
                                 Voir le document
@@ -194,11 +220,11 @@
                         <i class="fas fa-file-invoice-dollar"></i>
                         IFU (PDF)
                     </label>
-                    <input type="file" name="ifu_file" accept="application/pdf" 
+                    <input type="file" name="ifu_file" accept="image/*" 
                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
                     @if($user->ifu_file)
                         <div class="mt-2">
-                            <a href="{{ asset('storage/'.$user->ifu_file) }}" target="_blank" 
+                            <a href="{{ $user->ifu_file }}" target="_blank" 
                                class="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1 mb-1">
                                 <i class="fas fa-eye"></i>
                                 Voir le document
@@ -214,11 +240,11 @@
                         <i class="fas fa-university"></i>
                         RIB (PDF)
                     </label>
-                    <input type="file" name="rib_file" accept="application/pdf" 
+                    <input type="file" name="rib_file" accept="image/*"
                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
                     @if($user->rib_file)
                         <div class="mt-2 flex items-center gap-2">
-                            <a href="{{ asset('storage/'.$user->rib_file) }}" target="_blank" 
+                            <a href="{{ $user->rib_file }}" target="_blank" 
                                class="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1">
                                 <i class="fas fa-eye"></i>
                                 Voir le document
