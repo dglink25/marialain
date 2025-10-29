@@ -57,7 +57,7 @@ class StudentValidationController extends Controller{
 
     // Validation et envoi du mail avec reçu
     public function validateStudent(Request $request, Student $student){
-        if (!$this->checkActiveYear() instanceof AcademicYear) {
+        if (!($this->checkActiveYear() instanceof AcademicYear)) {
             return $this->checkActiveYear();
         }
 
@@ -65,48 +65,56 @@ class StudentValidationController extends Controller{
             'amount_paid' => 'required|numeric|min:0',
         ]);
 
-        // Mise à jour de l'élève
+        // ✅ Mise à jour de l'élève
         $student->update([
             'is_validated' => true,
             'amount_paid' => $request->amount_paid,
         ]);
 
+        // ✅ Enregistrement du paiement
         $payment = $student->payments()->create([
             'tranche'      => 1,
             'amount'       => $request->amount_paid,
             'payment_date' => now(),
         ]);
 
-        // Génération du PDF
-        $pdf = Pdf::loadView('pdf.valide_pdf', ['student' => $this->student]);
+        // ✅ Génération du PDF
+        $pdf = Pdf::loadView('pdf.valide_pdf', ['student' => $student]);
 
-        // Stockage temporaire local
-        $tempPath = storage_path('app/temp/' . 'recu_' . $this->student->id . '_' . time() . '.pdf');
+        // ✅ Stockage temporaire local
+        $folder = storage_path('app/temp');
+        if (!file_exists($folder)) {
+            mkdir($folder, 0777, true);
+        }
+
+        $tempPath = $folder . '/recu_' . $student->id . '_' . time() . '.pdf';
         file_put_contents($tempPath, $pdf->output());
 
-        // Upload sur Cloudinary
+        // ✅ Upload sur Cloudinary
         $uploadApi = new UploadApi();
         $uploaded = $uploadApi->upload($tempPath, [
-            'folder' => 'receipts',  // dossier Cloudinary
-            'resource_type' => 'raw' // très important pour PDF
+            'folder' => 'receipts',
+            'resource_type' => 'raw', // indispensable pour PDF
         ]);
 
-        // URL sécurisée du PDF sur Cloudinary
-        $pdfUrl = $uploaded['secure_url'];
+        // ✅ URL du PDF
+        $pdfUrl = $uploaded['secure_url'] ?? null;
 
-        // Supprime le fichier temporaire si tu veux
+        // ✅ Suppression du fichier temporaire
         @unlink($tempPath);
 
-        // Enregistre l'URL dans la base ou retourne-la
-        $this->student->receipt_url = $pdfUrl;
-        $this->student->save();
-
-        //Mail::to($student->parent_email)->send(new StudentValidated($student));
-
+        // ✅ Mise à jour de l’élève
+        $student->receipt_url = $pdfUrl;
         $student->school_fees_paid = $student->payments()->sum('amount');
         $student->fully_paid = $student->school_fees_paid >= $student->classe->school_fees;
         $student->save();
 
-        return redirect()->route('admin.students.pending')->with('success', 'Élève validé et reçu envoyé avec succès.');
+        // Envoi d’un mail si tu veux
+        // Mail::to($student->parent_email)->send(new StudentValidated($student));
+
+        return redirect()
+            ->route('admin.students.pending')
+            ->with('success', 'Élève validé et reçu envoyé avec succès.');
     }
+
 }
