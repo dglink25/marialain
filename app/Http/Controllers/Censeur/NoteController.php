@@ -158,6 +158,8 @@ use App\Exports\NotesTrimestreExport;
         public function trimestres($id){
             $classe = Classe::findOrFail($id);
 
+            $coef = ClassTeacherSubject::findOrFail($id);
+
             // Récupérer les matières associées à la classe
             $matieres = $classe->matieres; // collection de matières
 
@@ -381,13 +383,13 @@ use App\Exports\NotesTrimestreExport;
                 ->where('academic_year_id', $activeYear->id)
                 ->get();
 
-            // 4️⃣ On extrait la liste des matières à partir des résultats
             $subjects = $classSubjects->map(function ($item) {
-                // on ajoute le nom de l'enseignant pour faciliter la vue
                 $subject = $item->subject;
                 $subject->teacher_name = $item->teacher->name ?? 'Non assigné';
+                $subject->coefficient = $item->coefficient; // ✅ On ajoute le coefficient du pivot
                 return $subject;
             });
+
 
             // 5️⃣ On récupère le trimestre
             $trimestre = $t;
@@ -403,8 +405,8 @@ use App\Exports\NotesTrimestreExport;
             }
 
             // Vérifier que la matière existe bien dans cette classe et cette année
-            $subject = Subject::where('id', $subjectId)
-                ->where('classe_id', $classId)
+            $subject = ClassTeacherSubject::where('subject_id', $subjectId)
+                ->where('class_id', $classId)
                 ->where('academic_year_id', $activeYear->id)
                 ->first();
 
@@ -422,9 +424,7 @@ use App\Exports\NotesTrimestreExport;
             // Vérifier si des notes existent
             $hasNotes = $classe->students->flatMap->grades->isNotEmpty();
 
-            if (!$hasNotes) {
-                return back()->with('error', 'Aucune note enregistrée pour cette matière au trimestre sélectionné.');
-            }
+            
 
             return view('censeur.notes.notes_trimestre', compact('classe', 'subject', 'activeYear', 'trimestre', 'hasNotes'));
         }
@@ -449,8 +449,8 @@ use App\Exports\NotesTrimestreExport;
             }
 
             // 3 Récupérer la matière concernée
-            $subject = Subject::where('id', $subjectId)
-                ->where('classe_id', $classId)
+            $subject = ClassTeacherSubject::where('subject_id', $subjectId)
+                ->where('class_id', $classId)
                 ->first();
 
             if (!$subject) {
@@ -556,19 +556,27 @@ use App\Exports\NotesTrimestreExport;
             // Récupérer l'année académique active
             $academicYear = AcademicYear::where('active', 1)->firstOrFail();
 
-            // Récupérer la matière de la classe et de l'année en cours
-            $subject = Subject::where('id', $subjectId)
-                ->where('classe_id', $classeId)
+            // Trouver la ligne correspondante dans class_subject_teacher
+            $record = DB::table('class_teacher_subject')
+                ->where('class_id', $classeId)
+                ->where('subject_id', $subjectId)
                 ->where('academic_year_id', $academicYear->id)
-                ->firstOrFail();
+                ->first();
+
+            if (!$record) {
+                return back()->with('error', 'Association classe–matière non trouvée pour cette année académique.');
+            }
 
             // Mettre à jour le coefficient
-            $subject->update([
-                'coefficient' => $request->coefficient
-            ]);
+            DB::table('class_teacher_subject')
+                ->where('class_id', $classeId)
+                ->where('subject_id', $subjectId)
+                ->where('academic_year_id', $academicYear->id)
+                ->update(['coefficient' => $request->coefficient]);
 
             return back()->with('success', 'Coefficient mis à jour avec succès.');
         }
+
 
         public function exportNotesPDF($classId, $trimestre, $subjectId){
             // 1 Récupération de l’année académique active
@@ -590,8 +598,8 @@ use App\Exports\NotesTrimestreExport;
             }
 
             // 3 Matière concernée
-            $subject = Subject::where('id', $subjectId)
-                ->where('classe_id', $classId)
+            $subject = ClassTeacherSubject::where('subject_id', $subjectId)
+                ->where('class_id', $classId)
                 ->first();
 
             if (!$subject) {
@@ -922,8 +930,7 @@ use App\Exports\NotesTrimestreExport;
         }
     }
 
-    private function getAppreciation($moy)
-    {
+    private function getAppreciation($moy){
         if (is_null($moy)) return '-';
         return match (true) {
             $moy >= 16 => 'Très Bien',

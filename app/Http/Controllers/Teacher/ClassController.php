@@ -6,17 +6,36 @@ use App\Http\Controllers\Controller;
 use App\Models\Classe;
 use Illuminate\Support\Facades\Auth;
 use App\Models\AcademicYear;
+use Carbon\Carbon;
+use App\Models\Timetable;
 
 class ClassController extends Controller{
     // Liste des classes de l’enseignant connecté
-    public function index(){
-        
-        $teacher = Auth::user();
+    
 
-        $classes = $teacher->classes()->with('teachers')->get();
+    public function index(){
+        $teacherId = auth()->id();
+        $classes = auth()->user()->classes; // ou selon ta relation
+
+        $today = Carbon::now()->format('l');
+        $now = Carbon::now()->format('H:i:s');
+        $academicYear = AcademicYear::where('active', 1)->firstOrFail();
+
+        // Pour chaque classe, récupérer le cours en cours (null si aucun)
+        foreach ($classes as $class) {
+            $class->currentLesson = Timetable::with('subject')
+                ->where('class_id', $class->id)
+                ->where('teacher_id', $teacherId)
+                ->where('day', $today)
+                ->where('academic_year_id', $academicYear->id)
+                ->where('start_time', '<=', $now)
+                ->where('end_time', '>=', $now)
+                ->first();
+        }
 
         return view('teacher.classes.index', compact('classes'));
     }
+
 
     // Liste des élèves d’une classe
     public function students($classId){

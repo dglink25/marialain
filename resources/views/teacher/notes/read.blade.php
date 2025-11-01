@@ -8,7 +8,7 @@
 <div class="container mx-auto py-6">
 
     @auth
-    @if (Auth::id() == 6)
+    @if (auth()->id() == 4)
         <!-- Vue Censeur -->
         <h1 class="text-2xl font-bold mb-6">
             Notes - {{ ucfirst($type) }} {{ $num }} - Classe {{ $classe->name }} / Trimestre {{ $trimestre }}

@@ -60,9 +60,10 @@ class Classe extends Model{
     public function subject()
     {
         return $this->belongsToMany(Subject::class, 'class_teacher_subject', 'class_id', 'subject_id')
-                    ->withPivot('teacher_id')
+                    ->withPivot(['teacher_id', 'academic_year_id', 'coefficient'])
                     ->withTimestamps();
     }
+
 
     public function subjectss(){
         return $this->belongsToMany(Subject::class, 'subjects')

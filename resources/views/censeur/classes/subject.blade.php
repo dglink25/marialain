@@ -81,7 +81,7 @@
 
                         <!-- Formulaire coefficient -->
                         <div id="form-{{ $subject->id }}" class="hidden bg-gray-50 rounded-lg p-4 border border-gray-200">
-                            <form method="POST" action="{{ route('censeur.subjects.coefficient', [$classe->id, $subject->id]) }}" class="space-y-3">
+                            <form method="POST" action="{{ route('subjects.setCoefficient', [$classe->id, $subject->id]) }}" class="space-y-3">
                                 @csrf
                                 <div class="flex items-center space-x-2">
                                     <input type="number" 

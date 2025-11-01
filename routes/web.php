@@ -53,6 +53,8 @@ use App\Http\Controllers\Teacher\NoteController;
 use App\Http\Controllers\Teacher\GradeController;
 use App\Http\Controllers\ContactController;
 
+use App\Http\Controllers\CahierDeTexteController;
+
 // Pour tester la page 400
 Route::get('/test-400', function () {
     abort(400);
@@ -462,4 +464,16 @@ Route::middleware(['auth'])->prefix('teacher')->name('teacher.')->group(function
     Route::post('/classes/{id}/notes/calc/trimestre', [App\Http\Controllers\Teacher\NoteController::class, 'calcTrimestre'])->name('classes.notes.calc.trimestre');
 });
 
+Route::prefix('censeur')->group(function () {
+    Route::post('/classes/{classeId}/subjects/{subjectId}/coefficient', [SubjectController::class, 'setCoefficient'])->name('subjects.setCoefficient');
+});
 
+
+Route::middleware(['auth'])->prefix('teacher')->group(function () {
+    Route::get('/classes/{classeId}/cahier', [CahierDeTexteController::class, 'show'])->name('teacher.cahier.show');
+    Route::post('/classes/cahier/store', [CahierDeTexteController::class, 'store'])->name('teacher.cahier.store');
+    Route::get('/teacher/cahier/history/{classId}', [CahierDeTexteController::class, 'history'])->name('teacher.cahier.history');
+});
+
+Route::get('/teachers/active', [CahierDeTexteController::class, 'activeTeachers'])
+    ->name('teachers.active');
