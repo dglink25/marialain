@@ -74,14 +74,6 @@
                         Matières
                     </a>
                 </div>
-
-                <!-- Indicateur d'état -->
-                <div class="mt-4 pt-4 border-t border-gray-100">
-                    <div class="flex items-center justify-center text-sm text-gray-500">
-                        <i class="fas fa-circle text-green-500 mr-2"></i>
-                        <span>Accessible</span>
-                    </div>
-                </div>
             </div>
             @endforeach
         </div>

@@ -17,30 +17,35 @@ class NoteController extends Controller{
 
     public function index($classId, $trimestre){
         $activeYear = AcademicYear::where('active', true)->first();
+
         if (!$activeYear) {
             return back()->with('error', 'Aucune année académique active trouvée.');
         }
 
-        // Vérifier si le censeur a autorisé la saisie pour cette classe et trimestre
+        // Vérifier si la saisie est autorisée
         $permission = \App\Models\NotePermission::where('class_id', $classId)
-            
-            ->where('trimestre', $trimestre)
+            ->where('trimestre', (string) $trimestre) // 🔹 forcer le type string pour éviter le cache plan PostgreSQL
             ->first();
 
         if (!$permission || $permission->is_open != 1) {
             return back()->with('error', "La saisie des notes n'est pas encore autorisée pour ce trimestre.");
         }
 
-        $classe = Classe::with(['students.grades' => function ($q) use ($activeYear, $trimestre) {
-            $q->where('academic_year_id', $activeYear->id)
-            ->where('trimestre', $trimestre);
-        }])->findOrFail($classId);
+        // Chargement de la classe et des élèves avec leurs notes du trimestre en cours
+        $classe = Classe::with('students')->findOrFail($classId);
 
-        // Vérifier si des notes existent
-        $hasNotes = $classe->students->flatMap->grades->isNotEmpty();
+        foreach ($classe->students as $student) {
+            $student->gradesFiltered = $student->grades()
+                ->where('academic_year_id', $activeYear->id)
+                ->where('trimestre', $trimestre)
+                ->get();
+        }
+
+        $hasNotes = $classe->students->flatMap->gradesFiltered->isNotEmpty();
 
         return view('teacher.notes.index', compact('classe', 'activeYear', 'trimestre', 'hasNotes'));
     }
+
 
     public function read($classId, $type, $num, $trimestre){
         $activeYear = AcademicYear::where('active', true)->first();

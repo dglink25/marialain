@@ -157,12 +157,12 @@ use App\Exports\NotesTrimestreExport;
         // Affiche les trimestres d’une classe
         public function trimestres($id){
             $classe = Classe::findOrFail($id);
-
-            $coef = ClassTeacherSubject::findOrFail($id);
-
+            
+            $coef = ClassTeacherSubject::where('class_id', $id)
+                                        ->firstOrFail();
+            
             // Récupérer les matières associées à la classe
             $matieres = $classe->matieres; // collection de matières
-
             // Préparer les 3 trimestres
             $trimestres = [1, 2, 3];
 
@@ -362,7 +362,7 @@ use App\Exports\NotesTrimestreExport;
         }
 
         public function matiere($classe, $t){
-            // 1️⃣ Récupère l'année scolaire active
+            // Récupère l'année scolaire active
             $activeYear = AcademicYear::where('active', true)->first();
 
             if (!$activeYear) {
@@ -373,10 +373,10 @@ use App\Exports\NotesTrimestreExport;
                 ]);
             }
 
-            // 2️⃣ Vérifie si la classe existe
+            // Vérifie si la classe existe
             $classe = Classe::findOrFail($classe);
 
-            // 3️⃣ Récupère les relations "matière - enseignant" via class_teacher_subject
+            // Récupère les relations "matière - enseignant" via class_teacher_subject
             // On filtre par l'année académique active et la classe
             $classSubjects = ClassTeacherSubject::with(['subject', 'teacher'])
                 ->where('class_id', $classe->id)
@@ -435,7 +435,7 @@ use App\Exports\NotesTrimestreExport;
             if (!$activeYear) {
                 return back()->with('error', 'Aucune année académique active trouvée.');
             }
-
+            
             // 2 Récupérer la classe et ses étudiants valides pour l’année active
             $classe = Classe::with(['students' => function ($q) use ($activeYear) {
                 $q->where('academic_year_id', $activeYear->id)
@@ -447,7 +447,7 @@ use App\Exports\NotesTrimestreExport;
             if (!$classe) {
                 return back()->with('error', "Classe introuvable.");
             }
-
+            
             // 3 Récupérer la matière concernée
             $subject = ClassTeacherSubject::where('subject_id', $subjectId)
                 ->where('class_id', $classId)

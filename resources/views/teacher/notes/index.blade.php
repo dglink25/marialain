@@ -4,7 +4,10 @@
 
 @php
     $pageTitle = "Notes";
+
+use Illuminate\Support\Facades\Auth;
 @endphp
+
 @auth
     @if (Auth::id() == 6)
         <div class="container mx-auto py-6">
