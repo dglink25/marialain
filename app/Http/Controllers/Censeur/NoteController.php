@@ -19,7 +19,9 @@ use App\Models\Conduct;
 use App\Models\Punishment;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\NotesTrimestreExport;
-
+use Carbon\Carbon;
+use App\Models\NoteEditPermission;
+ 
 
 
     class NoteController extends Controller{
@@ -152,22 +154,16 @@ use App\Exports\NotesTrimestreExport;
             }
         }
 
-
-
-        // Affiche les trimestres d’une classe
         public function trimestres($id){
             $classe = Classe::findOrFail($id);
-            
-            $coef = ClassTeacherSubject::where('class_id', $id)
-                                        ->firstOrFail();
-            
-            // Récupérer les matières associées à la classe
-            $matieres = $classe->matieres; // collection de matières
-            // Préparer les 3 trimestres
+            $coef = ClassTeacherSubject::where('class_id', $id)->first();
+            $matieres = $classe->matieres;
             $trimestres = [1, 2, 3];
 
-            return view('censeur.classes.notes.trimestres', compact('classe', 'trimestres', 'matieres'));
+            return view('censeur.classes.notes.trimestres', compact('classe', 'trimestres', 'matieres', 'coef'));
         }
+
+
 
 
         // Gérer les permissions de saisie des notes pour une classe
@@ -831,8 +827,7 @@ use App\Exports\NotesTrimestreExport;
             }
         }
         
-    public function downloadPdf($classId, $studentId, $trimestre)
-    {
+    public function downloadPdf($classId, $studentId, $trimestre){
         try {
             // 🔹 Année académique active
             $activeYear = AcademicYear::where('active', true)->firstOrFail();
@@ -943,6 +938,101 @@ use App\Exports\NotesTrimestreExport;
             default => 'Nul',
         };
     }
+
+    public function pointsDisponibles($classId, $trimestre){
+        $activeYear = \App\Models\AcademicYear::where('active', true)->first();
+
+        if (!$activeYear) {
+            return back()->with('error', 'Aucune année académique active trouvée.');
+        }
+
+        $classe = \App\Models\Classe::findOrFail($classId);
+
+        // Récupération des matières et des coefficients pour cette classe
+        $matieres = \App\Models\ClassTeacherSubject::with('subject')
+            ->where('class_id', $classId)
+            ->where('academic_year_id', $activeYear->id)
+            ->get();
+
+        // Types d’évaluations
+        $interrogations = ['I1', 'I2', 'I3', 'I4', 'I5'];
+        $devoirs = ['D1', 'D2'];
+
+        $notesDisponibles = [];
+
+        foreach ($matieres as $m) {
+            $totalNotes = 0;
+            $subjectName = $m->subject->name;
+
+            // Interrogations
+            foreach ($interrogations as $i) {
+                $exists = \App\Models\Grade::where([
+                    ['class_id', '=', $classId],
+                    ['subject_id', '=', $m->subject_id],
+                    ['academic_year_id', '=', $activeYear->id],
+                    ['trimestre', '=', $trimestre],
+                    ['type', '=', $i],
+                ])->exists();
+
+                $notesDisponibles[$subjectName][$i] = $exists;
+                if ($exists) $totalNotes++;
+            }
+
+            // Devoirs
+            foreach ($devoirs as $d) {
+                $exists = \App\Models\Grade::where([
+                    ['class_id', '=', $classId],
+                    ['subject_id', '=', $m->subject_id],
+                    ['academic_year_id', '=', $activeYear->id],
+                    ['trimestre', '=', $trimestre],
+                    ['type', '=', $d],
+                ])->exists();
+
+                $notesDisponibles[$subjectName][$d] = $exists;
+                if ($exists) $totalNotes++;
+            }
+
+            // Total
+            $notesDisponibles[$subjectName]['total'] = $totalNotes;
+        }
+
+        return view('censeur.classes.notes.points', compact(
+            'classe',
+            'activeYear',
+            'trimestre',
+            'matieres',
+            'notesDisponibles',
+            'interrogations',
+            'devoirs'
+        ));
+    }
+
+    public function autoriserModification(Request $request){
+        $request->validate([
+            'teacher_id' => 'required|exists:users,id',
+            'class_id' => 'required|exists:classes,id',
+            'subject_id' => 'required|exists:subjects,id',
+            'trimestre' => 'required|string',
+            'type' => 'required|string', // ex: I1, I2, D1, D2...
+        ]);
+
+        $activeYear = AcademicYear::where('active', true)->firstOrFail();
+
+        // Crée une autorisation temporaire (2h)
+        NoteEditPermission::create([
+            'teacher_id' => $request->teacher_id,
+            'class_id' => $request->class_id,
+            'subject_id' => $request->subject_id,
+            'academic_year_id' => $activeYear->id,
+            'trimestre' => $request->trimestre,
+            'type' => $request->type,
+            'expires_at' => now()->addHours(2),
+        ]);
+
+        return back()->with('success', "L'autorisation pour modifier les notes de {$request->type} a été accordée pour 2 heures.");
+    }
+
+
 
 
 }

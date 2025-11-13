@@ -12,6 +12,7 @@ use App\Models\Student;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use App\Models\NoteEditPermission;
 
 class NoteController extends Controller{
 
@@ -161,6 +162,24 @@ class NoteController extends Controller{
     public function edit($classId, $type, $num, $trimestre){
         $activeYear = AcademicYear::where('active', true)->firstOrFail();
 
+        // Vérifier l’autorisation avant tout
+        $teacherId = Auth::id(); // enseignant connecté
+
+        $permission = NoteEditPermission::where('teacher_id', $teacherId)
+            ->where('class_id', $classId)
+            ->where('academic_year_id', $activeYear->id)
+            ->where('trimestre', $trimestre)
+            ->where('type', $type . $num) // Exemple : I1, I2, D1...
+            ->where('is_active', true)
+            ->where('expires_at', '>', now())
+            ->first();
+
+        if (!$permission) {
+            return back()->with('error', "⚠️ Vous n'êtes pas autorisé à modifier les notes de $type$num pour ce trimestre. 
+            Veuillez contacter le censeur pour obtenir l'autorisation.");
+        }
+
+        // Si autorisation trouvée, afficher la vue d’édition
         $classe = Classe::with(['students' => function($q) use ($type, $num, $activeYear, $trimestre) {
             $q->where('academic_year_id', $activeYear->id)
                 ->where('is_validated', 1)
@@ -175,7 +194,8 @@ class NoteController extends Controller{
         }])->findOrFail($classId);
 
         return view('teacher.notes.edit', compact('classe','type','num','trimestre'));
-    }
+}
+
 
     // Mettre à jour les notes
     public function update(Request $request, $classId, $type, $num, $trimestre){

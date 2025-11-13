@@ -23,17 +23,21 @@
         </div>
         
         <!-- Messages flash améliorés -->
-        @if(session('error'))
-            <div class="mb-6 bg-red-50 border border-red-200 rounded-xl p-4 flex items-start">
-                <div class="flex-shrink-0">
-                    <i class="fas fa-exclamation-circle text-red-500 text-lg mt-1 mr-3"></i>
+          @if ($errors->any())
+                <div class="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-lg mb-6">
+                <ul class="list-disc pl-5 space-y-1">
+                    @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
                 </div>
-                <div>
-                    <h3 class="text-red-800 font-medium">Erreur</h3>
-                    <p class="text-red-700 text-sm mt-1">{{ session('error') }}</p>
+            @endif
+
+            @if (session('error'))
+                <div class="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-lg mb-6">
+                {{ session('error') }}
                 </div>
-            </div>
-        @endif
+            @endif
 
         @if(session('success'))
             <div class="mb-6 bg-green-50 border border-green-200 rounded-xl p-4 flex items-start">
@@ -73,6 +77,13 @@
                         <i class="fas fa-book mr-3"></i>
                         Matières
                     </a>
+
+                    <a href="{{ route('censeur.classes.trimestre.points', [$classe->id, $t]) }}"
+                    class="w-full flex items-center justify-center px-4 py-3 bg-green-50 text-green-700 rounded-lg border border-green-200 hover:bg-green-100 hover:border-green-300 transition-colors duration-200">
+                        <i class="fas fa-chart-line mr-3"></i>
+                        Voir le point des notes disponibles
+                    </a>
+
                 </div>
             </div>
             @endforeach

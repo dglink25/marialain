@@ -477,3 +477,11 @@ Route::middleware(['auth'])->prefix('teacher')->group(function () {
 
 Route::get('/teachers/active', [CahierDeTexteController::class, 'activeTeachers'])
     ->name('teachers.active');
+
+Route::get('/censeur/classes/{classId}/trimestre/{trimestre}/points', 
+    [CenseurNoteController::class, 'pointsDisponibles']
+)->name('censeur.classes.trimestre.points');
+
+Route::post('/censeur/notes/autoriser-modification', [CenseurNoteController::class, 'autoriserModification'])
+    ->name('censeur.notes.autoriserModification');
+
