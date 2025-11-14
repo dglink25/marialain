@@ -114,4 +114,19 @@ class InvitationController extends Controller{
 
         return redirect('/login')->with('success', 'Votre compte est activé, veuillez vous connecter.');
     }
+
+
+    public function destroy(TeacherInvitation $invitation){
+        // Supprimer d'abord le user concerné
+        if ($invitation->user) {
+            $invitation->user->delete();
+        }
+
+        // Supprimer l’invitation elle-même
+        $invitation->delete();
+
+        return back()->with('success', 'Enseignant supprimé avec succès.');
+    }
+
+
 }

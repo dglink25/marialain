@@ -485,3 +485,5 @@ Route::get('/censeur/classes/{classId}/trimestre/{trimestre}/points',
 Route::post('/censeur/notes/autoriser-modification', [CenseurNoteController::class, 'autoriserModification'])
     ->name('censeur.notes.autoriserModification');
 
+Route::delete('/teacher-invitations/{invitation}', [CenseurInvitationController::class, 'destroy'])
+    ->name('teacher_invitations.destroy');
