@@ -487,3 +487,5 @@ Route::post('/censeur/notes/autoriser-modification', [CenseurNoteController::cla
 
 Route::delete('/teacher-invitations/{invitation}', [CenseurInvitationController::class, 'destroy'])
     ->name('teacher_invitations.destroy');
+
+Route::post('/teacher/cahier/update/{id}', [CahierDeTexteController::class, 'update'])->name('teacher.cahier.update');

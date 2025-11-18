@@ -12,13 +12,12 @@ use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use App\Models\TeacherInvitation;
+use Illuminate\Support\Facades\DB;
 
 
-class CahierDeTexteController extends Controller
-{
+class CahierDeTexteController extends Controller{
     // Afficher les créneaux du jour pour l'enseignant
-    public function show($classeId)
-    {
+    public function show($classeId){
         $teacherId = auth()->id();
         $dayOfWeek = Carbon::now()->format('l'); // ex: Monday
         $academicYear = AcademicYear::where('active', 1)->firstOrFail();
@@ -30,19 +29,47 @@ class CahierDeTexteController extends Controller
             ->where('academic_year_id', $academicYear->id)
             ->get();
 
-        
-
         return view('teacher.cahier_de_texte', compact('timetable', 'classeId'));
     }
 
     // Enregistrer le cahier de texte
-    public function store(Request $request)
-    {
+    public function store(Request $request){
         $request->validate([
+            'class_id' => 'required|integer',
+            'subject_id' => 'required|integer',
+            'teacher_id' => 'required|integer',
+            'timetable_id' => 'required|integer',
+            'day' => 'required|string',
             'content' => 'required|string',
+            'motif_retard' => 'nullable|string',
         ]);
 
         $academicYear = AcademicYear::where('active', 1)->firstOrFail();
+
+        // Récupérer l'heure du cours
+        $timetable = Timetable::findOrFail($request->timetable_id);
+
+        // Calcul automatique de la durée
+        $start = \Carbon\Carbon::parse($timetable->start_time);
+        $end   = \Carbon\Carbon::parse($timetable->end_time);
+
+        $durationMinutes = $start->diffInMinutes($end);
+
+        $durationMinutes = $durationMinutes/60;
+
+        $now = Carbon::now();
+        $isLate = !$now->between($start, $end);
+
+        // Vérifier si c’est l’heure du cours
+        $now = \Carbon\Carbon::now();
+        $isDuringClass = $now->between($start, $end);
+
+        // Si hors période → motif obligatoire
+        if (!$isDuringClass && !$request->motif_retard) {
+            return back()
+                ->withErrors(['motif_retard' => 'Veuillez indiquer un motif de retard, vous n’êtes pas dans l’heure du cours.'])
+                ->withInput();
+        }
 
         CahierDeTexte::create([
             'class_id' => $request->class_id,
@@ -52,6 +79,9 @@ class CahierDeTexteController extends Controller
             'day' => $request->day,
             'content' => $request->content,
             'academic_year_id' => $academicYear->id,
+            'motif_retard' => $request->motif_retard,
+            'is_late' => $isLate ? 1 : 0,
+            'duration_minutes' => $durationMinutes,
         ]);
 
         return back()->with('success', 'Cahier de texte enregistré avec succès.');
@@ -78,33 +108,41 @@ class CahierDeTexteController extends Controller
     }
 
     public function history($classId){
-        $teacherId = Auth::user()->id;
-        $classes = auth()->user()->classes; // relation Teacher->classes
+        $teacherId = Auth::id();
+        $now = now();
+        $academicYear = AcademicYear::where('active', 1)->firstOrFail();
 
-        $today = \Carbon\Carbon::now()->format('l');
-        $now = \Carbon\Carbon::now()->format('H:i:s');
-        $academicYear = \App\Models\AcademicYear::where('active', 1)->firstOrFail();
+        $class = auth()->user()->classes()
+            ->where('classes.id', $classId)
+            ->firstOrFail();
 
-        // Pour chaque classe de l'enseignant, déterminer le cours en cours
-        foreach ($classes as $class) {
-            $class->currentLesson = \App\Models\Timetable::with('subject')
-                ->where('class_id', $class->id)
-                ->where('teacher_id', $teacherId)
-                ->where('day', $today)
-                ->where('academic_year_id', $academicYear->id)
-                ->where('start_time', '<=', $now)
-                ->where('end_time', '>=', $now)
-                ->first();
+        // Cours actuel ?
+        $currentLesson = Timetable::with('subject')
+            ->where('class_id', $class->id)
+            ->where('teacher_id', $teacherId)
+            ->where('academic_year_id', $academicYear->id)
+            ->first();
+
+        $isDuringLesson = false;
+        if ($currentLesson) {
+            $start = Carbon::parse($currentLesson->start_time);
+            $end   = Carbon::parse($currentLesson->end_time);
+            $isDuringLesson = $now->between($start, $end);
         }
 
-        $entries = \App\Models\CahierDeTexte::with(['subject', 'timetable'])
+        $class->currentLesson = $currentLesson;
+        $class->isDuringLesson = $isDuringLesson;
+        DB::statement('DISCARD ALL');
+        // Cahiers
+        $entries = CahierDeTexte::with(['subject', 'timetable'])
             ->where('class_id', $classId)
             ->where('teacher_id', $teacherId)
             ->orderByDesc('created_at')
             ->get();
 
-        return view('teacher.cahier.history', compact('entries', 'classes'));
+        return view('teacher.cahier.history', compact('entries', 'class'));
     }
+
 
     public function activeTeachers() {
         // On récupère l'année académique active
@@ -126,6 +164,23 @@ class CahierDeTexteController extends Controller
 
         return view('teacher.active', compact('teachers', 'academicYear'));
     }
+
+    public function update(Request $request, $id){
+        $entry = CahierDeTexte::findOrFail($id);
+
+        if (now()->diffInMinutes($entry->created_at) > 10) {
+            return back()->with('error', "Impossible de modifier ce cahier, délai dépassé.");
+        }
+
+        $entry->update([
+            'content' => $request->content,
+            'motif_retard' => $request->motif_retard,
+        ]);
+
+        return back()->with('success', "Cahier de texte modifié.");
+    }
+    
+
 
 
 }
