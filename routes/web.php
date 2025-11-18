@@ -475,8 +475,10 @@ Route::middleware(['auth'])->prefix('teacher')->group(function () {
     Route::get('/teacher/cahier/history/{classId}', [CahierDeTexteController::class, 'history'])->name('teacher.cahier.history');
 });
 
-Route::get('/teachers/active', [CahierDeTexteController::class, 'activeTeachers'])
-    ->name('teachers.active');
+Route::get('teachers/{subject}/active', [CahierDeTexteController::class, 'activeTeachers'])->name('teachers.active');
+
+Route::get('/teachers/active', [CahierDeTexteController::class, 'subjects'])
+    ->name('subject.teachers.active');
 
 Route::get('/censeur/classes/{classId}/trimestre/{trimestre}/points', 
     [CenseurNoteController::class, 'pointsDisponibles']
@@ -489,3 +491,21 @@ Route::delete('/teacher-invitations/{invitation}', [CenseurInvitationController:
     ->name('teacher_invitations.destroy');
 
 Route::post('/teacher/cahier/update/{id}', [CahierDeTexteController::class, 'update'])->name('teacher.cahier.update');
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/enseignants/matiere/{subject}', [CahierDeTexteController::class, 'indexBySubject'])
+        ->name('enseignants.bySubject');
+});
+
+Route::get('/enseignants/{teacher}/classe/{classe}/matiere/{subject}/cahier', 
+    [CahierDeTexteController::class, 'showTeacherCahier'])
+    ->name('enseignants.cahier.matiere');
+
+Route::post('/enseignants/{teacher}/classe/{class}/matiere/{subject}/paiement', 
+    [CahierDeTexteController::class, 'setBrutAmount'])
+    ->name('enseignants.classe.paiement');
+
+Route::post('/subject/{subject}/pdf', [CahierDeTexteController::class, 'downloadPdf'])
+    ->name('subject.teachers.pdf');
+
+

@@ -119,6 +119,9 @@
                         
                         <!-- Actions -->
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <a href="{{ route('enseignants.cahier.matiere', ['teacher' => $teacher->id, 'classe' => $classe->id, 'subject' => $subject->id]) }}" class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded hover:bg-green-200">
+                                Voir cahier de texte
+                            </a>
                             <a href="{{ route('enseignants.show', $teacher->id) }}" 
                                class="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded text-blue-700 bg-blue-100 hover:bg-blue-200 transition duration-200">
                                 <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">

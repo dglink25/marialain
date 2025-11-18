@@ -71,8 +71,5 @@ class Classe extends Model{
                     ->withTimestamps();
     }
 
-
-
-
     
 }

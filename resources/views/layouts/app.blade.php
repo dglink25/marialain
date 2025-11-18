@@ -248,9 +248,9 @@
                                 <span class="ml-3">Tableau de bord</span>
                             </a>
 
-                            <a href="{{ route('teachers.active') }}" class="block px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('primaire.enseignants.enseignants') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
-                                <i class="fa fa-chalkboard-teacher w-5 text-gray-500"></i> 
-                                <span class="ml-3">Enseignants</span>
+                            <a href="{{ route('subject.teachers.active') }}" class="block px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('censeur.subjects.index') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
+                                <i class="fas fa-book-open"></i>
+                                <span class="ml-2">Enseignants par matière</span>
                             </a>
                             
                             <div x-data="{ open: false }" class="space-y-1">
@@ -289,9 +289,9 @@
                                 <span class="ml-2">Années académiques</span>
                             </a>
 
-                            <a href="{{ route('teachers.active') }}" class="block px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('primaire.enseignants.enseignants') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
-                                <i class="fa fa-chalkboard-teacher w-5 text-gray-500"></i> 
-                                <span class="ml-3">Enseignants</span>
+                            <a href="{{ route('subject.teachers.active') }}" class="block px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('censeur.subjects.index') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
+                                <i class="fas fa-book-open"></i>
+                                <span class="ml-2">Enseignants par matière</span>
                             </a>
                             
                             <div x-data="{ open: false }" class="space-y-1">

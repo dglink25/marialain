@@ -13,7 +13,8 @@ class ClassTeacherSubject extends Model{
         'class_id',
         'teacher_id',
         'subject_id',
-        'coefficient'
+        'coefficient',
+        'amount_brut',
     ];
 
     public function classe(): BelongsTo
