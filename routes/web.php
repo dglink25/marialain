@@ -507,5 +507,9 @@ Route::post('/enseignants/{teacher}/classe/{class}/matiere/{subject}/paiement',
 
 Route::post('/subject/{subject}/pdf', [CahierDeTexteController::class, 'downloadPdf'])
     ->name('subject.teachers.pdf');
+    
+Route::delete('/censeur/timetables/{class}/{timetable}/delete', 
+    [\App\Http\Controllers\Censeur\TimetableController::class, 'destroy']
+)->name('censeur.timetables.delete');
 
 

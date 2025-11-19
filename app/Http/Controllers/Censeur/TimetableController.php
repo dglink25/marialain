@@ -48,9 +48,13 @@ class TimetableController extends Controller{
         $subjects = Subject::where('academic_year_id', $activeYear->id)
                             ->where('coefficient', '>', 0)
                             ->get();
+
         $teachers = User::whereHas('role', fn($q) => $q->where('id', 8))
-                        ->whereHas('invitationTeacher', fn($q) => $q->where('censeur_id', 4))
-                        ->get();
+                ->whereHas('invitationTeacher', fn($q) => $q->where('censeur_id', 4))
+                ->get()
+                ->sortBy('name')
+                ->values();
+
 
         return view('censeur.timetables.index', compact('class', 'hours', 'timetables', 'subjects', 'teachers', 'activeYear'));
     }
@@ -142,6 +146,25 @@ class TimetableController extends Controller{
                         ->with('success','Créneau modifié avec succès.');
     }
 
+    public function destroy($classId, $timetableId){
+        try {
+            $timetable = Timetable::where('id', $timetableId)
+                ->where('class_id', $classId)
+                ->first();
+
+            if (!$timetable) {
+                return redirect()->back()->with('error', "Emploi du temps introuvable !");
+            }
+
+            $timetable->delete();
+
+            return redirect()->back()->with('success', "Emploi du temps supprimé avec succès.");
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', "Une erreur est survenue : " . $e->getMessage());
+        }
+    }
+
+
     public function store(Request $request, $classId){
         $activeYear = AcademicYear::where('active', true)->firstOrFail();
 
@@ -176,20 +199,6 @@ class TimetableController extends Controller{
         ]);
 
         return back()->with('success', 'Créneau ajouté avec succès.');
-    }
-
-    public function destroy($id){
-        if (!$this->checkActiveYear() instanceof AcademicYear) {
-            return $this->checkActiveYear();
-        }
-
-        Timetable::findOrFail($id)->delete();
-        DB::table('class_teacher_subject')
-        ->where('class_id', $classId)
-        ->where('teacher_id', $teacher_id)
-        ->where('subject_id', $subjectId)
-        ->delete();
-        return back()->with('success', 'Créneau supprimé.');
     }
 
     public function downloadPDF($classId){

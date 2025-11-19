@@ -128,6 +128,20 @@
                                            class="btn btn-warning btn-sm">
                                             <i class="bi bi-pencil me-1"></i>Modifier
                                         </a>
+
+                                        <form action="{{ route('censeur.timetables.delete', [$class->id, $course->id]) }}"
+                                            method="POST" class="d-inline">
+                                            @csrf
+                                            @method('DELETE')
+
+                                            <button type="submit"
+                                                    onclick="return confirm('Voulez-vous vraiment supprimer cet emploi du temps ?')"
+                                                    class="btn btn-sm d-flex align-items-center gap-1 delete-btn">
+                                                <i class="bi bi-trash-fill"></i>
+                                                <span class="d-none d-md-inline">Supprimer</span>
+                                            </button>
+                                        </form>
+
                                     </div>
                                 </td>
                             @elseif($overlap)
@@ -205,5 +219,37 @@
         height: 100%;
         gap: 4px;
     }
+
+    .delete-btn {
+    background: #dc3545;
+    color: #fff;
+    border-radius: 50px;
+    padding: 6px 12px;
+    font-size: 0.80rem;
+    font-weight: 600;
+    transition: 0.3s;
+    border: none;
+}
+
+.delete-btn:hover {
+    background: #bb2d3b;
+    transform: translateY(-2px);
+}
+
+.delete-btn i {
+    font-size: 0.95rem;
+}
+
+/* Responsive : sur mobile, on affiche seulement l'icône */
+@media (max-width: 768px) {
+    .delete-btn span {
+        display: none !important;
+    }
+    .delete-btn {
+        padding: 7px 10px;
+        border-radius: 8px;
+    }
+}
+
 </style>
 @endsection
