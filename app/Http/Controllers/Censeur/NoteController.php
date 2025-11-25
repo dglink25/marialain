@@ -163,20 +163,34 @@ use App\Models\NoteEditPermission;
             return view('censeur.classes.notes.trimestres', compact('classe', 'trimestres', 'matieres', 'coef'));
         }
 
-
-
-
         // Gérer les permissions de saisie des notes pour une classe
         public function permissions($classId){
             $classe = Classe::findOrFail($classId);
 
-            // On charge ou crée par défaut les permissions
-            $permissions = NotePermission::firstOrCreate(
-                ['class_id' => $classId, 'trimestre' => 1],
-                ['is_open' => false]
-            );
+            // On garantit l’existence des permissions pour les 3 trimestres
             for ($i = 1; $i <= 3; $i++) {
-                NotePermission::firstOrCreate(['class_id' => $classId, 'trimestre' => $i]);
+
+                $permission = NotePermission::where('class_id', $classId)
+                    ->where('trimestre', $i)
+                    ->first();
+
+                if (!$permission) {
+                    $permission = new NotePermission();
+                    $permission->class_id = $classId;
+                    $permission->trimestre = $i;
+                    $permission->is_open = false;
+                    $permission->opens_at = null;
+                    $permission->closes_at = null;
+                    $permission->save();
+                }
+
+                // 🚦 Vérifier auto-fermeture
+                if ($permission->closes_at && now()->greaterThan($permission->closes_at)) {
+                    if ($permission->is_open) {
+                        $permission->is_open = false;
+                        $permission->save();
+                    }
+                }
             }
 
             $permissions = NotePermission::where('class_id', $classId)->get();
@@ -184,17 +198,60 @@ use App\Models\NoteEditPermission;
             return view('censeur.permissions.index', compact('classe', 'permissions'));
         }
 
-        // Toggle autorisation/revocation
-        public function toggle($classId, $trimestre){
+        public function setDates(Request $request, $classId, $trimestre){
+            $request->validate([
+                'open_at' => 'required|date',
+                'close_at' => 'required|date|after:open_at',
+            ]);
+
             $permission = NotePermission::where('class_id', $classId)
                 ->where('trimestre', $trimestre)
                 ->firstOrFail();
 
-            $permission->is_open = !$permission->is_open;
+            $permission->update([
+                'open_at' => $request->open_at,
+                'close_at' => $request->close_at,
+                'is_open' => true,
+            ]);
+
+            return back()->with('success', 'Période définie avec succès.');
+        }
+
+
+
+        // Toggle autorisation/revocation
+        public function toggle(Request $request, $classId, $trimestre){
+            $permission = NotePermission::where('class_id', $classId)
+                ->where('trimestre', $trimestre)
+                ->firstOrFail();
+
+            // Si l’utilisateur met des dates → on les prend
+            if ($request->filled('opens_at') && $request->filled('closes_at')) {
+
+                $request->validate([
+                    'opens_at' => 'required|date',
+                    'closes_at' => 'required|date|after:opens_at',
+                ]);
+
+                $permission->opens_at = $request->opens_at;
+                $permission->closes_at = $request->closes_at;
+
+                // Activer automatiquement si on est dans la période
+                $now = now();
+                $permission->is_open = $now->between($permission->opens_at, $permission->closes_at);
+
+            } else {
+
+                // Mode manuel ON/OFF
+                $permission->is_open = !$permission->is_open;
+            }
+
             $permission->save();
 
-            return back()->with('success', 'Mise à jour effectuée avec succès.');
+            return back()->with('success', 'Permission mise à jour avec succès.');
         }
+
+
 
         public function bulletin($classId, $studentId, $trimestre){
             try {
@@ -440,7 +497,9 @@ use App\Models\NoteEditPermission;
                 ->orderBy('first_name');
             }])->find($classId);
 
-            
+            if (!$classe) {
+                return back()->with('error', "Classe introuvable.");
+            }
             
             // 3 Récupérer la matière concernée
             $subject = ClassTeacherSubject::where('subject_id', $subjectId)

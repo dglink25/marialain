@@ -65,6 +65,20 @@ Route::get('/test-500', function () {
     abort(500);
 });
 
+Route::prefix('censeur')->middleware('auth')->group(function () {
+
+    Route::get('/permissions/{classId}', [CenseurPermissionController::class, 'permissions'])
+        ->name('censeur.permissions.index');
+
+    Route::post('/permissions/{classId}/{trimestre}/toggle', [CenseurPermissionController::class, 'toggle'])
+        ->name('censeur.permissions.toggle');
+
+    Route::post('/permissions/{classId}/{trimestre}/dates', [CenseurPermissionController::class, 'setDates'])
+        ->name('censeur.permissions.dates');
+
+});
+
+
 
 Route::get('/payments/{payment}/receipt', [StudentController::class, 'downloadReceipt'])
     ->name('payments.receipt');
