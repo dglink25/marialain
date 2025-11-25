@@ -16,136 +16,164 @@ use App\Models\NoteEditPermission;
 
 class NoteController extends Controller{
 
-    public function index($classId, $trimestre){
+    public function index($classId, $subjectId, $trimestre){
         $activeYear = AcademicYear::where('active', true)->first();
 
         if (!$activeYear) {
             return back()->with('error', 'Aucune année académique active trouvée.');
         }
 
-        // Vérifier si la saisie est autorisée
+        // Vérifier si la saisie est autorisée pour le trimestre
         $permission = \App\Models\NotePermission::where('class_id', $classId)
-            ->where('trimestre', (string) $trimestre) // 🔹 forcer le type string pour éviter le cache plan PostgreSQL
+            ->where('trimestre', (string) $trimestre) // forcer string pour PostgreSQL
             ->first();
 
         if (!$permission || $permission->is_open != 1) {
             return back()->with('error', "La saisie des notes n'est pas encore autorisée pour ce trimestre.");
         }
 
-        // Chargement de la classe et des élèves avec leurs notes du trimestre en cours
+        // Charger la classe et les élèves avec leurs notes filtrées par matière et trimestre
         $classe = Classe::with('students')->findOrFail($classId);
+        $subject = Subject::findOrFail($subjectId);
 
         foreach ($classe->students as $student) {
             $student->gradesFiltered = $student->grades()
                 ->where('academic_year_id', $activeYear->id)
+                ->where('subject_id', $subjectId) // 🔹 filtrer par matière
                 ->where('trimestre', $trimestre)
                 ->get();
         }
 
         $hasNotes = $classe->students->flatMap->gradesFiltered->isNotEmpty();
 
-        return view('teacher.notes.index', compact('classe', 'activeYear', 'trimestre', 'hasNotes'));
+        return view('teacher.notes.index', compact('classe', 'subject', 'activeYear', 'trimestre', 'hasNotes'));
     }
 
+    public function read($classId, $subjectId, $type, $num, $trimestre){
+        $activeYear = AcademicYear::where('active', true)->firstOrFail();
 
-    public function read($classId, $type, $num, $trimestre){
-        $activeYear = AcademicYear::where('active', true)->first();
+        // Vérifier que l’enseignant enseigne cette matière dans cette classe
+        $check = DB::table('class_teacher_subject')
+            ->where('class_id', $classId)
+            ->where('teacher_id', Auth::id())
+            ->where('subject_id', $subjectId)
+            ->exists();
 
-        if (!$activeYear) {
-            return back()->with('error', 'Pas d\'année académique active.');
+        if (!$check) {
+            return back()->with('error', "Vous n'êtes pas autorisé à consulter cette matière.");
         }
 
-        $classe = Classe::with(['students' => function($q) use ($activeYear, $type, $num, $trimestre) {
-            $q->where('academic_year_id', $activeYear->id)
-                ->orderBy('last_name')
-                ->where('is_validated', 1)
-                ->with(['grades' => function($q2) use ($activeYear, $type, $num, $trimestre) {
-                    $q2->where('type', $type)
-                        ->where('sequence', $num)
-                        ->where('trimestre', $trimestre)
-                        ->where('academic_year_id', $activeYear->id);
-                }]);
+        $classe = Classe::with(['students' => function($q) use ($activeYear, $subjectId, $type, $num, $trimestre) {
+            $q->where('is_validated', 1)
+            ->where('academic_year_id', $activeYear->id)
+            ->with(['grades' => function($g) use ($activeYear, $subjectId, $type, $num, $trimestre) {
+                $g->where('academic_year_id', $activeYear->id)
+                    ->where('subject_id', $subjectId)
+                    ->where('type', $type)
+                    ->where('sequence', $num)
+                    ->where('trimestre', $trimestre);
+            }])
+            ->orderBy('last_name')
+            ->orderBy('first_name');
         }])->findOrFail($classId);
 
-        return view('teacher.notes.read', compact('classe', 'type', 'num', 'trimestre'));
+        $subject = Subject::findOrFail($subjectId);
+
+        return view('teacher.notes.read', compact('classe','subject','type','num','trimestre'));
     }
 
-    public function chooseTrimestre($classId){
+    public function chooseTrimestre($classId, $subjectId){
         $classe = Classe::findOrFail($classId);
-        return view('teacher.notes.trimestres', compact('classe'));
+
+        // Récupérer la matière
+        $subject = \App\Models\Subject::findOrFail($subjectId);
+
+        return view('teacher.notes.trimestres', compact('classe', 'subject'));
     }
 
-    public function create($classId, $type, $num, $trimestre){
-        $activeYear = AcademicYear::where('active', true)->first();
-        if (!$activeYear) {
-            return back()->with('error', 'Pas d\'année académique active.');
+    public function create($classId, $subjectId, $type, $num, $trimestre){
+        $activeYear = AcademicYear::where('active', true)->firstOrFail();
+
+        // Vérifier que l'enseignant enseigne cette matière
+        $check = DB::table('class_teacher_subject')
+            ->where('class_id', $classId)
+            ->where('teacher_id', Auth::id())
+            ->where('subject_id', $subjectId)
+            ->exists();
+
+        if (!$check) {
+            return back()->with('error', 'Vous ne pouvez pas ajouter des notes pour cette matière.');
         }
 
-        $classe = Classe::with(['students' => function ($query) use ($activeYear) {
-            $query->where('is_validated', 1) 
-                ->where('academic_year_id', $activeYear->id)
-                ->orderBy('last_name')
-                ->orderBy('first_name');
-        }])->findOrFail($classId);
-
-        // Validation : ne pas ajouter Interro2 si Interro1 vide
+        // Vérifier interro précédente
         if ($type === 'interrogation' && $num > 1) {
             $previous = Grade::where('class_id', $classId)
+                ->where('subject_id', $subjectId)
                 ->where('type', 'interrogation')
                 ->where('sequence', $num - 1)
                 ->where('academic_year_id', $activeYear->id)
                 ->exists();
 
             if (!$previous) {
-                return back()->with('error', "Impossible d'ajouter Interrogation $num tant que Interrogation " . ($num - 1) . " n'est pas saisie.");
+                return back()->with('error', "Interrogation " . ($num - 1) . " doit être saisie avant.");
             }
         }
 
-        // Nouvelle vérification : notes déjà saisies pour cette interrogation/devoir
+        // Vérifier si déjà existant
         $existing = Grade::where('class_id', $classId)
+            ->where('subject_id', $subjectId)
             ->where('type', $type)
             ->where('sequence', $num)
             ->where('academic_year_id', $activeYear->id)
             ->exists();
 
         if ($existing) {
-            return back()->with('error', "Les notes pour $type $num ont déjà été saisies pour cette classe. Vous ne pouvez pas les ajouter à nouveau.");
+            return back()->with('error', "Les notes pour $type $num sont déjà saisies.");
         }
 
-        return view('teacher.notes.create', compact('classe', 'type', 'num', 'trimestre'));
+        $classe = Classe::with(['students' => function ($q) use ($activeYear) {
+            $q->where('academic_year_id', $activeYear->id)
+            ->where('is_validated', 1)
+            ->orderBy('last_name')
+            ->orderBy('first_name');
+        }])->findOrFail($classId);
+
+        $subject = Subject::findOrFail($subjectId);
+
+        return view('teacher.notes.create', compact('classe','subject','type','num','trimestre'));
     }
 
-
-    public function store(Request $request, $classId, $type, $num, $trimestre){
+    public function store(Request $request, $classId, $subjectId, $type, $num, $trimestre){
         $request->validate([
-            'notes.*' => 'nullable|numeric|min:0|max:20',
+            'notes.*' => 'nullable|numeric|min:0|max:20'
         ]);
 
         $activeYear = AcademicYear::where('active', true)->firstOrFail();
-        $classe = Classe::with('students')->findOrFail($classId);
 
-        // ⚡ récupérer le subject_id assigné à l'enseignant pour cette classe
-        $subjectPivot = DB::table('class_teacher_subject')
+        // Vérifier enseignement matière
+        $check = DB::table('class_teacher_subject')
             ->where('class_id', $classId)
             ->where('teacher_id', Auth::id())
-            ->first();
+            ->where('subject_id', $subjectId)
+            ->exists();
 
-        if (!$subjectPivot) {
-            return back()->with('error', 'Aucune matière assignée à cet enseignant pour cette classe.');
+        if (!$check) {
+            return back()->with('error', 'Vous ne pouvez pas enregistrer des notes pour cette matière.');
         }
 
-        $subjectId = $subjectPivot->subject_id;
+        $classe = Classe::with('students')->findOrFail($classId);
 
         foreach ($classe->students as $student) {
+
             if (isset($request->notes[$student->id])) {
                 Grade::updateOrCreate(
                     [
                         'student_id' => $student->id,
-                        'subject_id' => $subjectId,  
+                        'subject_id' => $subjectId,
                         'type' => $type,
                         'sequence' => $num,
-                        'class_id' => $classId,
                         'trimestre' => $trimestre,
+                        'class_id' => $classId,
                         'academic_year_id' => $activeYear->id,
                     ],
                     [
@@ -155,7 +183,8 @@ class NoteController extends Controller{
             }
         }
 
-        return redirect()->route('teacher.classes.notes', [$classe->id, $trimestre])
+        return redirect()
+            ->route('teacher.classes.notes.read', [$classId, $subjectId, $type, $num, $trimestre])
             ->with('success', 'Notes enregistrées.');
     }
 
@@ -194,43 +223,49 @@ class NoteController extends Controller{
         }])->findOrFail($classId);
 
         return view('teacher.notes.edit', compact('classe','type','num','trimestre'));
-}
-
+    }
 
     // Mettre à jour les notes
-    public function update(Request $request, $classId, $type, $num, $trimestre){
+    public function update(Request $request, $classId, $subjectId, $type, $num, $trimestre){
         $request->validate([
-            'notes.*' => 'nullable|min:0|max:20'
+            'notes.*' => 'nullable|numeric|min:0|max:20'
         ]);
+
         $activeYear = AcademicYear::where('active', true)->firstOrFail();
 
-        // Récupérer subject_id de l'enseignant pour cette classe
-        $subject = DB::table('class_teacher_subject')
+        // Vérifier autorisation
+        $permission = NoteEditPermission::where('teacher_id', Auth::id())
             ->where('class_id', $classId)
-            ->where('teacher_id', Auth::id())
+            ->where('subject_id', $subjectId)
+            ->where('academic_year_id', $activeYear->id)
+            ->where('trimestre', $trimestre)
+            ->where('type', $type . $num)
+            ->where('is_active', true)
+            ->where('expires_at', '>', now())
             ->first();
 
-        if (!$subject) {
-            return back()->with('error','Aucune matière assignée à cet enseignant.');
+        if (!$permission) {
+            return back()->with('error','Modification non autorisée.');
         }
 
-        foreach ($request->notes as $studentId => $value) {
+        foreach ($request->notes as $studentId => $val) {
             Grade::updateOrCreate(
                 [
                     'student_id' => $studentId,
-                    'subject_id' => $subject->subject_id,
+                    'subject_id' => $subjectId,
                     'type' => $type,
                     'sequence' => $num,
                     'trimestre' => $trimestre,
                     'class_id' => $classId,
                     'academic_year_id' => $activeYear->id
                 ],
-                ['value' => $value]
+                ['value' => $val]
             );
         }
 
-        return redirect()->route('teacher.classes.notes.read', [$classId, $type, $num, $trimestre])
-                         ->with('success','Notes mises à jour avec succès.');
+        return redirect()
+            ->route('teacher.classes.notes.read', [$classId, $subjectId, $type, $num, $trimestre])
+            ->with('success','Notes mises à jour.');
     }
 
     // Supprimer toutes les notes pour ce type/séquence
@@ -303,138 +338,131 @@ class NoteController extends Controller{
         return view('teacher.notes.class_notes', compact('classe', 'gradesData', 'activeYear', 'trimestre'));
     }
 
-    public function showClassNotes($classId, $trimestre){
+    public function showClassNotes($classId, $subjectId, $trimestre){
         // 1) année académique active
         $activeYear = AcademicYear::where('active', true)->first();
         if (!$activeYear) {
             return back()->with('error', 'Aucune année académique active trouvée.');
         }
 
-        // 2) récupérer la classe avec les élèves
+        // 2) récupérer la classe avec les élèves validés
         $classe = Classe::with(['students' => function ($q) use ($activeYear) {
             $q->where('is_validated', 1)
-              ->where('academic_year_id', $activeYear->id)
-              ->orderBy('last_name')->orderBy('first_name');
-            }])->findOrFail($classId);
+            ->where('academic_year_id', $activeYear->id)
+            ->orderBy('last_name')
+            ->orderBy('first_name');
+        }])->findOrFail($classId);
 
-        // 3) récupérer les matières liées à l’enseignant connecté
+        // 3) Vérifier que l’enseignant enseigne BIEN cette matière dans cette classe
         $teacherId = Auth::id();
 
-        // Vérifier table pivot existante
-        $pivotTable = 'class_teacher_subject'; // adapter si nécessaire
+        $pivotTable = 'class_teacher_subject';
 
-        $subjectIds = DB::table($pivotTable)
+        $exists = DB::table($pivotTable)
             ->where('class_id', $classId)
             ->where('teacher_id', $teacherId)
-            ->pluck('subject_id')
-            ->unique()
-            ->toArray();
+            ->where('subject_id', $subjectId)
+            ->exists();
 
-        if (empty($subjectIds)) {
-            return back()->with('error', "Aucune matière assignée à cet enseignant pour cette classe.");
+        if (!$exists) {
+            return back()->with('error', "Vous n'êtes pas autorisé à consulter les notes de cette matière.");
         }
 
-        $subjects = Subject::whereIn('id', $subjectIds)->get();
+        // Récupérer la matière concernée
+        $subject = Subject::findOrFail($subjectId);
 
-        // 4) préparation des notes par élève × matière
+        // 4) Préparation des notes pour CHAQUE élève
         $gradesData = [];
+        $classeMoyennes = [];
 
         foreach ($classe->students as $student) {
-            $studentGrades = [];
 
-            foreach ($subjects as $subject) {
+            // Récupérer les notes de cet élève pour cette matière
+            $grades = Grade::where('student_id', $student->id)
+                ->where('subject_id', $subjectId)
+                ->where('academic_year_id', $activeYear->id)
+                ->where('trimestre', $trimestre)
+                ->get();
 
-                // récupérer toutes les notes de l’élève pour cette matière et cette année
-                $grades = Grade::where('student_id', $student->id)
-                    ->where('subject_id', $subject->id)
-                    ->where('academic_year_id', $activeYear->id)
-                    ->where('trimestre', $trimestre)
-                    ->get();
+            // Séparer interros et devoirs
+            $interros = [];
+            $devoirs = [];
 
-                // préparation des tableaux
-                $interros = [];
-                $devoirs = [];
-
-                foreach ($grades as $grade) {
-                    if ($grade->type === 'interrogation') {
-                        $interros[$grade->sequence] = $grade->value; // clé = numéro de l’interro
-                    }
-                    if ($grade->type === 'devoir') {
-                        $devoirs[$grade->sequence] = $grade->value; // clé = numéro du devoir
-                    }
+            foreach ($grades as $grade) {
+                if ($grade->type === 'interrogation') {
+                    $interros[$grade->sequence] = $grade->value;
                 }
-
-                // ordonner par séquence
-                ksort($interros);
-                ksort($devoirs);
-
-                // calcul des moyennes
-                $moyenneInterro = count($interros) > 0 ? round(array_sum($interros) / count($interros), 2) : null;
-                $moyenneDevoir = count($devoirs) > 0 ? round(array_sum($devoirs) / count($devoirs), 2) : null;
-
-                $coef = $subject->coefficient ?? 1;
-
-                $moyenneMat = null;
-                if ($moyenneInterro !== null && $moyenneDevoir !== null) {
-                    $moyenneMat = round((($moyenneInterro + $moyenneDevoir) / 2) * $coef, 2);
-                }
-
-                $moyenne = null;
-                if ($moyenneInterro !== null && $moyenneDevoir !== null) {
-                    $moyenne = round((($moyenneInterro + $moyenneDevoir) / 2), 2);
-                }
-
-                $studentGrades[$subject->id] = [
-                    'interros' => $interros,       // [1 => note1, 2 => note2, ...]
-                    'devoirs' => $devoirs,         // [1 => note1, 2 => note2]
-                    'moyenneInterro' => $moyenneInterro,
-                    'coef' => $coef,
-                    'moyenne' => $moyenne,
-                    'moyenneMat' => $moyenneMat,
-                    'subject' => $subject,
-                    'rang' => null,
-                ];
-
-                if ($moyenne !== null) {
-                    $classeMoyennes[$student->id] = $moyenne;
+                if ($grade->type === 'devoir') {
+                    $devoirs[$grade->sequence] = $grade->value;
                 }
             }
 
-            $gradesData[$student->id] = $studentGrades;
+            ksort($interros);
+            ksort($devoirs);
+
+            // Calcul moyennes
+            $moyenneInterro = count($interros) ? round(array_sum($interros) / count($interros), 2) : null;
+            $moyenneDevoir = count($devoirs) ? round(array_sum($devoirs) / count($devoirs), 2) : null;
+
+            $coef = $subject->coefficient ?? 1;
+
+            $moyenne = null;
+            $moyenneMat = null;
+
+            if ($moyenneInterro !== null && $moyenneDevoir !== null) {
+                $moyenne = round(($moyenneInterro + $moyenneDevoir) / 2, 2);
+                $moyenneMat = round($moyenne * $coef, 2);
+
+                // Ajouter à la liste pour classement
+                $classeMoyennes[$student->id] = $moyenne;
+            }
+
+            // Stocker
+            $gradesData[$student->id] = [
+                'interros' => $interros,
+                'devoirs' => $devoirs,
+                'moyenneInterro' => $moyenneInterro,
+                'moyenneDevoir' => $moyenneDevoir,
+                'moyenne' => $moyenne,
+                'moyenneMat' => $moyenneMat,
+                'coef' => $coef,
+                'subject' => $subject,
+                'rang' => null,
+            ];
         }
 
+        // 5) Classement
         if (!empty($classeMoyennes)) {
-            // Trier du plus grand au plus petit
             arsort($classeMoyennes);
 
             $rank = 1;
-            $previousMoyenne = null;
-            $sameRankCount = 0;
+            $prev = null;
+            $sameCount = 0;
 
-            foreach ($classeMoyennes as $studentId => $moyenne) {
-                if ($moyenne === $previousMoyenne) {
-                    // même moyenne → même rang
-                    $sameRankCount++;
+            foreach ($classeMoyennes as $studentId => $moy) {
+
+                if ($moy === $prev) {
+                    $sameCount++;
                 } else {
-                    // nouvelle moyenne → rang suivant
-                    $rank += $sameRankCount;
-                    $sameRankCount = 1;
+                    $rank += $sameCount;
+                    $sameCount = 1;
                 }
 
-                $gradesData[$studentId][$subject->id]['rang'] = $rank;
-                $previousMoyenne = $moyenne;
+                $gradesData[$studentId]['rang'] = $rank;
+                $prev = $moy;
             }
         }
 
-        // 5) envoyer à la vue
+        // 6) retour à la vue
         return view('teacher.notes.class_notes', [
             'classe' => $classe,
-            'subjects' => $subjects,
+            'subject' => $subject,
             'gradesData' => $gradesData,
             'activeYear' => $activeYear,
-            'trimestre'  => $trimestre,
+            'trimestre' => $trimestre,
         ]);
     }
+
 
 
     public function calcInterro($classId){

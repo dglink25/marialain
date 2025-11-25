@@ -15,13 +15,9 @@
         <p class="text-gray-600">
             Année académique : <span class="font-semibold">{{ $activeYear->name ?? $activeYear->label ?? 'N/A' }} / Trimestre {{ $trimestre }}</span>
         </p>
-        {{-- Matières de l’enseignant --}}
-        @foreach($subjects as $subject)
-            <h2 class="text-lg font-semibold text-blue-700 mt-4">
-                Matière : {{ $subject->name }} (Coef {{ $subject->coefficient ?? 1 }})
-            </h2>
-            
-        @endforeach
+        <h2 class="text-lg font-semibold text-blue-700 mt-4">
+            Matière : {{ $subject->name }} (Coef {{ $subject->coefficient ?? 1 }})
+        </h2>
     </div>
 
     {{-- Messages flash --}}
@@ -61,8 +57,6 @@
             <tbody>
                 @foreach($classe->students as $student)
                     @php
-                        // On suppose qu’il n’y a qu’une matière (enseignant connecté)
-                        $subject = $subjects->first();
                         $grades = $gradesData[$student->id][$subject->id] ?? null;
                     @endphp
                     <tr class="hover:bg-gray-50">

@@ -12,17 +12,35 @@ use App\Models\Timetable;
 class ClassController extends Controller{
     // Liste des classes de l’enseignant connecté
     
-
     public function index(){
-        $teacherId = auth()->id();
-        $classes = auth()->user()->classes; // ou selon ta relation
+        $teacher = auth()->user();
+        $teacherId = $teacher->id;
 
         $today = Carbon::now()->format('l');
         $now = Carbon::now()->format('H:i:s');
         $academicYear = AcademicYear::where('active', 1)->firstOrFail();
 
-        // Pour chaque classe, récupérer le cours en cours (null si aucun)
+        // Récupérer les classes de l'enseignant (sans doublons)
+        $classes = $teacher->classes()
+            ->wherePivot('academic_year_id', $academicYear->id)
+            ->with(['timetables.subject'])
+            ->get()
+            ->unique('id');
+
+        // Ajouter les matières enseignées par l'enseignant dans chaque classe
         foreach ($classes as $class) {
+            $classTeacherSubjects = \App\Models\ClassTeacherSubject::with('subject')
+                ->where('class_id', $class->id)
+                ->where('teacher_id', $teacherId)
+                ->where('academic_year_id', $academicYear->id)
+                ->get();
+
+            // Extraire uniquement les matières
+            $class->subjects = $classTeacherSubjects->map(function($cts) {
+                return $cts->subject;
+            });
+
+            // Cours en cours
             $class->currentLesson = Timetable::with('subject')
                 ->where('class_id', $class->id)
                 ->where('teacher_id', $teacherId)
@@ -33,8 +51,10 @@ class ClassController extends Controller{
                 ->first();
         }
 
+
         return view('teacher.classes.index', compact('classes'));
     }
+
 
 
     // Liste des élèves d’une classe

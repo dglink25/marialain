@@ -429,30 +429,54 @@ Gestion notes côté enseignants
 
 */
 
-Route::get('classes/{class}/{trimestre}/notes', [NoteController::class, 'showClassNotes'])->name('teacher.classes.notes.list');
+Route::get('classes/{class}/{subject}/{trimestre}/notes', 
+    [NoteController::class, 'showClassNotes']
+)->name('teacher.classes.notes.list');
+
+
+// Afficher les notes d’un trimestre pour une classe et une matière
+Route::get('/classes/{classId}/subjects/{subjectId}/notes/{trimestre}', 
+    [App\Http\Controllers\Teacher\NoteController::class, 'index'])
+    ->middleware(['auth'])
+    ->name('classes.notes.subject');
 
 Route::middleware(['auth'])->prefix('teacher')->name('teacher.')->group(function () {
 
+    // Choisir un trimestre pour une classe et une matière
+    Route::get('/classes/{classId}/subjects/{subjectId}/notes/trimestres', 
+        [App\Http\Controllers\Teacher\NoteController::class, 'chooseTrimestre'])
+        ->name('classes.notes.trimestres.subject');
     
-    Route::get('/classes/{id}/notes/trimestres', [App\Http\Controllers\Teacher\NoteController::class, 'chooseTrimestre'])
-        ->name('classes.notes.trimestres');
-        
-    // Notes par trimestre
-    Route::get('/classes/{id}/notes/{trimestre}', [App\Http\Controllers\Teacher\NoteController::class, 'index'])
-        ->name('classes.notes');
-    
-    // Insertion des notes
-    Route::get('/classes/{id}/notes/{type}/{num}/{trimestre}/create', [App\Http\Controllers\Teacher\NoteController::class, 'create'])->name('classes.notes.create');
-    Route::post('/classes/{id}/notes/{type}/{num}/{trimestre}', [App\Http\Controllers\Teacher\NoteController::class, 'store'])->name('classes.notes.store');
-    Route::get('classes/{class}/notes/read/{type}/{num}/{trimestre}', [App\Http\Controllers\Teacher\NoteController::class, 'read'])->name('classes.notes.read');
+   // LECTURE DES NOTES
+    Route::get(
+        'classes/{class}/subjects/{subject}/notes/read/{type}/{num}/{trimestre}',
+        [NoteController::class, 'read']
+    )->name('classes.notes.read');
 
-    // Formulaire modification des notes
-    Route::get('/teacher/classes/{id}/notes/{type}/{num}/{trimestre}/edit', [App\Http\Controllers\Teacher\NoteController::class, 'edit'])
-        ->name('classes.notes.edit');
+    // CREATION FORMULAIRE
+    Route::get(
+        'classes/{class}/subjects/{subject}/notes/{type}/{num}/{trimestre}/create',
+        [NoteController::class, 'create']
+    )->name('classes.notes.create');
 
-    // Mettre à jour les notes
-    Route::put('/teacher/classes/{id}/notes/{type}/{num}/{trimestre}/update', [App\Http\Controllers\Teacher\NoteController::class, 'update'])
-        ->name('classes.notes.update');
+    // ENREGISTREMENT FORM
+    Route::post(
+        'classes/{class}/subjects/{subject}/notes/{type}/{num}/{trimestre}',
+        [NoteController::class, 'store']
+    )->name('classes.notes.store');
+
+    // EDITION
+    Route::get(
+        'classes/{class}/subjects/{subject}/notes/{type}/{num}/{trimestre}/edit',
+        [NoteController::class, 'edit']
+    )->name('classes.notes.edit');
+
+    // UPDATE
+    Route::put(
+        'classes/{class}/subjects/{subject}/notes/{type}/{num}/{trimestre}',
+        [NoteController::class, 'update']
+    )->name('classes.notes.update');
+
 
 
     // Supprimer toutes les notes de ce type/séquence
@@ -472,8 +496,14 @@ Route::prefix('censeur')->group(function () {
 Route::middleware(['auth'])->prefix('teacher')->group(function () {
     Route::get('/classes/{classeId}/cahier', [CahierDeTexteController::class, 'show'])->name('teacher.cahier.show');
     Route::post('/classes/cahier/store', [CahierDeTexteController::class, 'store'])->name('teacher.cahier.store');
-    Route::get('/teacher/cahier/history/{classId}', [CahierDeTexteController::class, 'history'])->name('teacher.cahier.history');
+    
+    Route::get(
+        '/teacher/cahier/history/{classId}/{subjectId}',
+        [CahierDeTexteController::class, 'history']
+    )->name('teacher.cahier.history.subject');
+
 });
+
 
 Route::get('teachers/{subject}/active', [CahierDeTexteController::class, 'activeTeachers'])->name('teachers.active');
 

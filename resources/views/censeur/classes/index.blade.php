@@ -5,7 +5,21 @@
     $pageTitle = 'Classes ';
 @endphp
 
+     @if ($errors->any())
+    <div class="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-lg mb-6">
+      <ul class="list-disc pl-5 space-y-1">
+        @foreach ($errors->all() as $error)
+          <li>{{ $error }}</li>
+        @endforeach
+      </ul>
+    </div>
+  @endif
 
+  @if (session('error'))
+    <div class="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-lg mb-6">
+      {{ session('error') }}
+    </div>
+  @endif
     @if(isset($error))
         <div class="p-4 mb-6 text-sm text-red-700 bg-red-100 border border-red-300 rounded-lg">
             {{ $error }}

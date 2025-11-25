@@ -440,9 +440,7 @@ use App\Models\NoteEditPermission;
                 ->orderBy('first_name');
             }])->find($classId);
 
-            if (!$classe) {
-                return back()->with('error', "Classe introuvable.");
-            }
+            
             
             // 3 Récupérer la matière concernée
             $subject = ClassTeacherSubject::where('subject_id', $subjectId)

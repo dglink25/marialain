@@ -18,7 +18,7 @@
                 <p class="text-sm text-gray-600 mt-2">
                     Matière courante :
                     <span class="text-indigo-600 font-semibold">
-                        {{ $class->currentLesson->subject->name ?? 'Non détectée' }}
+                        {{ $subject->name ?? 'Non détectée' }}
                     </span>
                 </p>
             </div>

@@ -68,7 +68,7 @@
                         <p class="text-sm text-gray-500 mt-1">Évaluation écrite</p>
                     </div>
                     
-                    <a href="{{ route('teacher.classes.notes.read', [$classe->id, 'interrogation', $i, $trimestre]) }}"
+                    <a href="{{ route('teacher.classes.notes.read', [$classe->id, $subject->id, 'interrogation', $i, $trimestre]) }}"
                        class="w-full flex items-center justify-center px-4 py-2 bg-blue-50 text-blue-700 rounded-lg border border-blue-200 hover:bg-blue-100 hover:border-blue-300 transition-colors duration-200 font-medium">
                         <i class="fas fa-eye mr-2"></i>
                         Consulter
@@ -87,7 +87,7 @@
                         <p class="text-sm text-gray-500 mt-1">Travail noté</p>
                     </div>
                     
-                    <a href="{{ route('teacher.classes.notes.read', [$classe->id, 'devoir', $i, $trimestre]) }}"
+                    <a href="{{ route('teacher.classes.notes.read', [$classe->id, $subject->id, 'devoir', $i, $trimestre]) }}"
                        class="w-full flex items-center justify-center px-4 py-2 bg-green-50 text-green-700 rounded-lg border border-green-200 hover:bg-green-100 hover:border-green-300 transition-colors duration-200 font-medium">
                         <i class="fas fa-eye mr-2"></i>
                         Consulter

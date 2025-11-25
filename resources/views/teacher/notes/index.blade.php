@@ -9,16 +9,18 @@ use Illuminate\Support\Facades\Auth;
 @endphp
 
 @auth
-    @if (Auth::id() == 6)
+    @if (Auth::id() == 4)
         <div class="container mx-auto py-6">
 
             <div class="flex justify-between items-center mb-4">
-                <h1 class="text-2xl font-bold mb-6"> Fiche de  Notes {{ $subject}} Classe {{ $classe->name }} / Trimestre {{ $trimestre }}</h1>
-                <a href="{{ route('censeur.classes.notes.list', [$classe->id, $trimestre]) }}"
-                class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 text-center">
-                Voir toutes les notes
-                </a>
+                <h1 class="text-2xl font-bold mb-6">
+                    Fiche de Notes @if(isset($subject)) {{ $subject->name }} @endif - Classe {{ $classe->name }} / Trimestre {{ $trimestre }}
+                </h1>
 
+                <a href="{{ route('teacher.classes.notes.list', [$classe->id, $subject->id, $trimestre]) }}"
+                class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 text-center">
+                    Voir toutes les notes
+                </a>
             </div>
 
             {{-- Messages flash --}}
@@ -43,7 +45,7 @@ use Illuminate\Support\Facades\Auth;
                         </h2>
 
                         <div class="flex flex-col space-y-2">
-                            <a href="{{ route('teacher.classes.notes.read', [$classe->id, 'interrogation', $i, $trimestre]) }}"
+                            <a href="{{ route('teacher.classes.notes.read', [$classe->id, $subject->id, 'interrogation', $i, $trimestre]) }}"
                             class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded text-center font-medium transition">
                                 Lire
                             </a>
@@ -60,7 +62,7 @@ use Illuminate\Support\Facades\Auth;
 
                         <div class="flex flex-col space-y-2">
 
-                            <a href="{{ route('teacher.classes.notes.read', [$classe->id, 'devoir', $i, $trimestre]) }}"
+                            <a href="{{ route('teacher.classes.notes.read', [$classe->id, $subject->id, 'devoir', $i, $trimestre]) }}"
                             class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded text-center font-medium transition">
                                 Lire
                             </a>
@@ -75,12 +77,14 @@ use Illuminate\Support\Facades\Auth;
         <div class="container mx-auto py-6">
 
             <div class="flex justify-between items-center mb-4">
-                <h1 class="text-2xl font-bold mb-6"> Fiche de Notes {{ $classe->name }} / Trimestre {{ $trimestre }}</h1>
-                <a href="{{ route('teacher.classes.notes.list', [$classe->id, $trimestre]) }}"
-                class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 text-center">
-                Voir toutes les notes
-                </a>
+                <h1 class="text-2xl font-bold mb-6">
+                    Fiche de Notes @if(isset($subject)) {{ $subject->name }} @endif - Classe {{ $classe->name }} / Trimestre {{ $trimestre }}
+                </h1>
 
+                <a href="{{ route('teacher.classes.notes.list', [$classe->id, $subject->id, $trimestre]) }}"
+                class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 text-center">
+                    Voir toutes les notes
+                </a>
             </div>
 
             {{-- Messages flash --}}
@@ -105,13 +109,13 @@ use Illuminate\Support\Facades\Auth;
                         </h2>
 
                         <div class="flex flex-col space-y-2">
-                            <a href="{{ route('teacher.classes.notes.create', [$classe->id, 'interrogation', $i, $trimestre]) }}"
+                            <a href="{{ route('teacher.classes.notes.create', [$classe->id, $subject->id, 'interrogation', $i, $trimestre]) }}"
                             class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-center font-medium transition">
                                 Ajouter
                             </a>
 
 
-                            <a href="{{ route('teacher.classes.notes.read', [$classe->id, 'interrogation', $i, $trimestre]) }}"
+                            <a href="{{ route('teacher.classes.notes.read', [$classe->id, $subject->id, 'interrogation', $i, $trimestre]) }}"
                             class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded text-center font-medium transition">
                                 Lire
                             </a>
@@ -127,12 +131,12 @@ use Illuminate\Support\Facades\Auth;
                         </h2>
 
                         <div class="flex flex-col space-y-2">
-                            <a href="{{ route('teacher.classes.notes.create', [$classe->id, 'devoir', $i, $trimestre]) }}"
+                            <a href="{{ route('teacher.classes.notes.create', [$classe->id, $subject->id, 'devoir', $i, $trimestre]) }}"
                             class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded text-center font-medium transition">
                                 Ajouter
                             </a>
 
-                            <a href="{{ route('teacher.classes.notes.read', [$classe->id, 'devoir', $i, $trimestre]) }}"
+                            <a href="{{ route('teacher.classes.notes.read', [$classe->id, $subject->id, 'devoir', $i, $trimestre]) }}"
                             class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded text-center font-medium transition">
                                 Lire
                             </a>

@@ -112,41 +112,66 @@ class CahierDeTexteController extends Controller{
         return $currentLesson; // null si aucun cours
     }
 
-    public function history($classId){
+    public function history($classId, $subjectId){
         $teacherId = Auth::id();
         $now = now();
+
         $academicYear = AcademicYear::where('active', 1)->firstOrFail();
 
-        $class = auth()->user()->classes()
-            ->where('classes.id', $classId)
-            ->firstOrFail();
-
-        // Cours actuel ?
-        $currentLesson = Timetable::with('subject')
-            ->where('class_id', $class->id)
+        // Vérifier que la ligne existe dans class_teacher_subject
+        $exists = DB::table('class_teacher_subject')
+            ->where('class_id', $classId)
+            ->where('subject_id', $subjectId)
             ->where('teacher_id', $teacherId)
+            ->where('academic_year_id', $academicYear->id)
+            ->exists();
+
+        if (!$exists) {
+            abort(404, "Vous n'enseignez pas cette matière dans cette classe.");
+        }
+
+        // Charger la classe
+        $class = DB::table('classes')->where('id', $classId)->first();
+        if (!$class) abort(404);
+
+        // Charger la matière
+        $subject = DB::table('subjects')->where('id', $subjectId)->first();
+        if (!$subject) abort(404);
+
+        // Cours actuel
+        $currentLesson = DB::table('timetables')
+            ->where('class_id', $classId)
+            ->where('teacher_id', $teacherId)
+            ->where('subject_id', $subjectId)
             ->where('academic_year_id', $academicYear->id)
             ->first();
 
         $isDuringLesson = false;
+
         if ($currentLesson) {
             $start = Carbon::parse($currentLesson->start_time);
             $end   = Carbon::parse($currentLesson->end_time);
             $isDuringLesson = $now->between($start, $end);
         }
 
-        $class->currentLesson = $currentLesson;
-        $class->isDuringLesson = $isDuringLesson;
-        DB::statement('DISCARD ALL');
-        // Cahiers
+        // Cahier filtré par matière + enseignant
         $entries = CahierDeTexte::with(['subject', 'timetable'])
             ->where('class_id', $classId)
+            ->where('subject_id', $subjectId)
             ->where('teacher_id', $teacherId)
             ->orderByDesc('created_at')
             ->get();
 
-        return view('teacher.cahier.history', compact('entries', 'class'));
+        return view('teacher.cahier.history', [
+            'entries'        => $entries,
+            'class'          => $class,
+            'subject'        => $subject,
+            'currentLesson'  => $currentLesson,
+            'isDuringLesson' => $isDuringLesson
+        ]);
     }
+
+
 
     public function activeTeachers($subjectId){
         // Récupérer l'année académique active

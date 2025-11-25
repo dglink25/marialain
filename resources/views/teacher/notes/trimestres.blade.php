@@ -7,9 +7,11 @@
 @endphp
 
 <div class="container mx-auto py-6">
-    <h1 class="text-2xl font-bold mb-6">Notes - Classe {{ $classe->name }}</h1>
+    <h1 class="text-2xl font-bold mb-6">
+       Classe {{ $classe->name }} ({{ $subject->short_name ?? $subject->name }})
+    </h1>
 
-{{-- Messages flash --}}
+    {{-- Messages flash --}}
     @if(session('error'))
         <div class="bg-red-100 text-red-800 p-4 rounded mb-4">
             {{ session('error') }}
@@ -20,14 +22,20 @@
             {{ session('success') }}
         </div>
     @endif
+
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         @foreach([1, 2, 3] as $tri)
             <div class="bg-white rounded-xl shadow p-6 text-center">
                 <h2 class="text-lg font-semibold mb-4">Trimestre {{ $tri }}</h2>
-                <a href="{{ route('teacher.classes.notes', [$classe->id, $tri]) }}"
-                   class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded transition">
-                    Détails
-                </a>
+
+                {{-- Bouton détails --}}
+                <form action="{{ route('classes.notes.subject', [$classe->id, $subject->id, $tri]) }}" method="GET">
+                    @csrf
+                    <button type="submit"
+                        class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded transition">
+                        Détails
+                    </button>
+                </form>
             </div>
         @endforeach
     </div>

@@ -7,11 +7,27 @@
 
 <div class="container mx-auto py-6">
 
+@if ($errors->any())
+    <div class="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-lg mb-6">
+      <ul class="list-disc pl-5 space-y-1">
+        @foreach ($errors->all() as $error)
+          <li>{{ $error }}</li>
+        @endforeach
+      </ul>
+    </div>
+  @endif
+
+  @if (session('error'))
+    <div class="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-lg mb-6">
+      {{ session('error') }}
+    </div>
+  @endif
+
     @auth
     @if (auth()->id() == 4)
         <!-- Vue Censeur -->
         <h1 class="text-2xl font-bold mb-6">
-            Notes - {{ ucfirst($type) }} {{ $num }} - Classe {{ $classe->name }} / Trimestre {{ $trimestre }}
+            Notes - {{ ucfirst($type) }} {{ $num }} - {{ $subject->name }} - Classe {{ $classe->name }} / Trimestre {{ $trimestre }}
         </h1>
 
         @if(session('success'))
@@ -119,10 +135,11 @@
         </div>
 
         <!-- Bouton retour pour censeur -->
-        <div class="mt-6 flex justify-center animate-fade-in">
-            <button onclick="smartBack()" 
-                    class="bg-gray-600 text-white px-5 py-2.5 rounded hover:bg-gray-700 transition-colors duration-200 inline-flex items-center font-medium">
-                <i class="fas fa-arrow-left mr-2"></i>
+        <div onclick="window.history.back()" 
+                class="inline-flex items-center px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition duration-200 font-medium">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+            </svg>
                 Retour
             </button>
         </div>
@@ -130,7 +147,7 @@
     @else
         <!-- Vue Enseignant -->
         <h1 class="text-2xl font-bold mb-6">
-            Notes - {{ ucfirst($type) }} {{ $num }} - Classe {{ $classe->name }} / Trimestre {{ $trimestre }}
+            Notes - {{ ucfirst($type) }} {{ $num }} - {{ $subject->name }} - Classe {{ $classe->name }} / Trimestre {{ $trimestre }}
         </h1>
 
         @if(session('success'))
@@ -216,7 +233,13 @@
                                 @endif
                             </td>
                             <td class="px-4 py-3 border">
-                                <a href="{{ route('teacher.classes.notes.edit', [$classe->id, $type, $num, $trimestre]) }}"
+                                <a href="{{ route('teacher.classes.notes.edit', [
+                                        'class' => $classe->id,
+                                        'subject' => $subject->id,
+                                        'type' => $type,
+                                        'num' => $num,
+                                        'trimestre' => $trimestre
+                                    ]) }}"
                                    class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm inline-flex items-center transition-colors duration-200">
                                    <i class="fas fa-edit mr-1 text-xs"></i>
                                    Modifier
@@ -231,9 +254,11 @@
 
         <!-- Bouton retour en bas -->
         <div class="mt-6 flex  animate-fade-in">
-            <button onclick="smartBack()" 
-                    class="bg-gray-600 text-white px-5 py-2.5 rounded hover:bg-gray-700 transition-colors duration-200 inline-flex items-center font-medium">
-                <i class="fas fa-arrow-left mr-2"></i>
+            <button onclick="window.history.back()" 
+                class="inline-flex items-center px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition duration-200 font-medium">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+            </svg>
                 Retour
             </button>
         </div>
@@ -249,9 +274,10 @@
         // Vérifie si on peut revenir en arrière dans l'historique
         if (document.referrer && document.referrer !== window.location.href) {
             history.back();
-        } else {
+        } 
+        else {
             // Redirection vers une page par défaut
-            window.location.href = "{{ route('teacher.classes.notes', [$classe->id, $trimestre]) }}";
+            window.location.href = "#";
         }
     }
 
