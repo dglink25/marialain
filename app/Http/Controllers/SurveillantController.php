@@ -50,7 +50,7 @@ class SurveillantController extends Controller{
         ]);
 
         $activeYear = AcademicYear::where('active', true)->first();
-        $secondary = Entity::where('name', 'secondaire')->first();
+        $secondary = Entity::where('name', 'Secondaire')->first();
 
         if (!$activeYear || !$secondary) {
             return back()->withErrors("Impossible d'attribuer la conduite.");
