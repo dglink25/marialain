@@ -1,573 +1,605 @@
+@php
+    use Illuminate\Support\Str;
+@endphp
+
 @extends('layouts.app')
 
 @section('content')
 @php
     $pageTitle = 'Emploi du temps';
+    $joursSemaine = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+    
+    // Créer un tableau structuré pour faciliter l'affichage
+    $emploiDuTemps = [];
+    foreach ($joursSemaine as $jour) {
+        $emploiDuTemps[$jour] = array_fill(0, count($hours), null);
+        
+        if (isset($sortedTimetables[$jour])) {
+            foreach ($sortedTimetables[$jour] as $cours) {
+                $heureDebut = date('H', strtotime($cours->start_time));
+                $heureFin = date('H', strtotime($cours->end_time));
+                $duration = $heureFin - $heureDebut;
+                
+                // Trouver l'index dans les heures
+                for ($i = 0; $i < count($hours); $i++) {
+                    $heureSlot = intval(substr($hours[$i]['start'], 0, 2));
+                    if ($heureSlot == $heureDebut) {
+                        $emploiDuTemps[$jour][$i] = [
+                            'cours' => $cours,
+                            'duration' => $duration,
+                            'rowspan' => $duration
+                        ];
+                        break;
+                    }
+                }
+            }
+        }
+    }
 @endphp
 
-<div class="container-fluid p-3 p-md-4 bg-light min-h-screen">
-
-    <!-- En-tête responsive -->
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-3 mb-md-4 gap-3">
-        <h2 class="text-primary mb-0 fs-2 fs-md-1">
-            <strong>Emploi du temps - {{ $class->name }}</strong>
-        </h2>
-
-         @if ($errors->any())
-            <div class="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-lg mb-6">
-            <ul class="list-disc pl-5 space-y-1">
-                @foreach ($errors->all() as $error)
-                <li>{{ $error }}</li>
-                @endforeach
-            </ul>
+<div class="container-fluid p-3 p-md-4 bg-light min-vh-100">
+    <!-- En-tête -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3">
+        <div>
+            <h2 class="text-primary mb-2 fw-bold">
+                <i class="fas fa-calendar-alt me-2"></i>
+                Emploi du temps - {{ $class->name }}
+            </h2>
+            <div class="d-flex flex-wrap gap-2 align-items-center">
+                <span class="badge bg-info text-dark">
+                    <i class="fas fa-calendar me-1"></i>
+                    {{ $activeYear->name ?? 'Année en cours' }}
+                </span>
+                <span class="badge bg-secondary">
+                    <i class="fas fa-clock me-1"></i>
+                    {{ count($hours) }} créneaux horaires
+                </span>
             </div>
-        @endif
-
-        @if (session('error'))
-            <div class="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-lg mb-6">
-            {{ session('error') }}
-            </div>
-        @endif
+        </div>
         
-        <!-- Bouton pour afficher le modal -->
-        <div class="d-flex justify-content-end w-100 w-md-auto">
-            <button type="button" class="btn btn-primary border-blue-600 border-2 px-3 px-md-4 py-2 d-flex align-items-center gap-2" 
+        <!-- Bouton Ajouter -->
+        <button type="button" class="btn btn-primary px-4 py-2 fw-semibold d-flex align-items-center gap-2"
+                data-bs-toggle="modal" data-bs-target="#addCourseModal">
+            <i class="fas fa-plus-circle fs-5"></i>
+            <span class="d-none d-md-inline">Ajouter un cours</span>
+            <span class="d-inline d-md-none">Ajouter</span>
+        </button>
+    </div>
+
+    <!-- Messages d'erreur -->
+    @if($errors->any())
+        <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-exclamation-triangle me-3 fs-4"></i>
+                <div>
+                    <strong>Erreurs de validation :</strong>
+                    <ul class="mb-0 mt-1 ps-3">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+    @if (session('error'))
+        <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-exclamation-circle me-3 fs-4"></i>
+                <div>{{ session('error') }}</div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+    @if (session('success'))
+        <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-check-circle me-3 fs-4"></i>
+                <div>{{ session('success') }}</div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+    <!-- Tableau emploi du temps -->
+    <div class="card border-0 shadow-lg mb-4 overflow-hidden">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-bordered mb-0" style="min-width: 800px;">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="text-center align-middle" style="width: 100px; background-color: #f8f9fa;">
+                                <div class="fw-bold text-primary">Heure</div>
+                            </th>
+                            @foreach($joursSemaine as $jour)
+                                <th class="text-center align-middle" style="min-width: 150px; background-color: #f8f9fa;">
+                                    <div class="fw-bold text-primary">{{ $jour }}</div>
+                                    <div class="small text-muted">{{ date('d/m') }}</div>
+                                </th>
+                            @endforeach
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($hours as $index => $hour)
+                            <tr>
+                                <!-- Cellule Heure -->
+                                <td class="text-center align-middle fw-bold bg-light" 
+                                    style="background-color: #f8f9fa !important;">
+                                    <div class="text-primary">{{ $hour['slot'] }}</div>
+                                </td>
+                                
+                                <!-- Cellules pour chaque jour -->
+                                @foreach($joursSemaine as $jour)
+                                    @php
+                                        $cellule = $emploiDuTemps[$jour][$index] ?? null;
+                                        $estDebutCours = $cellule !== null;
+                                        $rowspan = $cellule['rowspan'] ?? 1;
+                                        $cours = $cellule['cours'] ?? null;
+                                        $skipRow = false;
+                                        
+                                        // Vérifier si cette cellule doit être sautée (cours sur plusieurs créneaux)
+                                        for ($i = 0; $i < $index; $i++) {
+                                            $previousCell = $emploiDuTemps[$jour][$i] ?? null;
+                                            if ($previousCell && isset($previousCell['rowspan'])) {
+                                                $previousRowspan = $previousCell['rowspan'] ?? 1;
+                                                if ($index - $i < $previousRowspan) {
+                                                    $skipRow = true;
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                    @endphp
+                                    
+                                    @if($skipRow)
+                                        {{-- Cellule déjà remplie par un cours précédent --}}
+                                    @elseif($estDebutCours)
+                                        <td class="align-middle text-center p-2 course-cell"
+                                            rowspan="{{ $rowspan }}"
+                                            data-course-id="{{ $cours->id }}"
+                                            style="background-color: rgba(13, 110, 253, 0.1); border: 2px solid rgba(13, 110, 253, 0.2);">
+                                            <div class="d-flex flex-column justify-content-between h-100">
+                                                <div class="mb-2">
+                                                    <div class="fw-bold text-truncate mb-1" 
+                                                         style="color: #0d6efd; font-size: 0.9rem;"
+                                                         title="{{ $cours->subject->name }}">
+                                                        {{ Str::limit($cours->subject->name, 20) }}
+                                                    </div>
+                                                    <div class="text-muted small text-truncate mb-2"
+                                                         title="{{ $cours->teacher->name }}">
+                                                        <i class="fas fa-user-tie me-1"></i>
+                                                        {{ Str::limit($cours->teacher->name, 18) }}
+                                                    </div>
+                                                    <div class="badge bg-info text-dark mb-2" style="font-size: 0.75rem;">
+                                                        {{ date('H:i', strtotime($cours->start_time)) }} - {{ date('H:i', strtotime($cours->end_time)) }}
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="mt-auto">
+                                                    <div class="d-flex flex-wrap gap-1 justify-content-center">
+                                                        <a href="{{ route('censeur.timetables.edit', [$class->id, $cours->id]) }}"
+                                                           class="btn btn-sm btn-outline-warning py-1 px-2 d-flex align-items-center"
+                                                           style="font-size: 0.75rem;">
+                                                            <i class="fas fa-edit me-1"></i>
+                                                            <span class="d-none d-lg-inline">Modifier</span>
+                                                        </a>
+                                                        <form action="{{ route('censeur.timetables.delete', [$class->id, $cours->id]) }}"
+                                                              method="POST" class="d-inline">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="submit"
+                                                                    onclick="return confirm('Voulez-vous vraiment supprimer ce cours ?')"
+                                                                    class="btn btn-sm btn-outline-danger py-1 px-2 d-flex align-items-center"
+                                                                    style="font-size: 0.75rem;">
+                                                                <i class="fas fa-trash me-1"></i>
+                                                                <span class="d-none d-lg-inline">Supprimer</span>
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    @else
+                                        <td class="empty-cell" style="min-height: 80px;"></td>
+                                    @endif
+                                @endforeach
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center gap-3 mt-4">
+        <a href="{{ route('censeur.classes.trimestres', $class->id) }}" 
+           class="btn btn-outline-secondary px-4 py-2 d-flex align-items-center gap-2">
+            <i class="fas fa-arrow-left"></i>
+            Retour
+        </a>
+        
+        <div class="d-flex gap-2">
+            <a href="{{ route('censeur.timetables.download', $class->id) }}" 
+               class="btn btn-success px-4 py-2 d-flex align-items-center gap-2">
+                <i class="fas fa-file-pdf me-2"></i>
+                <span class="d-none d-sm-inline">Télécharger PDF</span>
+                <span class="d-inline d-sm-none">PDF</span>
+            </a>
+            <button type="button" class="btn btn-primary px-4 py-2 d-flex align-items-center gap-2"
                     data-bs-toggle="modal" data-bs-target="#addCourseModal">
-                <i class="fas fa-plus-circle"></i>
-                <span class="d-none d-sm-inline">Ajouter un cours</span>
-                <span class="d-inline d-sm-none">Ajouter</span>
+                <i class="fas fa-plus me-2"></i>
+                Nouveau cours
             </button>
         </div>
     </div>
 
-    <!-- Modal Bootstrap pour l'ajout de cours -->
+    <!-- Modal pour ajouter un cours -->
     <div class="modal fade" id="addCourseModal" tabindex="-1" aria-labelledby="addCourseModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-md modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title fs-5" id="addCourseModalLabel">Ajouter un nouveau cours</h5>
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-primary text-white border-0">
+                    <h5 class="modal-title fw-bold" id="addCourseModalLabel">
+                        <i class="fas fa-plus-circle me-2"></i>
+                        Ajouter un nouveau cours
+                    </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
-                    <form action="{{ route('censeur.timetables.store', $class->id) }}" method="POST" class="row g-3">
+                <div class="modal-body p-4">
+                    <form action="{{ route('censeur.timetables.store', $class->id) }}" method="POST" id="addCourseForm">
                         @csrf
                         
-                        <div class="col-12">
-                            <label class="form-label"><strong>Enseignant:</strong></label>
-                            <select name="teacher_id" class="form-select @error('teacher_id') is-invalid @enderror" required>
-                                <option value="">-- Sélectionner --</option>
-                                @foreach($teachers as $t)
-                                    <option value="{{ $t->id }}" {{ old('teacher_id') == $t->id ? 'selected' : '' }}>
-                                        {{ $t->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('teacher_id')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Enseignant</label>
+                                <select name="teacher_id" class="form-select @error('teacher_id') is-invalid @enderror" required>
+                                    <option value="">-- Sélectionner un enseignant --</option>
+                                    @foreach($teachers as $teacher)
+                                        <option value="{{ $teacher->id }}" {{ old('teacher_id') == $teacher->id ? 'selected' : '' }}>
+                                            {{ $teacher->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('teacher_id')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
 
-                        <div class="col-12">
-                            <label class="form-label"><strong>Matière:</strong></label>
-                            <select name="subject_id" class="form-select @error('subject_id') is-invalid @enderror" required>
-                                <option value="">-- Sélectionner --</option>
-                                @foreach($subjects as $s)
-                                    <option value="{{ $s->id }}" {{ old('subject_id') == $s->id ? 'selected' : '' }}>
-                                        {{ $s->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('subject_id')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Matière</label>
+                                <select name="subject_id" class="form-select @error('subject_id') is-invalid @enderror" required>
+                                    <option value="">-- Sélectionner une matière --</option>
+                                    @foreach($subjects as $subject)
+                                        <option value="{{ $subject->id }}" {{ old('subject_id') == $subject->id ? 'selected' : '' }}>
+                                            {{ $subject->name }} (Coef: {{ $subject->coefficient }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('subject_id')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
 
-                        <div class="col-12 col-md-6">
-                            <label class="form-label"><strong>Jour:</strong></label>
-                            <select name="day" class="form-select @error('day') is-invalid @enderror" required>
-                                <option value="">-- Sélectionner --</option>
-                                @foreach(['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'] as $d)
-                                    <option value="{{ $d }}" {{ old('day') == $d ? 'selected' : '' }}>
-                                        {{ $d }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('day')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Jour</label>
+                                <select name="day" class="form-select @error('day') is-invalid @enderror" required>
+                                    <option value="">-- Sélectionner un jour --</option>
+                                    @foreach($joursSemaine as $jour)
+                                        <option value="{{ $jour }}" {{ old('day') == $jour ? 'selected' : '' }}>
+                                            {{ $jour }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('day')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
 
-                        <div class="col-12 col-md-6">
-                            <label class="form-label"><strong>Heure début:</strong></label>
-                            <input type="time" name="start_time" class="form-control @error('start_time') is-invalid @enderror" 
-                                   value="{{ old('start_time') }}" required>
-                            @error('start_time')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Heure de début</label>
+                                <input type="time" name="start_time" 
+                                       class="form-control @error('start_time') is-invalid @enderror"
+                                       value="{{ old('start_time') }}" 
+                                       min="07:00" max="18:00" required>
+                                @error('start_time')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
 
-                        <div class="col-12 col-md-6">
-                            <label class="form-label"><strong>Heure fin:</strong></label>
-                            <input type="time" name="end_time" class="form-control @error('end_time') is-invalid @enderror" 
-                                   value="{{ old('end_time') }}" required>
-                            @error('end_time')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Heure de fin</label>
+                                <input type="time" name="end_time" 
+                                       class="form-control @error('end_time') is-invalid @enderror"
+                                       value="{{ old('end_time') }}" 
+                                       min="07:00" max="18:00" required>
+                                @error('end_time')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
 
-                        <div class="col-12">
-                            <button type="submit" class="btn btn-success w-100 py-2 d-flex align-items-center justify-content-center gap-2">
-                                <i class="fas fa-check"></i>
-                                Ajouter le cours
-                            </button>
+                            <div class="col-12 mt-4">
+                                <div class="d-flex justify-content-end gap-2">
+                                    <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">
+                                        Annuler
+                                    </button>
+                                    <button type="submit" class="btn btn-primary px-4 d-flex align-items-center gap-2">
+                                        <i class="fas fa-save"></i>
+                                        Enregistrer le cours
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </form>
                 </div>
             </div>
         </div>
     </div>
-
-    <!-- Messages d'alerte -->
-    @if($errors->any())
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <strong>Erreur:</strong> Veuillez corriger les erreurs ci-dessous.
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-
-    <!-- Tableau d'emploi du temps -->
-    <div class="table-responsive border rounded-3 shadow-sm bg-white mb-4 timetable-container">
-        <table class="table table-bordered table-hover mb-0 timetable-table">
-            <thead class="table-light">
-                <tr>
-                    <th class="text-center time-column">Heure</th>
-                    @foreach(['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'] as $d)
-                        <th class="text-center day-column">{{ $d }}</th>
-                    @endforeach
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($hours as $hourSlot)
-                    @php
-                        [$startHour, $endHour] = explode('-', $hourSlot);
-                        $startHourFormatted = str_replace('h', ':00', $startHour);
-                        $currentHourProcessed = false;
-                    @endphp
-
-                    <tr class="timetable-row">
-                        <td class="text-center fw-bold bg-light time-cell">
-                            <span class="d-none d-md-inline">{{ $hourSlot }}</span>
-                            <span class="d-inline d-md-none">{{ str_replace('h', 'h-', $startHour) }}{{ $endHour }}</span>
-                        </td>
-
-                        @foreach(['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'] as $day)
-                            @php
-                                // Vérifier si cette cellule a déjà été remplie par un rowspan
-                                if ($currentHourProcessed) {
-                                    $currentHourProcessed = false;
-                                    continue;
-                                }
-
-                                $course = $timetables->first(function($t) use ($day, $startHourFormatted) {
-                                    return $t->day === $day && date('H:i', strtotime($t->start_time)) == $startHourFormatted;
-                                });
-
-                                $overlap = $timetables->first(function($t) use ($day, $startHourFormatted) {
-                                    return $t->day === $day 
-                                           && strtotime($t->start_time) < strtotime($startHourFormatted) 
-                                           && strtotime($t->end_time) > strtotime($startHourFormatted);
-                                });
-                            @endphp
-
-                            @if($course)
-                                @php
-                                    $duration = max(1, round((strtotime($course->end_time) - strtotime($course->start_time)) / 3600));
-                                    if ($duration > 1) {
-                                        $currentHourProcessed = true;
-                                    }
-                                @endphp
-                                <td class="bg-info bg-opacity-10 text-center course-cell" 
-                                    rowspan="{{ $duration }}"
-                                    data-course-id="{{ $course->id }}"
-                                    data-duration="{{ $duration }}">
-                                    <div class="course-content">
-                                        <div class="course-subject fw-bold text-truncate" title="{{ $course->subject->name }}">
-                                            {{ $course->subject->name }}
-                                        </div>
-                                        <div class="course-teacher small text-muted text-truncate" title="{{ $course->teacher->name }}">
-                                            {{ $course->teacher->name }}
-                                        </div>
-                                        <div class="course-time badge bg-info text-dark mt-1">
-                                            <small>{{ date('H:i', strtotime($course->start_time)) }}-{{ date('H:i', strtotime($course->end_time)) }}</small>
-                                        </div>
-                                        <div class="course-actions mt-2 d-flex flex-wrap justify-content-center gap-1">
-                                            <a href="{{ route('censeur.timetables.edit', [$class->id, $course->id]) }}"
-                                               class="btn btn-warning btn-sm px-2 py-1 edit-btn">
-                                                <i class="fas fa-edit me-1"></i>
-                                                <span class="d-none d-sm-inline">Modifier</span>
-                                                <span class="d-inline d-sm-none">Modif</span>
-                                            </a>
-
-                                            <form action="{{ route('censeur.timetables.delete', [$class->id, $course->id]) }}"
-                                                method="POST" class="d-inline delete-form">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit"
-                                                        onclick="return confirm('Voulez-vous vraiment supprimer ce cours ?')"
-                                                        class="btn btn-danger btn-sm px-2 py-1 delete-btn">
-                                                    <i class="fas fa-trash"></i>
-                                                    <span class="d-none d-sm-inline">Supprimer</span>
-                                                    <span class="d-inline d-sm-none">Supp</span>
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </td>
-                            @elseif($overlap)
-                                {{-- Cellule déjà remplie par un cours précédent --}}
-                            @else
-                                <td class="empty-cell"></td>
-                            @endif
-                        @endforeach
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
-    </div>
-
-    <!-- Actions (PDF et Retour) -->
-    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-stretch align-items-sm-center gap-3">
-        <button onclick="window.history.back()" 
-            class="btn btn-outline-secondary px-4 py-2 d-flex align-items-center justify-content-center gap-2 order-2 order-sm-1">
-            <i class="fas fa-arrow-left"></i>
-            Retour
-        </button>
-        
-        <div class="d-flex gap-2 order-1 order-sm-2">
-            <a href="{{ route('censeur.timetables.download', $class->id) }}" 
-               class="btn btn-success px-4 py-2 d-flex align-items-center justify-content-center gap-2">
-                <i class="fas fa-download"></i>
-                <span class="d-none d-sm-inline">Télécharger PDF</span>
-                <span class="d-inline d-sm-none">PDF</span>
-            </a>
-        </div>
-    </div>
-
 </div>
 
 <style>
-    /* Styles améliorés pour le responsive */
-    .min-h-screen {
+    /* Styles généraux */
+    .min-vh-100 {
         min-height: 100vh;
     }
 
-    /* Tableau responsive */
-    .timetable-container {
-        overflow-x: auto;
-        border-radius: 0.5rem;
+    /* Tableau */
+    .table {
+        --bs-table-bg: transparent;
     }
 
-    .timetable-table {
-        table-layout: fixed;
-        width: 100%;
-        font-size: 0.875rem;
-        min-width: 600px;
-    }
-
-    @media (min-width: 768px) {
-        .timetable-table {
-            font-size: 1rem;
-            min-width: auto;
-        }
-    }
-
-    .time-column {
-        width: 80px;
-        min-width: 80px;
-    }
-
-    .day-column {
-        min-width: 120px;
-    }
-
-    @media (max-width: 767.98px) {
-        .time-column {
-            width: 60px;
-            min-width: 60px;
-        }
-        
-        .day-column {
-            min-width: 100px;
-            font-size: 0.8rem;
-        }
-        
-        .timetable-table th,
-        .timetable-table td {
-            padding: 4px 2px;
-        }
-    }
-
-    @media (max-width: 575.98px) {
-        .time-column {
-            width: 50px;
-            min-width: 50px;
-        }
-        
-        .day-column {
-            min-width: 85px;
-            font-size: 0.75rem;
-        }
-        
-        .timetable-table {
-            font-size: 0.75rem;
-        }
-    }
-
-    /* Cellules de cours */
     .course-cell {
         position: relative;
-        height: 100%;
-        min-height: 90px;
-        transition: all 0.2s ease;
-        border: 1px solid #dee2e6;
+        transition: all 0.3s ease;
+        vertical-align: middle !important;
     }
 
     .course-cell:hover {
         background-color: rgba(13, 110, 253, 0.15) !important;
         transform: translateY(-1px);
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        z-index: 1;
     }
 
-    .course-content {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        height: 100%;
-        padding: 4px;
-        gap: 2px;
+    .empty-cell {
+        background-color: #f8f9fa;
+        transition: background-color 0.2s ease;
     }
 
-    .course-subject {
-        font-size: 0.875rem;
-        line-height: 1.2;
-        max-width: 100%;
+    .empty-cell:hover {
+        background-color: #e9ecef;
     }
 
-    .course-teacher {
-        font-size: 0.75rem;
-        line-height: 1.2;
-        max-width: 100%;
-    }
-
-    .course-time {
-        font-size: 0.7rem;
-        padding: 2px 4px;
-    }
-
-    .course-actions {
-        width: 100%;
-    }
-
-    .course-actions .btn {
-        font-size: 0.75rem;
-        padding: 2px 6px;
-        white-space: nowrap;
-    }
-
-    .edit-btn {
-        background: #ffc107;
-        border: none;
-        color: #000;
-    }
-
-    .edit-btn:hover {
-        background: #e0a800;
-        color: #000;
-    }
-
-    .delete-btn {
-        background: #dc3545;
-        border: none;
-        color: #fff;
-    }
-
-    .delete-btn:hover {
-        background: #c82333;
-        color: #fff;
-    }
-
-    @media (min-width: 768px) {
-        .course-cell {
-            min-height: 110px;
+    /* Responsive */
+    @media (max-width: 768px) {
+        .card-body {
+            padding: 0.5rem !important;
         }
         
-        .course-content {
-            padding: 8px;
-            gap: 4px;
+        .table {
+            font-size: 0.85rem;
         }
         
-        .course-subject {
-            font-size: 1rem;
-        }
-        
-        .course-teacher {
+        .btn {
+            padding: 0.375rem 0.75rem;
             font-size: 0.875rem;
         }
         
-        .course-time {
+        .modal-dialog {
+            margin: 0.5rem;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .table {
             font-size: 0.8rem;
         }
         
-        .course-actions .btn {
-            font-size: 0.875rem;
-            padding: 4px 8px;
-        }
-    }
-
-    /* Cellules vides */
-    .empty-cell {
-        background-color: #f8f9fa;
-        min-height: 90px;
-    }
-
-    @media (min-width: 768px) {
-        .empty-cell {
-            min-height: 110px;
-        }
-    }
-
-    /* En-tête responsive */
-    h2.text-primary {
-        font-size: clamp(1.5rem, 4vw, 2.1rem);
-        line-height: 1.2;
-    }
-
-    /* Boutons responsive */
-    .btn {
-        white-space: nowrap;
-        font-weight: 500;
-        transition: all 0.2s ease;
-    }
-
-    /* Modal responsive */
-    @media (max-width: 575.98px) {
-        .modal-dialog {
-            margin: 10px;
-        }
-        
-        .modal-content {
-            border-radius: 8px;
+        .course-cell .btn {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
         }
         
         .modal-body {
-            padding: 15px;
+            padding: 1rem !important;
         }
         
         .form-select, .form-control {
-            font-size: 16px;
+            font-size: 16px !important; /* Empêche le zoom sur iOS */
         }
     }
 
-    /* Amélioration de l'accessibilité */
-    @media (prefers-reduced-motion: reduce) {
-        .course-cell, .btn {
-            transition: none;
-        }
+    /* Animation pour les cellules de cours */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
     }
 
-    /* Styles pour les très petits écrans */
-    @media (max-width: 400px) {
-        .timetable-table {
-            min-width: 550px;
-        }
-        
-        .course-actions {
-            flex-direction: column;
-        }
-        
-        .course-actions .btn {
-            width: 100%;
-            margin-bottom: 2px;
-        }
+    .course-cell {
+        animation: fadeIn 0.3s ease-out;
     }
 
-    /* Loading state */
-    .loading {
-        opacity: 0.6;
-        pointer-events: none;
+    /* Badge d'heure */
+    .badge.bg-info {
+        background: linear-gradient(135deg, #0dcaf0, #0b9ed8) !important;
+        border: none;
+    }
+
+    /* Tooltip personnalisé */
+    [title] {
+        position: relative;
+    }
+
+    [title]:hover::after {
+        content: attr(title);
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #333;
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        white-space: nowrap;
+        z-index: 1000;
+    }
+
+    /* Scrollbar personnalisée pour le tableau */
+    .table-responsive::-webkit-scrollbar {
+        height: 8px;
+    }
+
+    .table-responsive::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 4px;
+    }
+
+    .table-responsive::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 4px;
+    }
+
+    .table-responsive::-webkit-scrollbar-thumb:hover {
+        background: #555;
+    }
+
+    /* Styles pour les boutons d'action */
+    .btn-outline-warning {
+        border-color: #ffc107;
+        color: #ffc107;
+    }
+
+    .btn-outline-warning:hover {
+        background-color: #ffc107;
+        color: #000;
+    }
+
+    .btn-outline-danger {
+        border-color: #dc3545;
+        color: #dc3545;
+    }
+
+    .btn-outline-danger:hover {
+        background-color: #dc3545;
+        color: #fff;
     }
 </style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Gestion des formulaires de suppression
-    const deleteForms = document.querySelectorAll('.delete-form');
-    
-    deleteForms.forEach(form => {
-        form.addEventListener('submit', function(e) {
-            if (!confirm('Êtes-vous sûr de vouloir supprimer ce cours ? Cette action est irréversible.')) {
-                e.preventDefault();
+    // Validation du formulaire d'ajout de cours
+    const addCourseForm = document.getElementById('addCourseForm');
+    if (addCourseForm) {
+        addCourseForm.addEventListener('submit', function(e) {
+            const startTime = this.querySelector('input[name="start_time"]').value;
+            const endTime = this.querySelector('input[name="end_time"]').value;
+            
+            if (startTime && endTime) {
+                const start = new Date('2000-01-01T' + startTime);
+                const end = new Date('2000-01-01T' + endTime);
+                
+                if (end <= start) {
+                    e.preventDefault();
+                    alert('L\'heure de fin doit être après l\'heure de début.');
+                    return false;
+                }
+                
+                // Vérifier que la durée n'excède pas 4 heures
+                const duration = (end - start) / (1000 * 60 * 60);
+                if (duration > 4) {
+                    e.preventDefault();
+                    alert('La durée d\'un cours ne peut excéder 4 heures.');
+                    return false;
+                }
             }
         });
+    }
+
+    // Gestion des suppressions
+    const deleteButtons = document.querySelectorAll('form button[type="submit"]');
+    deleteButtons.forEach(button => {
+        if (button.closest('form').action.includes('delete')) {
+            button.addEventListener('click', function(e) {
+                if (!confirm('Êtes-vous sûr de vouloir supprimer ce cours ? Cette action est irréversible.')) {
+                    e.preventDefault();
+                } else {
+                    // Afficher un indicateur de chargement
+                    const originalHTML = this.innerHTML;
+                    this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Suppression...';
+                    this.disabled = true;
+                    
+                    // Restaurer après 3 secondes si la suppression échoue
+                    setTimeout(() => {
+                        this.innerHTML = originalHTML;
+                        this.disabled = false;
+                    }, 3000);
+                }
+            });
+        }
     });
 
-    // Amélioration de l'accessibilité du tableau
-    const courseCells = document.querySelectorAll('.course-cell');
-    
-    courseCells.forEach(cell => {
-        cell.setAttribute('tabindex', '0');
-        cell.addEventListener('focus', function() {
-            this.style.outline = '2px solid #0d6efd';
-            this.style.outlineOffset = '-2px';
-        });
+    // Ouvrir le modal s'il y a des erreurs
+    @if($errors->any())
+        const modal = new bootstrap.Modal(document.getElementById('addCourseModal'));
+        modal.show();
+    @endif
+
+    // Gestion du responsive
+    function handleResponsive() {
+        const table = document.querySelector('.table-responsive');
+        const screenWidth = window.innerWidth;
         
-        cell.addEventListener('blur', function() {
-            this.style.outline = 'none';
-        });
-    });
-
-    // Gestion du redimensionnement
-    function handleResize() {
-        const table = document.querySelector('.timetable-table');
-        if (window.innerWidth < 576) {
-            table.classList.add('small-screen');
-        } else {
-            table.classList.remove('small-screen');
+        if (screenWidth < 768) {
+            // Sur mobile, ajuster la taille des cellules
+            const courseCells = document.querySelectorAll('.course-cell');
+            courseCells.forEach(cell => {
+                const buttons = cell.querySelectorAll('.btn');
+                buttons.forEach(btn => {
+                    btn.innerHTML = btn.innerHTML.replace('Modifier', '<i class="fas fa-edit"></i>');
+                    btn.innerHTML = btn.innerHTML.replace('Supprimer', '<i class="fas fa-trash"></i>');
+                });
+            });
         }
     }
 
-    window.addEventListener('resize', handleResize);
-    handleResize();
+    window.addEventListener('resize', handleResponsive);
+    handleResponsive();
 
-    // Tooltips pour les textes tronqués
-    const truncatedElements = document.querySelectorAll('.text-truncate');
-    truncatedElements.forEach(el => {
-        el.addEventListener('mouseenter', function() {
-            if (this.offsetWidth < this.scrollWidth) {
-                this.setAttribute('title', this.textContent);
-            } else {
-                this.removeAttribute('title');
-            }
+    // Highlight les cellules de cours au survol
+    const courseCells = document.querySelectorAll('.course-cell');
+    courseCells.forEach(cell => {
+        cell.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-2px) scale(1.01)';
+            this.style.boxShadow = '0 6px 12px rgba(0,0,0,0.15)';
+        });
+        
+        cell.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0) scale(1)';
+            this.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
         });
     });
 
-    // Gestion des erreurs de formulaire dans le modal
-    const addCourseModal = document.getElementById('addCourseModal');
-    if (addCourseModal && @json($errors->any())) {
-        const modal = new bootstrap.Modal(addCourseModal);
-        modal.show();
-    }
-
-    // Empêcher la double soumission des formulaires
+    // Empêcher la double soumission
+    let formSubmitting = false;
     const forms = document.querySelectorAll('form');
     forms.forEach(form => {
         form.addEventListener('submit', function() {
+            if (formSubmitting) {
+                event.preventDefault();
+                return false;
+            }
+            formSubmitting = true;
+            
+            // Désactiver le bouton de soumission
             const submitBtn = this.querySelector('button[type="submit"]');
             if (submitBtn) {
                 submitBtn.disabled = true;
-                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Traitement...';
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Traitement...';
             }
+            
+            return true;
         });
     });
 });

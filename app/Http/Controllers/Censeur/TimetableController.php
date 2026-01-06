@@ -16,8 +16,7 @@ use Illuminate\Support\Facades\Validator;
 
 class TimetableController extends Controller
 {
-    public function index($classId)
-    {
+    public function index($classId) {
         try {
             // Vérifie s'il existe une année active
             $activeYear = AcademicYear::where('active', true)->first();
@@ -32,28 +31,30 @@ class TimetableController extends Controller
                 ->firstOrFail();
 
             // Récupération des emplois du temps pour cette classe et année
-            // Correction pour PostgreSQL : utilisation de CASE au lieu de FIELD()
             $timetables = Timetable::where('class_id', $classId)
                 ->where('academic_year_id', $activeYear->id)
                 ->with(['teacher', 'subject'])
-                ->orderByRaw("
-                    CASE 
-                        WHEN day = 'Lundi' THEN 1
-                        WHEN day = 'Mardi' THEN 2
-                        WHEN day = 'Mercredi' THEN 3
-                        WHEN day = 'Jeudi' THEN 4
-                        WHEN day = 'Vendredi' THEN 5
-                        WHEN day = 'Samedi' THEN 6
-                        ELSE 7
-                    END
-                ")
-                ->orderBy('start_time')
-                ->get();
+                ->get()
+                ->groupBy('day'); // Grouper par jour pour faciliter le traitement
 
-            // Génération des heures sous forme "07h-08h", "08h-09h", ...
+            // Jours de la semaine dans l'ordre
+            $daysOrder = ['Lundi' => 1, 'Mardi' => 2, 'Mercredi' => 3, 'Jeudi' => 4, 'Vendredi' => 5, 'Samedi' => 6];
+            
+            // Trier les emplois du temps par jour et heure
+            $sortedTimetables = collect($timetables)->map(function($dayCourses) {
+                return $dayCourses->sortBy('start_time');
+            })->sortBy(function($value, $key) use ($daysOrder) {
+                return $daysOrder[$key] ?? 99;
+            });
+
+            // Génération des heures (7h à 18h)
             $hours = [];
-            for ($h = 7; $h < 19; $h++) {
-                $hours[] = sprintf('%02dh-%02dh', $h, $h + 1);
+            for ($h = 7; $h < 18; $h++) {
+                $hours[] = [
+                    'slot' => sprintf('%02dh-%02dh', $h, $h + 1),
+                    'start' => sprintf('%02d:00', $h),
+                    'end' => sprintf('%02d:00', $h + 1)
+                ];
             }
 
             // Récupère seulement les matières et profs de l'année active
@@ -67,7 +68,15 @@ class TimetableController extends Controller
                 ->orderBy('name')
                 ->get();
 
-            return view('censeur.timetables.index', compact('class', 'hours', 'timetables', 'subjects', 'teachers', 'activeYear'));
+            return view('censeur.timetables.index', compact(
+                'class', 
+                'hours', 
+                'sortedTimetables', 
+                'subjects', 
+                'teachers', 
+                'activeYear',
+                'daysOrder'
+            ));
 
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             Log::error('Classe non trouvée: ' . $e->getMessage());
@@ -78,8 +87,7 @@ class TimetableController extends Controller
         }
     }
 
-    public function edit($classId, $id)
-    {
+    public function edit($classId, $id) {
         try {
             $activeYear = AcademicYear::where('active', true)->firstOrFail();
             $class = Classe::findOrFail($classId);
@@ -110,8 +118,7 @@ class TimetableController extends Controller
         }
     }
 
-    public function update(Request $request, $classId, $id)
-    {
+    public function update(Request $request, $classId, $id){
         DB::beginTransaction();
 
         try {
@@ -193,8 +200,7 @@ class TimetableController extends Controller
         }
     }
 
-    private function updateClassTeacherSubject($classId, $oldData, $newData)
-    {
+    private function updateClassTeacherSubject($classId, $oldData, $newData) {
         try {
             // Supprimer l'ancienne relation si elle existe
             DB::table('class_teacher_subject')
@@ -227,8 +233,7 @@ class TimetableController extends Controller
         }
     }
 
-    public function destroy($classId, $timetableId)
-    {
+    public function destroy($classId, $timetableId){
         DB::beginTransaction();
 
         try {
@@ -273,8 +278,7 @@ class TimetableController extends Controller
         }
     }
 
-    public function store(Request $request, $classId)
-    {
+    public function store(Request $request, $classId){
         DB::beginTransaction();
 
         try {
@@ -359,8 +363,7 @@ class TimetableController extends Controller
         }
     }
 
-    public function download($classId)
-    {
+    public function download($classId){
         try {
             $activeYear = AcademicYear::where('active', true)->firstOrFail();
             $class = Classe::findOrFail($classId);
@@ -397,8 +400,7 @@ class TimetableController extends Controller
      * Méthode alternative utilisant une collection pour le tri
      * Utile si vous préférez trier côté PHP plutôt que côté base de données
      */
-    private function getOrderedTimetables($classId, $activeYearId)
-    {
+    private function getOrderedTimetables($classId, $activeYearId) {
         $timetables = Timetable::where('class_id', $classId)
             ->where('academic_year_id', $activeYearId)
             ->with(['teacher', 'subject'])
