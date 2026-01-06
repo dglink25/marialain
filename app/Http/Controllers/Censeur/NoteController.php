@@ -216,9 +216,6 @@ use App\Models\NoteEditPermission;
 
             return back()->with('success', 'Période définie avec succès.');
         }
-
-
-
         // Toggle autorisation/revocation
         public function toggle(Request $request, $classId, $trimestre){
             $permission = NotePermission::where('class_id', $classId)
@@ -240,9 +237,19 @@ use App\Models\NoteEditPermission;
                 $now = now();
                 $permission->is_open = $now->between($permission->opens_at, $permission->closes_at);
 
-            } else {
+            } 
+            else {
 
                 // Mode manuel ON/OFF
+                if($permission->is_open == true){
+                    $permission->open_at = null;
+                    $permission->close_at = null;
+                }
+
+                else {
+                    $permission->open_at = now();
+                    $permission->close_at = now()->addDay(7);;
+                }
                 $permission->is_open = !$permission->is_open;
             }
 
@@ -250,8 +257,6 @@ use App\Models\NoteEditPermission;
 
             return back()->with('success', 'Permission mise à jour avec succès.');
         }
-
-
 
         public function bulletin($classId, $studentId, $trimestre){
             try {
@@ -318,6 +323,31 @@ use App\Models\NoteEditPermission;
                     $moyenne = $moyenne ? round($moyenne, 2) : null;
                     $moyCoeff = $moyenne ? round($moyenne * $coef, 2) : 0;
 
+                    // Moyenne générale matière
+                    $interroValues = collect($notesInterro)->filter();
+                    $devoirValues = collect($notesDevoir)->filter();
+
+                    $moyenne = null;
+
+                    if ($interroValues->isNotEmpty() || $devoirValues->isNotEmpty()) {
+
+                        $notesFinales = collect();
+
+                        // Moyenne des interrogations (comptée comme une seule note)
+                        if ($interroValues->isNotEmpty()) {
+                            $notesFinales->push($interroValues->avg());
+                        }
+
+                        // Ajouter toutes les notes de devoirs
+                        foreach ($devoirValues as $d) {
+                            $notesFinales->push($d);
+                        }
+
+                        $moyenne = round($notesFinales->avg(), 2);
+                    }
+
+                    $moyCoeff = $moyenne !== null ? round($moyenne * $coef, 2) : 0;
+
                     // Appréciation par matière
                     $appreciation = '-';
                     if ($moyenne !== null) {
@@ -358,7 +388,8 @@ use App\Models\NoteEditPermission;
                     elseif ($moyenneGenerale >= 6) $appreciationGenerale = 'Faible';
                     elseif ($moyenneGenerale >= 4) $appreciationGenerale = 'Médiocre';
                     else $appreciationGenerale = 'Très Faible';
-                } else {
+                }
+                else {
                     $appreciationGenerale = '-';
                 }
 
@@ -684,17 +715,32 @@ use App\Models\NoteEditPermission;
                 ksort($interros);
                 ksort($devoirs);
 
-                $moyenneInterro = count($interros) > 0 ? round(array_sum($interros) / count($interros), 2) : null;
+                $moyenneInterro = count($interros) > 0
+                    ? round(array_sum($interros) / count($interros), 2)
+                    : null;
                 $moyenneDevoir = count($devoirs) > 0 ? round(array_sum($devoirs) / count($devoirs), 2) : null;
-
                 $coef = $subject->coefficient ?? 1;
+
                 $moyenne = null;
                 $moyenneMat = null;
 
-                if ($moyenneInterro !== null && $moyenneDevoir !== null) {
-                    $moyenne = round(($moyenneInterro + $moyenneDevoir) / 2, 2);
+                $notesFinales = [];
+
+                // Moyenne des interrogations (1 seule note)
+                if ($moyenneInterro !== null) {
+                    $notesFinales[] = $moyenneInterro;
+                }
+
+                // Ajouter chaque devoir individuellement
+                foreach ($devoirs as $note) {
+                    $notesFinales[] = $note;
+                }
+
+                if (count($notesFinales) > 0) {
+                    $moyenne = round(array_sum($notesFinales) / count($notesFinales), 2);
                     $moyenneMat = round($moyenne * $coef, 2);
                 }
+
 
                 $gradesData[$student->id][$subjectId] = [
                     'interros' => $interros,
@@ -925,9 +971,30 @@ use App\Models\NoteEditPermission;
                 }
 
                 // Moyenne générale matière
-                $allNotes = collect(array_merge($interros, $devoirs))->filter();
-                $moyenne = $allNotes->isNotEmpty() ? round($allNotes->avg(), 2) : null;
-                $moyCoeff = $moyenne ? round($moyenne * $coef, 2) : 0;
+                $interroValues = collect($interros)->filter();
+                $devoirValues = collect($devoirs)->filter();
+
+                $moyenne = null;
+
+                if ($interroValues->isNotEmpty() || $devoirValues->isNotEmpty()) {
+
+                    $notesFinales = collect();
+
+                    // Moyenne des interrogations (comptée comme une seule note)
+                    if ($interroValues->isNotEmpty()) {
+                        $notesFinales->push($interroValues->avg());
+                    }
+
+                    // Ajouter toutes les notes de devoirs
+                    foreach ($devoirValues as $d) {
+                        $notesFinales->push($d);
+                    }
+
+                    $moyenne = round($notesFinales->avg(), 2);
+                }
+
+                $moyCoeff = $moyenne !== null ? round($moyenne * $coef, 2) : 0;
+
 
                 // Appréciation par matière
                 $appreciation = $this->getAppreciation($moyenne);
@@ -976,8 +1043,10 @@ use App\Models\NoteEditPermission;
 
             return $pdf->download("Bulletin_{$student->last_name}_T{$trimestre}.pdf");
 
-        } catch (\Exception $e) {
-            Log::error('Erreur PDF Bulletin : ' . $e->getMessage());
+        } 
+        catch (\Exception $e) {
+            //Log::error('Erreur PDF Bulletin : ' . $e->getMessage());
+           
             return back()->with('error', 'Impossible de générer le PDF du bulletin.');
         }
     }

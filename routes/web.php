@@ -67,18 +67,16 @@ Route::get('/test-500', function () {
 
 Route::prefix('censeur')->middleware('auth')->group(function () {
 
-    Route::get('/permissions/{classId}', [CenseurPermissionController::class, 'permissions'])
+    Route::get('/permissions/{classId}', [App\Http\Controllers\Censeur\NoteController::class, 'permissions'])
         ->name('censeur.permissions.index');
 
-    Route::post('/permissions/{classId}/{trimestre}/toggle', [CenseurPermissionController::class, 'toggle'])
+    Route::post('/permissions/{classId}/{trimestre}/toggle', [App\Http\Controllers\Censeur\NoteController::class, 'toggle'])
         ->name('censeur.permissions.toggle');
 
-    Route::post('/permissions/{classId}/{trimestre}/dates', [CenseurPermissionController::class, 'setDates'])
+    Route::post('/permissions/{classId}/{trimestre}/dates', [App\Http\Controllers\Censeur\NoteController::class, 'setDates'])
         ->name('censeur.permissions.dates');
 
 });
-
-
 
 Route::get('/payments/{payment}/receipt', [StudentController::class, 'downloadReceipt'])
     ->name('payments.receipt');

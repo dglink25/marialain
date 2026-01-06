@@ -4,30 +4,42 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class NotePermission extends Model
-{
+class NotePermission extends Model{
     protected $fillable = [
         'class_id',
         'trimestre',
-        'is_open',
         'open_at',
         'close_at',
     ];
 
     protected $dates = ['open_at', 'close_at'];
 
-    public function classe(){
-        return $this->belongsTo(Classe::class, 'class_id');
-    }
+    protected $appends = ['is_open'];
 
-    public function checkAutoClose(){
-        if ($this->close_at && now()->greaterThan($this->close_at)) {
-            if ($this->is_open) {
-                $this->is_open = false;
-                $this->save();
-            }
+    public function getIsOpenAttribute(){
+        $now = now();
+
+        if ($this->open_at && $now->lt($this->open_at)) {
+            return false;
         }
+
+        if ($this->close_at && $now->gt($this->close_at)) {
+            return false;
+        }
+
+        if ($this->close_at == null) {
+            return false;
+        }
+
+        if ($this->open_at == null) {
+            return false;
+        }
+
+        return true;
     }
 
+    public function classe()
+    {
+        return $this->belongsTo(Classe::class);
+    }
 }
-
