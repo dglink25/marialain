@@ -81,7 +81,7 @@ class SurveillantController extends Controller{
     // Liste des élèves d’une classe
     public function classStudents($classId) {
         $activeYear = AcademicYear::where('active', true)->first();
-        $secondary = Entity::where('name', 'secondaire')->first();
+        $secondary = Entity::where('name', 'Secondaire')->first();
 
         if (!$activeYear || !$secondary) {
             return back()->withErrors("Impossible de charger les élèves.");
@@ -104,7 +104,7 @@ class SurveillantController extends Controller{
         ]);
 
         $activeYear = AcademicYear::where('active', true)->first();
-        $secondary = Entity::where('name', 'secondaire')->first();
+        $secondary = Entity::where('name', 'Secondaire')->first();
 
         if (!$activeYear || !$secondary) {
             return back()->withErrors("Impossible de punir l’élève.");
