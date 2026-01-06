@@ -403,7 +403,7 @@ class NoteController extends Controller{
             // Calcul moyennes
             $moyenneInterro = count($interros) ? round(array_sum($interros) / count($interros), 2) : null;
             $moyenneDevoir = count($devoirs) ? round(array_sum($devoirs) / count($devoirs), 2) : null;
-
+            
             $coef = $subject->coefficient ?? 1;
 
             $moyenne = null;
