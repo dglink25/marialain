@@ -63,7 +63,7 @@ class InvitationController extends Controller{
             ]);
 
             // Génération mot de passe aléatoire
-            $plainPassword = Str::random(8);
+            $plainPassword = "12345678";
 
             // Création de l'utilisateur
             $user = User::create([

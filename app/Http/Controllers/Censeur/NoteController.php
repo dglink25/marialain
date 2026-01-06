@@ -179,8 +179,8 @@ use App\Models\NoteEditPermission;
                     $permission->class_id = $classId;
                     $permission->trimestre = $i;
                     $permission->is_open = false;
-                    $permission->opens_at = null;
-                    $permission->closes_at = null;
+                    $permission->open_at = null;
+                    $permission->close_at = null;
                     $permission->save();
                 }
 
