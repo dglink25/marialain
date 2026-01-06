@@ -1080,9 +1080,9 @@ use App\Models\NoteEditPermission;
             ->where('academic_year_id', $activeYear->id)
             ->get();
 
-        // Types d’évaluations
-        $interrogations = ['I1', 'I2', 'I3', 'I4', 'I5'];
-        $devoirs = ['D1', 'D2'];
+        // Types d’évaluations - Correction ici
+        $interrogations = [1, 2, 3, 4, 5];  // Numéros de séquence
+        $devoirs = [1, 2];  // Numéros de séquence
 
         $notesDisponibles = [];
 
@@ -1090,31 +1090,33 @@ use App\Models\NoteEditPermission;
             $totalNotes = 0;
             $subjectName = $m->subject->name;
 
-            // Interrogations
-            foreach ($interrogations as $i) {
+            // Interrogations - CORRECTION
+            foreach ($interrogations as $seq) {
                 $exists = \App\Models\Grade::where([
                     ['class_id', '=', $classId],
                     ['subject_id', '=', $m->subject_id],
                     ['academic_year_id', '=', $activeYear->id],
                     ['trimestre', '=', $trimestre],
-                    ['type', '=', $i],
+                    ['type', '=', 'interrogation'],
+                    ['sequence', '=', $seq],
                 ])->exists();
 
-                $notesDisponibles[$subjectName][$i] = $exists;
+                $notesDisponibles[$subjectName]["I$seq"] = $exists;
                 if ($exists) $totalNotes++;
             }
 
-            // Devoirs
-            foreach ($devoirs as $d) {
+            // Devoirs - CORRECTION
+            foreach ($devoirs as $seq) {
                 $exists = \App\Models\Grade::where([
                     ['class_id', '=', $classId],
                     ['subject_id', '=', $m->subject_id],
                     ['academic_year_id', '=', $activeYear->id],
                     ['trimestre', '=', $trimestre],
-                    ['type', '=', $d],
+                    ['type', '=', 'devoir'],
+                    ['sequence', '=', $seq],
                 ])->exists();
 
-                $notesDisponibles[$subjectName][$d] = $exists;
+                $notesDisponibles[$subjectName]["D$seq"] = $exists;
                 if ($exists) $totalNotes++;
             }
 
