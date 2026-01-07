@@ -277,92 +277,52 @@ class TimetableController extends Controller
             return redirect()->back()->with('error', 'Erreur lors de la suppression: ' . $e->getMessage());
         }
     }
-
-    public function store(Request $request, $classId)
-    {
-        // Validation initiale
-        $validator = Validator::make($request->all(), [
-            'teacher_id' => 'required|integer',
-            'subject_id' => 'required|integer',
-            'day' => 'required|in:Lundi,Mardi,Mercredi,Jeudi,Vendredi,Samedi',
-            'start_time' => 'required|date_format:H:i',
-            'end_time' => 'required|date_format:H:i|after:start_time',
-        ], [
-            'end_time.after' => 'L\'heure de fin doit être après l\'heure de début.',
-            'start_time.date_format' => 'Format d\'heure invalide (HH:MM).',
-            'end_time.date_format' => 'Format d\'heure invalide (HH:MM).',
-        ]);
-
-        if ($validator->fails()) {
-            return back()
-                ->withErrors($validator)
-                ->withInput()
-                ->with('error', 'Veuillez corriger les erreurs ci-dessous.');
-        }
-
+    
+    public function store(Request $request, $classId){
         DB::beginTransaction();
 
         try {
-            \Log::info('Début de l\'ajout de créneau', [
-                'teacher_id' => $request->teacher_id,
-                'subject_id' => $request->subject_id,
-                'class_id' => $classId,
-                'day' => $request->day,
-                'start_time' => $request->start_time,
-                'end_time' => $request->end_time
+            $activeYear = AcademicYear::where('active', true)->firstOrFail();
+
+            $validator = Validator::make($request->all(), [
+                'teacher_id' => 'required|exists:users,id',
+                'subject_id' => 'required|exists:subjects,id',
+                'day' => 'required|in:Lundi,Mardi,Mercredi,Jeudi,Vendredi,Samedi',
+                'start_time' => 'required|date_format:H:i',
+                'end_time' => 'required|date_format:H:i|after:start_time',
+            ], [
+                'end_time.after' => 'L\'heure de fin doit être après l\'heure de début.',
+                'start_time.date_format' => 'Format d\'heure invalide.',
+                'end_time.date_format' => 'Format d\'heure invalide.',
             ]);
 
-            // 1. Vérifier l'année académique
-            $activeYear = AcademicYear::where('active', true)->first();
-            if (!$activeYear) {
-                throw new \Exception('Aucune année académique active trouvée.');
+            if ($validator->fails()) {
+                return back()
+                    ->withErrors($validator)
+                    ->withInput()
+                    ->with('error', 'Veuillez corriger les erreurs ci-dessous.');
             }
 
-            \Log::info('Année académique trouvée', ['activeYear' => $activeYear->id]);
-
-            // 2. Vérifier l'enseignant
-            $teacher = User::where('id', $request->teacher_id)
-                ->where('role', 'teacher')
-                ->first();
-                
-            if (!$teacher) {
-                throw new \Exception('L\'enseignant sélectionné n\'existe pas ou n\'est pas un enseignant.');
-            }
-
-            // 3. Vérifier la matière
-            $subject = Subject::find($request->subject_id);
-            if (!$subject) {
-                throw new \Exception('La matière sélectionnée n\'existe pas.');
-            }
-
-            // 4. Vérifier la classe
-            $classe = Classe::find($classId);
-            if (!$classe) {
-                throw new \Exception('La classe sélectionnée n\'existe pas.');
-            }
-
-            \Log::info('Vérifications de base OK');
-
-            // 5. Vérifier les conflits d'horaire
+            // Vérifier les conflits d'horaire
             $conflict = Timetable::where('class_id', $classId)
                 ->where('academic_year_id', $activeYear->id)
                 ->where('day', $request->day)
                 ->where(function ($query) use ($request) {
                     $query->where(function ($q) use ($request) {
                         $q->where('start_time', '<', $request->end_time)
-                        ->where('end_time', '>', $request->start_time);
+                          ->where('end_time', '>', $request->start_time);
                     });
                 })
                 ->exists();
 
             if ($conflict) {
-                throw new \Exception('Conflit d\'horaire : un cours existe déjà sur ce créneau.');
+                return back()
+                    ->withInput()
+                    ->with('error', 'Conflit d\'horaire : un cours existe déjà sur ce créneau.');
             }
 
-            \Log::info('Pas de conflit d\'horaire');
-
-            // 6. Créer le créneau horaire
-            $timetable = Timetable::create([
+            // Créer le nouveau créneau
+            Timetable::create([
                 'class_id' => $classId,
                 'teacher_id' => $request->teacher_id,
                 'subject_id' => $request->subject_id,
@@ -372,77 +332,36 @@ class TimetableController extends Controller
                 'academic_year_id' => $activeYear->id,
             ]);
 
-            \Log::info('Créneau horaire créé', ['timetable_id' => $timetable->id]);
+            // Vérifier si la relation existe déjà
+            $existingRelation = DB::table('class_teacher_subject')
+                ->where('class_id', $classId)
+                ->where('teacher_id', $request->teacher_id)
+                ->where('subject_id', $request->subject_id)
+                ->exists();
 
-            // 7. Ajouter ou mettre à jour la relation dans class_teacher_subject
-            try {
-                $existingRelation = DB::table('class_teacher_subject')
-                    ->where('class_id', $classId)
-                    ->where('teacher_id', $request->teacher_id)
-                    ->where('subject_id', $request->subject_id)
-                    ->where('academic_year_id', $activeYear->id)
-                    ->first();
-
-                if (!$existingRelation) {
-                    // Vérifier si la table a une colonne 'id'
-                    $hasIdColumn = Schema::hasColumn('class_teacher_subject', 'id');
-                    
-                    $relationData = [
-                        'academic_year_id' => $activeYear->id,
-                        'class_id' => $classId,
-                        'teacher_id' => $request->teacher_id,
-                        'subject_id' => $request->subject_id,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ];
-                    
-                    // Ajouter coefficient si la colonne existe
-                    if (Schema::hasColumn('class_teacher_subject', 'coefficient')) {
-                        $relationData['coefficient'] = $subject->coefficient ?? 1;
-                    }
-                    
-                    DB::table('class_teacher_subject')->insert($relationData);
-                    
-                    \Log::info('Relation class_teacher_subject créée', $relationData);
-                } else {
-                    \Log::info('Relation class_teacher_subject existe déjà', ['id' => $existingRelation->id]);
-                }
-                
-            } catch (\Exception $e) {
-                \Log::warning('Erreur lors de l\'insertion dans class_teacher_subject: ' . $e->getMessage());
-                // On continue même si cette partie échoue, car le créneau horaire est le plus important
+            if (!$existingRelation) {
+                DB::table('class_teacher_subject')->insert([
+                    'academic_year_id' => $activeYear->id,
+                    'class_id' => $classId,
+                    'teacher_id' => $request->teacher_id,
+                    'subject_id' => $request->subject_id,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
             }
 
             DB::commit();
-
-            \Log::info('Transaction commitée avec succès');
 
             return redirect()->back()->with('success', 'Créneau ajouté avec succès.');
 
         } catch (\Exception $e) {
             DB::rollBack();
-            
-            \Log::error('ERREUR CRITIQUE ajout créneau: ' . $e->getMessage());
-            \Log::error('Trace: ' . $e->getTraceAsString());
-            \Log::error('Données de la requête: ', $request->all());
-            
-            // Message d'erreur plus informatif
-            $errorMessage = 'Erreur lors de l\'ajout du créneau. ';
-            
-            if (str_contains($e->getMessage(), 'foreign key constraint')) {
-                $errorMessage .= 'Une référence est invalide (enseignant, matière ou classe).';
-            } elseif (str_contains($e->getMessage(), 'duplicate key')) {
-                $errorMessage .= 'Ce créneau existe déjà.';
-            } else {
-                $errorMessage .= 'Détails: ' . $e->getMessage();
-            }
-
+            Log::error('Erreur ajout créneau: ' . $e->getMessage());
             return back()
                 ->withInput()
-                ->with('error', $errorMessage);
+                ->with('error', 'Erreur lors de l\'ajout du créneau: ' . $e->getMessage());
         }
-    }
-
+    }  
     public function download($classId){
         try {
             $activeYear = AcademicYear::where('active', true)->firstOrFail();

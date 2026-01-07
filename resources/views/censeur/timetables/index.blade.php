@@ -5,6 +5,23 @@
 @extends('layouts.app')
 
 @section('content')
+
+  @if ($errors->any())
+    <div class="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-lg mb-6">
+      <ul class="list-disc pl-5 space-y-1">
+        @foreach ($errors->all() as $error)
+          <li>{{ $error }}</li>
+        @endforeach
+      </ul>
+    </div>
+  @endif
+
+  @if (session('error'))
+    <div class="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-lg mb-6">
+      {{ session('error') }}
+    </div>
+  @endif
+  
 @php
     $pageTitle = 'Emploi du temps';
     $joursSemaine = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
