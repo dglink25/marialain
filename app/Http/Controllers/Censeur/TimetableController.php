@@ -278,53 +278,72 @@ class TimetableController extends Controller
         }
     }
 
-    public function store(Request $request, $classId){
-        try {
-            $activeYear = AcademicYear::where('active', true)->firstOrFail();
+    public function store(Request $request, $classId)
+    {
+        // Validation initiale
+        $validator = Validator::make($request->all(), [
+            'teacher_id' => 'required|integer',
+            'subject_id' => 'required|integer',
+            'day' => 'required|in:Lundi,Mardi,Mercredi,Jeudi,Vendredi,Samedi',
+            'start_time' => 'required|date_format:H:i',
+            'end_time' => 'required|date_format:H:i|after:start_time',
+        ], [
+            'end_time.after' => 'L\'heure de fin doit être après l\'heure de début.',
+            'start_time.date_format' => 'Format d\'heure invalide (HH:MM).',
+            'end_time.date_format' => 'Format d\'heure invalide (HH:MM).',
+        ]);
 
-            // Validation avant transaction
-            $validator = Validator::make($request->all(), [
-                'teacher_id' => 'required|exists:users,id',
-                'subject_id' => 'required|exists:subjects,id',
-                'day' => 'required|in:Lundi,Mardi,Mercredi,Jeudi,Vendredi,Samedi',
-                'start_time' => 'required|date_format:H:i',
-                'end_time' => 'required|date_format:H:i|after:start_time',
-            ], [
-                'teacher_id.exists' => 'L\'enseignant sélectionné n\'existe pas.',
-                'subject_id.exists' => 'La matière sélectionnée n\'existe pas.',
-                'end_time.after' => 'L\'heure de fin doit être après l\'heure de début.',
-                'start_time.date_format' => 'Format d\'heure invalide (HH:MM).',
-                'end_time.date_format' => 'Format d\'heure invalide (HH:MM).',
+        if ($validator->fails()) {
+            return back()
+                ->withErrors($validator)
+                ->withInput()
+                ->with('error', 'Veuillez corriger les erreurs ci-dessous.');
+        }
+
+        DB::beginTransaction();
+
+        try {
+            \Log::info('Début de l\'ajout de créneau', [
+                'teacher_id' => $request->teacher_id,
+                'subject_id' => $request->subject_id,
+                'class_id' => $classId,
+                'day' => $request->day,
+                'start_time' => $request->start_time,
+                'end_time' => $request->end_time
             ]);
 
-            if ($validator->fails()) {
-                return back()
-                    ->withErrors($validator)
-                    ->withInput()
-                    ->with('error', 'Veuillez corriger les erreurs ci-dessous.');
+            // 1. Vérifier l'année académique
+            $activeYear = AcademicYear::where('active', true)->first();
+            if (!$activeYear) {
+                throw new \Exception('Aucune année académique active trouvée.');
             }
 
-            DB::beginTransaction();
+            \Log::info('Année académique trouvée', ['activeYear' => $activeYear->id]);
 
-            // Vérifier si l'utilisateur est bien un enseignant
-            $teacher = User::find($request->teacher_id);
-            if (!$teacher || $teacher->role !== 'teacher') {
-                DB::rollBack();
-                return back()
-                    ->withInput()
-                    ->with('error', 'L\'utilisateur sélectionné n\'est pas un enseignant.');
+            // 2. Vérifier l'enseignant
+            $teacher = User::where('id', $request->teacher_id)
+                ->where('role', 'teacher')
+                ->first();
+                
+            if (!$teacher) {
+                throw new \Exception('L\'enseignant sélectionné n\'existe pas ou n\'est pas un enseignant.');
             }
 
-            // Vérifier si la matière existe
+            // 3. Vérifier la matière
             $subject = Subject::find($request->subject_id);
             if (!$subject) {
-                DB::rollBack();
-                return back()
-                    ->withInput()
-                    ->with('error', 'La matière sélectionnée n\'existe pas.');
+                throw new \Exception('La matière sélectionnée n\'existe pas.');
             }
 
-            // Vérifier les conflits d'horaire
+            // 4. Vérifier la classe
+            $classe = Classe::find($classId);
+            if (!$classe) {
+                throw new \Exception('La classe sélectionnée n\'existe pas.');
+            }
+
+            \Log::info('Vérifications de base OK');
+
+            // 5. Vérifier les conflits d'horaire
             $conflict = Timetable::where('class_id', $classId)
                 ->where('academic_year_id', $activeYear->id)
                 ->where('day', $request->day)
@@ -337,14 +356,13 @@ class TimetableController extends Controller
                 ->exists();
 
             if ($conflict) {
-                DB::rollBack();
-                return back()
-                    ->withInput()
-                    ->with('error', 'Conflit d\'horaire : un cours existe déjà sur ce créneau.');
+                throw new \Exception('Conflit d\'horaire : un cours existe déjà sur ce créneau.');
             }
 
-            // Créer le nouveau créneau
-            Timetable::create([
+            \Log::info('Pas de conflit d\'horaire');
+
+            // 6. Créer le créneau horaire
+            $timetable = Timetable::create([
                 'class_id' => $classId,
                 'teacher_id' => $request->teacher_id,
                 'subject_id' => $request->subject_id,
@@ -354,40 +372,74 @@ class TimetableController extends Controller
                 'academic_year_id' => $activeYear->id,
             ]);
 
-            // Vérifier si la relation existe déjà
-            $existingRelation = DB::table('class_teacher_subject')
-                ->where('class_id', $classId)
-                ->where('teacher_id', $request->teacher_id)
-                ->where('subject_id', $request->subject_id)
-                ->where('academic_year_id', $activeYear->id)
-                ->exists();
+            \Log::info('Créneau horaire créé', ['timetable_id' => $timetable->id]);
 
-            if (!$existingRelation) {
-                DB::table('class_teacher_subject')->insert([
-                    'academic_year_id' => $activeYear->id,
-                    'class_id' => $classId,
-                    'teacher_id' => $request->teacher_id,
-                    'subject_id' => $request->subject_id,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
+            // 7. Ajouter ou mettre à jour la relation dans class_teacher_subject
+            try {
+                $existingRelation = DB::table('class_teacher_subject')
+                    ->where('class_id', $classId)
+                    ->where('teacher_id', $request->teacher_id)
+                    ->where('subject_id', $request->subject_id)
+                    ->where('academic_year_id', $activeYear->id)
+                    ->first();
+
+                if (!$existingRelation) {
+                    // Vérifier si la table a une colonne 'id'
+                    $hasIdColumn = Schema::hasColumn('class_teacher_subject', 'id');
+                    
+                    $relationData = [
+                        'academic_year_id' => $activeYear->id,
+                        'class_id' => $classId,
+                        'teacher_id' => $request->teacher_id,
+                        'subject_id' => $request->subject_id,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
+                    
+                    // Ajouter coefficient si la colonne existe
+                    if (Schema::hasColumn('class_teacher_subject', 'coefficient')) {
+                        $relationData['coefficient'] = $subject->coefficient ?? 1;
+                    }
+                    
+                    DB::table('class_teacher_subject')->insert($relationData);
+                    
+                    \Log::info('Relation class_teacher_subject créée', $relationData);
+                } else {
+                    \Log::info('Relation class_teacher_subject existe déjà', ['id' => $existingRelation->id]);
+                }
+                
+            } catch (\Exception $e) {
+                \Log::warning('Erreur lors de l\'insertion dans class_teacher_subject: ' . $e->getMessage());
+                // On continue même si cette partie échoue, car le créneau horaire est le plus important
             }
 
             DB::commit();
 
+            \Log::info('Transaction commitée avec succès');
+
             return redirect()->back()->with('success', 'Créneau ajouté avec succès.');
 
         } catch (\Exception $e) {
-            if (DB::transactionLevel() > 0) {
-                DB::rollBack();
+            DB::rollBack();
+            
+            \Log::error('ERREUR CRITIQUE ajout créneau: ' . $e->getMessage());
+            \Log::error('Trace: ' . $e->getTraceAsString());
+            \Log::error('Données de la requête: ', $request->all());
+            
+            // Message d'erreur plus informatif
+            $errorMessage = 'Erreur lors de l\'ajout du créneau. ';
+            
+            if (str_contains($e->getMessage(), 'foreign key constraint')) {
+                $errorMessage .= 'Une référence est invalide (enseignant, matière ou classe).';
+            } elseif (str_contains($e->getMessage(), 'duplicate key')) {
+                $errorMessage .= 'Ce créneau existe déjà.';
+            } else {
+                $errorMessage .= 'Détails: ' . $e->getMessage();
             }
-            
-            Log::error('Erreur ajout créneau: ' . $e->getMessage() . ' - Trace: ' . $e->getTraceAsString());
-            
-            // Message d'erreur générique pour l'utilisateur
+
             return back()
                 ->withInput()
-                ->with('error', 'Une erreur est survenue lors de l\'ajout du créneau. Veuillez réessayer.');
+                ->with('error', $errorMessage);
         }
     }
 
