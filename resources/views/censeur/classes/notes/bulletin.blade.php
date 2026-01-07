@@ -18,7 +18,7 @@
                         </div>
                         <div class="flex items-center">
                             <i class="fas fa-graduation-cap mr-2"></i>
-                            <span>{{ $classe->academicYear->name ?? '' }}</span>
+                            <span>{{ $activeYear->name ?? $activeYear->label ?? 'Année en cours' }}</span>
                         </div>
                     </div>
                 </div>
@@ -71,6 +71,7 @@
 
             <!-- Tableau des notes -->
             <div class="overflow-x-auto">
+                @if(count($bulletin) > 0)
                 <table class="w-full">
                     <thead class="bg-gray-50">
                         <tr class="border-b border-gray-200">
@@ -145,14 +146,24 @@
                         @endforeach
                     </tbody>
                 </table>
+                @else
+                <div class="text-center py-12">
+                    <div class="text-gray-400 mb-4">
+                        <i class="fas fa-book-open text-5xl"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Aucune matière trouvée</h3>
+                    <p class="text-gray-500">Aucune matière n'est enseignée dans cette classe pour l'année en cours.</p>
+                </div>
+                @endif
             </div>
 
             <!-- Résultats généraux -->
+            @if(count($bulletin) > 0)
             <div class="bg-gray-50 border-t border-gray-200 px-8 py-6">
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <div class="text-center">
                         <div class="text-sm text-gray-500 mb-1">Conduite</div>
-                        <div class="text-2xl font-bold text-blue-600">{{ $conduiteFinale ?? '-' }}/20</div>
+                        <div class="text-2xl font-bold text-blue-600">{{ number_format($conduiteFinale, 1) ?? '-' }}/20</div>
                     </div>
                     
                     <div class="text-center">
@@ -161,14 +172,14 @@
                             {{ isset($moyenneGenerale) ? 
                                ($moyenneGenerale >= 10 ? 'text-green-600' : 'text-red-600') : 
                                'text-gray-600' }}">
-                            {{ $moyenneGenerale ?? '-' }}/20
+                            {{ number_format($moyenneGenerale, 2) ?? '-' }}/20
                         </div>
                     </div>
                     
                     <div class="text-center">
                         <div class="text-sm text-gray-500 mb-1">Rang Général</div>
                         <div class="text-2xl font-bold text-purple-600">
-                            {{ $rang ?? '-' }}/{{ $effectif->students->count() }}
+                            {{ $rang ?? '-' }}/{{ $classe->students->count() ?? 0 }}
                         </div>
                     </div>
                     
@@ -178,15 +189,20 @@
                     </div>
                 </div>
             </div>
+            @endif
         </div>
 
-        <!-- Bouton d'action -->
-        <div class="flex justify-end">
+        <!-- Boutons d'action -->
+        <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mt-6">
+            
+            @if(count($bulletin) > 0)
             <a href="{{ route('censeur.classes.notes.bulletin.pdf', [$classe->id, $student->id, $trimestre]) }}"
+               target="_blank"
                class="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 shadow-sm">
                 <i class="fas fa-file-pdf mr-2"></i>
                 Télécharger le bulletin PDF
             </a>
+            @endif
         </div>
     </div>
 </div>
@@ -221,6 +237,15 @@
                 card.style.opacity = '1';
                 card.style.transform = 'translateY(0)';
             }, index * 100);
+        });
+        
+        // Ajout d'infobulles pour les notes
+        const noteCells = document.querySelectorAll('td span');
+        noteCells.forEach(cell => {
+            const note = cell.textContent.trim();
+            if (note !== '-') {
+                cell.title = 'Note: ' + note;
+            }
         });
     });
 </script>

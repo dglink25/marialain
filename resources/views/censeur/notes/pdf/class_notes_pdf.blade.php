@@ -162,8 +162,8 @@
         <center>
             <div class="">
                 <u><h2>FICHE DE NOTES - TRIMESTRE {{ $trimestre }}</h2></u>
-                <h3>Classe : {{ $classe->name }} | Matière : {{ $subjects->name }}</h3>
-                <p>Année académique : {{ $activeYear->name }}</p>
+                <h3>Classe : {{ $classe->name }} | Matière : {{ $subject->name }}</h3>
+                <p>Année académique : {{ $activeYear->name }} | Coefficient : {{ $subjectPivot->coefficient ?? $subject->coefficient ?? 1 }}</p>
             </div>
         </center>
     </div>
@@ -187,7 +187,10 @@
         <tbody>
             @foreach($classe->students as $student)
                 @php
-                    $grades = $gradesData[$student->id][$subjects->id] ?? null;
+                    // CORRECTION: Accès correct aux données
+                    $grades = isset($gradesData[$student->id][$subject->id]) 
+                        ? $gradesData[$student->id][$subject->id] 
+                        : null;
                 @endphp
                 <tr>
                     <td>{{ $loop->iteration }}</td>
@@ -197,15 +200,15 @@
 
                     {{-- Interros --}}
                     @for($i = 1; $i <= 5; $i++)
-                        <td>{{ $grades['interros'][$i] ?? '-' }}</td>
+                        <td>{{ isset($grades['interros'][$i]) && $grades['interros'][$i] !== null ? $grades['interros'][$i] : '-' }}</td>
                     @endfor
 
                     <td>{{ $grades['moyenneInterro'] ?? '-' }}</td>
-                    <td>{{ $grades['coef'] ?? 1 }}</td>
+                    <td>{{ $grades['coef'] ?? ($subjectPivot->coefficient ?? $subject->coefficient ?? 1) }}</td>
 
                     {{-- Devoirs --}}
                     @for($i = 1; $i <= 2; $i++)
-                        <td>{{ $grades['devoirs'][$i] ?? '-' }}</td>
+                        <td>{{ isset($grades['devoirs'][$i]) && $grades['devoirs'][$i] !== null ? $grades['devoirs'][$i] : '-' }}</td>
                     @endfor
 
                     <td><strong>{{ $grades['moyenne'] ?? '-' }}</strong></td>
@@ -215,11 +218,31 @@
             @endforeach
         </tbody>
     </table>
- <br>
+    <br>
+    
+    <!-- Statistiques -->
+    <div style="margin-top: 20px; font-size: 11px;">
+        <div style="display: flex; justify-content: space-between;">
+            <div>
+                <strong>Total élèves :</strong> {{ $classe->students->count() }}
+            </div>
+            <div>
+                <strong>Élèves notés :</strong> {{ collect($gradesData)->filter(function($studentGrades) use ($subject) {
+                    return isset($studentGrades[$subject->id]['moyenne']) && $studentGrades[$subject->id]['moyenne'] !== null;
+                })->count() }}
+            </div>
+            <div>
+                <strong>Date d'édition :</strong> {{ now()->format('d/m/Y') }}
+            </div>
+        </div>
+    </div>
+
     <div class="footer">
-        <p>Fait le {{ now()->format('d/m/Y') }}</p> <br>
-        <br>
-        <p><strong>Le Censeur</strong></p>
+        <p style="margin-top: 50px;">
+            <span style="display: inline-block; width: 200px; border-top: 1px solid #333; padding-top: 5px;">
+                <strong>Le Censeur</strong>
+            </span>
+        </p>
     </div>
 </body>
 </html>

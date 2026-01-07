@@ -48,6 +48,7 @@ class NoteController extends Controller{
 
         return view('teacher.notes.index', compact('classe', 'subject', 'activeYear', 'trimestre', 'hasNotes'));
     }
+    
 
     public function read($classId, $subjectId, $type, $num, $trimestre){
         $activeYear = AcademicYear::where('active', true)->firstOrFail();

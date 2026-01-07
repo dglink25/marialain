@@ -4,455 +4,553 @@
     <meta charset="UTF-8">
     <title>Bulletin Trimestre {{ $trimestre }}</title>
     <style>
-        /* STYLES UNIQUEMENT POUR PDF - NE PAS AFFICHER DANS BROWSER */
+        /* STYLES POUR FORMAT BULLETIN SCOLAIRE FRANÇAIS */
         @page {
-            size: A4;
-            margin: 12mm 15mm 0mm 06mm; /* Marge gauche réduite */
+            size: A4 portrait;
+            margin: 15mm 15mm 15mm 15mm;
         }
         
-        body { 
-            font-family: 'Times New Roman',sans-serif; 
-            font-size: 15pt;
-            color: #000;
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 11pt;
+            color: #000000;
             margin: 0;
             padding: 0;
-            width: 200mm;
-            height: 200mm;
-            background-color: white;
-        }
-        
-        .page-container {
-            width: 180mm; /* Légèrement réduit */
-            height: 250mm;
-            margin: 0 auto;
-            padding: 7mm;
-            border: 2px solid #000;
-            box-sizing: border-box;
-            position: relative;
-        }
-        
-        /* Header */
-        .header {
-            position: relative;
-            margin-bottom: 6px;
-            padding-bottom: 6px;
-            border-bottom: 1px solid #000;
-        }
-        
-        .header-left {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 55mm; /* Réduit */
-            font-size: 8pt;
             line-height: 1.1;
         }
         
-        .header-right {
-            position: absolute;
-            top: 0;
-            right: 0;
-            width: 40mm; /* Réduit */
+        /* EN-TÊTE */
+        .entete {
+            width: 100%;
+            margin-bottom: 10px;
+            border-bottom: 2px solid #000;
+            padding-bottom: 8px;
+        }
+        
+        .gauche {
+            float: left;
+            width: 45%;
+            font-size: 9pt;
+        }
+        
+        .droite {
+            float: right;
+            width: 45%;
             text-align: right;
-            font-size: 8pt;
-            line-height: 1.1;
+            font-size: 9pt;
         }
         
-        .header-center {
+        .centre {
             text-align: center;
-            margin: 0 auto;
-            width: 65mm; /* Réduit */
+            clear: both;
+            padding-top: 5px;
         }
         
         .logo {
-            width: 100px; /* Taille ajustée pour le logo */
-            height: 100px;
-            margin: 0 auto 3px auto;
-            display: block;
-            object-fit: contain; /* Pour bien ajuster l'image */
+            width: 80px;
+            height: 80px;
+            display: inline-block;
+            vertical-align: middle;
         }
         
-        .title {
-            font-size: 15pt; /* Réduit */
+        .titre {
+            font-size: 16pt;
             font-weight: bold;
-            text-align: center;
-            padding: 1px 0;
-            margin: 30px 0 0 0;
+            text-transform: uppercase;
+            margin: 5px 0;
+            color: #000;
         }
         
-        /* Student Info */
-        .student-info {
-            display: table;
+        /* INFORMATIONS ÉLÈVE */
+        .info-eleve {
             width: 100%;
             border: 1px solid #000;
-            margin: 6px 0;
-            padding: 4px;
-            background: #f8f9fa;
-            font-size: 8pt;
-        }
-        
-        .student-details {
-            display: table-cell;
-            width: 85%;
-            vertical-align: top;
-        }
-
-        .trimestre-center {
-            display: table-cell;
-            width: 75%; /* Colonne pour le trimestre */
-            text-align: center;
-            vertical-align: middle;
-            font-weight: bold;
+            padding: 8px;
+            margin: 10px 0;
             font-size: 9pt;
-        }
-                
-        .qr-code {
-            display: table-cell;
-            width: 25%;
-            text-align: center;
-            vertical-align: middle;
-            border: 1px solid #000;
-            padding: 2px;
-            background: white;
-            font-size: 7pt;
+            background: #f8f9fa;
         }
         
-        /* Main Table */
-        .main-table {
+        .info-colonne {
+            width: 60%;
+            float: left;
+        }
+        
+        .trimestre-colonne {
+            width: 20%;
+            float: left;
+            text-align: center;
+            font-weight: bold;
+            font-size: 10pt;
+            padding-top: 15px;
+        }
+        
+        .qrcode-colonne {
+            width: 20%;
+            float: right;
+            text-align: center;
+            border: 1px solid #000;
+            padding: 3px;
+            background: white;
+        }
+        
+        /* TABLEAU DES NOTES */
+        .tableau-notes {
             width: 100%;
             border-collapse: collapse;
-            margin: 5px 0;
-            font-size: 7pt;
+            margin: 10px 0;
+            font-size: 8pt;
             table-layout: fixed;
         }
         
-        .main-table th, .main-table td {
+        .tableau-notes th,
+        .tableau-notes td {
             border: 1px solid #000;
-            padding: 2px 1px;
+            padding: 3px 1px;
             text-align: center;
-            height: 16px;
+            vertical-align: middle;
+            height: 18px;
         }
         
-        .main-table th {
-            background: #e0e0e0;
+        .tableau-notes th {
+            background: #e9ecef;
             font-weight: bold;
         }
         
-        .col-matiere { 
-            width: 21%; /* Réduit */
-            text-align: left;
-            padding-left: 3px;
-        }
-        .col-coef { width: 4%; }
+        /* Largeurs des colonnes selon format standard */
+        .col-matiere { width: 22%; text-align: left; padding-left: 5px; }
+        .col-coef { width: 5%; }
         .col-interro { width: 4%; }
-        .col-devoir { width: 4%; }
-        .col-moy { width: 5%; }
-        .col-moy-coef { width: 7%; }
-        .col-appreciation { 
-            width: 14%; /* Réduit */
-            text-align: left;
-            padding-left: 3px;
-        }
+        .col-moy-interro { width: 5%; }
+        .col-devoir { width: 4.5%; }
+        .col-moy { width: 5%; font-weight: bold; }
+        .col-moy-coef { width: 6%; font-weight: bold; }
+        .col-appreciation { width: 13%; text-align: left; padding-left: 5px; }
         
-        /* Totals Section */
-        .totals-section {
-            text-align: center;
-            margin: 5px 0;
-            font-weight: bold;
-            font-size: 8pt;
-        }
-        
-        /* Three Columns Section */
-        .three-columns {
-            display: table;
+        /* TOTAUX ET MOYENNES */
+        .totaux-section {
             width: 100%;
             margin: 8px 0;
+            padding: 5px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 9pt;
+            border: 1px solid #000;
+            background: #f8f9fa;
         }
         
-        .column {
+        .totaux-ligne {
+            display: flex;
+            justify-content: space-around;
+            margin: 3px 0;
+        }
+        
+        .totaux-item {
+            flex: 1;
+            text-align: center;
+            padding: 0 5px;
+        }
+        
+        /* TROIS COLONNES INFÉRIEURES */
+        .trois-colonnes {
+            width: 100%;
+            margin: 10px 0;
+            display: table;
+        }
+        
+        .colonne {
             display: table-cell;
             width: 33.33%;
             border: 1px solid #000;
-            padding: 4px; /* Réduit */
+            padding: 8px;
             vertical-align: top;
         }
         
-        .column h4 {
+        .titre-colonne {
             text-align: center;
-            margin: 0 0 4px 0;
-            font-size: 8pt;
+            font-weight: bold;
+            font-size: 9pt;
             text-decoration: underline;
+            margin-bottom: 5px;
+        }
+        
+        /* DÉCISIONS AVEC CASES */
+        .decision-item {
+            margin-bottom: 4px;
+            padding-left: 20px;
+            position: relative;
+            font-size: 8pt;
+        }
+        
+        .case-decision {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 14px;
+            height: 14px;
+            border: 1px solid #000;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .case-decision.cochee {
+            background: #28a745;
+            color: white;
             font-weight: bold;
         }
         
-        .column div {
-            margin-bottom: 3px;
-            font-size: 7pt;
-        }
-        
-        .decision-item {
-            margin-bottom: 2px;
-            padding-left: 6px; /* Réduit */
-            font-size: 7pt;
-        }
-        
-        /* Signatures */
+        /* SIGNATURES */
         .signatures {
-            display: table;
             width: 100%;
-            margin: 8px 0 5px 0; /* Réduit */
+            margin: 15px 0;
+            display: table;
         }
         
         .signature {
             display: table-cell;
-            width: 50%; /* Modifié pour 2 signatures */
+            width: 33.33%;
             text-align: center;
-            font-size: 7pt;
+            font-size: 8pt;
         }
         
-        .signature-line {
+        .ligne-signature {
             border-bottom: 1px solid #000;
-            height: 18px; /* Réduit */
-            margin: 3px 15px 0 15px; /* Ajusté */
+            width: 80%;
+            height: 20px;
+            margin: 5px auto;
         }
         
-        /* Footer */
-        .footer {
-            border-top: 1px solid #000;
-            padding-top: 4px;
-            margin-top: 8px;
-            display: table;
+        /* PIED DE PAGE */
+        .pied-page {
             width: 100%;
-            font-size: 6pt;
+            margin-top: 10px;
+            padding-top: 5px;
+            border-top: 1px solid #000;
+            font-size: 7pt;
+            display: table;
         }
         
-        .footer-left, .footer-center, .footer-right {
+        .pied-gauche,
+        .pied-centre,
+        .pied-droite {
             display: table-cell;
             vertical-align: middle;
         }
         
-        .footer-center {
+        .pied-centre {
             text-align: center;
             font-style: italic;
         }
         
-        .footer-right {
+        .pied-droite {
             text-align: right;
         }
         
-        .barcode {
+        .code-barres {
             border: 1px dashed #000;
-            padding: 1px 4px; /* Réduit */
-            font-size: 5pt;
+            padding: 2px 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 6pt;
             display: inline-block;
         }
         
-        /* Utility */
-        .keep-together {
-            page-break-inside: avoid;
-        }
-
-        /* Pour les totaux sur une ligne */
-        .totals-line {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-            font-size: 8pt;
-        }
-        .total-left { text-align: left; }
-        .total-center { text-align: center; }
-        .total-right { text-align: right; }
-
-        .print-line {
-            border: none;
-            height: 1px;
-            background: transparent;
-            border-top: 1px dashed #000;
-            margin: 4px 0;
-            width: 50%;
-            margin-left:24px;
-            margin-right: 15px;
-        }
-
-        .print-lin {
-            border: none;
-            height: 1px;
-            background: transparent;
-            border-top: 1px dashed #000;
-            margin: 4px 0;
-            width: 25%;
-            margin-left:40px;
-            margin-right: 15px;
-        }
-
-        .cs-marie{
-            display: flex;
-            margin-left: 15px;
-            
+        /* UTILITAIRES */
+        .clearfix::after {
+            content: "";
+            clear: both;
+            display: table;
         }
         
+        .texte-gras {
+            font-weight: bold;
+        }
+        
+        .texte-centre {
+            text-align: center;
+        }
+        
+        .ligne-conduite {
+            background: #fff3cd;
+        }
+        
+        .ligne-totaux {
+            background: #d4edda;
+            font-weight: bold;
+        }
+        
+        /* IMPRESSION */
+        @media print {
+            body {
+                font-size: 10pt;
+            }
+            
+            .tableau-notes {
+                font-size: 7.5pt;
+            }
+            
+            .page-break {
+                page-break-before: always;
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="page-container">
-        <!-- Header -->
-        <div class="header keep-together">
-            <div class="header-left">
-                <strong>Ministère des Enseignements Secondaires,Techniques et de
-                <br>la Formation Professionnelle</strong><br>
-                <hr class="print-lin">
-                <strong class="cs-marie">CS « MARIE-ALAIN »</strong>
+    <!-- EN-TÊTE -->
+    <div class="entete">
+        <div class="gauche">
+            <div class="texte-gras">Ministère des Enseignements Secondaires,</div>
+            <div class="texte-gras">Techniques et de la Formation Professionnelle</div>
+            <div style="margin-top: 5px; font-size: 8pt;">
+                <div class="texte-gras">CS « MARIE-ALAIN »</div>
+            </div>
+        </div>
+        
+        <div class="droite">
+            <div class="texte-gras">République du Bénin</div>
+            <div>Fraternité - Justice - Travail</div>
+            <hr style="border-top: 1px solid #000; margin: 3px 0; width: 80%; margin-left: auto;">
+            <div>
+                <span class="texte-gras">Année scolaire:</span> {{ $activeYear->name ?? '2025-2026' }}<br>
+                <span class="texte-gras">Classe:</span> {{ $classe->name }}<br>
+                <span class="texte-gras">Effectif:</span> {{ $classe->students->count() }}
+            </div>
+        </div>
+        
+        <div class="centre">
+            <img src="{{ $logoPath ?? 'logo.png' }}" alt="Logo École" class="logo">
+            <div class="titre">BULLETIN DE NOTES</div>
+        </div>
+    </div>
+
+    <!-- INFORMATIONS ÉLÈVE -->
+    <div class="info-eleve clearfix">
+        <div class="info-colonne">
+            <div><span class="texte-gras">Nom:</span> {{ strtoupper($student->last_name) }}</div>
+            <div><span class="texte-gras">Prénom:</span> {{ ucfirst($student->first_name) }}</div>
+            <div><span class="texte-gras">Matricule:</span> {{ $student->num_educ ?? '-' }}</div>
+            <div><span class="texte-gras">Genre:</span> {{ $student->gender == 'M' ? 'Masculin' : 'Féminin' }}</div>
+            <div><span class="texte-gras">Né(e) le:</span> {{ $student->birth_date ? \Carbon\Carbon::parse($student->birth_date)->format('d/m/Y') : '-' }}</div>
+            <div><span class="texte-gras">Classe:</span> {{ $classe->name }}</div>
+        </div>
+        
+        <div class="trimestre-colonne">
+            <div style="font-size: 12pt; margin-bottom: 5px;">{{ $trimestre }}</div>
+            <div>Trimestre</div>
+        </div>
+        
+        <div class="qrcode-colonne">
+            <div style="height: 60px; display: flex; align-items: center; justify-content: center; color: #666; font-size: 7pt;">
+                QR CODE<br>
+                <span style="font-size: 6pt;">Bulletin ID: {{ $student->id }}-T{{ $trimestre }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- TABLEAU DES NOTES -->
+    <table class="tableau-notes">
+        <thead>
+            <tr>
+                <th class="col-matiere" rowspan="2">Matière</th>
+                <th class="col-coef" rowspan="2">Coef</th>
+                <th colspan="5" style="background: #d1ecf1; border-bottom: 2px solid #000;">Interrogations</th>
+                <th class="col-moy-interro" rowspan="2">Moy.I</th>
+                <th colspan="2" style="background: #d1ecf1; border-bottom: 2px solid #000;">Devoirs</th>
+                <th class="col-moy" rowspan="2">Moy</th>
+                <th class="col-moy-coef" rowspan="2">Moy x Coef</th>
+                <th class="col-appreciation" rowspan="2">Appréciation</th>
+            </tr>
+            <tr>
+                <!-- Sous-colonnes pour les interrogations -->
+                <th class="col-interro">I1</th>
+                <th class="col-interro">I2</th>
+                <th class="col-interro">I3</th>
+                <th class="col-interro">I4</th>
+                <th class="col-interro">I5</th>
+                <!-- Sous-colonnes pour les devoirs -->
+                <th class="col-devoir">D1</th>
+                <th class="col-devoir">D2</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach ($bulletin as $ligne)
+            <tr>
+                <td class="col-matiere">{{ $ligne['subject'] }}</td>
+                <td class="col-coef">{{ $ligne['coef'] }}</td>
+                @for ($i = 1; $i <= 5; $i++)
+                <td class="col-interro">{{ $ligne['interros'][$i] ?? '-' }}</td>
+                @endfor
+                <td class="col-moy-interro">
+                    @if($ligne['moyenneInterro'] !== null)
+                        {{ number_format($ligne['moyenneInterro'], 1) }}
+                    @else
+                        -
+                    @endif
+                </td>
+                <td class="col-devoir">{{ $ligne['devoirs'][1] ?? '-' }}</td>
+                <td class="col-devoir">{{ $ligne['devoirs'][2] ?? '-' }}</td>
+                <td class="col-moy">
+                    @if($ligne['moyenne'] !== null)
+                        {{ number_format($ligne['moyenne'], 2) }}
+                    @else
+                        -
+                    @endif
+                </td>
+                <td class="col-moy-coef">
+                    @if($ligne['moyCoeff'] > 0)
+                        {{ number_format($ligne['moyCoeff'], 2) }}
+                    @else
+                        -
+                    @endif
+                </td>
+                <td class="col-appreciation">{{ $ligne['appreciation'] ?? '-' }}</td>
+            </tr>
+            @endforeach
+            
+            <!-- LIGNE DES TOTAUX -->
+            <tr class="ligne-totaux">
+                <td colspan="10" style="text-align: right; padding-right: 10px;">
+                    <center>Total Moy.Coef</center>
+                </td>
+                <td colspan="3" style="text-align: left; padding-left: 10px;">
+                    <center>{{ number_format($totalMoyCoeff, 2) }}</center>
+                </td>
+            </tr>
+            
+            <!-- LIGNE DE LA CONDUITE -->
+            <tr class="ligne-conduite">
+                <td colspan="9" style="text-align: right; padding-right: 10px; font-weight: bold;">
+                    <center>Conduite</center>
+                </td>
+                <td></td>
+                <td class="col-moy">{{ $conduite ?? '-' }}/20</td>
+                <td colspan="2">{{ $appreciationConduite ?? '-' }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- TROIS COLONNES INFÉRIEURES -->
+    <div class="trois-colonnes">
+        <!-- Colonne 1: Résultat de l'apprenant -->
+        <div class="colonne">
+            <div class="titre-colonne">Résultat de l'apprenant</div>
+            <div style="margin-bottom: 4px;">
+                <span style="font-weight: bold;">Moyenne générale : </span>
+                {{ $moyenneGenerale ?? '-' }}/20
+            </div>
+            <div style="margin-bottom: 4px;">
+                <span style="font-weight: bold;">Mention : </span>
+                {{ $appreciationGenerale ?? '-' }}
+            </div>
+            <div style="margin-bottom: 4px;">
+                <span style="font-weight: bold;">Rang : </span>
+                {{ $rang }} sur {{ $classe->students->count() }}
+            </div>
+            <div>
+                <span style="font-weight: bold;">Conduite : </span>
+                {{ $conduite ?? '-' }}/20 ({{ $appreciationConduite ?? '-' }})
+            </div>
+        </div>
+        
+        <!-- Colonne 2: Résultat de la classe -->
+        <div class="colonne">
+            <div class="titre-colonne">Résultat de la classe</div>
+            <div style="margin-bottom: 4px;">
+                <span style="font-weight: bold;">Plus forte moyenne : </span>
+                {{ $plusForte ?? '-' }}/20
+            </div>
+            <div style="margin-bottom: 4px;">
+                <span style="font-weight: bold;">Plus faible moyenne : </span>
+                {{ $plusFaible ?? '-' }}/20
+            </div>
+            <div style="margin-bottom: 4px;">
+                <span style="font-weight: bold;">Moyenne de la classe : </span>
+                {{ $moyClasse ?? '-' }}/20
+            </div>
+            <div>
+                <span style="font-weight: bold;">Effectif : </span>
+                {{ $classe->students->count() }} apprenants
+            </div>
+        </div>
+        
+        <!-- Colonne 3: Décision du Conseil -->
+        <div class="colonne">
+            <div class="titre-colonne">Décision du Conseil des Enseignants</div>
+            
+            <div class="decision-item">
+                <div class="case-decision {{ $felicitation ? 'cochee' : '' }}">
+                    {{ $felicitation ? : '' }}
+                </div>
+                Félicitation
             </div>
             
-            <div class="header-center">
-                <!-- Logo de l'école -->
-                <img src="{{ $logoPath ?? 'logo.png' }}" alt="Logo de l'école" class="logo">
-                <div class="title">BULLETIN DE NOTES</div>
+            <div class="decision-item">
+                <div class="case-decision {{ $encouragement ? 'cochee' : '' }}">
+                    {{ $encouragement ? : '' }}
+                </div>
+                Encouragement
             </div>
             
-            <div class="header-right">
-                <div style="text-align: justify;"> 
-                <strong>République du Bénin</strong><br>
-                Fraternité - Justice - Travail<br>
-                <hr class="print-line">
-                <strong>Année scolaire:</strong> {{ $classe->academicYear->name ?? '2025-2026' }}<br>
-                <strong>Classe:</strong>{{ $classe->name }}<br>
-                <strong>Effectif:</strong> {{ $classe->students->count() }}
+            <div class="decision-item">
+                <div class="case-decision {{ $tableauHonneur ? 'cochee' : '' }}">
+                    {{ $tableauHonneur ?  : '' }}
                 </div>
-            </div>
-        </div>
-
-        <!-- Student Information -->
-        <div class="student-info keep-together">
-            <div class="student-details">
-                <strong>Nom:</strong> {{ strtoupper($student->last_name) }} <br>
-                <strong>Prénom:</strong> {{ ucfirst($student->first_name) }} <br>
-                <strong>Matricule:</strong> {{ $student->matricule ?? '-' }} <br>
-                <strong>Genre:</strong> {{ $student->gender ?? '-' }}<br>
-                <strong>Né(e) le:</strong> {{ $student->birth_date ?? '-' }} <br>
-                <strong>Classe:</strong> {{ $classe->name }} <br>
-            </div>
-               <div class="trimestre-center">
-            Trimestre: {{ $trimestre }}
-                </div>
-            <div class="qr-code">
-                QR CODE
-            </div>
-        </div>
-
-        <!-- Grades Table -->
-        <table class="main-table keep-together">
-            <thead>
-                <tr>
-                    <th class="col-matiere">Matière</th>
-                    <th class="col-coef">Coef</th>
-                    <th colspan="5">Interrogations</th>
-                    <th colspan="2">Devoirs</th>
-                    <th class="col-moy">Moy</th>
-                    <th class="col-moy-coef">Moy x Coef</th>
-                    <th class="col-appreciation">Appréciation</th>
-                </tr>
-                <tr>
-                    <th colspan="2"></th>
-                    @for ($i = 1; $i <= 5; $i++)
-                    <th class="col-interro">I{{ $i }}</th>
-                    @endfor
-                    <th class="col-devoir">D1</th>
-                    <th class="col-devoir">D2</th>
-                    <th colspan="3"></th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach ($bulletin as $ligne)
-                <tr>
-                    <td class="col-matiere">{{ $ligne['subject'] }}</td>
-                    <td class="col-coef">{{ $ligne['coef'] }}</td>
-                    @for ($i = 1; $i <= 5; $i++)
-                    <td class="col-interro">{{ $ligne['interros'][$i] ?? '-' }}</td>
-                    @endfor
-                    <td class="col-devoir">{{ $ligne['devoirs'][1] ?? '-' }}</td>
-                    <td class="col-devoir">{{ $ligne['devoirs'][2] ?? '-' }}</td>
-                    <td class="col-moy"><strong>{{ $ligne['moyenne'] ?? '-' }}</strong></td>
-                    <td class="col-moy-coef"><strong>{{ $ligne['moyCoeff'] ?? '-' }}</strong></td>
-                    <td class="col-appreciation">{{ $ligne['appreciation'] ?? '-' }}</td>
-                </tr>
-                @endforeach
-            </tbody>
-            <tfoot>
-                <tr>
-                    <td colspan="9" align="right"><strong>Conduite:</strong></td>
-                    <td colspan="3">{{ $conduiteFinale }}</td>
-                </tr>
-            </tfoot>
-        </table>
-
-        <!-- Totals Line -->
-        <div class="totals-section">
-            <strong>Totaux:............................................................</strong> {{ $totalPoints ?? '-' }}
-        </div>
-
-        <!-- Moyennes -->
-        <div class="totals-section">
-            <div class="totals-line">
-                <div class="total-left">
-                    <strong>Moyenne Littéraires:</strong> {{ $moyenneLitteraires ?? '-' }}
-                </div>
-                <div class="total-right">
-                    <strong>Moyenne Scientifiques:</strong> {{ $moyenneScientifiques ?? '-' }}
-                </div>
-            </div>
-        </div>
-
-        <!-- Three Columns -->
-        <div class="three-columns keep-together">
-            <div class="column">
-                <h4>Résultat de l'apprenant</h4>
-                <div>Moyenne: <strong>{{ $moyenneGenerale }}</strong></div>
-                <div>Rang: <strong>{{ $rang }} / {{ $classe->students->count() }}</strong></div>
-                <div>Mention: <strong>{{ $mention ?? '-' }}</strong></div>
+                Tableau d'Honneur
             </div>
             
-            <div class="column">
-                <h4>Résultat de la classe</h4>
-                <div>Plus forte moyenne: <strong>{{ $plusForte ?? '-' }}</strong></div>
-                <div>Plus faible moyenne: <strong>{{ $plusFaible ?? '-' }}</strong></div>
-                <div>Moyenne de la classe: <strong>{{ $moyClasse ?? '-' }}</strong></div>
+            <div class="decision-item">
+                <div class="case-decision {{ $avertissement ? 'cochee' : '' }}">
+                    {{ $avertissement ? : '' }}
+                </div>
+                Avertissement
             </div>
             
-            <div class="column">
-                <h4>Décision du Conseil des Enseignants</h4>
-                <div class="decision-item">□ Félicitation</div>
-                <div class="decision-item">□ Encouragement</div>
-                <div class="decision-item">□ Tableau d'Honneur</div>
-                <div class="decision-item">□ Avertissement</div>
+            @if(!$felicitation && !$encouragement && !$tableauHonneur && !$avertissement)
+            <div style="margin-top: 10px; font-size: 7pt; text-align: center; font-style: italic; color: #666;">
+                Aucune décision spécifique
             </div>
+            @endif
         </div>
-        <br>
-        <br>
+    </div>
+    <br>
+    <br>
 
-        <!-- Signatures -->
-        <div class="signatures keep-together">
-            <div class="signature">
-                <div>Le Titulaire</div>
-                <div class="signature-line"></div>
-            </div>
-            <div class="signature">
-                <div>Le Directeur</div>
-                <div class="signature-line"></div>
-            </div>
+    <!-- SIGNATURES -->
+    <div class="signatures">
+        <div class="signature">
+            <div>Le Titulaire</div>
+            <div class="ligne-signature"></div>
         </div>
-        <!-- Footer -->
-        <div class="footer">
-            <div class="footer-left">
-                <span class="barcode">CODE BARRE</span>
-            </div>
-            <div class="footer-center">
-                Discipline - Créativité - Excellence
-            </div>
-            <div class="footer-right">
-                Imprimé le {{ now()->format('d/m/Y') }}
-            </div>
+      
+        <div class="signature">
+            <div>Le Censeur</div>
+            <div class="ligne-signature"></div>
+        </div>
+        
+        <div class="signature">
+            <div>Le Chef d'Établissement</div>
+            <div class="ligne-signature"></div>
+        </div>
+        <br><br><br>
+    </div>
+
+    <br>
+    <br>
+    <br><br>
+
+    <!-- PIED DE PAGE -->
+    <div class="pied-page">
+        <div class="pied-gauche">
+            <span class="code-barres">BULLETIN-{{ $student->num_educ ?? $student->id }}-T{{ $trimestre }}</span>
+        </div>
+        
+        <div class="pied-centre">
+            Discipline - Créativité - Excellence
+        </div>
+        
+        <div class="pied-droite">
+            Imprimé le {{ now()->format('d/m/Y à H:i') }}
         </div>
     </div>
 </body>

@@ -300,6 +300,10 @@ Route::get('/censeur/classes/{classId}/students/{studentId}/bulletin/{trimestre}
     [App\Http\Controllers\Censeur\NoteController::class, 'downloadPdf']
 )->name('censeur.classes.notes.bulletin.pdf');
 
+// Route pour consulter les notes d'une évaluation spécifique
+Route::get('classes/{classId}/notes/{subjectId}/{type}/{sequence}/trimestre/{trimestre}', 
+    [App\Http\Controllers\Censeur\NoteController::class, 'viewEvaluationNotes']
+)->name('censeur.evaluation.notes.view');
 
 // Notes par trimestre
 Route::get('/censeur/classes/{id}/notes/{trimestre}/{subjectId}', [App\Http\Controllers\Censeur\NoteController::class, 'notes_trimestre'])

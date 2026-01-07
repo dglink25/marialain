@@ -30,15 +30,15 @@
                 <div class="bg-blue-50 rounded-lg p-4 border border-blue-200 inline-block">
                     <h2 class="text-lg font-semibold text-blue-800">
                         <i class="fas fa-book mr-2"></i>
-                        {{ $subjects->name }} 
-                        <span class="text-blue-600">(Coefficient : {{ $subjects->coefficient ?? 1 }})</span>
+                        {{ $subject->name }} 
+                        <span class="text-blue-600">(Coefficient : {{ $subjectPivot->coefficient ?? $subject->coefficient ?? 1 }})</span>
                     </h2>
                 </div>
             </div>
 
             <!-- Bouton d'export -->
             <div class="flex justify-center mt-6">
-                <a href="{{ route('censeur.notes.export.pdf', [$classe->id, $trimestre, $subjects->id]) }}" 
+                <a href="{{ route('censeur.notes.export.pdf', [$classe->id, $trimestre, $subject->id]) }}" 
                    class="inline-flex items-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 shadow-sm font-medium">
                     <i class="fas fa-file-pdf mr-2"></i>
                     Télécharger le PDF
@@ -86,7 +86,10 @@
                     <tbody class="divide-y divide-gray-200">
                         @foreach($classe->students as $student)
                             @php
-                                $grades = $gradesData[$student->id][$subjects->id] ?? null;
+                                // CORRECTION: Accès correct aux données
+                                $grades = isset($gradesData[$student->id][$subject->id]) 
+                                    ? $gradesData[$student->id][$subject->id] 
+                                    : null;
                             @endphp
                             <tr class="hover:bg-gray-50 transition-colors duration-150">
                                 <!-- Informations élève -->
@@ -109,8 +112,8 @@
                                 <!-- Interrogations -->
                                 @for($i = 1; $i <= 5; $i++)
                                     <td class="px-2 py-2 text-center text-sm border-r {{ $i === 5 ? 'border-gray-200' : '' }} 
-                                        {{ isset($grades['interros'][$i]) ? 'text-gray-700' : 'text-gray-400' }}">
-                                        {{ $grades['interros'][$i] ?? '-' }}
+                                        {{ isset($grades['interros'][$i]) && $grades['interros'][$i] !== null ? 'text-gray-700' : 'text-gray-400' }}">
+                                        {{ isset($grades['interros'][$i]) && $grades['interros'][$i] !== null ? $grades['interros'][$i] : '-' }}
                                     </td>
                                 @endfor
 
@@ -122,14 +125,14 @@
 
                                 <!-- Coefficient -->
                                 <td class="px-3 py-2 text-center text-sm text-gray-600 border-r border-gray-200">
-                                    {{ $grades['coef'] ?? ($subjects->coefficient ?? 1) }}
+                                    {{ $grades['coef'] ?? ($subjectPivot->coefficient ?? $subject->coefficient ?? 1) }}
                                 </td>
 
                                 <!-- Devoirs -->
                                 @for($i = 1; $i <= 2; $i++)
                                     <td class="px-2 py-2 text-center text-sm border-r {{ $i === 2 ? 'border-gray-200' : '' }}
-                                        {{ isset($grades['devoirs'][$i]) ? 'text-gray-700' : 'text-gray-400' }}">
-                                        {{ $grades['devoirs'][$i] ?? '-' }}
+                                        {{ isset($grades['devoirs'][$i]) && $grades['devoirs'][$i] !== null ? 'text-gray-700' : 'text-gray-400' }}">
+                                        {{ isset($grades['devoirs'][$i]) && $grades['devoirs'][$i] !== null ? $grades['devoirs'][$i] : '-' }}
                                     </td>
                                 @endfor
 
