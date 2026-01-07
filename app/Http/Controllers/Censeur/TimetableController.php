@@ -120,7 +120,9 @@ class TimetableController extends Controller
 
     public function update(Request $request, $classId, $id){
         DB::beginTransaction();
-
+        while (DB::transactionLevel() > 0) {
+            DB::rollBack();
+        }
         try {
             $activeYear = AcademicYear::where('active', true)->firstOrFail();
 
