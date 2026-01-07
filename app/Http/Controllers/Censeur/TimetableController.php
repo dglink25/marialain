@@ -279,9 +279,8 @@ class TimetableController extends Controller
     }
 
     public function store(Request $request, $classId){
-        DB::beginTransaction();
+        return DB::transaction(function () use ($request, $classId) {
 
-        try {
             $activeYear = AcademicYear::where('active', true)->firstOrFail();
 
             $validator = Validator::make($request->all(), [
@@ -290,38 +289,23 @@ class TimetableController extends Controller
                 'day' => 'required|in:Lundi,Mardi,Mercredi,Jeudi,Vendredi,Samedi',
                 'start_time' => 'required|date_format:H:i',
                 'end_time' => 'required|date_format:H:i|after:start_time',
-            ], [
-                'end_time.after' => 'L\'heure de fin doit être après l\'heure de début.',
-                'start_time.date_format' => 'Format d\'heure invalide.',
-                'end_time.date_format' => 'Format d\'heure invalide.',
             ]);
 
             if ($validator->fails()) {
-                return back()
-                    ->withErrors($validator)
-                    ->withInput()
-                    ->with('error', 'Veuillez corriger les erreurs ci-dessous.');
+                throw new \Illuminate\Validation\ValidationException($validator);
             }
 
-            // Vérifier les conflits d'horaire
             $conflict = Timetable::where('class_id', $classId)
                 ->where('academic_year_id', $activeYear->id)
                 ->where('day', $request->day)
-                ->where(function ($query) use ($request) {
-                    $query->where(function ($q) use ($request) {
-                        $q->where('start_time', '<', $request->end_time)
-                          ->where('end_time', '>', $request->start_time);
-                    });
-                })
+                ->where('start_time', '<', $request->end_time)
+                ->where('end_time', '>', $request->start_time)
                 ->exists();
 
             if ($conflict) {
-                return back()
-                    ->withInput()
-                    ->with('error', 'Conflit d\'horaire : un cours existe déjà sur ce créneau.');
+                throw new \Exception("Conflit d'horaire");
             }
 
-            // Créer le nouveau créneau
             Timetable::create([
                 'class_id' => $classId,
                 'teacher_id' => $request->teacher_id,
@@ -332,35 +316,21 @@ class TimetableController extends Controller
                 'academic_year_id' => $activeYear->id,
             ]);
 
-            // Vérifier si la relation existe déjà
-            $existingRelation = DB::table('class_teacher_subject')
-                ->where('class_id', $classId)
-                ->where('teacher_id', $request->teacher_id)
-                ->where('subject_id', $request->subject_id)
-                ->exists();
-
-            if (!$existingRelation) {
-                DB::table('class_teacher_subject')->insert([
-                    'academic_year_id' => $activeYear->id,
+            DB::table('class_teacher_subject')->updateOrInsert(
+                [
                     'class_id' => $classId,
                     'teacher_id' => $request->teacher_id,
                     'subject_id' => $request->subject_id,
-                    'created_at' => now(),
+                    'academic_year_id' => $activeYear->id,
+                ],
+                [
                     'updated_at' => now(),
-                ]);
-            }
+                    'created_at' => now(),
+                ]
+            );
 
-            DB::commit();
-
-            return redirect()->back()->with('success', 'Créneau ajouté avec succès.');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Erreur ajout créneau: ' . $e->getMessage());
-            return back()
-                ->withInput()
-                ->with('error', 'Erreur lors de l\'ajout du créneau: ' . $e->getMessage());
-        }
+            return back()->with('success', 'Créneau ajouté avec succès.');
+        });
     }
 
     public function download($classId){
