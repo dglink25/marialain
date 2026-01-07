@@ -495,7 +495,7 @@
             <footer class="bg-white border-t py-4 mt-auto">
                 <div class="container mx-auto px-4">
                     <div class="text-center text-sm text-gray-600">
-                        &copy; 2025 CPEG MARIE-ALAIN — Tous droits réservés.
+                        &copy; 2026 CPEG MARIE-ALAIN — Tous droits réservés.
                     </div>
                 </div>
             </footer>
