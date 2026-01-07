@@ -534,25 +534,35 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Gestion des suppressions
+    // CORRECTION : Gestion des suppressions
     const deleteButtons = document.querySelectorAll('form button[type="submit"]');
     deleteButtons.forEach(button => {
-        if (button.closest('form').action.includes('delete')) {
+        const form = button.closest('form');
+        
+        // Vérifier si c'est un formulaire de suppression
+        if (form && form.action.includes('delete')) {
             button.addEventListener('click', function(e) {
+                e.preventDefault(); // Empêcher la soumission immédiate
+                
                 if (!confirm('Êtes-vous sûr de vouloir supprimer ce cours ? Cette action est irréversible.')) {
-                    e.preventDefault();
-                } else {
-                    // Afficher un indicateur de chargement
-                    const originalHTML = this.innerHTML;
-                    this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Suppression...';
-                    this.disabled = true;
-                    
-                    // Restaurer après 3 secondes si la suppression échoue
-                    setTimeout(() => {
-                        this.innerHTML = originalHTML;
-                        this.disabled = false;
-                    }, 3000);
+                    return false;
                 }
+                
+                // Afficher un indicateur de chargement
+                const originalHTML = this.innerHTML;
+                this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Suppression...';
+                this.disabled = true;
+                
+                // Soumettre le formulaire après confirmation
+                setTimeout(() => {
+                    form.submit();
+                }, 500);
+                
+                // Restaurer après 10 secondes si la suppression échoue
+                setTimeout(() => {
+                    this.innerHTML = originalHTML;
+                    this.disabled = false;
+                }, 10000);
             });
         }
     });
@@ -565,7 +575,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Gestion du responsive
     function handleResponsive() {
-        const table = document.querySelector('.table-responsive');
         const screenWidth = window.innerWidth;
         
         if (screenWidth < 768) {
@@ -598,15 +607,16 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Empêcher la double soumission
+    // Empêcher la double soumission uniquement pour les formulaires non-suppression
     let formSubmitting = false;
-    const forms = document.querySelectorAll('form');
+    const forms = document.querySelectorAll('form:not([action*="delete"])');
     forms.forEach(form => {
-        form.addEventListener('submit', function() {
+        form.addEventListener('submit', function(e) {
             if (formSubmitting) {
-                event.preventDefault();
+                e.preventDefault();
                 return false;
             }
+            
             formSubmitting = true;
             
             // Désactiver le bouton de soumission
