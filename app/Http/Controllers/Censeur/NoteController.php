@@ -53,6 +53,7 @@ use Illuminate\Support\Facades\Log;
 
                 // 🔹 Conduite et punitions (comme dans listeEleves)
                 $conduct = Conduct::where('student_id', $studentId)
+                    ->where('trimestre', $trimestre)
                     ->where('academic_year_id', $activeYear->id)
                     ->first();
                 
@@ -261,6 +262,7 @@ use Illuminate\Support\Facades\Log;
                     
                     // Conduite pour cet élève
                     $stConduct = Conduct::where('student_id', $st->id)
+                        ->where('trimestre', $trimestre)
                         ->where('academic_year_id', $activeYear->id)
                         ->first();
                     
@@ -375,6 +377,7 @@ use Illuminate\Support\Facades\Log;
 
                 // 5) Conduites et punitions
                 $conducts = Conduct::where('academic_year_id', $activeYear->id)
+                                    ->where('trimestre', $trimestre)
                     ->whereIn('student_id', $classe->students->pluck('id'))
                     ->get()
                     ->keyBy('student_id');
@@ -617,6 +620,7 @@ use Illuminate\Support\Facades\Log;
 
                 // Conduite et punitions
                 $conduct = Conduct::where('student_id', $student->id)
+                    ->where('trimestre', $trimestre)
                     ->where('academic_year_id', $activeYear->id)
                     ->value('grade') ?? 0;
 
@@ -837,6 +841,7 @@ use Illuminate\Support\Facades\Log;
                     
                     // Conduite pour cet élève
                     $conduct = Conduct::where('student_id', $studentId)
+                        ->where('trimestre', $trimestre)
                         ->where('academic_year_id', $activeYear->id)
                         ->value('grade') ?? 0;
                     
@@ -1418,6 +1423,7 @@ use Illuminate\Support\Facades\Log;
 
                 // Conduites & punitions
                 $conducts = Conduct::where('academic_year_id', $activeYear->id)
+                    ->where('trimestre', $trimestre)
                     ->whereIn('student_id', $classe->students->pluck('id'))
                     ->get()
                     ->keyBy('student_id');

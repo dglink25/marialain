@@ -45,9 +45,25 @@ class SurveillantController extends Controller{
     // Attribuer conduite à tous les élèves d'une classe
     public function assignConducts(Request $request, $classId) {
         $request->validate([
-            'grade' => 'required|string|max:2',
+            'grade' => [
+                'required',
+                'numeric',
+                'min:0',
+                'max:20',
+                'regex:/^\d+(\.\d{1,2})?$/'
+            ],
+            'trimestre' => 'required|integer|in:1,2,3',
             'comment' => 'nullable|string|max:255',
         ]);
+
+        // Convertir en numérique si besoin
+        $grade = (float) $request->grade;
+        $trimestre = (int) $request->trimestre;
+
+        // Validation supplémentaire pour le grade
+        if ($grade < 0 || $grade > 20) {
+            return back()->withErrors(['grade' => 'La note de conduite doit être entre 0 et 20.']);
+        }
 
         $activeYear = AcademicYear::where('active', true)->first();
         $secondary = Entity::where('name', 'Secondaire')->first();
@@ -61,21 +77,27 @@ class SurveillantController extends Controller{
             ->where('class_id', $classId)
             ->get();
 
+        // Vérifier s'il y a des élèves
+        if ($students->isEmpty()) {
+            return back()->withErrors("Aucun élève trouvé dans cette classe.");
+        }
+
         foreach ($students as $student) {
             Conduct::updateOrCreate(
                 [
                     'student_id' => $student->id,
                     'academic_year_id' => $activeYear->id,
                     'entity_id' => $secondary->id,
+                    'trimestre' => $trimestre, // Ajouter trimestre dans la clé unique
                 ],
                 [
-                    'grade' => $request->grade,
+                    'grade' => $grade,
                     'comment' => $request->comment,
                 ]
             );
         }
 
-        return back()->with('success', "Conduite attribuée à tous les élèves de la classe.");
+        return back()->with('success', "Conduite attribuée à {$students->count()} élève(s) de la classe.");
     }
 
     // Liste des élèves d’une classe
