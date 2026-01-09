@@ -13,6 +13,7 @@
 </header>
 
 <!-- Statistiques -->
+<!--
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8" data-aos="fade-up">
     <div class="bg-blue-50 p-6 rounded-lg border border-blue-100 flex flex-col items-start">
         <div class="flex items-center justify-between w-full">
@@ -43,7 +44,7 @@
         <p class="text-sm text-purple-600 mt-1">{{ \App\Models\Classe::whereDate('created_at', now()->subDay())->count() }} nouvelles hier</p>
     </div>
 </div>
-
+-->
 <!-- Vos actions -->
 <section class="mb-8" data-aos="fade-up">
     <h2 class="text-xl font-bold text-gray-800 mb-4">Vos actions</h2>

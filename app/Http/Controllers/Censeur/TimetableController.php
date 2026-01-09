@@ -237,6 +237,9 @@ class TimetableController extends Controller
 
     public function destroy($classId, $timetableId){
         DB::beginTransaction();
+        while (DB::transactionLevel() > 0) {
+            DB::rollBack();
+        }
 
         try {
             $timetable = Timetable::where('id', $timetableId)

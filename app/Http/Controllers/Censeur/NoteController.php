@@ -367,6 +367,9 @@ use Illuminate\Support\Facades\Log;
                 $subjects = ClassTeacherSubject::where('class_id', $classId)
                                     ->where('academic_year_id', $activeYear->id)
                                     ->get();
+                if ($subjects->isEmpty()) {
+                    return back()->with('error', 'Aucune matière trouvée pour cette classe.');
+                }
 
                 // 4) Notes (grades)
                 $grades = Grade::whereIn('student_id', $classe->students->pluck('id'))
@@ -1454,6 +1457,11 @@ use Illuminate\Support\Facades\Log;
                     ->where('academic_year_id', $activeYear->id)
                     ->get();
 
+                // Vérifier si des matières existent
+                if ($subjects->isEmpty()) {
+                    return back()->with('error', 'Aucune matière trouvée pour cette classe.');
+                }
+
                 // Notes
                 $grades = Grade::whereIn('student_id', $classe->students->pluck('id'))
                     ->whereIn('subject_id', $subjects->pluck('id'))
@@ -1540,10 +1548,6 @@ use Illuminate\Support\Facades\Log;
                         $moyenneCoef = $moyenneMatiere !== null ? round($moyenneMatiere * $coef, 2) : null;
                         
                         $gradesData[$studentId][$subject->id] = [
-                            'interros' => $interros,
-                            'devoir1' => $devoir1,
-                            'devoir2' => $devoir2,
-                            'moyenneInterro' => $moyenneInterro,
                             'moyenneMatiere' => $moyenneMatiere,
                             'coef' => $coef,
                             'moyenneCoef' => $moyenneCoef,
@@ -1610,6 +1614,9 @@ use Illuminate\Support\Facades\Log;
                     $stats['meilleureMoyenne'] = max($moyennes);
                 }
 
+                // Date de téléchargement
+                $dateDownload = now()->format('d/m/Y à H:i');
+
                 // Génération du PDF
                 $pdf = Pdf::loadView('censeur.notes.pdf.notes_trimestre', [
                     'classe' => $classe,
@@ -1619,6 +1626,7 @@ use Illuminate\Support\Facades\Log;
                     'trimestre' => $trimestre,
                     'activeYear' => $activeYear,
                     'stats' => $stats,
+                    'dateDownload' => $dateDownload,
                 ])->setPaper('a4', 'landscape');
 
                 return $pdf->download("Fiche_notes_{$classe->name}_T{$trimestre}.pdf");

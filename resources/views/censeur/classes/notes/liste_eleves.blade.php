@@ -45,19 +45,21 @@
                 
                 <!-- Boutons d'export -->
                 <div class="flex space-x-3">
-                    <!--
                     <a href="{{ route('censeur.classes.notes.pdf', [$classe->id, $trimestre]) }}"
                        class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 shadow-sm">
                         <i class="fas fa-file-pdf mr-2"></i>
                         PDF
                     </a>
+
+                    <!--
                     
-                        <a href="{{ route('censeur.classes.notes.excel', [$classe->id, $trimestre]) }}"
-                        class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 shadow-sm">
-                            <i class="fas fa-file-excel mr-2"></i>
-                            Excel
-                        </a>
+                    <a href="{{ route('censeur.classes.notes.excel', [$classe->id, $trimestre]) }}"
+                       class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 shadow-sm">
+                        <i class="fas fa-file-excel mr-2"></i>
+                        Excel
+                    </a>
                     -->
+                    
                 </div>
             </div>
         </div>
@@ -88,19 +90,21 @@
                 <table class="w-full">
                     <thead class="bg-gray-50 border-b border-gray-200">
                         <tr>
-                            <th rowspan="2" class="px-4 py-3 text-left text-sm font-semibold text-gray-700 border-r border-gray-200">
+                            <!-- Colonne Élève -->
+                            <th rowspan="2" class="px-4 py-3 text-left text-sm font-semibold text-gray-700 border-r border-gray-200 sticky left-0 bg-gray-50 z-20">
                                 Élève
                             </th>
                             
+                            <!-- En-têtes des matières -->
                             @foreach($subjects as $subject)
-                            <th colspan="7" class="px-4 py-3 text-center text-sm font-semibold text-gray-700 border-r border-gray-200">
+                            <th colspan="3" class="px-4 py-3 text-center text-sm font-semibold text-gray-700 border-r border-gray-200">
                                 {{ $subject->subject->name }}
                             </th>
                             @endforeach
                             
+                            <!-- Colonnes finales -->
                             <th rowspan="2" class="px-4 py-3 text-center text-sm font-semibold text-gray-700 border-r border-gray-200">
                                 Conduite
-                                <span class="text-xs font-normal text-gray-500">(Coef: 1)</span>
                             </th>
                             <th rowspan="2" class="px-4 py-3 text-center text-sm font-semibold text-gray-700 border-r border-gray-200">
                                 Moy. Gén.
@@ -108,19 +112,23 @@
                             <th rowspan="2" class="px-4 py-3 text-center text-sm font-semibold text-gray-700 border-r border-gray-200">
                                 Rang
                             </th>
-                            <th rowspan="2" class="px-4 py-3 text-center text-sm font-semibold text-gray-700">
+                            <th rowspan="2" class="px-4 py-3 text-center text-sm font-semibold text-gray-700 sticky right-0 bg-gray-50 z-20">
                                 Bulletin
                             </th>
                         </tr>
+                        
+                        <!-- Sous-en-têtes pour chaque matière -->
                         <tr>
                             @foreach($subjects as $subject)
-                                <th class="px-2 py-2 text-xs font-medium text-gray-500 border-r border-gray-200">Int. Moy</th>
-                                <th class="px-2 py-2 text-xs font-medium text-gray-500 border-r border-gray-200">D. Moy</th>
-                                <th class="px-2 py-2 text-xs font-medium text-gray-500 border-r border-gray-200">Moy/20</th>
-                                <th class="px-2 py-2 text-xs font-medium text-gray-500 border-r border-gray-200">Coef</th>
-                                <th class="px-2 py-2 text-xs font-medium text-gray-500 border-r border-gray-200">MoyCoef</th>
-                                <th class="px-2 py-2 text-xs font-medium text-gray-500 border-r border-gray-200">Dev 1</th>
-                                <th class="px-2 py-2 text-xs font-medium text-gray-500 border-r border-gray-200">Dev 2</th>
+                                <th class="px-2 py-2 text-xs font-medium text-gray-500 border-r border-gray-200">
+                                    Moy/20
+                                </th>
+                                <th class="px-2 py-2 text-xs font-medium text-gray-500 border-r border-gray-200">
+                                    Coef
+                                </th>
+                                <th class="px-2 py-2 text-xs font-medium text-gray-500 border-r border-gray-200">
+                                    Moy×Coef
+                                </th>
                             @endforeach
                         </tr>
                     </thead>
@@ -134,8 +142,8 @@
                             $conduiteFinale = $studentData['conduite_finale'] ?? 0;
                         @endphp
                         <tr class="hover:bg-gray-50 transition-colors duration-150">
-                            <!-- Informations élève -->
-                            <td class="px-4 py-3 border-r border-gray-200">
+                            <!-- Informations élève (sticky) -->
+                            <td class="px-4 py-3 border-r border-gray-200 sticky left-0 bg-white z-10">
                                 <div class="flex items-center">
                                     <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
                                         <span class="text-blue-600 text-sm font-semibold">{{ $index + 1 }}</span>
@@ -151,39 +159,16 @@
                                 </div>
                             </td>
 
-                            <!-- Notes par matière -->
+                            <!-- Notes par matière (3 colonnes par matière) -->
                             @foreach($subjects as $subject)
                                 @php
                                     $matiere = $studentData[$subject->id] ?? [];
-                                    $moyenneInterro = $matiere['moyenneInterro'] ?? null;
-                                    $devoir1 = $matiere['devoir1'] ?? null;
-                                    $devoir2 = $matiere['devoir2'] ?? null;
                                     $moyenneMatiere = $matiere['moyenneMatiere'] ?? null;
-                                    $moyenneCoef = $matiere['moyenneCoef'] ?? null;
                                     $coef = $matiere['coef'] ?? 1;
-                                    
-                                    // Calculer la moyenne des devoirs dans la vue
-                                    $moyenneDevoir = null;
-                                    if ($devoir1 !== null && $devoir2 !== null) {
-                                        $moyenneDevoir = round(($devoir1 + $devoir2) / 2, 2);
-                                    } elseif ($devoir1 !== null) {
-                                        $moyenneDevoir = $devoir1;
-                                    } elseif ($devoir2 !== null) {
-                                        $moyenneDevoir = $devoir2;
-                                    }
+                                    $moyenneCoef = $matiere['moyenneCoef'] ?? null;
                                 @endphp
                                 
-                                <!-- Moyenne Interro -->
-                                <td class="px-2 py-2 text-center text-sm border-r border-gray-200 {{ $moyenneInterro !== null ? 'text-gray-700' : 'text-gray-400' }}">
-                                    {{ $moyenneInterro !== null ? number_format($moyenneInterro, 2) : '-' }}
-                                </td>
-                                
-                                <!-- Moyenne Devoir -->
-                                <td class="px-2 py-2 text-center text-sm border-r border-gray-200 {{ $moyenneDevoir !== null ? 'text-gray-700' : 'text-gray-400' }}">
-                                    {{ $moyenneDevoir !== null ? number_format($moyenneDevoir, 2) : '-' }}
-                                </td>
-                                
-                                <!-- Moyenne Matière -->
+                                <!-- Moyenne Matière /20 -->
                                 <td class="px-2 py-2 text-center text-sm font-medium border-r border-gray-200 
                                     {{ $moyenneMatiere !== null ? ($moyenneMatiere >= 10 ? 'text-green-600' : 'text-red-600') : 'text-gray-400' }}">
                                     {{ $moyenneMatiere !== null ? number_format($moyenneMatiere, 2) : '-' }}
@@ -198,16 +183,6 @@
                                 <td class="px-2 py-2 text-center text-sm font-semibold border-r border-gray-200 
                                     {{ $moyenneCoef !== null ? 'text-blue-600' : 'text-gray-400' }}">
                                     {{ $moyenneCoef !== null ? number_format($moyenneCoef, 2) : '-' }}
-                                </td>
-                                
-                                <!-- Devoir 1 -->
-                                <td class="px-2 py-2 text-center text-xs border-r border-gray-200 {{ $devoir1 !== null ? 'text-gray-600' : 'text-gray-400' }}">
-                                    {{ $devoir1 !== null ? number_format($devoir1, 2) : '-' }}
-                                </td>
-                                
-                                <!-- Devoir 2 -->
-                                <td class="px-2 py-2 text-center text-xs border-r border-gray-200 {{ $devoir2 !== null ? 'text-gray-600' : 'text-gray-400' }}">
-                                    {{ $devoir2 !== null ? number_format($devoir2, 2) : '-' }}
                                 </td>
                             @endforeach
 
@@ -229,8 +204,8 @@
                                 {{ $rang }}
                             </td>
                             
-                            <!-- Bulletin -->
-                            <td class="px-3 py-2 text-center">
+                            <!-- Bulletin (sticky) -->
+                            <td class="px-3 py-2 text-center sticky right-0 bg-white z-10">
                                 <a href="{{ route('teacher.classes.students.bulletin', [$classe->id, $student->id, $trimestre]) }}"
                                 class="inline-flex items-center px-3 py-1 bg-blue-50 text-blue-700 rounded-lg border border-blue-200 hover:bg-blue-100 hover:border-blue-300 transition-colors duration-200 text-sm">
                                     <i class="fas fa-eye mr-1"></i>
@@ -331,6 +306,7 @@
     table {
         border-collapse: separate;
         border-spacing: 0;
+        min-width: 100%;
     }
     
     th {
@@ -340,7 +316,24 @@
         z-index: 10;
     }
     
-    tr:nth-child(even) {
+    th.sticky-left, td.sticky-left {
+        position: sticky;
+        left: 0;
+        z-index: 20;
+        background-color: white;
+        box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+    }
+    
+    th.sticky-right, td.sticky-right {
+        position: sticky;
+        right: 0;
+        z-index: 20;
+        background-color: white;
+        box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+    }
+    
+    tr:nth-child(even) td.sticky-left,
+    tr:nth-child(even) td.sticky-right {
         background-color: #fafafa;
     }
 </style>
@@ -355,17 +348,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         row.addEventListener('mouseleave', function() {
             this.style.backgroundColor = '';
-        });
-    });
-    
-    // Tri optionnel des colonnes (si nécessaire)
-    const headers = document.querySelectorAll('thead th[data-sortable]');
-    headers.forEach(header => {
-        header.addEventListener('click', function() {
-            const column = this.getAttribute('data-column');
-            if (column) {
-                sortTable(column);
-            }
         });
     });
 });
