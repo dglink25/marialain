@@ -132,11 +132,7 @@
                     Sexe : {{ $data['student']->gender == 'M' ? 'Masculin' : 'Féminin' }}
                 </div>
                 <div class="qr-box">
-                    @if(!empty($data['qrCode']))
-                        <img src="data:image/png;base64,{{ $data['qrCode'] }}" class="qr-code">
-                    @else
-                        <div class="qr-code"></div>
-                    @endif
+                    <img src="data:image/png;base64,{{ base64_encode(file_get_contents(public_path('qrcode.png'))) }}" class="qr-code">
                 </div>
                 <div class="clear"></div>
             </div>
