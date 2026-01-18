@@ -284,48 +284,48 @@ Route::post('/inscription', [StudentController::class, 'store'])->name('students
 */
 
 //Gestion de notes Censeur
-Route::get('/classes', [CenseurNoteController::class, 'index'])->name('censeur.notes.index');
-Route::get('/classes/{classId}/students/{studentId}/bulletin/{trimestre}', 
+Route::middleware(['auth'])->get('/classes', [CenseurNoteController::class, 'index'])->name('censeur.notes.index');
+Route::middleware(['auth'])->get('/classes/{classId}/students/{studentId}/bulletin/{trimestre}', 
     [App\Http\Controllers\Censeur\NoteController::class, 'bulletin']
 )->name('teacher.classes.students.bulletin');
 
 //Téléchargement excel et pdf 
-Route::get('/censeur/classes/{classId}/trimestres/{trimestre}/notes/pdf', [App\Http\Controllers\Censeur\NoteController::class, 'telechargerPDF'])
+Route::middleware(['auth'])->get('/censeur/classes/{classId}/trimestres/{trimestre}/notes/pdf', [App\Http\Controllers\Censeur\NoteController::class, 'telechargerPDF'])
     ->name('censeur.classes.notes.pdf');
 
-Route::get('/censeur/classes/{classId}/trimestres/{trimestre}/notes/excel', [App\Http\Controllers\Censeur\NoteController::class, 'telechargerExcel'])
+Route::middleware(['auth'])->get('/censeur/classes/{classId}/trimestres/{trimestre}/notes/excel', [App\Http\Controllers\Censeur\NoteController::class, 'telechargerExcel'])
     ->name('censeur.classes.notes.excel');
 
-Route::get('/censeur/classes/{classId}/students/{studentId}/bulletin/{trimestre}/pdf',
+Route::middleware(['auth'])->get('/censeur/classes/{classId}/students/{studentId}/bulletin/{trimestre}/pdf',
     [App\Http\Controllers\Censeur\NoteController::class, 'downloadPdf']
 )->name('censeur.classes.notes.bulletin.pdf');
 
 // Route pour consulter les notes d'une évaluation spécifique
-Route::get('classes/{classId}/notes/{subjectId}/{type}/{sequence}/trimestre/{trimestre}', 
+Route::middleware(['auth'])->get('classes/{classId}/notes/{subjectId}/{type}/{sequence}/trimestre/{trimestre}', 
     [App\Http\Controllers\Censeur\NoteController::class, 'viewEvaluationNotes']
 )->name('censeur.evaluation.notes.view');
 
 // Notes par trimestre
-Route::get('/censeur/classes/{id}/notes/{trimestre}/{subjectId}', [App\Http\Controllers\Censeur\NoteController::class, 'notes_trimestre'])
+Route::middleware(['auth'])->get('/censeur/classes/{id}/notes/{trimestre}/{subjectId}', [App\Http\Controllers\Censeur\NoteController::class, 'notes_trimestre'])
     ->name('censeur.classes.notes');
 
-Route::get('/censeur/classes/{classId}/trimestres/{trimestre}/subjects/{subjectId}/notes/pdf', 
+Route::middleware(['auth'])->get('/censeur/classes/{classId}/trimestres/{trimestre}/subjects/{subjectId}/notes/pdf', 
     [App\Http\Controllers\Censeur\NoteController::class, 'exportNotesPDF']
 )->name('censeur.notes.export.pdf');
 
-Route::get('/censeur/classes/{classId}/trimestres/{trimestre}/matieres', 
+Route::middleware(['auth'])->get('/censeur/classes/{classId}/trimestres/{trimestre}/matieres', 
     [App\Http\Controllers\Censeur\NoteController::class, 'matiere']
 )->name('censeur.classes.trimestre.matiere');
 
-Route::get('censeur/classes/{class}/{trimestre}/{subject}/notes', 
+Route::middleware(['auth'])->get('censeur/classes/{class}/{trimestre}/{subject}/notes', 
     [App\Http\Controllers\Censeur\NoteController::class, 'showClassNote']
 )->name('censeur.classes.notes.list');
 
-Route::get('/classes/{classId}/trimestres/{trimestre}/eleves', 
+Route::middleware(['auth'])->get('/classes/{classId}/trimestres/{trimestre}/eleves', 
     [App\Http\Controllers\Censeur\NoteController::class, 'listeEleves']
 )->name('teacher.classes.trimestres.eleves');
 
-Route::post('/censeur/classes/{classe}/subjects/{subject}/coefficient', 
+Route::middleware(['auth'])->post('/censeur/classes/{classe}/subjects/{subject}/coefficient', 
     [App\Http\Controllers\Censeur\NoteController::class, 'setCoefficient']
 )->name('censeur.subjects.coefficient');
 
@@ -363,6 +363,9 @@ Route::prefix('censeur')->name('censeur.')->middleware('auth')->group(function (
     Route::get('classes/{class}/timetables/download', [TimetableController::class, 'downloadPDF'])->name('timetables.download');
     
 });
+Route::get('/censeur/classes/{classId}/bulletin-trimestre/{trimestre}/all-pdf', 
+    [App\Http\Controllers\Censeur\NoteController::class, 'downloadAllBulletinsPdf'])
+    ->name('censeur.classes.bulletin.all-pdf');
 
 /*
 |--------------------------------------------------------------------------
@@ -414,10 +417,10 @@ Route::middleware(['auth'])->group(function () {
 Route::get('/enseignants/{user}', [ProfileController::class, 'show'])->name('enseignants.show');
 
 // Export PDF des enseignants d’une classe (Censeur)
-Route::get('/classes/{class}/enseignants/export', [ClasseController::class, 'export'])->name('enseignants.export');
+Route::middleware(['auth'])->get('/classes/{class}/enseignants/export', [ClasseController::class, 'export'])->name('enseignants.export');
 
 // Sujet -> enseignants
-Route::get('subjects/{subject}/teachers', [SubjectController::class, 'teachers'])->name('subjects.teachers');
+Route::middleware(['auth'])->get('subjects/{subject}/teachers', [SubjectController::class, 'teachers'])->name('subjects.teachers');
 
 
 // Surveillant

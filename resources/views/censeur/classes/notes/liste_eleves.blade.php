@@ -42,26 +42,23 @@
                         <span>{{ $activeYear->name }}</span>
                     </div>
                 </div>
-                
-                <!-- Boutons d'export -->
+            </div>
+
+             <!-- Boutons d'export -->
                 <div class="flex space-x-3">
                     <a href="{{ route('censeur.classes.notes.pdf', [$classe->id, $trimestre]) }}"
                        class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 shadow-sm">
                         <i class="fas fa-file-pdf mr-2"></i>
-                        PDF
+                        Etat de notes (PDF)
                     </a>
 
-                    <!--
-                    
-                    <a href="{{ route('censeur.classes.notes.excel', [$classe->id, $trimestre]) }}"
-                       class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 shadow-sm">
-                        <i class="fas fa-file-excel mr-2"></i>
-                        Excel
+                    <a href="{{ route('censeur.classes.bulletin.all-pdf', [$classe->id, $trimestre]) }}"
+                        class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 shadow-sm">
+                        <i class="fas fa-file-archive mr-2"></i>
+                        Tous les Bulletins (PDF)
                     </a>
-                    -->
                     
                 </div>
-            </div>
         </div>
 
         <!-- Carte principale -->

@@ -1848,8 +1848,389 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
         return back()->with('success', "L'autorisation pour modifier les notes de {$request->type} a été accordée pour 2 heures.");
     }
 
-
-
+    public function downloadAllBulletinsPdf($classId, $trimestre) {
+        try {
+            // 🔹 Année académique active
+            $activeYear = AcademicYear::where('active', true)->firstOrFail();
+            
+            // 🔹 Classe avec tous les élèves validés
+            $classe = Classe::with(['students' => function ($query) use ($activeYear) {
+                $query->where('is_validated', 1)
+                    ->where('academic_year_id', $activeYear->id)
+                    ->orderBy('last_name')
+                    ->orderBy('first_name');
+            }])->findOrFail($classId);
+            
+            // 🔹 Récupérer les matières une seule fois pour toutes les pages
+            $subjects = Subject::whereHas('classTeacherSubjects', function($query) use ($classId, $activeYear) {
+                $query->where('class_id', $classId)
+                    ->where('academic_year_id', $activeYear->id);
+            })->with(['classTeacherSubjects' => function($query) use ($classId, $activeYear) {
+                $query->where('class_id', $classId)
+                    ->where('academic_year_id', $activeYear->id);
+            }])->orderBy('name')->get();
+            
+            // Liste des matières par catégorie
+            $matieresLitteraires = ['COMMUNICATION ECRITE', 'LECTURE', 'ANGLAIS', 'HISTOIRE-GEOGRAPHIE'];
+            $matieresScientifiques = ['MATHEMATIQUES', 'PCT', 'SVT'];
+            
+            // Formatage des nombres
+            $formatNumber = function($value) {
+                if ($value === null || $value === 0) {
+                    return '0,00';
+                }
+                return number_format($value, 2, ',', '');
+            };
+            
+            // 🔹 Préparer les données pour tous les élèves
+            $allBulletinsData = [];
+            
+            foreach ($classe->students as $student) {
+                $studentId = $student->id;
+                
+                // 🔹 Récupération des notes pour cet élève
+                $grades = Grade::where('student_id', $studentId)
+                    ->where('class_id', $classId)
+                    ->where('academic_year_id', $activeYear->id)
+                    ->where('trimestre', $trimestre)
+                    ->get();
+                
+                // 🔹 Conduite et punitions
+                $conduct = Conduct::where('student_id', $studentId)
+                    ->where('trimestre', $trimestre)
+                    ->where('academic_year_id', $activeYear->id)
+                    ->first();
+                
+                $punishments = Punishment::where('student_id', $studentId)
+                    ->where('academic_year_id', $activeYear->id)
+                    ->get();
+                
+                $punishHours = $punishments->sum('hours');
+                
+                // Calcul de la conduite
+                $conductGrade = $conduct ? $conduct->grade : 0;
+                $conductFinal = max(0, $conductGrade - ($punishHours / 2));
+                $conduiteSur20 = round($conductFinal, 2);
+                
+                // 🔹 Calcul des moyennes par matière pour cet élève
+                $bulletin = [];
+                $totalMoyCoeff = 0;
+                $totalCoeff = 0;
+                $moyennesLitteraires = [];
+                $moyennesScientifiques = [];
+                $moyennesAutres = [];
+                
+                foreach ($subjects as $subject) {
+                    // Récupérer le coefficient
+                    $coefRecord = $subject->classTeacherSubjects->first();
+                    $coef = $coefRecord->coefficient ?? 1;
+                    
+                    // Récupération des notes
+                    $subjectGrades = $grades->where('subject_id', $subject->id);
+                    
+                    // Notes d'interrogations
+                    $interroNotes = $subjectGrades->where('type', 'interrogation')
+                        ->sortBy('sequence')
+                        ->pluck('value')
+                        ->filter()
+                        ->values()
+                        ->toArray();
+                    
+                    // Notes de devoir
+                    $devoir1 = $subjectGrades->where('type', 'devoir')
+                        ->where('sequence', 1)
+                        ->first()->value ?? null;
+                    $devoir2 = $subjectGrades->where('type', 'devoir')
+                        ->where('sequence', 2)
+                        ->first()->value ?? null;
+                    
+                    // Calcul de la moyenne des interrogations
+                    $moyenneInterro = !empty($interroNotes) ? 
+                        round(array_sum($interroNotes) / count($interroNotes), 2) : null;
+                    
+                    // Calcul de la moyenne matière
+                    $moyenneMatiere = null;
+                    $notesPourMoyenne = [];
+                    
+                    if ($moyenneInterro !== null) {
+                        $notesPourMoyenne[] = $moyenneInterro;
+                    }
+                    
+                    if ($devoir1 !== null) {
+                        $notesPourMoyenne[] = $devoir1;
+                    }
+                    if ($devoir2 !== null) {
+                        $notesPourMoyenne[] = $devoir2;
+                    }
+                    
+                    if (!empty($notesPourMoyenne)) {
+                        $moyenneMatiere = round(array_sum($notesPourMoyenne) / count($notesPourMoyenne), 2);
+                    }
+                    
+                    // Calculer moyenne coefficientée
+                    $moyCoeff = null;
+                    $appreciation = '-';
+                    
+                    if ($moyenneMatiere !== null) {
+                        $moyCoeff = round($moyenneMatiere * $coef, 2);
+                        
+                        // Appréciation par matière
+                        if ($moyenneMatiere > 16) $appreciation = 'Très Bien';
+                        elseif ($moyenneMatiere >= 14) $appreciation = 'Bien';
+                        elseif ($moyenneMatiere >= 12) $appreciation = 'Assez Bien';
+                        elseif ($moyenneMatiere >= 10) $appreciation = 'Passable';
+                        elseif ($moyenneMatiere >= 8) $appreciation = 'Insuffisant';
+                        elseif ($moyenneMatiere >= 6) $appreciation = 'Faible';
+                        elseif ($moyenneMatiere >= 4) $appreciation = 'Médiocre';
+                        else $appreciation = 'Très Faible';
+                        
+                        // Classer par catégorie pour les moyennes par domaine
+                        $nomMatiere = strtoupper($subject->name);
+                        if (in_array($nomMatiere, $matieresLitteraires)) {
+                            $moyennesLitteraires[] = $moyenneMatiere;
+                        } elseif (in_array($nomMatiere, $matieresScientifiques)) {
+                            $moyennesScientifiques[] = $moyenneMatiere;
+                        } else {
+                            $moyennesAutres[] = $moyenneMatiere;
+                        }
+                    }
+                    
+                    // Formatage des notes pour l'affichage
+                    $interrosFormatted = [];
+                    for ($i = 1; $i <= 5; $i++) {
+                        $interrosFormatted[$i] = isset($interroNotes[$i-1]) ? number_format($interroNotes[$i-1], 2, ',', '') : '-';
+                    }
+                    
+                    $devoirsFormatted = [];
+                    $devoirsFormatted[1] = $devoir1 !== null ? number_format($devoir1, 2, ',', '') : '-';
+                    $devoirsFormatted[2] = $devoir2 !== null ? number_format($devoir2, 2, ',', '') : '-';
+                    
+                    $bulletin[] = [
+                        'subject' => strtoupper($subject->name),
+                        'coef' => $coef,
+                        'interros' => $interrosFormatted,
+                        'devoirs' => $devoirsFormatted,
+                        'moyenneInterro' => $moyenneInterro !== null ? number_format($moyenneInterro, 2, ',', '') : '-',
+                        'moyenne' => $moyenneMatiere !== null ? number_format($moyenneMatiere, 2, ',', '') : '-',
+                        'moyCoeff' => $moyCoeff !== null ? number_format($moyCoeff, 2, ',', '') : '-',
+                        'appreciation' => $appreciation,
+                    ];
+                    
+                    // Pour le calcul de la moyenne générale
+                    if ($moyenneMatiere !== null && $moyCoeff !== null) {
+                        $totalCoeff += $coef;
+                        $totalMoyCoeff += $moyCoeff;
+                    }
+                }
+                
+                // 🔹 Ajouter la CONDUITE comme une matière
+                $conduiteAppreciation = '-';
+                if ($conduiteSur20 > 0) {
+                    if ($conduiteSur20 >= 14) $conduiteAppreciation = 'Très Bien';
+                    elseif ($conduiteSur20 >= 12) $conduiteAppreciation = 'Bien';
+                    elseif ($conduiteSur20 >= 10) $conduiteAppreciation = 'Passable';
+                    elseif ($conduiteSur20 >= 8) $conduiteAppreciation = 'Insuffisante';
+                    elseif ($conduiteSur20 >= 6) $conduiteAppreciation = 'Faible';
+                    elseif ($conduiteSur20 >= 4) $conduiteAppreciation = 'Médiocre';
+                    else $conduiteAppreciation = 'Très Faible';
+                    
+                    $totalCoeff += 1;
+                    $totalMoyCoeff += $conduiteSur20;
+                }
+                
+                // Ajouter la conduite au bulletin
+                $bulletin[] = [
+                    'subject' => 'CONDUITE',
+                    'coef' => 1,
+                    'interros' => [1 => '-', 2 => '-', 3 => '-', 4 => '-', 5 => '-'],
+                    'devoirs' => [1 => '-', 2 => number_format($conduiteSur20, 2, ',', '')],
+                    'moyenneInterro' => '-',
+                    'moyenne' => $conduiteSur20 > 0 ? number_format($conduiteSur20, 2, ',', '') : '-',
+                    'moyCoeff' => $conduiteSur20 > 0 ? number_format($conduiteSur20, 2, ',', '') : '-',
+                    'appreciation' => $conduiteAppreciation,
+                ];
+                
+                // 🔹 Calcul de la moyenne générale
+                $moyenneGenerale = null;
+                if ($totalCoeff > 0) {
+                    $moyenneGenerale = round($totalMoyCoeff / $totalCoeff, 2);
+                }
+                
+                // 🔹 Calcul des moyennes par domaine
+                $moyenneLitteraire = !empty($moyennesLitteraires) ? 
+                    round(array_sum($moyennesLitteraires) / count($moyennesLitteraires), 2) : 0;
+                $moyenneScientifique = !empty($moyennesScientifiques) ? 
+                    round(array_sum($moyennesScientifiques) / count($moyennesScientifiques), 2) : 0;
+                $moyenneAutres = !empty($moyennesAutres) ? 
+                    round(array_sum($moyennesAutres) / count($moyennesAutres), 2) : 0;
+                
+                // 🔹 Appréciation générale
+                $appreciationGenerale = '-';
+                if ($moyenneGenerale !== null) {
+                    if ($moyenneGenerale > 16) $appreciationGenerale = 'Très Bien';
+                    elseif ($moyenneGenerale >= 14) $appreciationGenerale = 'Bien';
+                    elseif ($moyenneGenerale >= 12) $appreciationGenerale = 'Assez Bien';
+                    elseif ($moyenneGenerale >= 10) $appreciationGenerale = 'Passable';
+                    elseif ($moyenneGenerale >= 8) $appreciationGenerale = 'Insuffisant';
+                    elseif ($moyenneGenerale >= 6) $appreciationGenerale = 'Faible';
+                    elseif ($moyenneGenerale >= 4) $appreciationGenerale = 'Médiocre';
+                    else $appreciationGenerale = 'Très Faible';
+                }
+                
+                // 🔹 Calcul du rang et statistiques de la classe pour TOUS les élèves
+                $moyennesGeneralesClasse = [];
+                
+                foreach ($classe->students as $st) {
+                    $stGrades = Grade::where('student_id', $st->id)
+                        ->where('class_id', $classId)
+                        ->where('academic_year_id', $activeYear->id)
+                        ->where('trimestre', $trimestre)
+                        ->get();
+                    
+                    $stTotalPoints = 0;
+                    $stTotalCoef = 0;
+                    
+                    // Calcul pour chaque matière
+                    foreach ($subjects as $subject) {
+                        $coefRecord = $subject->classTeacherSubjects->first();
+                        $coef = $coefRecord->coefficient ?? 1;
+                        
+                        $subjectGrades = $stGrades->where('subject_id', $subject->id);
+                        
+                        // Calcul des notes
+                        $interroNotes = $subjectGrades->where('type', 'interrogation')
+                            ->pluck('value')
+                            ->filter()
+                            ->values()
+                            ->toArray();
+                        
+                        $devoir1 = $subjectGrades->where('type', 'devoir')
+                            ->where('sequence', 1)
+                            ->first()->value ?? null;
+                        $devoir2 = $subjectGrades->where('type', 'devoir')
+                            ->where('sequence', 2)
+                            ->first()->value ?? null;
+                        
+                        // Calcul de la moyenne matière
+                        $moyenneInterro = !empty($interroNotes) ? 
+                            array_sum($interroNotes) / count($interroNotes) : null;
+                        
+                        $notesPourMoyenne = [];
+                        if ($moyenneInterro !== null) $notesPourMoyenne[] = $moyenneInterro;
+                        if ($devoir1 !== null) $notesPourMoyenne[] = $devoir1;
+                        if ($devoir2 !== null) $notesPourMoyenne[] = $devoir2;
+                        
+                        if (!empty($notesPourMoyenne)) {
+                            $moyenneMatiere = array_sum($notesPourMoyenne) / count($notesPourMoyenne);
+                            $stTotalPoints += $moyenneMatiere * $coef;
+                            $stTotalCoef += $coef;
+                        }
+                    }
+                    
+                    // Conduite de l'élève
+                    $stConduct = Conduct::where('student_id', $st->id)
+                        ->where('trimestre', $trimestre)
+                        ->where('academic_year_id', $activeYear->id)
+                        ->first();
+                    
+                    $stPunishments = Punishment::where('student_id', $st->id)
+                        ->where('academic_year_id', $activeYear->id)
+                        ->get();
+                    $stPunishHours = $stPunishments->sum('hours');
+                    
+                    $stConductGrade = $stConduct ? $stConduct->grade : 0;
+                    $stConductFinal = max(0, $stConductGrade - ($stPunishHours / 2));
+                    
+                    // Ajouter la conduite
+                    if ($stConductFinal > 0) {
+                        $stTotalPoints += $stConductFinal;
+                        $stTotalCoef += 1;
+                    }
+                    
+                    // Calcul moyenne générale élève
+                    if ($stTotalCoef > 0) {
+                        $moyennesGeneralesClasse[$st->id] = round($stTotalPoints / $stTotalCoef, 2);
+                    }
+                }
+                
+                // Calcul des statistiques de la classe
+                $plusForte = !empty($moyennesGeneralesClasse) ? max($moyennesGeneralesClasse) : 0;
+                $plusFaible = !empty($moyennesGeneralesClasse) ? min($moyennesGeneralesClasse) : 0;
+                $moyClasse = !empty($moyennesGeneralesClasse) ? 
+                    round(array_sum($moyennesGeneralesClasse) / count($moyennesGeneralesClasse), 2) : 0;
+                
+                // Calcul du rang pour cet élève
+                $rang = '-';
+                if (isset($moyennesGeneralesClasse[$studentId])) {
+                    arsort($moyennesGeneralesClasse);
+                    $positions = array_keys($moyennesGeneralesClasse);
+                    $position = array_search($studentId, $positions);
+                    $rang = $position !== false ? ($position + 1) . 'e' : '-';
+                }
+                
+                // 🔹 Décision du Conseil des Enseignants
+                $felicitation = false;
+                $encouragement = false;
+                $tableauHonneur = false;
+                $avertissement = false;
+                
+                if ($moyenneGenerale !== null && $conduiteSur20 > 0) {
+                    if ($moyenneGenerale >= 16 && $conduiteSur20 >= 14) {
+                        $felicitation = true;
+                    } elseif ($moyenneGenerale >= 14 && $moyenneGenerale < 16 && $conduiteSur20 >= 12) {
+                        $encouragement = true;
+                    } elseif ($moyenneGenerale >= 12 && $moyenneGenerale < 14 && $conduiteSur20 >= 10) {
+                        $tableauHonneur = true;
+                    } elseif (($conduiteSur20 < 10 || $moyenneGenerale < 10) && ($moyenneGenerale < 8 || $conduiteSur20 < 8)) {
+                        $avertissement = true;
+                    }
+                }
+                
+                // 🔹 Générer le QR code (vous pouvez utiliser une bibliothèque comme simplesoftwareio/simple-qrcode)
+                $qrCode = ""; // Générez votre QR code ici si nécessaire
+                
+                // Ajouter les données de cet élève
+                $allBulletinsData[] = [
+                    'qrCode' => $qrCode,
+                    'student' => $student,
+                    'classe' => $classe,
+                    'bulletin' => $bulletin,
+                    'trimestre' => $trimestre,
+                    'moyenneGenerale' => $formatNumber($moyenneGenerale),
+                    'moyenneLitteraire' => $formatNumber($moyenneLitteraire),
+                    'moyenneScientifique' => $formatNumber($moyenneScientifique),
+                    'moyenneAutres' => $formatNumber($moyenneAutres),
+                    'appreciationGenerale' => $appreciationGenerale,
+                    'conduite' => $formatNumber($conduiteSur20),
+                    'appreciationConduite' => $conduiteAppreciation,
+                    'rang' => $rang,
+                    'plusForte' => $formatNumber($plusForte),
+                    'plusFaible' => $formatNumber($plusFaible),
+                    'moyClasse' => $formatNumber($moyClasse),
+                    'felicitation' => $felicitation,
+                    'encouragement' => $encouragement,
+                    'tableauHonneur' => $tableauHonneur,
+                    'avertissement' => $avertissement,
+                    'totalMoyCoeff' => $formatNumber($totalMoyCoeff),
+                    'totalCoeff' => $totalCoeff,
+                    'activeYear' => $activeYear,
+                ];
+            }
+            
+            // 🔹 Générer le PDF avec toutes les pages
+            $pdf = Pdf::loadView('censeur.classes.notes.all_bulletins_pdf', [
+                'allBulletins' => $allBulletinsData,
+            ])->setPaper('a4', 'portrait');
+            
+            $nomClasse = str_replace([' ', '/'], '_', $classe->name);
+            return $pdf->download("Tous_Bulletins_{$nomClasse}_T{$trimestre}.pdf");
+            
+        } catch (\Exception $e) {
+        // \Log::error('Erreur génération tous les bulletins: ' . $e->getMessage());
+        // \Log::error($e->getTraceAsString());
+            return back()->with('error', 'Impossible de générer le PDF de tous les bulletins: ' . $e->getMessage());
+        }
+    }
 
 }
 

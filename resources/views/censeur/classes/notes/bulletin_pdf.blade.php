@@ -204,17 +204,20 @@
     <table class="footer-table" style="border:none;">
         <tr>
             <td style="width:50%; border:none; text-align:center;">
-                <strong>Le Titulaire</strong><br>
+                <u><strong>Le Titulaire</strong></u><br><br>
                 <div class="mention-frame">{{ $appreciationGenerale }}</div>
             </td>
+            <br>
             <td style="width:50%; border:none; text-align:center;">
-                <strong>Le Directeur</strong><br>
+                <u><strong>Le Directeur</strong></u><br>
                 <br><br><br>
+                <br><br>
                 <strong>Firmin DIDAGBE</strong>
             </td>
         </tr>
     </table>
-
+     <br><br><br>
+                <br><br>
     <div class="motto">Discipline - Créativité - Excellence</div>
 </div>
 
