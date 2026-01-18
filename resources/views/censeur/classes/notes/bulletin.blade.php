@@ -3,7 +3,21 @@
 @section('content')
 <div class="min-h-screen bg-gray-50 py-8">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        
+          @if ($errors->any())
+    <div class="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-lg mb-6">
+      <ul class="list-disc pl-5 space-y-1">
+        @foreach ($errors->all() as $error)
+          <li>{{ $error }}</li>
+        @endforeach
+      </ul>
+    </div>
+  @endif
+
+  @if (session('error'))
+    <div class="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-lg mb-6">
+      {{ session('error') }}
+    </div>
+  @endif
         <!-- Carte principale du bulletin -->
         <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden mb-6">
             
@@ -197,7 +211,6 @@
             
             @if(count($bulletin) > 0)
             <a href="{{ route('censeur.classes.notes.bulletin.pdf', [$classe->id, $student->id, $trimestre]) }}"
-               target="_blank"
                class="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 shadow-sm">
                 <i class="fas fa-file-pdf mr-2"></i>
                 Télécharger le bulletin PDF

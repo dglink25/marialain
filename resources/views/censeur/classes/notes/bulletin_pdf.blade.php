@@ -2,271 +2,164 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bulletin de Notes - {{ $student->last_name }} {{ $student->first_name }}</title>
     <style>
-        :root {
-            --border-color: #444;
-            --bg-gray: #f2f2f2;
-        }
-
+        @page { margin: 10mm; }
         body {
-            font-family: "Segoe UI", Arial, sans-serif;
-            font-size: 11px;
-            margin: 0;
-            padding: 20px;
-            background-color: #525659;
-            display: flex;
-            justify-content: center;
-        }
-
-        .bulletin-container {
-            width: 210mm;
-            min-height: 297mm;
-            padding: 15mm;
-            background: white;
-            box-shadow: 0 0 10px rgba(0,0,0,0.5);
-            box-sizing: border-box;
-        }
-
-        /* --- En-tête --- */
-        .header-top {
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 10px;
-        }
-
-        .logo-ecole {
-            width: 80px;
-            height: auto;
-        }
-
-        .header-center {
-            text-align: center;
-            flex: 1;
-            padding: 0 10px;
-        }
-
-        .header-right {
-            text-align: right;
-            line-height: 1.4;
-        }
-
-        .title-main {
-            text-align: center;
-            font-size: 22px;
-            font-weight: bold;
-            margin: 20px 0;
-            text-transform: uppercase;
-            letter-spacing: 3px;
-        }
-
-        /* --- Zone Infos Élève & QR Code --- */
-        .student-section {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding: 10px;
-            border: 1px solid #eee;
-        }
-
-        .student-info {
-            line-height: 1.8;
-            font-size: 12px;
-        }
-
-        .qrcode-box {
-            width: 70px;
-            height: 70px;
-            border: 1px solid #ccc;
-            padding: 5px;
-        }
-
-        /* --- Tableau Style Officiel --- */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 5px;
-        }
-
-        th, td {
-            border: 1px solid var(--border-color);
-            padding: 6px 4px;
-            text-align: center;
-        }
-
-        th {
-            background-color: var(--bg-gray);
+            font-family: "DejaVu Sans", Arial, sans-serif;
             font-size: 10px;
-            text-transform: uppercase;
+            color: #000;
+            margin: 0;
+            padding: 0;
         }
+        .container { width: 100%; }
+        
+        /* En-tête */
+        .header-table { width: 100%; border: none; margin-bottom: 10px; }
+        .header-left { width: 40%; text-align: left; font-size: 9px; }
+        .header-center { width: 20%; text-align: center; }
+        .header-right { width: 40%; text-align: right; }
+        .logo { width: 70px; }
 
-        .subject-col {
-            text-align: left;
+        .title {
+            text-align: center;
+            font-size: 18px;
             font-weight: bold;
-            padding-left: 10px;
-            width: 200px;
+            text-decoration: underline;
+            margin: 15px 0;
         }
 
-        .total-row {
-            background-color: var(--bg-gray);
-            font-weight: bold;
-        }
+        /* Infos Élève */
+        .info-section { width: 100%; margin-bottom: 15px; }
+        .student-box { float: left; width: 70%; line-height: 1.5; }
+        .qr-box { float: right; width: 80px; text-align: right; }
+        .qr-code { width: 60px; height: 60px; border: 1px solid #ccc; }
 
-        /* --- Sous-tableaux de stats --- */
-        .averages-summary {
-            display: flex;
-            justify-content: space-between;
-            margin: 5px 0 15px 0;
-            font-style: italic;
-            border-bottom: 1px dashed #ccc;
-            padding-bottom: 5px;
-        }
+        /* Tableau des notes */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #000; padding: 4px; text-align: center; }
+        th { background-color: #f2f2f2; font-size: 9px; }
+        .subject-name { text-align: left; font-weight: bold; padding-left: 5px; }
 
-        .summary-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 15px;
+        /* Moyennes par domaine */
+        .domain-averages {
+            display: table;
+            width: 100%;
+            margin: 5px 0;
+            font-size: 9px;
+            border-bottom: 1px dashed #000;
         }
+        .domain-item { display: table-cell; padding: 3px; }
 
+        /* Blocs de résumé (Bas de page) */
+        .summary-wrapper { width: 100%; margin-top: 15px; display: table; }
         .summary-box {
-            border: 1px solid black;
+            display: table-cell;
+            width: 32%;
+            border: 1px solid #000;
+            vertical-align: top;
         }
-
-        .summary-header {
-            background: #d9d9d9;
-            padding: 5px;
+        .summary-box-header {
+            background-color: #e0e0e0;
             font-weight: bold;
             text-align: center;
-            border-bottom: 1px solid black;
+            padding: 3px;
+            border-bottom: 1px solid #000;
         }
+        .summary-content { padding: 5px; line-height: 1.4; }
 
-        .summary-body {
+        /* Signatures */
+        .footer-table { width: 100%; margin-top: 30px; }
+        .mention-frame {
+            border: 2px solid #000;
             padding: 8px;
-            line-height: 1.6;
-        }
-
-        /* --- Bas de page --- */
-        .footer-signatures {
-            margin-top: 40px;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .signature-block {
-            width: 200px;
-            text-align: center;
-        }
-
-        .mention-highlight {
-            border: 2px solid black;
-            padding: 10px;
-            margin-top: 10px;
             font-weight: bold;
-            font-size: 14px;
             display: inline-block;
-            width: 150px;
+            margin-top: 10px;
         }
-
         .motto {
-            margin-top: 50px;
             text-align: center;
+            margin-top: 40px;
             font-style: italic;
             border-top: 1px solid #000;
             padding-top: 5px;
         }
-
-        @media print {
-            body { background: white; padding: 0; }
-            .bulletin-container { box-shadow: none; border: none; }
-        }
+        .clear { clear: both; }
     </style>
 </head>
 <body>
 
-<div class="bulletin-container">
-    <div class="header-top">
-        <img src="logo.png" alt="Logo École" class="logo-ecole">
-        <div class="header-center">
-            Ministère des Enseignements Secondaire, Technique et de la Formation Professionnelle<br>
-            <span>..............</span><br>
-            <strong style="font-size: 14px;">CS « MARIE-ALAIN »</strong><br>
-            <small>AGORI AITCHEDJI <br> 08 BP : 559 Tri-Postal Cotonou / Tél: (+229) 01 62 61 67 67 / (+229) 01 95 60 69 67</small>
+<div class="container">
+    <table class="header-table">
+        <tr>
+            <td class="header-left" style="border:none;">
+                MINISTERE DES ENSEIGNEMENTS SECONDAIRE, TECHNIQUE ET DE LA FORMATION PROFESSIONNELLE<br>
+                <strong>CS « MARIE-ALAIN »</strong><br>
+                <small>AGORI AITCHEDJI - 08 BP : 559 Cotonou / Tél: 61 67 67 67</small>
+            </td>
+            <td class="header-center" style="border:none;">
+                <img src="data:image/png;base64,{{ base64_encode(file_get_contents(public_path('logo.png'))) }}" class="logo">
+            </td>
+            <td class="header-right" style="border:none;">
+                REPUBLIQUE DU BENIN<br>
+                Année scolaire : {{ $activeYear->name }}<br>
+                Trimestre : {{ $trimestre }}<br>
+                Classe : {{ $classe->name }}<br>
+                Effectif : {{ $classe->students->count() }}
+            </td>
+        </tr>
+    </table>
+
+    <div class="title">BULLETIN DE NOTES</div>
+
+    <div class="info-section">
+        <div class="student-box">
+            Nom : <strong>{{ $student->last_name }}</strong><br>
+            Prénoms : <strong>{{ $student->first_name }}</strong><br>
+            N° Matricule : {{ $student->registration_number ?? '1000' }}<br>
+            Sexe : {{ $student->gender == 'M' ? 'Masculin' : 'Féminin' }}
         </div>
-        <div class="header-right">
-            République du Bénin<br>
-            Année scolaire : <strong>{{ $activeYear->name ?? '2024-2025' }}</strong><br>
-            Trimestre : <strong>{{ $trimestre }}</strong><br>
-            Classe : <strong>{{ $classe->name }}</strong><br>
-            Effectif : <strong>{{ count($classe->students) }}</strong>
+        <div class="qr-box">
+            <img src="data:image/png;base64,{{ base64_encode(file_get_contents(public_path('qrcode.png'))) }}" class="qr-code">
         </div>
+        <div class="clear"></div>
     </div>
 
-    <div class="title-main">BULLETIN DE NOTES</div>
-
-    <div class="student-section">
-        <div class="student-info">
-            Nom : <strong>{{ strtoupper($student->last_name) }}</strong><br>
-            Prénoms : <strong>{{ ucfirst($student->first_name) }}</strong><br>
-            N° Matricule : <strong>{{ $student->num_educ ?? 'N/A' }}</strong><br>
-            Sexe : <strong>{{ ucfirst($student->gender ?? 'Non spécifié') }}</strong>
-        </div>
-        <div class="qrcode-box">
-            <!-- QR Code peut être généré avec une librairie PHP -->
-            QR Code Bulletin
-        </div>
-    </div>
-    
     <table>
         <thead>
             <tr>
                 <th rowspan="2">Matières</th>
                 <th rowspan="2">Coef</th>
                 <th colspan="3">Notes de Classe</th>
-                <th rowspan="2">Moy. / 20</th>
+                <th rowspan="2">Moy. sur 20</th>
                 <th rowspan="2">Note Coef.</th>
                 <th rowspan="2">Rang</th>
-                <th rowspan="2">Appréciations</th>
+                <th rowspan="2">Appréciations des Enseignants</th>
             </tr>
             <tr>
-                <th>Moy. Int.</th>
-                <th>Dev. 1</th>
-                <th>Dev. 2</th>
+                <th>Moy. Interro</th>
+                <th>Devoir N°1</th>
+                <th>Devoir N°2</th>
             </tr>
         </thead>
         <tbody>
-            @php
-                $totalCoefTable = 0;
-                $totalMoyCoeffTable = 0;
-            @endphp
-            
-            @foreach($bulletin as $matiere)
-                @php
-                    $totalCoefTable += $matiere['coef'];
-                    if ($matiere['moyCoeff'] !== null) {
-                        $totalMoyCoeffTable += floatval(str_replace(',', '.', $matiere['moyCoeff']));
-                    }
-                @endphp
-                <tr>
-                    <td class="subject-col">{{ $matiere['subject'] }}</td>
-                    <td>{{ $matiere['coef'] }}</td>
-                    <td>{{ $matiere['moyenneInterro'] ?? '-' }}</td>
-                    <td>{{ $matiere['devoirs'][1] ?? '-' }}</td>
-                    <td>{{ $matiere['devoirs'][2] ?? '-' }}</td>
-                    <td>{{ $matiere['moyenne'] ?? '-' }}</td>
-                    <td>{{ $matiere['moyCoeff'] ?? '-' }}</td>
-                    <td>{{ $matiere['subject'] == 'CONDUITE' ? '23ex' : 'Rang' }}</td> <!-- Rang spécifique pour conduite -->
-                    <td>{{ $matiere['appreciation'] }}</td>
-                </tr>
+            @foreach($bulletin as $row)
+            <tr>
+                <td class="subject-name">{{ $row['subject'] }}</td>
+                <td>{{ $row['coef'] }}</td>
+                <td>{{ $row['moyenneInterro'] }}</td>
+                <td>{{ $row['devoirs'][1] }}</td>
+                <td>{{ $row['devoirs'][2] }}</td>
+                <td>{{ $row['moyenne'] }}</td>
+                <td>{{ $row['moyCoeff'] }}</td>
+                <td>{{ $row['rang'] ?? '-' }}</td>
+                <td>{{ $row['appreciation'] }}</td>
+            </tr>
             @endforeach
         </tbody>
         <tfoot>
-            <tr class="total-row">
-                <td>TOTAUX</td>
-                <td>{{ $totalCoef }}</td>
+            <tr style="font-weight:bold; background:#eee;">
+                <td>Totaux : {{ $totalCoeff }}</td>
+                <td>{{ $totalCoeff }}</td>
                 <td colspan="4"></td>
                 <td>{{ $totalMoyCoeff }}</td>
                 <td colspan="2"></td>
@@ -274,66 +167,56 @@
         </tfoot>
     </table>
 
-    <div class="averages-summary">
-        <span>Moyenne Littéraire : <strong>{{ $moyenneLitteraire }}</strong></span>
-        <span>Moyenne Scientifique : <strong>{{ $moyenneScientifique }}</strong></span>
-        <span>Moyenne Autres : <strong>{{ $moyenneAutres }}</strong></span>
+    <div class="domain-averages">
+        <div class="domain-item">Moyenne Matières Littéraires : <strong>{{ $moyenneLitteraire }}</strong></div>
+        <div class="domain-item">Moyenne Matières Scientifiques : <strong>{{ $moyenneScientifique }}</strong></div>
+        <div class="domain-item">Moyenne Autres Matières : <strong>{{ $moyenneAutres }}</strong></div>
     </div>
 
-    <div class="summary-grid">
-        <div class="summary-box">
-            <div class="summary-header">Résultat de l'apprenant</div>
-            <div class="summary-body">
+    <div class="summary-wrapper">
+        <div class="summary-box" style="margin-right:2%">
+            <div class="summary-box-header">Résultat de l'apprenant</div>
+            <div class="summary-content">
                 Moyenne : <strong>{{ $moyenneGenerale }}</strong> / 20<br>
-                Rang : <strong>{{ $rang }}</strong> sur {{ count($classe->students) }}<br>
+                Rang : {{ $rang }} sur {{ $classe->students->count() }}<br>
                 Mention : <strong>{{ $appreciationGenerale }}</strong>
             </div>
         </div>
-        <div class="summary-box">
-            <div class="summary-header">Résultat de la classe</div>
-            <div class="summary-body">
+        <div class="summary-box" style="margin-right:2%">
+            <div class="summary-box-header">Résultat de la classe</div>
+            <div class="summary-content">
                 Plus forte moyenne : {{ $plusForte }}<br>
                 Plus faible moyenne : {{ $plusFaible }}<br>
                 Moyenne de la classe : {{ $moyClasse }}
             </div>
         </div>
         <div class="summary-box">
-            <div class="summary-header">Conseil de classe</div>
-            <div class="summary-body">
-                @if($felicitation) ☑ @else ☐ @endif Félicitations<br>
-                @if($encouragement) ☑ @else ☐ @endif Encouragement<br>
-                @if($tableauHonneur) ☑ @else ☐ @endif Tableau d'Honneur<br>
-                @if($avertissement) ☑ @else ☐ @endif Avertissement
+            <div class="summary-header">Décision du Conseil</div>
+            <div class="summary-content">
+                {{ $felicitation ? '[X]' : '[ ]' }} Félicitations<br>
+                {{ $encouragement ? '[X]' : '[ ]' }} Encouragement<br>
+                {{ $tableauHonneur ? '[X]' : '[ ]' }} Tableau d'Honneur<br>
+                {{ $avertissement ? '[X]' : '[ ]' }} Avertissement
             </div>
         </div>
     </div>
 
-    <div class="footer-signatures">
-        <div class="signature-block">
-            <strong>Le Titulaire</strong><br>
-            <div class="mention-highlight">{{ $appreciationGenerale }}</div>
-        </div>
-        <div class="signature-block">
-            <strong>Le Directeur</strong><br><br>
-            <div style="height: 60px;"></div> <strong>Firmin DIDAGBE</strong>
-        </div>
-    </div>
+    <table class="footer-table" style="border:none;">
+        <tr>
+            <td style="width:50%; border:none; text-align:center;">
+                <strong>Le Titulaire</strong><br>
+                <div class="mention-frame">{{ $appreciationGenerale }}</div>
+            </td>
+            <td style="width:50%; border:none; text-align:center;">
+                <strong>Le Directeur</strong><br>
+                <br><br><br>
+                <strong>Firmin DIDAGBE</strong>
+            </td>
+        </tr>
+    </table>
 
     <div class="motto">Discipline - Créativité - Excellence</div>
 </div>
-
-<script>
-    // Script optionnel : Formatage des notes pour s'assurer qu'il y a toujours deux décimales
-    document.querySelectorAll('tbody td').forEach(td => {
-        let text = td.innerText;
-        if (text.includes(',')) {
-            let val = parseFloat(text.replace(',', '.'));
-            if (!isNaN(val)) {
-                td.style.color = val < 10 ? 'red' : 'black';
-            }
-        }
-    });
-</script>
 
 </body>
 </html>
