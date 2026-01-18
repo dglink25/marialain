@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bulletin de Notes - Aliou Nanzif</title>
+    <style>
+        :root {
+            --border-color: #444;
+            --bg-gray: #f2f2f2;
+        }
+
+        body {
+            font-family: "Segoe UI", Arial, sans-serif;
+            font-size: 11px;
+            margin: 0;
+            padding: 20px;
+            background-color: #525659;
+            display: flex;
+            justify-content: center;
+        }
+
+        .bulletin-container {
+            width: 210mm;
+            min-height: 297mm;
+            padding: 15mm;
+            background: white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            box-sizing: border-box;
+        }
+
+        /* --- En-tête --- */
+        .header-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        .logo-ecole {
+            width: 80px;
+            height: auto;
+        }
+
+        .header-center {
+            text-align: center;
+            flex: 1;
+            padding: 0 10px;
+        }
+
+        .header-right {
+            text-align: right;
+            line-height: 1.4;
+        }
+
+        .title-main {
+            text-align: center;
+            font-size: 22px;
+            font-weight: bold;
+            margin: 20px 0;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        /* --- Zone Infos Élève & QR Code --- */
+        .student-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #eee;
+        }
+
+        .student-info {
+            line-height: 1.8;
+            font-size: 12px;
+        }
+
+        .qrcode-box {
+            width: 70px;
+            height: 70px;
+            border: 1px solid #ccc;
+            padding: 5px;
+        }
+
+        /* --- Tableau Style Officiel --- */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 5px;
+        }
+
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 6px 4px;
+            text-align: center;
+        }
+
+        th {
+            background-color: var(--bg-gray);
+            font-size: 10px;
+            text-transform: uppercase;
+        }
+
+        .subject-col {
+            text-align: left;
+            font-weight: bold;
+            padding-left: 10px;
+            width: 200px;
+        }
+
+        .total-row {
+            background-color: var(--bg-gray);
+            font-weight: bold;
+        }
+
+        /* --- Sous-tableaux de stats --- */
+        .averages-summary {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0 15px 0;
+            font-style: italic;
+            border-bottom: 1px dashed #ccc;
+            padding-bottom: 5px;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+        }
+
+        .summary-box {
+            border: 1px solid black;
+        }
+
+        .summary-header {
+            background: #d9d9d9;
+            padding: 5px;
+            font-weight: bold;
+            text-align: center;
+            border-bottom: 1px solid black;
+        }
+
+        .summary-body {
+            padding: 8px;
+            line-height: 1.6;
+        }
+
+        /* --- Bas de page --- */
+        .footer-signatures {
+            margin-top: 40px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .signature-block {
+            width: 200px;
+            text-align: center;
+        }
+
+        .mention-highlight {
+            border: 2px solid black;
+            padding: 10px;
+            margin-top: 10px;
+            font-weight: bold;
+            font-size: 14px;
+            display: inline-block;
+            width: 150px;
+        }
+
+        .motto {
+            margin-top: 50px;
+            text-align: center;
+            font-style: italic;
+            border-top: 1px solid #000;
+            padding-top: 5px;
+        }
+
+        @media print {
+            body { background: white; padding: 0; }
+            .bulletin-container { box-shadow: none; border: none; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="bulletin-container">
+    <div class="header-top">
+        <img src="logo.png" alt="Logo École" class="logo-ecole">
+        <div class="header-center">
+            Ministère des Enseignements Secondaire, Technique et de la Formation Professionnelle<br>
+            <span>..............</span><br>
+            <strong style="font-size: 14px;">CS « MARIE-ALAIN »</strong><br>
+            <small>AGORI AITCHEDJI <br> 08 BP : 559 Tri-Postal Cotonou / Tél: (+229) 01 62 61 67 67 / (+229) 01 95 60 69 67</small>
+        </div>
+        <div class="header-right">
+            République du Bénin<br>
+            Année scolaire : <strong>2024-2025</strong><br>
+            Trimestre : <strong>2</strong><br>
+            Classe : <strong>5ème</strong><br>
+            Effectif : <strong>27</strong>
+        </div>
+    </div>
+
+    <div class="title-main">BULLETIN DE NOTES</div>
+
+    <div class="student-section">
+        <div class="student-info">
+            Nom : <strong>ALIOU</strong><br>
+            Prénoms : <strong>Nanzif</strong><br>
+            N° Matricule : <strong>1000</strong><br>
+            Sexe : <strong>Masculin</strong>
+        </div>
+        <img src="qrcode.png" alt="QR Code" class="qrcode-box">
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th rowspan="2">Matières</th>
+                <th rowspan="2">Coef</th>
+                <th colspan="3">Notes de Classe</th>
+                <th rowspan="2">Moy. / 20</th>
+                <th rowspan="2">Note Coef.</th>
+                <th rowspan="2">Rang</th>
+                <th rowspan="2">Appréciations</th>
+            </tr>
+            <tr>
+                <th>Moy. Int.</th>
+                <th>Dev. 1</th>
+                <th>Dev. 2</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td class="subject-col">COMMUNICATION ECRITE</td><td>1</td><td>13,00</td><td>11</td><td>11</td><td>11,67</td><td>11,67</td><td>14ex</td><td>Passable</td></tr>
+            <tr><td class="subject-col">LECTURE</td><td>1</td><td>10,00</td><td>15</td><td>11,5</td><td>12,17</td><td>12,17</td><td>16e</td><td>Assez-Bien</td></tr>
+            <tr><td class="subject-col">ANGLAIS</td><td>1</td><td>12,50</td><td>09</td><td>11</td><td>10,83</td><td>10,83</td><td>21e</td><td>Passable</td></tr>
+            <tr><td class="subject-col">MATHEMATIQUES</td><td>1</td><td>09,00</td><td>13</td><td>10</td><td>10,67</td><td>10,67</td><td>17e</td><td>Passable</td></tr>
+            <tr><td class="subject-col">PCT</td><td>1</td><td>12,50</td><td>12,5</td><td>10</td><td>11,67</td><td>11,67</td><td>22e</td><td>Passable</td></tr>
+            <tr><td class="subject-col">SVT</td><td>1</td><td>06,67</td><td>09</td><td>11</td><td>08,89</td><td>08,89</td><td>21e</td><td>Insuffisant</td></tr>
+            <tr><td class="subject-col">HISTOIRE-GEOGRAPHIE</td><td>1</td><td>08,00</td><td>12</td><td>12</td><td>10,67</td><td>10,67</td><td>19e</td><td>Passable</td></tr>
+            <tr><td class="subject-col">EPS</td><td>1</td><td>17,00</td><td>16</td><td>16</td><td>16,33</td><td>16,33</td><td>2e</td><td>Très Bien</td></tr>
+            <tr><td class="subject-col">CONDUITE</td><td>1</td><td>-</td><td>-</td><td>17</td><td>17,00</td><td>17,00</td><td>23ex</td><td>Très Bien</td></tr>
+        </tbody>
+        <tfoot>
+            <tr class="total-row">
+                <td>TOTAUX</td>
+                <td>9</td>
+                <td colspan="4"></td>
+                <td>109,89</td>
+                <td colspan="2"></td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <div class="averages-summary">
+        <span>Moyenne Littéraire : <strong>11,33</strong></span>
+        <span>Moyenne Scientifique : <strong>10,41</strong></span>
+        <span>Moyenne Autres : <strong>16,67</strong></span>
+    </div>
+
+    <div class="summary-grid">
+        <div class="summary-box">
+            <div class="summary-header">Résultat de l'apprenant</div>
+            <div class="summary-body">
+                Moyenne : <strong>12,21</strong> / 20<br>
+                Rang : <strong>19e</strong> sur 27<br>
+                Mention : <strong>Assez-bien</strong>
+            </div>
+        </div>
+        <div class="summary-box">
+            <div class="summary-header">Résultat de la classe</div>
+            <div class="summary-body">
+                Plus forte moyenne : 16,73<br>
+                Plus faible moyenne : 09,18<br>
+                Moyenne de la classe : 13,20
+            </div>
+        </div>
+        <div class="summary-box">
+            <div class="summary-header">Conseil de classe</div>
+            <div class="summary-body">
+                ☐ Félicitations<br>
+                ☑ Encouragement<br>
+                ☐ Tableau d'Honneur<br>
+                ☐ Avertissement
+            </div>
+        </div>
+    </div>
+
+    <div class="footer-signatures">
+        <div class="signature-block">
+            <strong>Le Titulaire</strong><br>
+            <div class="mention-highlight">Assez-Bien</div>
+        </div>
+        <div class="signature-block">
+            <strong>Le Directeur</strong><br><br>
+            <div style="height: 60px;"></div> <strong>Firmin DIDAGBE</strong>
+        </div>
+    </div>
+
+    <div class="motto">Discipline - Créativité - Excellence</div>
+</div>
+
+<script>
+    // Script optionnel : Formatage des notes pour s'assurer qu'il y a toujours deux décimales
+    document.querySelectorAll('tbody td').forEach(td => {
+        let val = parseFloat(td.innerText.replace(',', '.'));
+        if (!isNaN(val) && td.innerText.includes(',')) {
+            td.style.color = val < 10 ? 'red' : 'black';
+        }
+    });
+</script>
+
+</body>
+</html>
