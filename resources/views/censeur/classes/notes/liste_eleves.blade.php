@@ -98,7 +98,7 @@
                             <!-- En-têtes des matières -->
                             @foreach($subjects as $subject)
                             <th colspan="3" class="px-4 py-3 text-center text-sm font-semibold text-gray-700 border-r border-gray-200">
-                                {{ $subject->subject->name }}
+                                {{ $subject->name }}
                             </th>
                             @endforeach
                             

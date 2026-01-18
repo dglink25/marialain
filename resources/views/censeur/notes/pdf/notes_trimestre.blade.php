@@ -231,7 +231,7 @@
                 
                 <!-- En-têtes des matières -->
                 @foreach($subjects as $subject)
-                <th colspan="3" style="font-size: 8px;">{{ $subject->subject->name }}</th>
+                <th colspan="3" style="font-size: 8px;">{{ $subject->name }}</th>
                 @endforeach
                 
                 <!-- Colonnes finales -->
