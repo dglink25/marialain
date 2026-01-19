@@ -211,7 +211,7 @@
                             </td>
                             <td class="px-6 py-4">
                                 <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap">
-                                    {{ $duration }}
+                                    {{ ltrim($duration, '-') }}
                                 </span>
                             </td>
                             <td class="px-6 py-4">

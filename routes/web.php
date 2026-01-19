@@ -562,3 +562,26 @@ Route::delete('/censeur/timetables/{class}/{timetable}/delete',
 )->name('censeur.timetables.delete');
 
 
+// routes/web.php
+
+Route::prefix('cahier-de-texte')->group(function () {
+    // Vue pour voir les cahiers d'un enseignant spécifique
+    Route::get('/teacher/{teacher}/class/{classe}/subject/{subject}', 
+        [CahierDeTexteController::class, 'showTeacherCahier'])
+        ->name('cahier.teacher.view');
+    
+    // Validation individuelle
+    Route::post('/{cahier}/validate', 
+        [CahierDeTexteController::class, 'validateEntry'])
+        ->name('cahier.validate');
+    
+    // Validation multiple
+    Route::post('/validate-multiple', 
+        [CahierDeTexteController::class, 'validateMultiple'])
+        ->name('cahier.validate.multiple');
+    
+    // Téléchargement du rapport
+    Route::get('/teacher/{teacher}/class/{classe}/subject/{subject}/download', 
+        [CahierDeTexteController::class, 'downloadReport'])
+        ->name('cahier.teacher.download');
+});

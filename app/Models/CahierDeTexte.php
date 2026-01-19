@@ -17,15 +17,25 @@ class CahierDeTexte extends Model{
         'academic_year_id',
         'course_start_date',
         'course_end_date',
+        'is_validated',
+        'validated_at',
+        'validated_by',
+        'validation_notes',
     ];
 
     protected $casts = [
         'course_start_date' => 'datetime',
         'course_end_date' => 'datetime',
+        'validated_at' => 'datetime',
+        'is_validated' => 'boolean',
     ];
 
     public function subject(){
         return $this->belongsTo(Subject::class);
+    }
+
+    public function validator() {
+        return $this->belongsTo(User::class, 'validated_by');
     }
 
     public function teacher(){
@@ -38,8 +48,7 @@ class CahierDeTexte extends Model{
     }
 
     // Accessor pour la durée formatée
-    public function getFormattedDurationAttribute()
-    {
+    public function getFormattedDurationAttribute(){
         if (!$this->course_start_date || !$this->course_end_date) {
             return 'N/A';
         }
@@ -55,8 +64,7 @@ class CahierDeTexte extends Model{
     }
 
     // Vérifier si le cours est en cours
-    public function isCourseOngoing()
-    {
+    public function isCourseOngoing(){
         if (!$this->course_start_date || !$this->course_end_date) {
             return false;
         }
@@ -69,8 +77,7 @@ class CahierDeTexte extends Model{
     }
 
     // Vérifier si le cours est terminé
-    public function isCourseFinished()
-    {
+    public function isCourseFinished() {
         if (!$this->course_end_date) {
             return false;
         }

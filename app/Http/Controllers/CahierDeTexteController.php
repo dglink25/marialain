@@ -176,12 +176,24 @@ class CahierDeTexteController extends Controller{
     }
 
     public function activeTeachers($subjectId){
+        // Récupérer l'année académique active
         $academicYear = AcademicYear::where('active', true)->first();
 
         if (!$academicYear) {
             return redirect()->back()->with('error', "Aucune année académique active trouvée.");
         }
-        // ... reste du code ...
+
+        // Charger la matière avec ses enseignants
+        $subject = Subject::with(['teachers' => function($query) use ($subjectId, $academicYear) {
+            $query->with(['classes' => function($q) use ($subjectId, $academicYear) {
+                // Préciser le nom de la table pour éviter l'ambiguïté
+                $q->where('classes.academic_year_id', $academicYear->id)
+                ->wherePivot('subject_id', $subjectId)
+                ->withPivot('amount_brut', 'subject_id');
+            }]);
+        }])->findOrFail($subjectId);
+
+        return view('teacher.active', compact('subject'));
     }
 
 
@@ -223,7 +235,8 @@ class CahierDeTexteController extends Controller{
         
         return view('admin.subjects.index', compact('subjects', 'activeYear'));
     }
-
+    
+    // Afficher les cahiers de texte d'un enseignant spécifique (pour admin/chef)
     public function showTeacherCahier(User $teacher, Classe $classe, Subject $subject){
         $academicYear = AcademicYear::where('active', true)->firstOrFail();
 
@@ -231,16 +244,129 @@ class CahierDeTexteController extends Controller{
         $entries = CahierDeTexte::where('teacher_id', $teacher->id)
             ->where('class_id', $classe->id)
             ->where('subject_id', $subject->id)
-            ->orderBy('day', 'asc')
-            ->with('timetable')  // charger les horaires
+            ->orderBy('course_start_date', 'desc')
+            ->with(['timetable', 'validator'])
             ->get();
+
+        // Statistiques
+        $stats = [
+            'total' => $entries->count(),
+            'validated' => $entries->where('is_validated', true)->count(),
+            'pending' => $entries->where('is_validated', false)->count(),
+            'this_month' => $entries->whereBetween('course_start_date', [now()->startOfMonth(), now()->endOfMonth()])->count(),
+        ];
 
         return view('teacher.bySubject', [
             'teacher' => $teacher,
-            'class'   => $classe,   // ⚠️ Assurez-vous que la variable s'appelle bien $class
+            'class'   => $classe,
             'subject' => $subject,
-            'entries' => $entries
+            'entries' => $entries,
+            'stats'   => $stats,
+            'canValidate' => "Censeur"
         ]);
+    }
+
+    // Valider un cahier de texte individuel
+    public function validateEntry(Request $request, CahierDeTexte $cahier){
+        $request->validate([
+            'validation_notes' => 'nullable|string|max:500',
+            'action' => 'required|in:validate,reject'
+        ]);
+
+        if ($request->action === 'validate') {
+            $cahier->update([
+                'is_validated' => true,
+                'validated_at' => now(),
+                'validated_by' => Auth::id(),
+                'validation_notes' => $request->validation_notes
+            ]);
+            
+            $message = 'Cahier de texte validé avec succès.';
+        } else {
+            $cahier->update([
+                'is_validated' => false,
+                'validated_at' => null,
+                'validated_by' => null,
+                'validation_notes' => $request->validation_notes
+            ]);
+            
+            $message = 'Cahier de texte rejeté avec succès.';
+        }
+
+        return back()->with('success', $message);
+    }
+
+    // Valider plusieurs cahiers de texte en une fois
+    public function validateMultiple(Request $request){
+        $request->validate([
+            'entry_ids' => 'required|array',
+            'entry_ids.*' => 'exists:cahier_de_texte,id',
+            'validation_notes' => 'nullable|string|max:500',
+            'action' => 'required|in:validate,reject'
+        ]);
+
+        $count = 0;
+        $notes = $request->validation_notes ?: 'Validation groupée';
+
+        foreach ($request->entry_ids as $entryId) {
+            $cahier = CahierDeTexte::find($entryId);
+            
+            if ($request->action === 'validate') {
+                $cahier->update([
+                    'is_validated' => true,
+                    'validated_at' => now(),
+                    'validated_by' => Auth::id(),
+                    'validation_notes' => $notes
+                ]);
+            } else {
+                $cahier->update([
+                    'is_validated' => false,
+                    'validated_at' => null,
+                    'validated_by' => null,
+                    'validation_notes' => $notes . ' (rejeté)'
+                ]);
+            }
+            
+            $count++;
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => $count . ' cahier(s) ' . ($request->action === 'validate' ? 'validé(s)' : 'rejeté(s)') . ' avec succès.',
+            'count' => $count
+        ]);
+    }
+
+    // Télécharger le rapport PDF
+    public function downloadReport(User $teacher, Classe $classe, Subject $subject){
+        $academicYear = AcademicYear::where('active', true)->firstOrFail();
+
+        $entries = CahierDeTexte::where('teacher_id', $teacher->id)
+            ->where('class_id', $classe->id)
+            ->where('subject_id', $subject->id)
+            ->orderBy('course_start_date', 'desc')
+            ->with(['timetable', 'validator'])
+            ->get();
+
+        $stats = [
+            'total' => $entries->count(),
+            'validated' => $entries->where('is_validated', true)->count(),
+            'pending' => $entries->where('is_validated', false)->count(),
+        ];
+
+        $pdf = Pdf::loadView('pdf.teacher-cahier-report', [
+            'teacher' => $teacher,
+            'class' => $classe,
+            'subject' => $subject,
+            'entries' => $entries,
+            'stats' => $stats,
+            'generated_at' => now(),
+            'generated_by' => Auth::user()->name
+        ]);
+
+        $filename = "cahier-texte-{$teacher->name}-{$classe->name}-{$subject->name}-" . now()->format('Y-m-d') . '.pdf';
+        
+        return $pdf->download($filename);
     }
 
     public function indexBySubject(Subject $subject, User $teacher, Classe $class){
@@ -344,7 +470,7 @@ class CahierDeTexteController extends Controller{
                 $totalMinutes = DB::table('cahier_de_texte')
                     ->where('teacher_id', $teacher->id)
                     ->where('subject_id', $subjectId)
-                    ->whereBetween('updated_at', [$start, $end])
+                    ->whereBetween('updated_at', [$end, $start])
                     ->sum('duration_minutes');
 
                 $teacher->total_minutes = $totalMinutes;
