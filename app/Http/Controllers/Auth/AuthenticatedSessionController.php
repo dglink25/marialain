@@ -36,10 +36,11 @@ class AuthenticatedSessionController extends Controller
             return back()
                 ->withErrors(['email' => 'Les identifiants fournis ne correspondent pas à nos enregistrements.'])
                 ->withInput($request->only('email', 'remember'));
-        } catch (\Exception $e) {
+        } 
+        catch (\Exception $e) {
             // Pour toutes les autres erreurs
             return back()
-                ->withErrors(['auth' => 'Une erreur est survenue lors de la connexion.'])
+                ->withErrors(['auth' => 'Identifiants incorrects'])
                 ->withInput($request->only('email', 'remember'));
         }
     }
@@ -55,6 +56,6 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerateToken();
 
-        return redirect('/');
+        return redirect('/home');
     }
 }
