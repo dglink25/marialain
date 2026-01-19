@@ -22,12 +22,26 @@ class AuthenticatedSessionController extends Controller
     /**
      * Handle an incoming authentication request.
      */
-    public function store(LoginRequest $request): RedirectResponse{
-        $request->authenticate();
-
-        $request->session()->regenerate();
-
-        return redirect()->intended(route('admin.accueil'));
+    public function store(LoginRequest $request): RedirectResponse
+    {
+        try {
+            $request->authenticate();
+            
+            $request->session()->regenerate();
+            
+            return redirect()->intended(route('admin.accueil'));
+            
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Pour les erreurs de validation (mauvais identifiants)
+            return back()
+                ->withErrors(['email' => 'Les identifiants fournis ne correspondent pas à nos enregistrements.'])
+                ->withInput($request->only('email', 'remember'));
+        } catch (\Exception $e) {
+            // Pour toutes les autres erreurs
+            return back()
+                ->withErrors(['auth' => 'Une erreur est survenue lors de la connexion.'])
+                ->withInput($request->only('email', 'remember'));
+        }
     }
 
     /**
@@ -41,6 +55,6 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerateToken();
 
-        return redirect('/home');
+        return redirect('/');
     }
 }

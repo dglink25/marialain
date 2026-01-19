@@ -51,24 +51,17 @@
             height: 155px;
             background: #ffffff;
             border-radius: 50%;
-            border-radius: 50%;
             justify-content: center;
             align-items: center;
             margin: 0 auto 30px auto;
-            padding-top:10px;
-            padding-right:20px  /* <-- centre horizontalement */
+            padding: 10px;
         }
-
         
         .logo-container img {
             max-width: 150px;
             max-height: 150px;
             border-radius: 50%;
-            border-radius: 50%;
-            justify-content: center;
-            align-items: center;
         }
-
         
         .left-panel h2 {
             font-size: 28px;
@@ -298,35 +291,34 @@
             <form method="POST" action="{{ route('login') }}">
                 @csrf
 
-               <!-- Email Address -->
-                    <div class="form-group">
-                        <label for="email">Adresse Email</label>
-                        <div class="input-with-icon">
-                            <i class="fas fa-envelope input-icon"></i>
-                            <input id="email" type="email" name="email" value="{{ old('email') }}" required autofocus autocomplete="email" placeholder="yourroom@hotmail.com">
-                        </div>
-
-                        @error('email')
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
+                <!-- Email Address -->
+                <div class="form-group">
+                    <label for="email">Adresse Email</label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-envelope input-icon"></i>
+                        <input id="email" type="email" name="email" value="{{ old('email') }}" required autofocus autocomplete="email" placeholder="votre@email.com">
                     </div>
 
-                    <!-- Password -->
-                    <div class="form-group">
-                        <label for="password">Mot de passe</label>
-                        <div class="input-with-icon">
-                            <i class="fas fa-lock input-icon"></i>
-                            <input id="password" type="password" name="password" required autocomplete="current-password" placeholder="••••••••">
-                            <button type="button" id="password-toggle" class="password-toggle">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                        </div>
+                    @error('email')
+                        <div class="error-message">{{ $message }}</div>
+                    @enderror
+                </div>
 
-                        @error('password')
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
+                <!-- Password -->
+                <div class="form-group">
+                    <label for="password">Mot de passe</label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-lock input-icon"></i>
+                        <input id="password" type="password" name="password" required autocomplete="current-password" placeholder="••••••••">
+                        <button type="button" id="password-toggle" class="password-toggle">
+                            <i class="fas fa-eye"></i>
+                        </button>
                     </div>
 
+                    @error('password')
+                        <div class="error-message">{{ $message }}</div>
+                    @enderror
+                </div>
                                     
                 <div class="options">
                     <div class="remember-me">
@@ -339,8 +331,17 @@
                             Mot de passe oublié?
                         </a>
                     @endif
+                    
                 </div>
-                                @if(session('error'))
+                
+                <!-- Erreurs d'authentification générale -->
+                @if($errors->has('auth'))
+                    <div class="session-status error">
+                        {{ $errors->first('auth') }}
+                    </div>
+                @endif
+                
+                @if(session('error'))
                     <div class="session-status error">
                         {{ session('error') }}
                     </div>
@@ -349,9 +350,9 @@
                 <button type="submit" class="login-button">
                     Se connecter
                 </button>
-                 </div>
             </form>
         </div>
+    </div>
 
     <script>
         // Fonctionnalité pour afficher/masquer le mot de passe
