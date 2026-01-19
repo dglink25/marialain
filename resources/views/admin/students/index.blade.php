@@ -38,7 +38,7 @@
 
         <!-- Section Filtres et Export -->
         <div class="bg-white border border-gray-200 rounded-lg p-6 mb-6">
-            <!-- Bouton Envoyer mails de rappel - Bien positionné -->
+            <!-- Bouton Envoyer mails de rappel - Bien positionné 
             <div class="mb-6">
                 <h2 class="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
                     <i class="fas fa-envelope"></i>
@@ -54,6 +54,7 @@
                     <p>:pour non payement de contribution au parents</p>
                 </form>
             </div>
+            -->
 
             <!-- Filtres de recherche -->
             <div class="mb-4">

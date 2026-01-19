@@ -1,7 +1,5 @@
 <?php 
 
-// app/Http/Controllers/CahierDeTexteController.php
-
 namespace App\Http\Controllers;
 
 use App\Models\User;
@@ -18,13 +16,12 @@ use App\Models\Classe;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Log;
 
-
-
 class CahierDeTexteController extends Controller{
+    
     // Afficher les créneaux du jour pour l'enseignant
     public function show($classeId){
         $teacherId = auth()->id();
-        $dayOfWeek = Carbon::now()->format('l'); // ex: Monday
+        $dayOfWeek = Carbon::now()->format('l');
         $academicYear = AcademicYear::where('active', 1)->firstOrFail();
 
         $timetable = Timetable::with(['subject'])
@@ -46,33 +43,27 @@ class CahierDeTexteController extends Controller{
             'timetable_id' => 'required|integer',
             'day' => 'required|string',
             'content' => 'required|string',
-            'motif_retard' => 'nullable|string',
+            'course_start_date' => 'required|date',
+            'course_end_date' => 'required|date|after:course_start_date',
         ]);
 
         $academicYear = AcademicYear::where('active', 1)->firstOrFail();
 
-        // Récupérer l'heure du cours
-        $timetable = Timetable::findOrFail($request->timetable_id);
-
-        // Calcul automatique de la durée
-        $start = \Carbon\Carbon::parse($timetable->start_time);
-        $end   = \Carbon\Carbon::parse($timetable->end_time);
-
-        $durationMinutes = $start->diffInMinutes($end);
-
-        $durationMinutes = $durationMinutes/60;
-
-        $now = Carbon::now();
-        $isLate = !$now->between($start, $end);
-
-        // Vérifier si c’est l’heure du cours
-        $now = \Carbon\Carbon::now();
-        $isDuringClass = $now->between($start, $end);
-
-        // Si hors période → motif obligatoire
-        if (!$isDuringClass && !$request->motif_retard) {
+        // Vérifier que la date de fin est après la date de début
+        $startDate = Carbon::parse($request->course_start_date);
+        $endDate = Carbon::parse($request->course_end_date);
+        
+        if ($endDate->lessThanOrEqualTo($startDate)) {
             return back()
-                ->withErrors(['motif_retard' => 'Veuillez indiquer un motif de retard, vous n’êtes pas dans l’heure du cours.'])
+                ->withErrors(['course_end_date' => 'La date de fin doit être après la date de début.'])
+                ->withInput();
+        }
+
+        // Vérifier que la durée n'excède pas 8 heures (480 minutes)
+        $durationMinutes = $startDate->diffInMinutes($endDate);
+        if ($durationMinutes > 480) {
+            return back()
+                ->withErrors(['course_end_date' => 'La durée du cours ne peut excéder 8 heures.'])
                 ->withInput();
         }
 
@@ -84,32 +75,54 @@ class CahierDeTexteController extends Controller{
             'day' => $request->day,
             'content' => $request->content,
             'academic_year_id' => $academicYear->id,
-            'motif_retard' => $request->motif_retard,
-            'is_late' => $isLate ? 1 : 0,
-            'duration_minutes' => $durationMinutes,
+            'course_start_date' => $startDate,
+            'course_end_date' => $endDate,
         ]);
 
         return back()->with('success', 'Cahier de texte enregistré avec succès.');
     }
 
-    public function checkCurrentLesson($classeId){
-        $teacherId = auth()->id();
-        $now = Carbon::now();
-        $today = $now->format('l'); // 'Monday', 'Tuesday', etc.
-        $timeNow = $now->format('H:i:s');
+    // Mettre à jour le cahier de texte
+    public function update(Request $request, $id){
+        $request->validate([
+            'content' => 'required|string',
+            'course_start_date' => 'required|date',
+            'course_end_date' => 'required|date|after:course_start_date',
+        ]);
 
-        $academicYear = AcademicYear::where('active', 1)->firstOrFail();
+        $cahier = CahierDeTexte::findOrFail($id);
+        
+        // Vérifier que l'enseignant peut modifier (dans les 10 minutes suivant la création)
+        $canEdit = Carbon::now()->diffInMinutes($cahier->created_at) <= 10;
+        
+        if (!$canEdit) {
+            return back()->with('error', 'Le délai de modification est expiré (10 minutes maximum).');
+        }
 
-        $currentLesson = Timetable::with('subject')
-            ->where('class_id', $classeId)
-            ->where('teacher_id', $teacherId)
-            ->where('day', $today)
-            ->where('academic_year_id', $academicYear->id)
-            ->where('start_time', '<=', $timeNow)
-            ->where('end_time', '>=', $timeNow)
-            ->first();
+        $startDate = Carbon::parse($request->course_start_date);
+        $endDate = Carbon::parse($request->course_end_date);
+        
+        if ($endDate->lessThanOrEqualTo($startDate)) {
+            return back()
+                ->withErrors(['course_end_date' => 'La date de fin doit être après la date de début.'])
+                ->withInput();
+        }
 
-        return $currentLesson; // null si aucun cours
+        // Vérifier que la durée n'excède pas 8 heures
+        $durationMinutes = $startDate->diffInMinutes($endDate);
+        if ($durationMinutes > 480) {
+            return back()
+                ->withErrors(['course_end_date' => 'La durée du cours ne peut excéder 8 heures.'])
+                ->withInput();
+        }
+
+        $cahier->update([
+            'content' => $request->content,
+            'course_start_date' => $startDate,
+            'course_end_date' => $endDate,
+        ]);
+
+        return back()->with('success', 'Cahier de texte mis à jour avec succès.');
     }
 
     public function history($classId, $subjectId){
@@ -146,20 +159,12 @@ class CahierDeTexteController extends Controller{
             ->where('academic_year_id', $academicYear->id)
             ->first();
 
-        $isDuringLesson = false;
-
-        if ($currentLesson) {
-            $start = Carbon::parse($currentLesson->start_time);
-            $end   = Carbon::parse($currentLesson->end_time);
-            $isDuringLesson = $now->between($start, $end);
-        }
-
         // Cahier filtré par matière + enseignant
         $entries = CahierDeTexte::with(['subject', 'timetable'])
             ->where('class_id', $classId)
             ->where('subject_id', $subjectId)
             ->where('teacher_id', $teacherId)
-            ->orderByDesc('created_at')
+            ->orderByDesc('course_start_date')
             ->get();
 
         return view('teacher.cahier.history', [
@@ -167,31 +172,37 @@ class CahierDeTexteController extends Controller{
             'class'          => $class,
             'subject'        => $subject,
             'currentLesson'  => $currentLesson,
-            'isDuringLesson' => $isDuringLesson
         ]);
     }
 
-
-
     public function activeTeachers($subjectId){
-        // Récupérer l'année académique active
         $academicYear = AcademicYear::where('active', true)->first();
 
         if (!$academicYear) {
             return redirect()->back()->with('error', "Aucune année académique active trouvée.");
         }
+        // ... reste du code ...
+    }
 
-        // Charger la matière avec ses enseignants
-        $subject = Subject::with(['teachers' => function($query) use ($subjectId, $academicYear) {
-            $query->with(['classes' => function($q) use ($subjectId, $academicYear) {
-                // Préciser le nom de la table pour éviter l'ambiguïté
-                $q->where('classes.academic_year_id', $academicYear->id)
-                ->wherePivot('subject_id', $subjectId)
-                ->withPivot('amount_brut', 'subject_id');
-            }]);
-        }])->findOrFail($subjectId);
 
-        return view('teacher.active', compact('subject'));
+    public function checkCurrentLesson($classeId){
+        $teacherId = auth()->id();
+        $now = Carbon::now();
+        $today = $now->format('l'); // 'Monday', 'Tuesday', etc.
+        $timeNow = $now->format('H:i:s');
+
+        $academicYear = AcademicYear::where('active', 1)->firstOrFail();
+
+        $currentLesson = Timetable::with('subject')
+            ->where('class_id', $classeId)
+            ->where('teacher_id', $teacherId)
+            ->where('day', $today)
+            ->where('academic_year_id', $academicYear->id)
+            ->where('start_time', '<=', $timeNow)
+            ->where('end_time', '>=', $timeNow)
+            ->first();
+
+        return $currentLesson; // null si aucun cours
     }
 
 
@@ -213,21 +224,6 @@ class CahierDeTexteController extends Controller{
         return view('admin.subjects.index', compact('subjects', 'activeYear'));
     }
 
-    public function update(Request $request, $id){
-        $entry = CahierDeTexte::findOrFail($id);
-
-        if (now()->diffInMinutes($entry->created_at) > 10) {
-            return back()->with('error', "Impossible de modifier ce cahier, délai dépassé.");
-        }
-
-        $entry->update([
-            'content' => $request->content,
-            'motif_retard' => $request->motif_retard,
-        ]);
-
-        return back()->with('success', "Cahier de texte modifié.");
-    }
-
     public function showTeacherCahier(User $teacher, Classe $classe, Subject $subject){
         $academicYear = AcademicYear::where('active', true)->firstOrFail();
 
@@ -246,8 +242,6 @@ class CahierDeTexteController extends Controller{
             'entries' => $entries
         ]);
     }
-
-
 
     public function indexBySubject(Subject $subject, User $teacher, Classe $class){
         // Année académique active
