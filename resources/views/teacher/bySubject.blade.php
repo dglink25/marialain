@@ -104,6 +104,7 @@
     </div>
 
     {{-- Barre d'actions de validation --}}
+    @if(auth()->id() == 4)
     @if($canValidate)
     <div id="validation-actions" class="hidden bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl shadow-md p-4 mb-6 border border-gray-300">
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -133,6 +134,7 @@
             </div>
         </div>
     </div>
+    @endif
     @endif
 
     {{-- Entries --}}
@@ -171,9 +173,11 @@
                             <th class="px-6 py-4 font-semibold whitespace-nowrap">
                                 <i class="fas fa-check-circle mr-2"></i>Validation
                             </th>
+                            @if(auth()->id() == 4)
                             <th class="px-6 py-4 font-semibold whitespace-nowrap">
                                 <i class="fas fa-cog mr-2"></i>Actions
                             </th>
+                            @endif
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100" id="entries-table-body">
@@ -270,6 +274,7 @@
                                     </span>
                                 @endif
                             </td>
+                            @if(auth()->id() == 4)
                             <td class="px-6 py-4 align-middle">
                                 <div class="flex flex-col space-y-2.5">
                                     <div class="flex space-x-2">
@@ -292,6 +297,7 @@
                                     </div>
                                 </div>
                             </td>
+                            @endif
                         </tr>
                         @endforeach
                     </tbody>
