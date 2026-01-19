@@ -409,7 +409,7 @@
                         <i class="fas fa-history mr-1.5 text-gray-400"></i>
                         <span>Créé {{ $entry->created_at->diffForHumans() }}</span>
                     </div>
-                    
+                    @if(auth()->id() == 4)
                     @if($canValidate)
                     <div class="flex gap-2">
                         @if(!$entry->is_validated)
@@ -425,6 +425,7 @@
                             </button>
                         @endif
                     </div>
+                    @endif
                     @endif
                 </div>
             </div>
