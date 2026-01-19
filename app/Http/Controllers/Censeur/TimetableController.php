@@ -14,8 +14,7 @@ use Illuminate\Support\Facades\Log;
 use App\Models\AcademicYear;
 use Illuminate\Support\Facades\Validator;
 
-class TimetableController extends Controller
-{
+class TimetableController extends Controller{
     public function index($classId) {
         try {
             // Vérifie s'il existe une année active

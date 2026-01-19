@@ -293,6 +293,18 @@
 
                 <!-- Email Address -->
                 <div class="form-group">
+                    <!-- Erreurs d'authentification générale -->
+                    @if($errors->has('auth'))
+                        <div class="session-status error">
+                            {{ $errors->first('auth') }}
+                        </div>
+                    @endif
+                    
+                    @if(session('error'))
+                        <div class="session-status error">
+                            {{ session('error') }}
+                        </div>
+                    @endif
                     <label for="email">Adresse Email</label>
                     <div class="input-with-icon">
                         <i class="fas fa-envelope input-icon"></i>
@@ -309,7 +321,7 @@
                     <label for="password">Mot de passe</label>
                     <div class="input-with-icon">
                         <i class="fas fa-lock input-icon"></i>
-                        <input id="password" type="password" name="password" required autocomplete="current-password" placeholder="••••••••">
+                        <input id="password" type="password" name="password" required autocomplete="current-password" placeholder="entrez votre mot de passe">
                         <button type="button" id="password-toggle" class="password-toggle">
                             <i class="fas fa-eye"></i>
                         </button>

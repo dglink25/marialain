@@ -77,31 +77,37 @@ class ClassController extends Controller{
         return view('teacher.classes.students', compact('class', 'students', 'activeYear'));
     }
 
-
-
-    public function timetable($classId){
-
+    public function timetable($classId)
+    {
         $class = Classe::with(['timetables.teacher', 'timetables.subject'])
                     ->findOrFail($classId);
 
         $timetables = $class->timetables;
+        
+        // Organiser les cours par jour pour faciliter l'affichage
+        $joursSemaine = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+        $sortedTimetables = [];
+        
+        foreach ($joursSemaine as $jour) {
+            $sortedTimetables[$jour] = $timetables->where('day', $jour)->sortBy('start_time')->values();
+        }
 
+        // Définir les créneaux horaires avec start/end pour faciliter les comparaisons
         $hours = [
-            '07h-08h',
-            '08h-09h',
-            '09h-10h',
-            '10h-11h',
-            '11h-12h',
-            '12h-13h',
-            '13h-14h',
-            '14h-15h',
-            '15h-16h',
-            '16h-17h',
-            '17h-18h',
-            '18h-19h',
+            ['slot' => '07h-08h', 'start' => '07:00', 'end' => '08:00'],
+            ['slot' => '08h-09h', 'start' => '08:00', 'end' => '09:00'],
+            ['slot' => '09h-10h', 'start' => '09:00', 'end' => '10:00'],
+            ['slot' => '10h-11h', 'start' => '10:00', 'end' => '11:00'],
+            ['slot' => '11h-12h', 'start' => '11:00', 'end' => '12:00'],
+            ['slot' => '12h-13h', 'start' => '12:00', 'end' => '13:00'],
+            ['slot' => '13h-14h', 'start' => '13:00', 'end' => '14:00'],
+            ['slot' => '14h-15h', 'start' => '14:00', 'end' => '15:00'],
+            ['slot' => '15h-16h', 'start' => '15:00', 'end' => '16:00'],
+            ['slot' => '16h-17h', 'start' => '16:00', 'end' => '17:00'],
+            ['slot' => '17h-18h', 'start' => '17:00', 'end' => '18:00'],
         ];
 
-        return view('teacher.classes.timetable', compact('class', 'timetables', 'hours'));
+        return view('teacher.classes.timetable', compact('class', 'timetables', 'hours', 'joursSemaine', 'sortedTimetables'));
     }
 
 
