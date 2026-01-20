@@ -17,18 +17,15 @@ class ClassTeacherSubject extends Model{
         'amount_brut',
     ];
 
-    public function classe(): BelongsTo
-    {
+    public function classe(): BelongsTo{
         return $this->belongsTo(Classe::class, 'class_id');
     }
 
-    public function teacher(): BelongsTo
-    {
+    public function teacher(): BelongsTo{
         return $this->belongsTo(User::class, 'teacher_id');
     }
 
-    public function subject(): BelongsTo
-    {
+    public function subject(): BelongsTo {
         return $this->belongsTo(Subject::class, 'subject_id');
     }
 }

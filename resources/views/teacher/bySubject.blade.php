@@ -334,7 +334,7 @@
                         </div>
                     </div>
                     <span class="inline-flex items-center bg-gradient-to-br from-blue-50 to-blue-100 text-blue-800 px-2.5 py-1 rounded-full text-xs font-medium border border-blue-200">
-                        <i class="fas fa-hourglass-half mr-1.5"></i>{{ $duration }}
+                        <i class="fas fa-hourglass-half mr-1.5"></i>{{ ltrim($duration, '-') }}
                     </span>
                 </div>
 

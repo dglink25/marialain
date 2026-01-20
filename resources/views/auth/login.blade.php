@@ -1,10 +1,15 @@
 @php use Illuminate\Support\Facades\Route; @endphp
+@php
+    use Illuminate\Support\Str;
+@endphp
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Connexion - CPEG MARIE-ALAIN</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -193,6 +198,12 @@
             border: 1px solid #f5c6cb;
         }
         
+        .session-status.warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
         .options {
             display: flex;
             justify-content: space-between;
@@ -241,10 +252,46 @@
             transition: background 0.3s;
             width: 100%;
             margin-bottom: 20px;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
         }
         
-        .login-button:hover {
+        .login-button:hover:not(:disabled) {
             background: #1c64e0;
+        }
+        
+        .login-button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .resubmit-warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-size: 13px;
+            text-align: center;
         }
         
         @media (max-width: 900px) {
@@ -288,23 +335,28 @@
                 </div>
             @endif
 
-            <form method="POST" action="{{ route('login') }}">
+            <!-- Affichage des erreurs de token CSRF -->
+            @if(session('csrf_error'))
+                <div class="session-status error">
+                    {{ session('csrf_error') }}
+                </div>
+            @endif
+
+            @if($errors->has('csrf'))
+                <div class="session-status error">
+                    {{ $errors->first('csrf') }}
+                </div>
+            @endif
+
+            <form method="POST" action="{{ route('login') }}" id="loginForm">
                 @csrf
+                
+                <!-- Champ caché pour détecter les resoumissions -->
+                <input type="hidden" name="form_submitted" value="1">
+                <input type="hidden" name="form_token" value="{{ Str::random(40) }}">
 
                 <!-- Email Address -->
                 <div class="form-group">
-                    <!-- Erreurs d'authentification générale -->
-                    @if($errors->has('auth'))
-                        <div class="session-status error">
-                            {{ $errors->first('auth') }}
-                        </div>
-                    @endif
-                    
-                    @if(session('error'))
-                        <div class="session-status error">
-                            {{ session('error') }}
-                        </div>
-                    @endif
                     <label for="email">Adresse Email</label>
                     <div class="input-with-icon">
                         <i class="fas fa-envelope input-icon"></i>
@@ -343,7 +395,6 @@
                             Mot de passe oublié?
                         </a>
                     @endif
-                    
                 </div>
                 
                 <!-- Erreurs d'authentification générale -->
@@ -359,14 +410,32 @@
                     </div>
                 @endif
 
-                <button type="submit" class="login-button">
-                    Se connecter
+                <button type="submit" class="login-button" id="loginButton">
+                    <span id="buttonText">Se connecter</span>
+                    <div class="spinner" id="buttonSpinner" style="display: none;"></div>
                 </button>
+                
+                <div id="resubmitWarning" class="resubmit-warning" style="display: none;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Le formulaire est en cours de traitement, veuillez patienter...
+                </div>
             </form>
         </div>
     </div>
 
     <script>
+        // Récupération des références aux éléments DOM
+        const loginForm = document.getElementById('loginForm');
+        const loginButton = document.getElementById('loginButton');
+        const buttonText = document.getElementById('buttonText');
+        const buttonSpinner = document.getElementById('buttonSpinner');
+        const resubmitWarning = document.getElementById('resubmitWarning');
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        
+        // État du formulaire
+        let isSubmitting = false;
+        let submittedForms = new Set();
+
         // Fonctionnalité pour afficher/masquer le mot de passe
         document.getElementById('password-toggle').addEventListener('click', function() {
             const passwordInput = document.getElementById('password');
@@ -382,6 +451,127 @@
                 icon.classList.add('fa-eye');
             }
         });
+
+        // Fonction pour désactiver le bouton et afficher le spinner
+        function setSubmittingState(submitting) {
+            isSubmitting = submitting;
+            loginButton.disabled = submitting;
+            
+            if (submitting) {
+                buttonText.textContent = 'Connexion en cours...';
+                buttonSpinner.style.display = 'inline-block';
+                resubmitWarning.style.display = 'block';
+            } else {
+                buttonText.textContent = 'Se connecter';
+                buttonSpinner.style.display = 'none';
+                resubmitWarning.style.display = 'none';
+            }
+        }
+
+        // Gérer la soumission du formulaire
+        loginForm.addEventListener('submit', function(e) {
+            if (isSubmitting) {
+                e.preventDefault();
+                return false;
+            }
+            
+            // Générer un identifiant unique pour cette soumission
+            const formToken = document.querySelector('input[name="form_token"]').value;
+            
+            // Vérifier si ce formulaire a déjà été soumis
+            if (submittedForms.has(formToken)) {
+                e.preventDefault();
+                alert('Ce formulaire a déjà été soumis. Veuillez patienter.');
+                return false;
+            }
+            
+            // Marquer le formulaire comme en cours de soumission
+            submittedForms.add(formToken);
+            setSubmittingState(true);
+            
+            // Rafraîchir le token CSRF avant soumission
+            refreshCsrfToken();
+            
+            // Le formulaire sera soumis normalement
+            return true;
+        });
+
+        // Rafraîchir le token CSRF
+        function refreshCsrfToken() {
+            // Vous pouvez implémenter une logique pour rafraîchir le token CSRF si nécessaire
+            // Par exemple, via une requête AJAX
+        }
+
+        // Gérer les événements de navigation
+        window.addEventListener('pageshow', function(event) {
+            // Si l'utilisateur revient à la page via le cache navigateur
+            if (event.persisted) {
+                resetFormState();
+            }
+        });
+
+        // Réinitialiser l'état du formulaire
+        function resetFormState() {
+            setSubmittingState(false);
+            submittedForms.clear();
+            
+            // Rafraîchir le token CSRF stocké
+            const newCsrfToken = '{{ csrf_token() }}';
+            document.querySelector('input[name="_token"]').value = newCsrfToken;
+            document.querySelector('meta[name="csrf-token"]').setAttribute('content', newCsrfToken);
+            
+            // Générer un nouveau token de formulaire
+            document.querySelector('input[name="form_token"]').value = generateRandomToken();
+        }
+
+        // Générer un token aléatoire
+        function generateRandomToken() {
+            return Math.random().toString(36).substring(2) + Date.now().toString(36);
+        }
+
+        // Gérer le bouton d'actualisation de la page
+        window.addEventListener('beforeunload', function(e) {
+            if (isSubmitting) {
+                // Optionnel: Avertir l'utilisateur qu'il quitte pendant une soumission
+                // e.preventDefault();
+                // e.returnValue = 'Une connexion est en cours. Êtes-vous sûr de vouloir quitter ?';
+            }
+        });
+
+        // Réinitialiser l'état si l'utilisulaire revient en arrière
+        window.addEventListener('pagehide', function() {
+            if (isSubmitting) {
+                // Réinitialiser l'état pour la prochaine visite
+                localStorage.setItem('wasSubmitting', 'true');
+            }
+        });
+
+        // Vérifier l'état au chargement
+        window.addEventListener('load', function() {
+            if (localStorage.getItem('wasSubmitting') === 'true') {
+                resetFormState();
+                localStorage.removeItem('wasSubmitting');
+            }
+            
+            // Vérifier s'il y a des erreurs 419 dans l'URL
+            if (window.location.search.includes('error=419')) {
+                showCsrfError();
+            }
+        });
+
+        // Afficher un message d'erreur CSRF
+        function showCsrfError() {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'session-status error';
+            errorDiv.innerHTML = `
+                <strong>Session expirée</strong><br>
+                Votre session a expiré en raison d'une inactivité prolongée.
+                Veuillez rafraîchir la page et vous reconnecter.
+            `;
+            
+            const welcomeText = document.querySelector('.welcome-text');
+            welcomeText.parentNode.insertBefore(errorDiv, welcomeText.nextSibling);
+        }
     </script>
 </body>
 </html>

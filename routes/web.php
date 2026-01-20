@@ -65,6 +65,14 @@ Route::get('/test-500', function () {
     abort(500);
 });
 
+Route::get('/test-404', function () {
+    abort(404);
+});
+
+Route::get('/test-403', function () {
+    abort(403);
+});
+
 Route::prefix('censeur')->middleware('auth')->group(function () {
 
     Route::get('/permissions/{classId}', [App\Http\Controllers\Censeur\NoteController::class, 'permissions'])
@@ -584,4 +592,25 @@ Route::prefix('cahier-de-texte')->group(function () {
     Route::get('/teacher/{teacher}/class/{classe}/subject/{subject}/download', 
         [CahierDeTexteController::class, 'downloadReport'])
         ->name('cahier.teacher.download');
+});
+
+// Gestion des sessions expirées
+Route::get('/session-expired', [\App\Http\Controllers\Auth\ExpiredSessionController::class, 'show'])
+    ->name('session.expired');
+
+Route::post('/refresh-csrf', [\App\Http\Controllers\Auth\ExpiredSessionController::class, 'refreshCsrf'])
+    ->name('csrf.refresh');
+
+// Route pour regénérer la session (optionnel)
+Route::get('/refresh-session', function () {
+    session()->regenerate();
+    return back()->with('status', 'Session rafraîchie avec succès.');
+})->name('session.refresh');
+
+Route::get('/session-expired', function () {
+    abort(419);
+});
+
+Route::get('/test-419', function () {
+    abort(419);
 });

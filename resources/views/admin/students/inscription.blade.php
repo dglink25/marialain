@@ -113,7 +113,7 @@
       <!-- Documents -->
       <div class="md:col-span-2">
         <label class="block text-sm font-semibold text-gray-700 mb-1">Acte de naissance (PDF)</label>
-        <input type="file" name="birth_certificate" accept="image/*" class="w-full border border-gray-300 rounded-lg px-4 py-2" required>
+        <input type="file" name="birth_certificate" accept="image/*" class="w-full border border-gray-300 rounded-lg px-4 py-2">
       </div>
 
       <div class="md:col-span-2">
