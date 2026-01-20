@@ -422,7 +422,7 @@ Route::middleware(['auth'])->group(function () {
 |--------------------------------------------------------------------------
 */
 // Afficher le profil d’un enseignant
-Route::get('/enseignants/{user}', [ProfileController::class, 'show'])->name('enseignants.show');
+Route::middleware(['auth'])->get('/enseignants/{user}', [ProfileController::class, 'show'])->name('enseignants.show');
 
 // Export PDF des enseignants d’une classe (Censeur)
 Route::middleware(['auth'])->get('/classes/{class}/enseignants/export', [ClasseController::class, 'export'])->name('enseignants.export');
@@ -456,13 +456,13 @@ Gestion notes côté enseignants
 
 */
 
-Route::get('classes/{class}/{subject}/{trimestre}/notes', 
+Route::middleware(['auth'])->get('classes/{class}/{subject}/{trimestre}/notes', 
     [NoteController::class, 'showClassNotes']
 )->name('teacher.classes.notes.list');
 
 
 // Afficher les notes d’un trimestre pour une classe et une matière
-Route::get('/classes/{classId}/subjects/{subjectId}/notes/{trimestre}', 
+Route::middleware(['auth'])->get('/classes/{classId}/subjects/{subjectId}/notes/{trimestre}', 
     [App\Http\Controllers\Teacher\NoteController::class, 'index'])
     ->middleware(['auth'])
     ->name('classes.notes.subject');
@@ -515,7 +515,7 @@ Route::middleware(['auth'])->prefix('teacher')->name('teacher.')->group(function
     Route::post('/classes/{id}/notes/calc/trimestre', [App\Http\Controllers\Teacher\NoteController::class, 'calcTrimestre'])->name('classes.notes.calc.trimestre');
 });
 
-Route::prefix('censeur')->group(function () {
+Route::middleware(['auth'])->prefix('censeur')->group(function () {
     Route::post('/classes/{classeId}/subjects/{subjectId}/coefficient', [SubjectController::class, 'setCoefficient'])->name('subjects.setCoefficient');
 });
 
@@ -532,47 +532,47 @@ Route::middleware(['auth'])->prefix('teacher')->group(function () {
 });
 
 
-Route::get('teachers/{subject}/active', [CahierDeTexteController::class, 'activeTeachers'])->name('teachers.active');
+Route::middleware(['auth'])->get('teachers/{subject}/active', [CahierDeTexteController::class, 'activeTeachers'])->name('teachers.active');
 
-Route::get('/teachers/active', [CahierDeTexteController::class, 'subjects'])
+Route::middleware(['auth'])->get('/teachers/active', [CahierDeTexteController::class, 'subjects'])
     ->name('subject.teachers.active');
 
-Route::get('/censeur/classes/{classId}/trimestre/{trimestre}/points', 
+Route::middleware(['auth'])->get('/censeur/classes/{classId}/trimestre/{trimestre}/points', 
     [CenseurNoteController::class, 'pointsDisponibles']
 )->name('censeur.classes.trimestre.points');
 
-Route::post('/censeur/notes/autoriser-modification', [CenseurNoteController::class, 'autoriserModification'])
+Route::middleware(['auth'])->post('/censeur/notes/autoriser-modification', [CenseurNoteController::class, 'autoriserModification'])
     ->name('censeur.notes.autoriserModification');
 
-Route::delete('/teacher-invitations/{invitation}', [CenseurInvitationController::class, 'destroy'])
+Route::middleware(['auth'])->delete('/teacher-invitations/{invitation}', [CenseurInvitationController::class, 'destroy'])
     ->name('teacher_invitations.destroy');
 
-Route::post('/teacher/cahier/update/{id}', [CahierDeTexteController::class, 'update'])->name('teacher.cahier.update');
+Route::middleware(['auth'])->post('/teacher/cahier/update/{id}', [CahierDeTexteController::class, 'update'])->name('teacher.cahier.update');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/enseignants/matiere/{subject}', [CahierDeTexteController::class, 'indexBySubject'])
         ->name('enseignants.bySubject');
 });
 
-Route::get('/enseignants/{teacher}/classe/{classe}/matiere/{subject}/cahier', 
+Route::middleware(['auth'])->get('/enseignants/{teacher}/classe/{classe}/matiere/{subject}/cahier', 
     [CahierDeTexteController::class, 'showTeacherCahier'])
     ->name('enseignants.cahier.matiere');
 
-Route::post('/enseignants/{teacher}/classe/{class}/matiere/{subject}/paiement', 
+Route::middleware(['auth'])->post('/enseignants/{teacher}/classe/{class}/matiere/{subject}/paiement', 
     [CahierDeTexteController::class, 'setBrutAmount'])
     ->name('enseignants.classe.paiement');
 
-Route::post('/subject/{subject}/pdf', [CahierDeTexteController::class, 'downloadPdf'])
+Route::middleware(['auth'])->post('/subject/{subject}/pdf', [CahierDeTexteController::class, 'downloadPdf'])
     ->name('subject.teachers.pdf');
     
-Route::delete('/censeur/timetables/{class}/{timetable}/delete', 
+Route::middleware(['auth'])->delete('/censeur/timetables/{class}/{timetable}/delete', 
     [\App\Http\Controllers\Censeur\TimetableController::class, 'destroy']
 )->name('censeur.timetables.delete');
 
 
 // routes/web.php
 
-Route::prefix('cahier-de-texte')->group(function () {
+Route::middleware(['auth'])->prefix('cahier-de-texte')->group(function () {
     // Vue pour voir les cahiers d'un enseignant spécifique
     Route::get('/teacher/{teacher}/class/{classe}/subject/{subject}', 
         [CahierDeTexteController::class, 'showTeacherCahier'])
