@@ -15,6 +15,7 @@ use App\Models\Subject;
 use App\Models\Classe;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class CahierDeTexteController extends Controller{
     
@@ -77,6 +78,7 @@ class CahierDeTexteController extends Controller{
             'academic_year_id' => $academicYear->id,
             'course_start_date' => $startDate,
             'course_end_date' => $endDate,
+            'is_validated' => false,
         ]);
 
         return back()->with('success', 'Cahier de texte enregistré avec succès.');
@@ -183,9 +185,9 @@ class CahierDeTexteController extends Controller{
             return redirect()->back()->with('error', "Aucune année académique active trouvée.");
         }
 
-        // Charger la matière avec ses enseignants
+        // Charger la matière avec ses enseignants DISTINCTS
         $subject = Subject::with(['teachers' => function($query) use ($subjectId, $academicYear) {
-            $query->with(['classes' => function($q) use ($subjectId, $academicYear) {
+            $query->distinct()->with(['classes' => function($q) use ($subjectId, $academicYear) {
                 // Préciser le nom de la table pour éviter l'ambiguïté
                 $q->where('classes.academic_year_id', $academicYear->id)
                 ->wherePivot('subject_id', $subjectId)
@@ -369,6 +371,164 @@ class CahierDeTexteController extends Controller{
         return $pdf->download($filename);
     }
 
+    public function downloadPdf(Request $request, $subjectId){
+        try {
+            // Validation
+            $request->validate([
+                'start_date' => 'required|date',
+                'end_date'   => 'required|date|after_or_equal:start_date',
+            ]);
+
+            // Récupérer les données de base
+            $subject = Subject::findOrFail($subjectId);
+            $academicYear = AcademicYear::where('active', true)->firstOrFail();
+            
+            $startDate = $request->start_date;
+            $endDate = $request->end_date;
+
+            // Récupérer tous les cahiers de texte pour la période
+            $cahiers = CahierDeTexte::with(['teacher', 'classe'])
+                ->where('subject_id', $subjectId)
+                ->whereBetween('course_start_date', [$startDate, $endDate])
+                ->get();
+
+            if ($cahiers->isEmpty()) {
+                return back()->with('error', "Aucun cahier de texte trouvé pour la période sélectionnée.");
+            }
+
+            // Grouper par enseignant
+            $cahiersByTeacher = $cahiers->groupBy('teacher_id');
+
+            // Préparer les données pour chaque enseignant
+            $teachersData = [];
+            
+            foreach ($cahiersByTeacher as $teacherId => $teacherCahiers) {
+                $teacher = $teacherCahiers->first()->teacher;
+                
+                // Calculer la durée totale pour cet enseignant
+                $totalMinutes = 0;
+                $classesMap = [];
+                
+                foreach ($teacherCahiers as $cahier) {
+                    if ($cahier->course_start_date && $cahier->course_end_date) {
+                        $totalMinutes += $cahier->course_end_date->diffInMinutes($cahier->course_start_date);
+                    }
+                    
+                    // Collecter les classes uniques
+                    if ($cahier->classe) {
+                        $classId = $cahier->classe->id;
+                        if (!isset($classesMap[$classId])) {
+                            $classesMap[$classId] = (object)[
+                                'class_id' => $classId,
+                                'class_name' => $cahier->classe->name,
+                                'amount_brut' => 0,
+                                'total_brut' => 0,
+                                'aib' => 0,
+                                'emmagement' => ''
+                            ];
+                        }
+                    }
+                }
+                
+                // Convertir la map en collection
+                $classes = collect(array_values($classesMap));
+                
+                // Récupérer les taux pour chaque classe
+                if (!$classes->isEmpty()) {
+                    try {
+                        // Essayer de récupérer les taux avec la table pivot
+                        $classRates = DB::table('class_teacher_subject')
+                            ->where('teacher_id', $teacherId)
+                            ->where('subject_id', $subjectId)
+                            ->whereIn('class_id', $classes->pluck('class_id'))
+                            ->select('class_id', 'amount_brut')
+                            ->get()
+                            ->keyBy('class_id');
+                            
+                        foreach ($classes as $classe) {
+                            if (isset($classRates[$classe->class_id])) {
+                                $classe->amount_brut = $classRates[$classe->class_id]->amount_brut;
+                            } else {
+                                // Valeur par défaut si aucun taux trouvé
+                                $classe->amount_brut = 0;
+                            }
+                        }
+                    } catch (\Exception $e) {
+                        Log::info("Erreur récupération taux : " . $e->getMessage());
+                        // Si erreur, initialiser tous les taux à 0
+                        foreach ($classes as $classe) {
+                            $classe->amount_brut = 0;
+                        }
+                    }
+                }
+                
+                // Calculer les heures totales pour cet enseignant
+                $totalHours = round($totalMinutes / 60, 2);
+                
+                // Calculer les montants pour chaque classe de cet enseignant
+                foreach ($classes as $classe) {
+                    $rate = $classe->amount_brut;
+                    $classe->total_brut = round($totalHours * $rate, 2);
+                    $classe->aib = round($classe->total_brut * 0.05, 2);
+                    // Emmagement reste vide comme dans la vue
+                    $classe->emmagement = '';
+                }
+                
+                // Créer l'objet enseignant avec les propriétés attendues par la vue
+                $teacherData = (object)[
+                    'id' => $teacher->id,
+                    'name' => $teacher->name,
+                    'email' => $teacher->email ?? '--',
+                    'phone' => $teacher->phone ?? '--',
+                    'id_card_number' => $teacher->id_card_number ?? '--',
+                    'total_hours' => $totalHours,
+                    'total_minutes' => $totalMinutes,
+                    // La vue attend une propriété 'classes_for_subject' qui est un tableau d'objets
+                    'classes_for_subject' => $classes->toArray(),
+                    'cahiers_count' => $teacherCahiers->count(),
+                    // Propriétés calculées pour l'enseignant (utilisées pour les totaux)
+                    'teacher_total_hours' => $totalHours,
+                    'teacher_total_brut_heure' => $classes->avg('amount_brut'),
+                    'teacher_total_brut_total' => $classes->sum('total_brut'),
+                    'teacher_total_aib' => $classes->sum('aib')
+                ];
+                
+                $teachersData[] = $teacherData;
+            }
+
+            // Ajouter les totaux globaux pour la vue
+            $grand_total_heures = collect($teachersData)->sum('teacher_total_hours');
+            $grand_total_brut_heure = collect($teachersData)->sum('teacher_total_brut_heure');
+            $grand_total_brut_total = collect($teachersData)->sum('teacher_total_brut_total');
+            $grand_total_aib = collect($teachersData)->sum('teacher_total_aib');
+
+            // Générer le PDF
+            $pdf = PDF::loadView('teacher.pdf', [
+                'subject' => $subject,
+                'teachers' => $teachersData,
+                'start' => $startDate, // Note: la vue utilise 'start' pas 'start_date'
+                'end' => $endDate,     // Note: la vue utilise 'end' pas 'end_date'
+                'academic_year' => $academicYear,
+                'generated_at' => now(),
+                'generated_by' => auth()->user()->name,
+                // Variables globales pour les totaux
+                'grand_total_heures' => $grand_total_heures,
+                'grand_total_brut_heure' => $grand_total_brut_heure,
+                'grand_total_brut_total' => $grand_total_brut_total,
+                'grand_total_aib' => $grand_total_aib
+            ]);
+
+            $filename = 'rapport_enseignants_' . Str::slug($subject->name) . '_' . now()->format('Y-m-d') . '.pdf';
+            return $pdf->download($filename);
+
+        } 
+        catch (\Exception $e) {
+            Log::error('Erreur PDF : ' . $e->getMessage());
+            Log::error('Stack trace : ' . $e->getTraceAsString());
+            return back()->with('error', 'Une erreur est survenue lors de la génération du PDF : ' . $e->getMessage());
+        }
+    }
+    
     public function indexBySubject(Subject $subject, User $teacher, Classe $class){
         // Année académique active
         $academicYear = AcademicYear::where('active', true)->firstOrFail();
@@ -410,117 +570,6 @@ class CahierDeTexteController extends Controller{
         return redirect()->back()->with('success', 'Montant brut enregistré pour ' . $teacher->name . 
             ' dans la classe ' . $class->name . ' pour la matière ' . $subject->name);
     }
-
-    public function downloadPdf(Request $request, $subjectId){
-        try {
-            // ---------------------------------------------------------
-            // 1) VALIDATION DE BASE
-            // ---------------------------------------------------------
-            $request->validate([
-                'start_date' => 'required|date',
-                'end_date'   => 'required|date|after_or_equal:start_date',
-            ]);
-
-            $start = $request->start_date;
-            $end = date('Y-m-d 23:59:59', strtotime($request->end_date));
-
-            // ---------------------------------------------------------
-            // 2) ANNÉE ACADÉMIQUE ACTIVE
-            // ---------------------------------------------------------
-            $academicYear = DB::table('academic_years')->where('active', true)->first();
-            if (!$academicYear) {
-                return back()->with('error', "Aucune année académique active trouvée.");
-            }
-
-            // ---------------------------------------------------------
-            // 3) MATIÈRE
-            // ---------------------------------------------------------
-            $subject = DB::table('subjects')->where('id', $subjectId)->first();
-            if (!$subject) {
-                return back()->with('error', "Matière introuvable.");
-            }
-
-            // ---------------------------------------------------------
-            // 4) RÉCUPÉRER LES ENSEIGNANTS QUI ONT DES CAHIERS SUR CETTE MATIÈRE
-            // ---------------------------------------------------------
-            $teachers = DB::table('users')
-                ->join('cahier_de_texte', 'users.id', '=', 'cahier_de_texte.teacher_id')
-                ->where('cahier_de_texte.subject_id', $subjectId)
-                ->whereBetween('cahier_de_texte.updated_at', [$start, $end])
-                ->select(
-                    'users.id',
-                    'users.name',
-                    'users.email',
-                    'users.gender',
-                    'users.phone',
-                    'users.id_card_number'
-                )
-                ->distinct()
-                ->get();
-
-            if ($teachers->isEmpty()) {
-                return back()->with('error', "Aucun enseignant trouvé pour la période sélectionnée.");
-            }
-
-            // ---------------------------------------------------------
-            // 5) POUR CHAQUE ENSEIGNANT : CALCUL DES MINUTES + CLASSES + MONTANTS
-            // ---------------------------------------------------------
-            foreach ($teachers as $teacher) {
-                // ---- TOTAL DES MINUTES ----
-                $totalMinutes = DB::table('cahier_de_texte')
-                    ->where('teacher_id', $teacher->id)
-                    ->where('subject_id', $subjectId)
-                    ->whereBetween('updated_at', [$end, $start])
-                    ->sum('duration_minutes');
-
-                $teacher->total_minutes = $totalMinutes;
-                $teacher->total_hours = $totalMinutes; // conversion en heures
-
-                // ---- LES CLASSES LIÉES (table pivot) ----
-                $classes = DB::table('class_teacher_subject')
-                    ->join('classes', 'classes.id', '=', 'class_teacher_subject.class_id')
-                    ->where('class_teacher_subject.teacher_id', $teacher->id)
-                    ->where('class_teacher_subject.subject_id', $subjectId)
-                    ->where('classes.academic_year_id', $academicYear->id)
-                    ->select(
-                        'classes.id as class_id',
-                        'classes.name as class_name',
-                        'class_teacher_subject.amount_brut'
-                    )
-                    ->get();
-
-                // ---- CALCULS FINANCIERS ----
-                foreach ($classes as $classe) {
-                    $rate = $classe->amount_brut ?? 0;
-                    $totalBrut = round($teacher->total_hours * $rate, 2);
-                    $classe->total_brut  = $totalBrut;
-                    $classe->aib         = round($totalBrut * 0.05, 2);
-                    $classe->emmagement  = '';
-                }
-
-                $teacher->classes_for_subject = $classes;
-            }
-
-            // ---------------------------------------------------------
-            // 6) GÉNÉRATION DU PDF
-            // ---------------------------------------------------------
-            $pdf = Pdf::loadView('teacher.pdf', [
-                'subject'  => $subject,
-                'teachers' => $teachers,
-                'start'    => $start,
-                'end'      => $end,
-            ]);
-
-            return $pdf->download('paiement_enseignants_'.$subject->name.'.pdf');
-
-        } catch (\Exception $e) {
-            Log::error('Erreur PDF enseignants : '.$e->getMessage());
-            return back()->with('error', 'Une erreur est survenue lors de la génération du PDF. '.$e->getMessage());
-        }
-    }
-
-
-
 
 
 

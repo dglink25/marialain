@@ -350,6 +350,18 @@
 
             <form method="POST" action="{{ route('login') }}" id="loginForm">
                 @csrf
+                <!-- Erreurs d'authentification générale -->
+                @if($errors->has('auth'))
+                    <div class="session-status error">
+                        {{ $errors->first('auth') }}
+                    </div>
+                @endif
+                
+                @if(session('error'))
+                    <div class="session-status error">
+                        {{ session('error') }}
+                    </div>
+                @endif
                 
                 <!-- Champ caché pour détecter les resoumissions -->
                 <input type="hidden" name="form_submitted" value="1">
@@ -396,19 +408,6 @@
                         </a>
                     @endif
                 </div>
-                
-                <!-- Erreurs d'authentification générale -->
-                @if($errors->has('auth'))
-                    <div class="session-status error">
-                        {{ $errors->first('auth') }}
-                    </div>
-                @endif
-                
-                @if(session('error'))
-                    <div class="session-status error">
-                        {{ session('error') }}
-                    </div>
-                @endif
 
                 <button type="submit" class="login-button" id="loginButton">
                     <span id="buttonText">Se connecter</span>

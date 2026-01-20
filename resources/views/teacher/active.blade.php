@@ -26,7 +26,7 @@
         </div>
     @endif
 
-     @if ($errors->any())
+    @if ($errors->any())
     <div class="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-lg mb-6">
       <ul class="list-disc pl-5 space-y-1">
         @foreach ($errors->all() as $error)
@@ -34,23 +34,74 @@
         @endforeach
       </ul>
     </div>
-  @endif
+    @endif
 
-  @if (session('error'))
+    @if (session('error'))
     <div class="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-lg mb-6">
       {{ session('error') }}
     </div>
-  @endif
+    @endif
 
-    @if($subject->teachers->count())
+    <!-- Statistiques -->
+    @php
+        $uniqueTeachers = $subject->teachers->unique('id');
+        $totalClasses = 0;
+        foreach($uniqueTeachers as $teacher) {
+            $totalClasses += $teacher->classes ? $teacher->classes->count() : 0;
+        }
+    @endphp
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 animate-fadeInUp">
+        <div class="bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-xl p-6">
+            <div class="flex items-center">
+                <div class="bg-blue-500 rounded-xl p-3 mr-4">
+                    <i class="fas fa-chalkboard-teacher text-white text-xl"></i>
+                </div>
+                <div>
+                    <p class="text-sm text-blue-600">Enseignants uniques</p>
+                    <p class="text-2xl font-bold text-blue-800">{{ $uniqueTeachers->count() }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-gradient-to-r from-green-50 to-green-100 border border-green-200 rounded-xl p-6">
+            <div class="flex items-center">
+                <div class="bg-green-500 rounded-xl p-3 mr-4">
+                    <i class="fas fa-door-open text-white text-xl"></i>
+                </div>
+                <div>
+                    <p class="text-sm text-green-600">Total Classes</p>
+                    <p class="text-2xl font-bold text-green-800">{{ $totalClasses }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-gradient-to-r from-purple-50 to-purple-100 border border-purple-200 rounded-xl p-6">
+            <div class="flex items-center">
+                <div class="bg-purple-500 rounded-xl p-3 mr-4">
+                    <i class="fas fa-book text-white text-xl"></i>
+                </div>
+                <div>
+                    <p class="text-sm text-purple-600">Matière</p>
+                    <p class="text-lg font-bold text-purple-800 truncate">{{ $subject->name }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if($uniqueTeachers->count())
         <!-- Bouton PDF avec design amélioré -->
-        <div class="flex justify-end mb-6 animate-fadeInUp">
+        <div class="flex justify-between items-center mb-6 animate-fadeInUp">
+            <div class="text-sm text-gray-600">
+                <i class="fas fa-info-circle mr-1"></i>
+                {{ $uniqueTeachers->count() }} enseignant(s) unique(s)
+            </div>
             <button onclick="openPdfModal()"
                 class="bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 font-semibold flex items-center group">
                 <svg class="w-5 h-5 mr-2 group-hover:animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                 </svg>
-                Télécharger la liste PDF
+                Télécharger PDF
             </button>
         </div>
 
@@ -118,7 +169,11 @@
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200/40">
-                        @foreach($subject->teachers as $teacher)
+                        @foreach($uniqueTeachers as $teacher)
+                        @php
+                            $teacherClasses = $teacher->classes ?? collect();
+                            $teacherClassesCount = $teacherClasses->count();
+                        @endphp
                         <tr class="hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-indigo-50/50 transition-all duration-300 group animate-slideIn" style="animation-delay: {{ $loop->index * 100 }}ms">
                             <td class="px-8 py-6 whitespace-nowrap">
                                 <div class="flex items-center">
@@ -135,10 +190,15 @@
                                     </svg>
                                     {{ $teacher->email ?? '--' }}
                                 </div>
+                                <div class="text-xs text-gray-400 mt-2">
+                                    <i class="fas fa-door-open mr-1"></i>
+                                    {{ $teacherClassesCount }} classe{{ $teacherClassesCount > 1 ? 's' : '' }} assignée{{ $teacherClassesCount > 1 ? 's' : '' }}
+                                </div>
                             </td>
                             <td class="px-8 py-6">
+                                @if($teacherClassesCount > 0)
                                 <div class="space-y-3">
-                                    @foreach($teacher->classes as $classe)
+                                    @foreach($teacherClasses as $classe)
                                         @php
                                             $pivot = $classe->pivot;
                                             $amountBrut = $pivot->amount_brut ?? 0;
@@ -157,12 +217,6 @@
                                                             </svg>
                                                             Brut: <span class="font-semibold text-green-700 ml-1">{{ number_format($amountBrut, 2, '.', ',') }} FCFA</span>
                                                         </div>
-                                                        <div class="flex items-center text-gray-600">
-                                                            <svg class="w-4 h-4 mr-1 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-                                                            </svg>
-                                                            AIB (5%): <span class="font-semibold text-orange-600 ml-1">{{ number_format($aib, 2, '.', ',') }} FCFA</span>
-                                                        </div>
                                                     </div>
                                                 </div>
                                                 <button onclick="openAmountModal('modal-{{ $teacher->id }}-{{ $classe->id }}')"
@@ -173,63 +227,31 @@
                                                     Modifier
                                                 </button>
                                             </div>
-
-                                            <!-- Modal amélioré -->
-                                            <div id="modal-{{ $teacher->id }}-{{ $classe->id }}" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm transition-opacity duration-300">
-                                                <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md transform transition-all duration-500 scale-95 animate-modalIn">
-                                                    <div class="p-6 border-b border-gray-100">
-                                                        <div class="flex items-center justify-between">
-                                                            <h2 class="text-xl font-bold text-gray-900 flex items-center">
-                                                                <svg class="w-6 h-6 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
-                                                                </svg>
-                                                                Montant brut - {{ $classe->name }}
-                                                            </h2>
-                                                            <button onclick="closeAmountModal('modal-{{ $teacher->id }}-{{ $classe->id }}')" 
-                                                                    class="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full p-2 transition-colors">
-                                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                                                                </svg>
-                                                            </button>
-                                                        </div>
-                                                        <p class="text-sm text-gray-600 mt-2">Enseignant: <span class="font-semibold">{{ $teacher->name }}</span></p>
-                                                    </div>
-                                                    <form action="{{ route('enseignants.classe.paiement', ['teacher' => $teacher->id, 'class' => $classe->id, 'subject' => $subject->id]) }}" method="POST" class="p-6">
-                                                        @csrf
-                                                        <div class="mb-6">
-                                                            <label class="block text-sm font-medium text-gray-700 mb-2">Montant brut (FCFA)</label>
-                                                            <input type="number" name="amount" min="0" step="0.01" value="{{ $amountBrut }}" 
-                                                                   class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
-                                                                   placeholder="Saisir le montant brut">
-                                                        </div>
-                                                        <div class="flex justify-end space-x-3">
-                                                            <button type="button" onclick="closeAmountModal('modal-{{ $teacher->id }}-{{ $classe->id }}')" 
-                                                                    class="px-6 py-2.5 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-all duration-300 font-medium">
-                                                                Annuler
-                                                            </button>
-                                                            <button type="submit" 
-                                                                    class="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 font-semibold">
-                                                                Enregistrer
-                                                            </button>
-                                                        </div>
-                                                    </form>
-                                                </div>
-                                            </div>
                                         </div>
                                     @endforeach
                                 </div>
+                                @else
+                                <div class="text-center py-4">
+                                    <span class="text-sm text-gray-500 bg-gray-100 px-3 py-2 rounded-lg">
+                                        <i class="fas fa-door-closed mr-2"></i>
+                                        Aucune classe assignée
+                                    </span>
+                                </div>
+                                @endif
                             </td>
                             <td class="px-8 py-6">
                                 <div class="flex flex-col space-y-3">
-                                    @foreach($teacher->classes as $classe)
-                                        <a href="{{ route('enseignants.cahier.matiere', ['teacher' => $teacher->id, 'classe' => $classe->id, 'subject' => $subject->id]) }}"
-                                           class="inline-flex items-center px-4 py-2.5 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-xl text-sm font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 group/btn">
-                                            <svg class="w-4 h-4 mr-2 group-hover/btn:rotate-12 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                                            </svg>
-                                            Cahier - {{ $classe->name }}
-                                        </a>
-                                    @endforeach
+                                    @if($teacherClassesCount > 0)
+                                        @foreach($teacherClasses as $classe)
+                                            <a href="{{ route('enseignants.cahier.matiere', ['teacher' => $teacher->id, 'classe' => $classe->id, 'subject' => $subject->id]) }}"
+                                               class="inline-flex items-center px-4 py-2.5 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-xl text-sm font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 group/btn">
+                                                <svg class="w-4 h-4 mr-2 group-hover/btn:rotate-12 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                                </svg>
+                                                Cahier - {{ $classe->name }}
+                                            </a>
+                                        @endforeach
+                                    @endif
                                     <a href="{{ route('enseignants.show', $teacher->id ) }}" 
                                        class="inline-flex items-center px-4 py-2.5 border-2 border-blue-200 text-blue-700 bg-blue-50/50 hover:bg-blue-100 hover:border-blue-300 rounded-xl transition-all duration-300 font-medium group/profile">
                                         <svg class="w-4 h-4 mr-2 group-hover/profile:scale-110 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -241,6 +263,54 @@
                                 </div>
                             </td>
                         </tr>
+                        
+                        <!-- Modal amélioré pour chaque classe -->
+                        @foreach($teacherClasses as $classe)
+                        @php
+                            $pivot = $classe->pivot;
+                            $amountBrut = $pivot->amount_brut ?? 0;
+                        @endphp
+                        <div id="modal-{{ $teacher->id }}-{{ $classe->id }}" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm transition-opacity duration-300">
+                            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md transform transition-all duration-500 scale-95 animate-modalIn">
+                                <div class="p-6 border-b border-gray-100">
+                                    <div class="flex items-center justify-between">
+                                        <h2 class="text-xl font-bold text-gray-900 flex items-center">
+                                            <svg class="w-6 h-6 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
+                                            </svg>
+                                            Montant brut - {{ $classe->name }}
+                                        </h2>
+                                        <button onclick="closeAmountModal('modal-{{ $teacher->id }}-{{ $classe->id }}')" 
+                                                class="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full p-2 transition-colors">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                    <p class="text-sm text-gray-600 mt-2">Enseignant: <span class="font-semibold">{{ $teacher->name }}</span></p>
+                                </div>
+                                <form action="{{ route('enseignants.classe.paiement', ['teacher' => $teacher->id, 'class' => $classe->id, 'subject' => $subject->id]) }}" method="POST" class="p-6">
+                                    @csrf
+                                    <div class="mb-6">
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Montant brut (FCFA)</label>
+                                        <input type="number" name="amount" min="0" step="0.01" value="{{ $amountBrut }}" 
+                                               class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
+                                               placeholder="Saisir le montant brut">
+                                    </div>
+                                    <div class="flex justify-end space-x-3">
+                                        <button type="button" onclick="closeAmountModal('modal-{{ $teacher->id }}-{{ $classe->id }}')" 
+                                                class="px-6 py-2.5 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-all duration-300 font-medium">
+                                            Annuler
+                                        </button>
+                                        <button type="submit" 
+                                                class="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 font-semibold">
+                                            Enregistrer
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        @endforeach
                         @endforeach
                     </tbody>
                 </table>
@@ -249,7 +319,11 @@
 
         <!-- Version Mobile -->
         <div class="lg:hidden space-y-6 animate-fadeIn">
-            @foreach($subject->teachers as $teacher)
+            @foreach($uniqueTeachers as $teacher)
+            @php
+                $teacherClasses = $teacher->classes ?? collect();
+                $teacherClassesCount = $teacherClasses->count();
+            @endphp
             <div class="bg-white/90 backdrop-blur-sm shadow-2xl rounded-2xl border border-gray-100 p-6 hover:shadow-2xl transition-all duration-500 transform hover:scale-[1.02]">
                 <!-- En-tête de l'enseignant -->
                 <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-200/60">
@@ -265,6 +339,10 @@
                                 </svg>
                                 {{ $teacher->email ?? '--' }}
                             </p>
+                            <p class="text-xs text-gray-400 mt-1">
+                                <i class="fas fa-door-open mr-1"></i>
+                                {{ $teacherClassesCount }} classe{{ $teacherClassesCount > 1 ? 's' : '' }}
+                            </p>
                         </div>
                     </div>
                     <a href="{{ route('enseignants.show', $teacher->id ) }}" 
@@ -277,9 +355,10 @@
                 </div>
 
                 <!-- Classes et montants -->
+                @if($teacherClassesCount > 0)
                 <div class="space-y-4 mb-6">
                     <h4 class="font-semibold text-gray-700 text-sm uppercase tracking-wide">Classes assignées</h4>
-                    @foreach($teacher->classes as $classe)
+                    @foreach($teacherClasses as $classe)
                         @php
                             $pivot = $classe->pivot;
                             $amountBrut = $pivot->amount_brut ?? 0;
@@ -315,6 +394,12 @@
                         </div>
                     @endforeach
                 </div>
+                @else
+                <div class="text-center py-8 bg-gray-50 rounded-xl mb-6">
+                    <i class="fas fa-door-closed text-gray-400 text-3xl mb-3"></i>
+                    <p class="text-gray-500">Aucune classe assignée</p>
+                </div>
+                @endif
             </div>
             @endforeach
         </div>

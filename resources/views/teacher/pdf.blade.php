@@ -469,10 +469,10 @@
                         <td class="class-info">
                             {{ $classe->class_name }}
                         </td>
-                        <td class="amount">{{ number_format($teacher->total_hours, 0) }}h</td>
+                        <td class="amount">{{ abs($teacher->total_hours) }}h</td>
                         <td class="amount positive-amount">{{ number_format($classe->amount_brut ?? 0, 0, ',', ' ') }} F</td>
-                        <td class="amount positive-amount">{{ number_format($classe->total_brut ?? 0, 0, ',', ' ') }} F</td>
-                        <td class="amount">{{ number_format($classe->aib ?? 0, 0, ',', ' ') }} F</td>
+                        <td class="amount positive-amount">{{ abs($classe->total_brut) }} F</td>
+                        <td class="amount">{{ abs($classe->aib) }} F</td>
                         <td style="font-style: italic;">{{ $classe->emmagement ?? '--' }}</td>
                     </tr>
 
@@ -508,15 +508,15 @@
                 <td style="font-weight: bold; text-align: center; font-size: 12px;">
                     {{ count($teachers) }} enseignant(s)
                 </td>
-                <td class="amount" style="font-size: 12px;">{{ number_format($grand_total_heures, 0) }}h</td>
+                <td class="amount" style="font-size: 12px;">{{abs($grand_total_heures) }}h</td>
                 <td class="amount positive-amount" style="font-size: 12px;">
-                    {{ number_format($grand_total_brut_heure/count($teachers), 0, ',', ' ') }} F
+                    {{ abs($grand_total_brut_heure/count($teachers)) }} F
                 </td>
                 <td class="amount positive-amount" style="font-size: 12px;">
-                    {{ number_format($grand_total_brut_total, 0, ',', ' ') }} F
+                    {{ abs($grand_total_brut_total) }} F
                 </td>
-                <td class="amount" style="font-size: 12px;">{{ number_format($grand_total_aib, 0, ',', ' ') }} F</td>
-                <td style="font-weight: bold; font-size: 12px;">TOTAL FINAL</td>
+                <td class="amount" style="font-size: 12px;">{{ abs($grand_total_aib) }} F</td>
+                <td style="font-weight: bold; font-size: 12px;">-----</td>
             </tr>
         </tbody>
     </table>

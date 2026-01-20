@@ -3,6 +3,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class CahierDeTexte extends Model{
     protected $table = 'cahier_de_texte';
@@ -63,6 +64,10 @@ class CahierDeTexte extends Model{
         return $hours . 'h' . str_pad($minutes, 2, '0', STR_PAD_LEFT);
     }
 
+    public function classe(){
+        return $this->belongsTo(Classe::class, 'class_id');
+    }
+
     // Vérifier si le cours est en cours
     public function isCourseOngoing(){
         if (!$this->course_start_date || !$this->course_end_date) {
@@ -84,4 +89,16 @@ class CahierDeTexte extends Model{
         
         return Carbon::now()->greaterThan(Carbon::parse($this->course_end_date));
     }
+    // Dans app/Models/CahierDeTexte.php
+    public static function calculateTotalMinutesForTeacher($teacherId, $subjectId, $startDate, $endDate){
+        // Méthode compatible PostgreSQL
+        $totalSeconds = self::where('teacher_id', $teacherId)
+            ->where('subject_id', $subjectId)
+            ->whereBetween('course_start_date', [$startDate, $endDate])
+            ->select(DB::raw('SUM(EXTRACT(EPOCH FROM (course_end_date - course_start_date))) as total_seconds'))
+            ->value('total_seconds');
+        
+        return $totalSeconds ? (int)($totalSeconds / 60) : 0;
+    }
+
 }
