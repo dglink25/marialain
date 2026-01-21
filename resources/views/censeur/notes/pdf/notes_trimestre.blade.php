@@ -275,27 +275,27 @@
                     @endphp
                     
                     <!-- Moyenne Matière -->
-                    <td class="{{ $moyenneMatiere !== null ? ($moyenneMatiere >= 10 ? 'note-good' : 'note-bad') : 'note-empty' }}">
-                        {{ $moyenneMatiere !== null ? number_format($moyenneMatiere, 2) : '-' }}
+                    <td style="color: black;" class="{{ $moyenneMatiere !== null ? ($moyenneMatiere >= 10 ? 'note-good' : 'note-bad') : 'note-empty' }}">
+                        <strong>{{ $moyenneMatiere !== null ? number_format($moyenneMatiere, 2) : '-' }}</strong>
                     </td>
                     
                     <!-- Coefficient -->
-                    <td>{{ $coef }}</td>
+                    <td><strong>{{ $coef }}</strong></td>
                     
                     <!-- Moyenne Coefficientée -->
-                    <td class="{{ $moyenneCoef !== null ? 'note-coef' : 'note-empty' }}">
-                        {{ $moyenneCoef !== null ? number_format($moyenneCoef, 2) : '-' }}
+                    <td style="color: black;" class="{{ $moyenneCoef !== null ? 'note-coef' : 'note-empty' }}">
+                        <strong>{{ $moyenneCoef !== null ? number_format($moyenneCoef, 2) : '-' }}</strong>
                     </td>
                 @endforeach
 
                 <!-- Conduite -->
-                <td class="{{ $conduiteFinale > 0 ? 'note-coef' : 'note-empty' }}">
+                <td style="color: black;" class="{{ $conduiteFinale > 0 ? 'note-coef' : 'note-empty' }}">
                     {{ $conduiteFinale > 0 ? number_format($conduiteFinale, 2) : '-' }}
                 </td>
                 
                 <!-- Moyenne Générale -->
-                <td class="{{ $moyenneGenerale >= 10 ? 'note-good' : 'note-bad' }}" style="font-weight: bold;">
-                    {{ $moyenneGenerale > 0 ? number_format($moyenneGenerale, 2) : '-' }}
+                <td style="color: black;" class="{{ $moyenneGenerale >= 10 ? 'note-good' : 'note-bad' }}" style="font-weight: bold;">
+                    <strong>{{ $moyenneGenerale > 0 ? number_format($moyenneGenerale, 2) : '-' }}</strong>
                 </td>
                 
                 <!-- Rang -->
