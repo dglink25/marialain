@@ -497,6 +497,7 @@ Route::middleware(['auth'])->prefix('teacher')->name('teacher.')->group(function
         'classes/{class}/subjects/{subject}/notes/{type}/{num}/{trimestre}/edit',
         [NoteController::class, 'edit']
     )->name('classes.notes.edit');
+    
 
     // UPDATE
     Route::put(

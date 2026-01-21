@@ -8,10 +8,55 @@
 
 <div class="container mx-auto py-6">
     <h1 class="text-2xl font-bold mb-6">
-        Modifier Notes {{ ucfirst($type) }} {{ $num }} - Classe {{ $classe->name }} /  Trimestre {{ $trimestre }}
+        Modifier Notes  {{ $subject->name }} - {{ ucfirst($type) }} {{ $num }} - Classe {{ $classe->name }} /  Trimestre {{ $trimestre }}
     </h1>
 
-    <form action="{{ route('teacher.classes.notes.update', [$classe->id, $type, $num, $trimestre]) }}" method="POST">
+    <!-- Messages d'alerte -->
+            <div class="px-8 pt-6">
+                @if ($errors->any())
+                <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-lg">
+                    <div class="flex items-center">
+                        <svg class="w-5 h-5 text-red-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <h3 class="text-red-800 font-semibold">Veuillez corriger les erreurs suivantes :</h3>
+                    </div>
+                    <ul class="mt-2 text-red-700 list-disc list-inside text-sm space-y-1">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+                @endif
+
+                @if (session('error'))
+                <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-lg flex items-center">
+                    <svg class="w-5 h-5 text-red-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <span class="text-red-800">{{ session('error') }}</span>
+                </div>
+                @endif
+
+                @if (session('success'))
+                <div class="bg-green-50 border-l-4 border-green-500 p-4 mb-6 rounded-lg flex items-center">
+                    <svg class="w-5 h-5 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <span class="text-green-800">{{ session('success') }}</span>
+                </div>
+                @endif
+            </div>
+            
+    <form method="POST"
+      action="{{ route('teacher.classes.notes.update', [
+          'class' => $classe->id,
+          'subject' => $subject->id,
+          'type' => $num,
+          'num' => $type,
+          'trimestre' => $trimestre,
+      ]) }}">
+
         @csrf
         <table class="w-full border-collapse border mb-4">
             <thead>
@@ -42,7 +87,14 @@
 
         <div class="flex space-x-2">
             <!-- Formulaire pour soumettre les modifications -->
-            <form action="{{ route('teacher.classes.notes.update', [$classe->id, $type, $num, $trimestre]) }}" method="POST">
+            <form action="{{ route('teacher.classes.notes.update', [
+                        'class' => $classe->id,
+                        'subject' => $subject->id,
+                        'type' => $num,
+                        'num' => $type,
+                        'trimestre' => $trimestre,
+                    ]) }}"
+                    method="POST">
                 @csrf
                 @method('PUT') <!-- ou PATCH selon ta route -->
             
@@ -62,9 +114,14 @@
                 </button>
             </form>
 
-            <a href="{{ route('teacher.classes.notes.read', [$classe->id, $type, $num, $trimestre]) }}"
-               class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700">
-               Retour
+            <a href="{{ route('teacher.classes.notes.read', [
+                'class' => $classe->id,
+                'subject' => $subject->id,
+                'type' => $type,
+                'num' => $num,
+                'trimestre' => $trimestre,
+                ]) }}">
+                Retour
             </a>
         </div>
     </form>

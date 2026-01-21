@@ -190,45 +190,49 @@ class NoteController extends Controller{
             ->with('success', 'Notes enregistrées.');
     }
 
-    public function edit($classId, $type, $num, $trimestre){
+    public function edit($classId, $subjectId, $type, $num, $trimestre){
         $activeYear = AcademicYear::where('active', true)->firstOrFail();
-
+       
         // Vérifier l’autorisation avant tout
         $teacherId = Auth::id(); // enseignant connecté
-
+        
         $permission = NoteEditPermission::where('teacher_id', $teacherId)
             ->where('class_id', $classId)
             ->where('academic_year_id', $activeYear->id)
             ->where('trimestre', $trimestre)
-            ->where('type', $type . $num) // Exemple : I1, I2, D1...
+            ->where('type', $type)
+            ->where('subject_id', $subjectId)
             ->where('is_active', true)
             ->where('expires_at', '>', now())
             ->first();
 
         if (!$permission) {
-            return back()->with('error', "⚠️ Vous n'êtes pas autorisé à modifier les notes de $type$num pour ce trimestre. 
+            return back()->with('error', "⚠️ Vous n'êtes pas autorisé à modifier les notes de $num $type pour ce trimestre. 
             Veuillez contacter le censeur pour obtenir l'autorisation.");
         }
 
+        $subject = Subject::where('id', $subjectId)->firstOrFail();
+      
         // Si autorisation trouvée, afficher la vue d’édition
-        $classe = Classe::with(['students' => function($q) use ($type, $num, $activeYear, $trimestre) {
+        $classe = Classe::with(['students' => function($q) use ($type, $num, $activeYear, $trimestre, $subjectId) {
             $q->where('academic_year_id', $activeYear->id)
                 ->where('is_validated', 1)
                 ->orderBy('last_name')
                 ->orderBy('first_name')
-                ->with(['grades' => function($q2) use ($type, $num, $activeYear, $trimestre) {
+                ->with(['grades' => function($q2) use ($type, $num, $activeYear, $trimestre, $subjectId) {
                     $q2->where('type', $type)
                         ->where('sequence', $num)
+                        ->where('subject_id', $subjectId)
                         ->where('trimestre', $trimestre)
                         ->where('academic_year_id', $activeYear->id);
                 }]);
         }])->findOrFail($classId);
 
-        return view('teacher.notes.edit', compact('classe','type','num','trimestre'));
+        return view('teacher.notes.edit', compact('classe','type','num','trimestre', 'subject'));
     }
 
     // Mettre à jour les notes
-    public function update(Request $request, $classId, $subjectId, $type, $num, $trimestre){
+    public function update(Request $request, $classId, $subjectId, $num, $type, $trimestre){
         $request->validate([
             'notes.*' => 'nullable|numeric|min:0|max:20'
         ]);
@@ -241,7 +245,7 @@ class NoteController extends Controller{
             ->where('subject_id', $subjectId)
             ->where('academic_year_id', $activeYear->id)
             ->where('trimestre', $trimestre)
-            ->where('type', $type . $num)
+            ->where('type', $type)
             ->where('is_active', true)
             ->where('expires_at', '>', now())
             ->first();
