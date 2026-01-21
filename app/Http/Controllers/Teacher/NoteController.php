@@ -414,7 +414,9 @@ class NoteController extends Controller{
             ksort($devoirs);
 
             // Calcul moyennes
-            $moyenneInterro = count($interros) ? round(array_sum($interros) / count($interros), 2) : null;
+            $moyenneInterro = count($interros)
+                ? round(array_sum($interros) / count($interros), 2)
+                : null;
             $moyenneDevoir = count($devoirs) ? round(array_sum($devoirs) / count($devoirs), 2) : null;
             
             $coef = $subject->coefficient ?? 1;
@@ -422,14 +424,18 @@ class NoteController extends Controller{
             $moyenne = null;
             $moyenneMat = null;
 
-            if ($moyenneInterro !== null && $moyenneDevoir !== null) {
-                $moyenne = round(($moyenneInterro + $moyenneDevoir) / 2, 2);
+            // Nouvelle logique : interro moyenne + devoirs directs
+            if ($moyenneInterro !== null) {
+
+                $total = $moyenneInterro + array_sum($devoirs);
+                $nbNotes = 1 + count($devoirs);
+
+                $moyenne = round($total / $nbNotes, 2);
                 $moyenneMat = round($moyenne * $coef, 2);
 
-                // Ajouter à la liste pour classement
+                // Pour le classement (NON coefficienté)
                 $classeMoyennes[$student->id] = $moyenne;
             }
-
             // Stocker
             $gradesData[$student->id] = [
                 'interros' => $interros,
@@ -475,8 +481,6 @@ class NoteController extends Controller{
             'trimestre' => $trimestre,
         ]);
     }
-
-
 
     public function calcInterro($classId){
         // ⚡ calculer moyenne interro par élève (minimum 2 notes)
