@@ -323,6 +323,17 @@ class NoteController extends Controller{
                     ? round((($moyenneInterro + array_sum($devoirs)/count($devoirs)) / 2) * $coef, 2)
                     : null;
 
+                if ($moyenneInterro !== null) {
+                    $totalNotes = $moyenneInterro + array_sum($devoirs);
+                    $nombreNotes = 1 + count($devoirs);
+
+                    $moyenneMat = round(($totalNotes / $nombreNotes), 2);
+                } 
+                else {
+                    $moyenneMat = null;
+                }
+
+
                 $studentGrades[$subject->id] = [
                     'interros' => $interros,
                     'devoirs' => $devoirs,
