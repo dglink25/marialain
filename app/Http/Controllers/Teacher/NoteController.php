@@ -207,7 +207,7 @@ class NoteController extends Controller{
             ->first();
 
         if (!$permission) {
-            return back()->with('error', "⚠️ Vous n'êtes pas autorisé à modifier les notes de $num $type pour ce trimestre. 
+            return back()->with('error', "⚠️ Vous n'êtes pas autorisé à modifier les notes de $type $num pour ce trimestre. 
             Veuillez contacter le censeur pour obtenir l'autorisation.");
         }
 
@@ -255,18 +255,31 @@ class NoteController extends Controller{
         }
 
         foreach ($request->notes as $studentId => $val) {
-            Grade::updateOrCreate(
-                [
-                    'student_id' => $studentId,
-                    'subject_id' => $subjectId,
-                    'type' => $type,
-                    'sequence' => $num,
-                    'trimestre' => $trimestre,
-                    'class_id' => $classId,
-                    'academic_year_id' => $activeYear->id
-                ],
-                ['value' => $val]
-            );
+            $criteria = [
+                'student_id' => $studentId,
+                'subject_id' => $subjectId,
+                'type' => $type,
+                'sequence' => $num,
+                'trimestre' => $trimestre,
+                'class_id' => $classId,
+                'academic_year_id' => $activeYear->id
+            ];
+
+            // Vérifier si une note existe déjà
+            $existingGrade = Grade::where($criteria)->first();
+
+            if (is_null($val) || $val === '') {
+                // Supprimer l'enregistrement si la note est null/vide
+                if ($existingGrade) {
+                    $existingGrade->delete();
+                }
+            } else {
+                // Mettre à jour ou créer la note
+                Grade::updateOrCreate(
+                    $criteria,
+                    ['value' => $val]
+                );
+            }
         }
 
         return redirect()
