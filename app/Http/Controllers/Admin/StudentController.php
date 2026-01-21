@@ -177,21 +177,21 @@ class StudentController extends Controller{
         $student = Student::findOrFail($id);
 
         $validated = $request->validate([
-            'first_name' => 'required|string',
-            'last_name' => 'required|string',
-            'birth_date' => 'required|date',
-            'birth_place' => 'required|string',
-            'entity_id' => 'required|exists:entities,id',
+            'first_name' => 'nullable|string',
+            'last_name' => 'nullable|string',
+            'birth_date' => 'nullable|date',
+            'birth_place' => 'nullable|string',
+            'entity_id' => 'nullable|exists:entities,id',
             'class_id' => 'nullable|exists:classes,id',
             'birth_certificate' => 'nullable|mimes:pdf|max:2048',
             'vaccination_card' => 'nullable|mimes:pdf|max:2048',
             'previous_report_card' => 'nullable|mimes:pdf|max:2048',
             'diploma_certificate' => 'nullable|mimes:pdf|max:2048',
-            'parent_full_name' => 'required|string',
-            'parent_email' => 'required|email',
-            'parent_phone' => 'required|string',
-            'num_educ' => 'required|string',
-            'gender' => 'required|string',
+            'parent_full_name' => 'nullable|string',
+            'parent_email' => 'nullable|email',
+            'parent_phone' => 'nullable|string',
+            'num_educ' => 'nullable|string',
+            'gender' => 'nullable|string',
         ]);
 
         $data['age'] = now()->diffInYears($request->birth_date);
