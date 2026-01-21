@@ -36,10 +36,20 @@
             font-weight: bold;
             text-decoration: underline;
             margin: 15px 0;
+            /* Nouveau style pour centrer entre les colonnes */
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 155px; /* Ajustez cette valeur selon la hauteur de votre en-tête */
         }
 
         /* Infos Élève */
-        .info-section { width: 100%; margin-bottom: 15px; }
+        .info-section { 
+            width: 100%; 
+            margin-bottom: 15px; 
+            position: relative;
+            padding-top: 50px; /* Pour faire de la place pour le titre centré */
+        }
         .student-box { float: left; width: 70%; line-height: 1.5; }
         .qr-box { float: right; width: 80px; text-align: right; }
         .qr-code { width: 60px; height: 60px; border: 1px solid #ccc; }
@@ -94,6 +104,12 @@
             padding-top: 5px;
         }
         .clear { clear: both; }
+        
+        /* Style spécifique pour le nom de l'école */
+        .school-name {
+            font-size: 12px; /* Augmenté de 9px à 12px */
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -106,8 +122,8 @@
                 <tr>
                     <td class="header-left" style="border:none;">
                         MINISTERE DES ENSEIGNEMENTS SECONDAIRE, TECHNIQUE ET DE LA FORMATION PROFESSIONNELLE<br>
-                        <strong>CS « MARIE-ALAIN »</strong><br>
-                        <small>AGORI AITCHEDJI - 08 BP : 559 Cotonou / Tél: 61 67 67 67</small>
+                        <strong class="school-name">CS « MARIE-ALAIN »</strong><br>
+                        <small>AGORI AITCHEDJI - 08 BP : 559 Cotonou / Tél: 01 62 61 67 67</small>
                     </td>
                     <td class="header-center" style="border:none;">
                         <img src="data:image/png;base64,{{ base64_encode(file_get_contents(public_path('logo.png'))) }}" class="logo">
