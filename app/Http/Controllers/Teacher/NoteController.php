@@ -124,6 +124,7 @@ class NoteController extends Controller{
         $existing = Grade::where('class_id', $classId)
             ->where('subject_id', $subjectId)
             ->where('type', $type)
+            ->where('trimestre', $trimestre)
             ->where('sequence', $num)
             ->where('academic_year_id', $activeYear->id)
             ->exists();

@@ -14,6 +14,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Storage;
 use Cloudinary\Api\Upload\UploadApi;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+use Illuminate\Support\Facades\Log;
 
 class ProfileController extends Controller{
     public function edit() {
@@ -124,7 +125,7 @@ class ProfileController extends Controller{
                     $uploadApi = new UploadApi();
                     $uploadApi->destroy($user->profile_photo);
                 } catch (\Exception $e) {
-                    \Log::error('Erreur suppression photo Cloudinary : ' . $e->getMessage());
+                  Log::error('Erreur suppression photo Cloudinary : ' . $e->getMessage());
                 }
             }
 
@@ -152,7 +153,7 @@ class ProfileController extends Controller{
                     $uploadApi = new UploadApi();
                     $uploadApi->destroy($user->profile_photo);
                 } catch (\Exception $e) {
-                    \Log::error('Erreur suppression photo Cloudinary : ' . $e->getMessage());
+                    Log::error('Erreur suppression photo Cloudinary : ' . $e->getMessage());
                 }
             }
             $user->profile_photo = null;
