@@ -216,9 +216,9 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
                 $moyennesAutres = [];
 
                 // Liste des matières par catégorie
-                $matieresLitteraires = ['COMMUNICATION ECRITE', 'LECTURE', 'ANGLAIS', 'HISTOIRE-GEOGRAPHIE', 'FRANÇAIS'];
+                $matieresLitteraires = ['COMMUNICATION ECRITE', 'LECTURE', 'ANGLAIS', 'HISTOIRE-GEOGRAPHIE', 'FRANÇAIS', 'PHILOSOPHIE', 'ESPAGNOL', 'HGGSP'];
                 $Autrematiere = ['EDUCATION PHYSIQUE ET SPORTIVE (EPS)', 'CONDUITE'];
-                $matieresScientifiques = ['MATHEMATIQUES', 'PHYSIQUE CHIMIE ET TECHNOLOGIE (PCT)', 'SCIENCE DE LA VIE ET DE LA TERRE (SVT)'];
+                $matieresScientifiques = ['MATHEMATIQUES', 'PHYSIQUE CHIMIE ET TECHNOLOGIE (PCT)', 'SCIENCE DE LA VIE ET DE LA TERRE (SVT)', 'ENSEIGNEMENTS SCIENTIFIQUES'];
 
                 foreach ($subjects as $subject) {
                     // Récupérer le coefficient
