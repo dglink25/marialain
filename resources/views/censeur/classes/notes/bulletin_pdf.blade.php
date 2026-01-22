@@ -22,7 +22,7 @@
         
         /* Style spécifique pour le nom de l'école */
         .school-name {
-            font-size: 12px; /* Augmenté de 9px à 12px */
+            font-size: 20px; /* Augmenté de 9px à 12px */
             font-weight: bold;
         }
 

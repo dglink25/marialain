@@ -57,14 +57,140 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
                         ->where('academic_year_id', $activeYear->id);
                 }])->orderBy('name')->get();
 
-                // 🔹 Récupération des notes
+                // 🔹 PRÉ-CALCUL : Stocker les moyennes par matière pour tous les élèves pour calculer les rangs
+                $allStudentsMoyennesParMatiere = [];
+                $allStudentsData = [];
+                
+                // Préparer toutes les données de base pour chaque élève
+                foreach ($classe->students as $st) {
+                    $stId = $st->id;
+                    
+                    // Récupération des notes pour cet élève
+                    $stGrades = Grade::where('student_id', $stId)
+                        ->where('class_id', $classId)
+                        ->where('academic_year_id', $activeYear->id)
+                        ->where('trimestre', $trimestre)
+                        ->get();
+                    
+                    // Conduite et punitions
+                    $stConduct = Conduct::where('student_id', $stId)
+                        ->where('trimestre', $trimestre)
+                        ->where('academic_year_id', $activeYear->id)
+                        ->first();
+                    
+                    $stPunishments = Punishment::where('student_id', $stId)
+                        ->where('academic_year_id', $activeYear->id)
+                        ->get();
+                    
+                    $stPunishHours = $stPunishments->sum('hours');
+                    
+                    // Calcul de la conduite
+                    $stConductGrade = $stConduct ? $stConduct->grade : 0;
+                    $stConductFinal = max(0, $stConductGrade - ($stPunishHours / 2));
+                    $stConduiteSur20 = round($stConductFinal, 2);
+                    
+                    // Stocker les données de base pour cet élève
+                    $allStudentsData[$stId] = [
+                        'student' => $st,
+                        'grades' => $stGrades,
+                        'conduiteSur20' => $stConduiteSur20,
+                        'moyennesParMatiere' => []
+                    ];
+                    
+                    // Calculer les moyennes par matière pour cet élève
+                    foreach ($subjects as $subject) {
+                        // Récupérer le coefficient
+                        $coefRecord = $subject->classTeacherSubjects->first();
+                        $coef = $coefRecord->coefficient ?? 1;
+                        
+                        // Récupération des notes
+                        $subjectGrades = $stGrades->where('subject_id', $subject->id);
+                        
+                        // Notes d'interrogations
+                        $interroNotes = $subjectGrades->where('type', 'interrogation')
+                            ->sortBy('sequence')
+                            ->pluck('value')
+                            ->filter()
+                            ->values()
+                            ->toArray();
+                        
+                        // Notes de devoir
+                        $devoir1 = $subjectGrades->where('type', 'devoir')
+                            ->where('sequence', 1)
+                            ->first()->value ?? null;
+                        $devoir2 = $subjectGrades->where('type', 'devoir')
+                            ->where('sequence', 2)
+                            ->first()->value ?? null;
+                        
+                        // Calcul de la moyenne des interrogations
+                        $moyenneInterro = !empty($interroNotes) ? 
+                            round(array_sum($interroNotes) / count($interroNotes), 2) : null;
+                        
+                        // Calcul de la moyenne matière
+                        $moyenneMatiere = null;
+                        $notesPourMoyenne = [];
+                        
+                        if ($moyenneInterro !== null) {
+                            $notesPourMoyenne[] = $moyenneInterro;
+                        }
+                        
+                        if ($devoir1 !== null) {
+                            $notesPourMoyenne[] = $devoir1;
+                        }
+                        if ($devoir2 !== null) {
+                            $notesPourMoyenne[] = $devoir2;
+                        }
+                        
+                        if (!empty($notesPourMoyenne)) {
+                            $moyenneMatiere = round(array_sum($notesPourMoyenne) / count($notesPourMoyenne), 2);
+                        }
+                        
+                        // Stocker la moyenne par matière pour le calcul du rang
+                        if ($moyenneMatiere !== null) {
+                            $allStudentsData[$stId]['moyennesParMatiere'][$subject->id] = $moyenneMatiere;
+                            $allStudentsMoyennesParMatiere[$subject->id][$stId] = $moyenneMatiere;
+                        }
+                    }
+                    
+                    // Ajouter la conduite comme une "matière" spéciale
+                    $allStudentsMoyennesParMatiere['CONDUITE'][$stId] = $stConduiteSur20;
+                    $allStudentsData[$stId]['moyennesParMatiere']['CONDUITE'] = $stConduiteSur20;
+                }
+                
+                // 🔹 Calculer les rangs par matière pour tous les élèves
+                $rangsParMatiere = [];
+                foreach ($allStudentsMoyennesParMatiere as $subjectId => $moyennes) {
+                    if (!empty($moyennes)) {
+                        // Trier par ordre décroissant (meilleure note en premier)
+                        arsort($moyennes);
+                        
+                        // Assigner les rangs
+                        $rang = 1;
+                        $previousValue = null;
+                        $sameRankCount = 0;
+                        
+                        foreach ($moyennes as $stId => $value) {
+                            if ($previousValue !== null && $value == $previousValue) {
+                                $sameRankCount++;
+                            } else {
+                                $rang += $sameRankCount;
+                                $sameRankCount = 1;
+                            }
+                            
+                            $rangsParMatiere[$subjectId][$stId] = $rang . 'e';
+                            $previousValue = $value;
+                        }
+                    }
+                }
+
+                // 🔹 Récupération des notes pour l'élève courant
                 $grades = Grade::where('student_id', $studentId)
                     ->where('class_id', $classId)
                     ->where('academic_year_id', $activeYear->id)
                     ->where('trimestre', $trimestre)
                     ->get();
 
-                // 🔹 Conduite et punitions
+                // 🔹 Conduite et punitions pour l'élève courant
                 $conduct = Conduct::where('student_id', $studentId)
                     ->where('trimestre', $trimestre)
                     ->where('academic_year_id', $activeYear->id)
@@ -89,10 +215,10 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
                 $moyennesScientifiques = [];
                 $moyennesAutres = [];
 
-                // Liste des matières littéraires
-                $matieresLitteraires = ['COMMUNICATION ECRITE', 'LECTURE', 'ANGLAIS', 'HISTOIRE-GEOGRAPHIE'];
-                // Liste des matières scientifiques
-                $matieresScientifiques = ['MATHEMATIQUES', 'PCT', 'SVT'];
+                // Liste des matières par catégorie
+                $matieresLitteraires = ['COMMUNICATION ECRITE', 'LECTURE', 'ANGLAIS', 'HISTOIRE-GEOGRAPHIE', 'FRANÇAIS'];
+                $Autrematiere = ['EDUCATION PHYSIQUE ET SPORTIVE (EPS)', 'CONDUITE'];
+                $matieresScientifiques = ['MATHEMATIQUES', 'PHYSIQUE CHIMIE ET TECHNOLOGIE (PCT)', 'SCIENCE DE LA VIE ET DE LA TERRE (SVT)'];
 
                 foreach ($subjects as $subject) {
                     // Récupérer le coefficient
@@ -164,7 +290,7 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
                             $moyennesLitteraires[] = $moyenneMatiere;
                         } elseif (in_array($nomMatiere, $matieresScientifiques)) {
                             $moyennesScientifiques[] = $moyenneMatiere;
-                        } else {
+                        } elseif (in_array($nomMatiere, $Autrematiere)) {
                             $moyennesAutres[] = $moyenneMatiere;
                         }
                     }
@@ -179,6 +305,10 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
                     $devoirsFormatted[1] = $devoir1 !== null ? number_format($devoir1, 2, ',', '') : '-';
                     $devoirsFormatted[2] = $devoir2 !== null ? number_format($devoir2, 2, ',', '') : '-';
 
+                    // Récupérer le rang pour cette matière
+                    $rangMatiere = isset($rangsParMatiere[$subject->id][$studentId]) ? 
+                        $rangsParMatiere[$subject->id][$studentId] : '-';
+
                     $bulletin[] = [
                         'subject' => strtoupper($subject->name),
                         'coef' => $coef,
@@ -187,6 +317,7 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
                         'moyenneInterro' => $moyenneInterro !== null ? number_format($moyenneInterro, 2, ',', '') : '-',
                         'moyenne' => $moyenneMatiere !== null ? number_format($moyenneMatiere, 2, ',', '') : '-',
                         'moyCoeff' => $moyCoeff !== null ? number_format($moyCoeff, 2, ',', '') : '-',
+                        'rang' => $rangMatiere,
                         'appreciation' => $appreciation,
                     ];
 
@@ -210,6 +341,15 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
                     $totalCoeff += 1;
                     $totalMoyCoeff += $conduiteSur20;
+                    
+                    // Ajouter la conduite aux autres matières
+                    $moyennesAutres[] = $conduiteSur20;
+                    
+                    // Récupérer le rang pour la conduite
+                    $rangConduite = isset($rangsParMatiere['CONDUITE'][$studentId]) ? 
+                        $rangsParMatiere['CONDUITE'][$studentId] : '-';
+                } else {
+                    $rangConduite = '-';
                 }
 
                 // Ajouter la conduite au bulletin
@@ -221,6 +361,7 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
                     'moyenneInterro' => '-',
                     'moyenne' => $conduiteSur20 > 0 ? number_format($conduiteSur20, 2, ',', '') : '-',
                     'moyCoeff' => $conduiteSur20 > 0 ? number_format($conduiteSur20, 2, ',', '') : '-',
+                    'rang' => $rangConduite,
                     'appreciation' => $conduiteAppreciation,
                 ];
 
@@ -235,7 +376,7 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
                     round(array_sum($moyennesLitteraires) / count($moyennesLitteraires), 2) : 0;
                 $moyenneScientifique = !empty($moyennesScientifiques) ? 
                     round(array_sum($moyennesScientifiques) / count($moyennesScientifiques), 2) : 0;
-                $moyenneAutres = !empty($moyennesAutres) ? 
+                $moyenneAutresMatières = !empty($moyennesAutres) ? 
                     round(array_sum($moyennesAutres) / count($moyennesAutres), 2) : 0;
 
                 // 🔹 Appréciation générale
@@ -251,80 +392,62 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
                     else $appreciationGenerale = 'Très Faible';
                 }
 
-                // 🔹 Calcul du rang et statistiques de la classe
-                $classStudents = $classe->students;
+                // 🔹 Calcul des moyennes générales de la classe pour le rang général
                 $moyennesGeneralesClasse = [];
-
-                foreach ($classStudents as $st) {
-                    $stGrades = Grade::where('student_id', $st->id)
-                        ->where('class_id', $classId)
-                        ->where('academic_year_id', $activeYear->id)
-                        ->where('trimestre', $trimestre)
-                        ->get();
-
+                
+                foreach ($allStudentsData as $stId => $stData) {
+                    $stGrades = $stData['grades'];
+                    $stConduiteSur20 = $stData['conduiteSur20'];
+                    
                     $stTotalPoints = 0;
                     $stTotalCoef = 0;
-
+                    
                     // Calcul pour chaque matière
                     foreach ($subjects as $subject) {
                         $coefRecord = $subject->classTeacherSubjects->first();
                         $coef = $coefRecord->coefficient ?? 1;
                         
                         $subjectGrades = $stGrades->where('subject_id', $subject->id);
-
+                        
                         // Calcul des notes
                         $interroNotes = $subjectGrades->where('type', 'interrogation')
                             ->pluck('value')
                             ->filter()
                             ->values()
                             ->toArray();
-
+                        
                         $devoir1 = $subjectGrades->where('type', 'devoir')
                             ->where('sequence', 1)
                             ->first()->value ?? null;
                         $devoir2 = $subjectGrades->where('type', 'devoir')
                             ->where('sequence', 2)
                             ->first()->value ?? null;
-
+                        
                         // Calcul de la moyenne matière
                         $moyenneInterro = !empty($interroNotes) ? 
                             array_sum($interroNotes) / count($interroNotes) : null;
-
+                        
                         $notesPourMoyenne = [];
                         if ($moyenneInterro !== null) $notesPourMoyenne[] = $moyenneInterro;
                         if ($devoir1 !== null) $notesPourMoyenne[] = $devoir1;
                         if ($devoir2 !== null) $notesPourMoyenne[] = $devoir2;
-
+                        
                         if (!empty($notesPourMoyenne)) {
                             $moyenneMatiere = array_sum($notesPourMoyenne) / count($notesPourMoyenne);
                             $stTotalPoints += $moyenneMatiere * $coef;
                             $stTotalCoef += $coef;
                         }
                     }
-
-                    // Conduite de l'élève
-                    $stConduct = Conduct::where('student_id', $st->id)
-                        ->where('trimestre', $trimestre)
-                        ->where('academic_year_id', $activeYear->id)
-                        ->first();
-
-                    $stPunishments = Punishment::where('student_id', $st->id)
-                        ->where('academic_year_id', $activeYear->id)
-                        ->get();
-                    $stPunishHours = $stPunishments->sum('hours');
-
-                    $stConductGrade = $stConduct ? $stConduct->grade : 0;
-                    $stConductFinal = max(0, $stConductGrade - ($stPunishHours / 2));
-
+                    
                     // Ajouter la conduite
-                    if ($stConductFinal > 0) {
-                        $stTotalPoints += $stConductFinal;
+                    if ($stConduiteSur20 > 0) {
+                        $stTotalPoints += $stConduiteSur20;
                         $stTotalCoef += 1;
                     }
-
+                    
                     // Calcul moyenne générale élève
                     if ($stTotalCoef > 0) {
-                        $moyennesGeneralesClasse[$st->id] = round($stTotalPoints / $stTotalCoef, 2);
+                        $moyennesGeneralesClasse[$stId] = round($stTotalPoints / $stTotalCoef, 2);
                     }
                 }
 
@@ -334,7 +457,7 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
                 $moyClasse = !empty($moyennesGeneralesClasse) ? 
                     round(array_sum($moyennesGeneralesClasse) / count($moyennesGeneralesClasse), 2) : 0;
 
-                // Calcul du rang
+                // Calcul du rang général pour cet élève
                 $rang = '-';
                 if (isset($moyennesGeneralesClasse[$studentId])) {
                     arsort($moyennesGeneralesClasse);
@@ -382,7 +505,7 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
                     'moyenneGenerale' => $formatNumber($moyenneGenerale),
                     'moyenneLitteraire' => $formatNumber($moyenneLitteraire),
                     'moyenneScientifique' => $formatNumber($moyenneScientifique),
-                    'moyenneAutres' => $formatNumber($moyenneAutres),
+                    'moyenneAutres' => $formatNumber($moyenneAutresMatières),
                     'appreciationGenerale' => $appreciationGenerale,
                     'conduite' => $formatNumber($conduiteSur20),
                     'appreciationConduite' => $conduiteAppreciation,
@@ -1850,10 +1973,10 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
     public function downloadAllBulletinsPdf($classId, $trimestre) {
         try {
-            // 🔹 Année académique active
+            // Année académique active
             $activeYear = AcademicYear::where('active', true)->firstOrFail();
             
-            // 🔹 Classe avec tous les élèves validés
+            // Classe avec tous les élèves validés
             $classe = Classe::with(['students' => function ($query) use ($activeYear) {
                 $query->where('is_validated', 1)
                     ->where('academic_year_id', $activeYear->id)
@@ -1871,8 +1994,9 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
             }])->orderBy('name')->get();
             
             // Liste des matières par catégorie
-            $matieresLitteraires = ['COMMUNICATION ECRITE', 'LECTURE', 'ANGLAIS', 'HISTOIRE-GEOGRAPHIE'];
-            $matieresScientifiques = ['MATHEMATIQUES', 'PCT', 'SVT'];
+            $matieresLitteraires = ['COMMUNICATION ECRITE', 'LECTURE', 'ANGLAIS', 'HISTOIRE-GEOGRAPHIE', 'FRANÇAIS'];
+            $Autrematiere = ['EDUCATION PHYSIQUE ET SPORTIVE (EPS)', 'CONDUITE'];
+            $matieresScientifiques = ['MATHEMATIQUES', 'PHYSIQUE CHIMIE ET TECHNOLOGIE (PCT)', 'SCIENCE DE LA VIE ET DE LA TERRE (SVT)'];
             
             // Formatage des nombres
             $formatNumber = function($value) {
@@ -1882,20 +2006,22 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
                 return number_format($value, 2, ',', '');
             };
             
-            // 🔹 Préparer les données pour tous les élèves
-            $allBulletinsData = [];
+            // 🔹 PRÉ-CALCUL : Stocker les moyennes par matière pour tous les élèves pour calculer les rangs
+            $allStudentsMoyennesParMatiere = [];
+            $allStudentsData = [];
             
+            // Préparer toutes les données de base pour chaque élève
             foreach ($classe->students as $student) {
                 $studentId = $student->id;
                 
-                // 🔹 Récupération des notes pour cet élève
+                // Récupération des notes pour cet élève
                 $grades = Grade::where('student_id', $studentId)
                     ->where('class_id', $classId)
                     ->where('academic_year_id', $activeYear->id)
                     ->where('trimestre', $trimestre)
                     ->get();
                 
-                // 🔹 Conduite et punitions
+                // Conduite et punitions
                 $conduct = Conduct::where('student_id', $studentId)
                     ->where('trimestre', $trimestre)
                     ->where('academic_year_id', $activeYear->id)
@@ -1911,6 +2037,111 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
                 $conductGrade = $conduct ? $conduct->grade : 0;
                 $conductFinal = max(0, $conductGrade - ($punishHours / 2));
                 $conduiteSur20 = round($conductFinal, 2);
+                
+                // Stocker les données de base pour cet élève
+                $allStudentsData[$studentId] = [
+                    'student' => $student,
+                    'grades' => $grades,
+                    'conduiteSur20' => $conduiteSur20,
+                    'moyennesParMatiere' => []
+                ];
+                
+                // Calculer les moyennes par matière pour cet élève
+                foreach ($subjects as $subject) {
+                    // Récupérer le coefficient
+                    $coefRecord = $subject->classTeacherSubjects->first();
+                    $coef = $coefRecord->coefficient ?? 1;
+                    
+                    // Récupération des notes
+                    $subjectGrades = $grades->where('subject_id', $subject->id);
+                    
+                    // Notes d'interrogations
+                    $interroNotes = $subjectGrades->where('type', 'interrogation')
+                        ->sortBy('sequence')
+                        ->pluck('value')
+                        ->filter()
+                        ->values()
+                        ->toArray();
+                    
+                    // Notes de devoir
+                    $devoir1 = $subjectGrades->where('type', 'devoir')
+                        ->where('sequence', 1)
+                        ->first()->value ?? null;
+                    $devoir2 = $subjectGrades->where('type', 'devoir')
+                        ->where('sequence', 2)
+                        ->first()->value ?? null;
+                    
+                    // Calcul de la moyenne des interrogations
+                    $moyenneInterro = !empty($interroNotes) ? 
+                        round(array_sum($interroNotes) / count($interroNotes), 2) : null;
+                    
+                    // Calcul de la moyenne matière
+                    $moyenneMatiere = null;
+                    $notesPourMoyenne = [];
+                    
+                    if ($moyenneInterro !== null) {
+                        $notesPourMoyenne[] = $moyenneInterro;
+                    }
+                    
+                    if ($devoir1 !== null) {
+                        $notesPourMoyenne[] = $devoir1;
+                    }
+                    if ($devoir2 !== null) {
+                        $notesPourMoyenne[] = $devoir2;
+                    }
+                    
+                    if (!empty($notesPourMoyenne)) {
+                        $moyenneMatiere = round(array_sum($notesPourMoyenne) / count($notesPourMoyenne), 2);
+                    }
+                    
+                    // Stocker la moyenne par matière pour le calcul du rang
+                    if ($moyenneMatiere !== null) {
+                        $allStudentsData[$studentId]['moyennesParMatiere'][$subject->id] = $moyenneMatiere;
+                        $allStudentsMoyennesParMatiere[$subject->id][$studentId] = $moyenneMatiere;
+                    }
+                }
+                
+                // Ajouter la conduite comme une "matière" spéciale
+                $allStudentsMoyennesParMatiere['CONDUITE'][$studentId] = $conduiteSur20;
+                $allStudentsData[$studentId]['moyennesParMatiere']['CONDUITE'] = $conduiteSur20;
+            }
+            
+            // 🔹 Calculer les rangs par matière pour tous les élèves
+            $rangsParMatiere = [];
+            foreach ($allStudentsMoyennesParMatiere as $subjectId => $moyennes) {
+                if (!empty($moyennes)) {
+                    // Trier par ordre décroissant (meilleure note en premier)
+                    arsort($moyennes);
+                    
+                    // Assigner les rangs
+                    $rang = 1;
+                    $previousValue = null;
+                    $sameRankCount = 0;
+                    
+                    foreach ($moyennes as $studentId => $value) {
+                        if ($previousValue !== null && $value == $previousValue) {
+                            $sameRankCount++;
+                        } else {
+                            $rang += $sameRankCount;
+                            $sameRankCount = 1;
+                        }
+                        
+                        $rangsParMatiere[$subjectId][$studentId] = $rang . 'e';
+                        $previousValue = $value;
+                    }
+                }
+            }
+            
+            // 🔹 Préparer les données pour tous les élèves
+            $allBulletinsData = [];
+            
+            foreach ($classe->students as $student) {
+                $studentId = $student->id;
+                $studentData = $allStudentsData[$studentId];
+                
+                // 🔹 Récupération des notes pour cet élève
+                $grades = $studentData['grades'];
+                $conduiteSur20 = $studentData['conduiteSur20'];
                 
                 // 🔹 Calcul des moyennes par matière pour cet élève
                 $bulletin = [];
@@ -1990,7 +2221,7 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
                             $moyennesLitteraires[] = $moyenneMatiere;
                         } elseif (in_array($nomMatiere, $matieresScientifiques)) {
                             $moyennesScientifiques[] = $moyenneMatiere;
-                        } else {
+                        } elseif (in_array($nomMatiere, $Autrematiere)) {
                             $moyennesAutres[] = $moyenneMatiere;
                         }
                     }
@@ -2005,6 +2236,10 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
                     $devoirsFormatted[1] = $devoir1 !== null ? number_format($devoir1, 2, ',', '') : '-';
                     $devoirsFormatted[2] = $devoir2 !== null ? number_format($devoir2, 2, ',', '') : '-';
                     
+                    // Récupérer le rang pour cette matière
+                    $rangMatiere = isset($rangsParMatiere[$subject->id][$studentId]) ? 
+                        $rangsParMatiere[$subject->id][$studentId] : '-';
+                    
                     $bulletin[] = [
                         'subject' => strtoupper($subject->name),
                         'coef' => $coef,
@@ -2013,6 +2248,7 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
                         'moyenneInterro' => $moyenneInterro !== null ? number_format($moyenneInterro, 2, ',', '') : '-',
                         'moyenne' => $moyenneMatiere !== null ? number_format($moyenneMatiere, 2, ',', '') : '-',
                         'moyCoeff' => $moyCoeff !== null ? number_format($moyCoeff, 2, ',', '') : '-',
+                        'rang' => $rangMatiere,
                         'appreciation' => $appreciation,
                     ];
                     
@@ -2036,6 +2272,15 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
                     
                     $totalCoeff += 1;
                     $totalMoyCoeff += $conduiteSur20;
+                    
+                    // Ajouter la conduite aux autres matières
+                    $moyennesAutres[] = $conduiteSur20;
+                    
+                    // Récupérer le rang pour la conduite
+                    $rangConduite = isset($rangsParMatiere['CONDUITE'][$studentId]) ? 
+                        $rangsParMatiere['CONDUITE'][$studentId] : '-';
+                } else {
+                    $rangConduite = '-';
                 }
                 
                 // Ajouter la conduite au bulletin
@@ -2047,6 +2292,7 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
                     'moyenneInterro' => '-',
                     'moyenne' => $conduiteSur20 > 0 ? number_format($conduiteSur20, 2, ',', '') : '-',
                     'moyCoeff' => $conduiteSur20 > 0 ? number_format($conduiteSur20, 2, ',', '') : '-',
+                    'rang' => $rangConduite,
                     'appreciation' => $conduiteAppreciation,
                 ];
                 
@@ -2061,7 +2307,7 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
                     round(array_sum($moyennesLitteraires) / count($moyennesLitteraires), 2) : 0;
                 $moyenneScientifique = !empty($moyennesScientifiques) ? 
                     round(array_sum($moyennesScientifiques) / count($moyennesScientifiques), 2) : 0;
-                $moyenneAutres = !empty($moyennesAutres) ? 
+                $moyenneAutresMatières = !empty($moyennesAutres) ? 
                     round(array_sum($moyennesAutres) / count($moyennesAutres), 2) : 0;
                 
                 // 🔹 Appréciation générale
@@ -2077,15 +2323,12 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
                     else $appreciationGenerale = 'Très Faible';
                 }
                 
-                // 🔹 Calcul du rang et statistiques de la classe pour TOUS les élèves
+                // 🔹 Calcul des moyennes générales de la classe pour le rang général
                 $moyennesGeneralesClasse = [];
                 
-                foreach ($classe->students as $st) {
-                    $stGrades = Grade::where('student_id', $st->id)
-                        ->where('class_id', $classId)
-                        ->where('academic_year_id', $activeYear->id)
-                        ->where('trimestre', $trimestre)
-                        ->get();
+                foreach ($allStudentsData as $stId => $stData) {
+                    $stGrades = $stData['grades'];
+                    $stConduiteSur20 = $stData['conduiteSur20'];
                     
                     $stTotalPoints = 0;
                     $stTotalCoef = 0;
@@ -2127,29 +2370,15 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
                         }
                     }
                     
-                    // Conduite de l'élève
-                    $stConduct = Conduct::where('student_id', $st->id)
-                        ->where('trimestre', $trimestre)
-                        ->where('academic_year_id', $activeYear->id)
-                        ->first();
-                    
-                    $stPunishments = Punishment::where('student_id', $st->id)
-                        ->where('academic_year_id', $activeYear->id)
-                        ->get();
-                    $stPunishHours = $stPunishments->sum('hours');
-                    
-                    $stConductGrade = $stConduct ? $stConduct->grade : 0;
-                    $stConductFinal = max(0, $stConductGrade - ($stPunishHours / 2));
-                    
                     // Ajouter la conduite
-                    if ($stConductFinal > 0) {
-                        $stTotalPoints += $stConductFinal;
+                    if ($stConduiteSur20 > 0) {
+                        $stTotalPoints += $stConduiteSur20;
                         $stTotalCoef += 1;
                     }
                     
                     // Calcul moyenne générale élève
                     if ($stTotalCoef > 0) {
-                        $moyennesGeneralesClasse[$st->id] = round($stTotalPoints / $stTotalCoef, 2);
+                        $moyennesGeneralesClasse[$stId] = round($stTotalPoints / $stTotalCoef, 2);
                     }
                 }
                 
@@ -2159,7 +2388,7 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
                 $moyClasse = !empty($moyennesGeneralesClasse) ? 
                     round(array_sum($moyennesGeneralesClasse) / count($moyennesGeneralesClasse), 2) : 0;
                 
-                // Calcul du rang pour cet élève
+                // Calcul du rang général pour cet élève
                 $rang = '-';
                 if (isset($moyennesGeneralesClasse[$studentId])) {
                     arsort($moyennesGeneralesClasse);
@@ -2199,7 +2428,7 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
                     'moyenneGenerale' => $formatNumber($moyenneGenerale),
                     'moyenneLitteraire' => $formatNumber($moyenneLitteraire),
                     'moyenneScientifique' => $formatNumber($moyenneScientifique),
-                    'moyenneAutres' => $formatNumber($moyenneAutres),
+                    'moyenneAutres' => $formatNumber($moyenneAutresMatières),
                     'appreciationGenerale' => $appreciationGenerale,
                     'conduite' => $formatNumber($conduiteSur20),
                     'appreciationConduite' => $conduiteAppreciation,
@@ -2226,11 +2455,10 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
             return $pdf->download("Tous_Bulletins_{$nomClasse}_T{$trimestre}.pdf");
             
         } catch (\Exception $e) {
-        // \Log::error('Erreur génération tous les bulletins: ' . $e->getMessage());
-        // \Log::error($e->getTraceAsString());
+            // \Log::error('Erreur génération tous les bulletins: ' . $e->getMessage());
+            // \Log::error($e->getTraceAsString());
             return back()->with('error', 'Impossible de générer le PDF de tous les bulletins: ' . $e->getMessage());
         }
     }
-
 }
 
