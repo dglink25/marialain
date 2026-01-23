@@ -200,8 +200,12 @@ class NoteController extends Controller{
         $hasNotes = $classe->students->flatMap->gradesFiltered->isNotEmpty();
 
         return redirect()
-            ->route('teacher.notes.index', [$classId, $subjectId, $type, $num, $trimestre, $classe, $subject, $activeYear, $hasNotes])
-                                        ->with('success', 'Notes enregistrées avec succès.');
+            ->route('classes.notes.subject', [
+                'classId'   => $classId,
+                'subjectId' => $subjectId,
+                'trimestre' => $trimestre,
+            ])
+            ->with('success', 'Notes enregistrées avec succès.');
 
     }
 
