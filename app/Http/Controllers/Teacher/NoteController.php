@@ -185,9 +185,24 @@ class NoteController extends Controller{
             }
         }
 
+        // Charger la classe et les élèves avec leurs notes filtrées par matière et trimestre
+        $classe = Classe::with('students')->findOrFail($classId);
+        $subject = Subject::findOrFail($subjectId);
+
+        foreach ($classe->students as $student) {
+            $student->gradesFiltered = $student->grades()
+                ->where('academic_year_id', $activeYear->id)
+                ->where('subject_id', $subjectId) // 🔹 filtrer par matière
+                ->where('trimestre', $trimestre)
+                ->get();
+        }
+
+        $hasNotes = $classe->students->flatMap->gradesFiltered->isNotEmpty();
+
         return redirect()
-            ->route('teacher.classes.notes.read', [$classId, $subjectId, $type, $num, $trimestre])
-            ->with('success', 'Notes enregistrées.');
+            ->route('teacher.notes.index', [$classId, $subjectId, $type, $num, $trimestre, $classe, $subject, $activeYear, $hasNotes])
+                                        ->with('success', 'Notes enregistrées avec succès.');
+
     }
 
     public function edit($classId, $subjectId, $type, $num, $trimestre){
