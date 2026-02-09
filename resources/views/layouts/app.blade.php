@@ -7,6 +7,9 @@
     <link rel="icon" type="image/png" href="Image.png">
     <title>CPEG MARIE-ALAIN</title>
 
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#1e40af">
+
     <!-- Tailwind + Flowbite -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://unpkg.com/flowbite@1.6.5/dist/flowbite.min.css" rel="stylesheet" />
@@ -17,6 +20,19 @@
     <link href="https://unpkg.com/flowbite@1.6.5/dist/flowbite.min.css" rel="stylesheet" />
     <script src="//unpkg.com/alpinejs" defer></script>
 
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(function(registration) {
+                        console.log('ServiceWorker enregistré:', registration.scope);
+                    })
+                    .catch(function(error) {
+                        console.log('ServiceWorker échec:', error);
+                    });
+            });
+        }
+    </script>
     <style>
         body { 
             font-family: 'Inter', sans-serif; 
