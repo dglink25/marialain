@@ -4,12 +4,16 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="viewport" content="width=device-width,initial-scale=1" />
+    
+    <link rel="manifest" href="{{ asset('manifest.json') }}">
+    <meta name="theme-color" content="#000000"/>
+
     <link rel="icon" type="image/png" href="Image.png">
     <title>CPEG MARIE-ALAIN</title>
 
     <!-- Tailwind + Flowbite -->
     <script src="https://cdn.tailwindcss.com"></script>
-     <link href="https://unpkg.com/flowbite@1.6.5/dist/flowbite.min.css" rel="stylesheet" />
+    <link href="https://unpkg.com/flowbite@1.6.5/dist/flowbite.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Font -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
@@ -123,6 +127,17 @@
             overflow: hidden;
         }
     </style>
+    <script>
+        // Enregistrer le Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('SW enregistré:', registration);
+                    });
+            });
+        }
+    </script>
 </head>
 <body class="antialiased bg-gray-50 text-gray-800">
 
