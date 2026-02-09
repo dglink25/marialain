@@ -1,0 +1,21 @@
+{
+  "name": "MARIE-ALAIN",
+  "short_name": "MARIE-ALAIN",
+  "description": "Gestion Scolaire MARIE-ALAIN",
+  "start_url": "/home",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1e40af",
+  "icons": [
+    {
+      "src": "logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

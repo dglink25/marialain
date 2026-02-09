@@ -615,3 +615,13 @@ Route::get('/session-expired', function () {
 Route::get('/test-419', function () {
     abort(419);
 });
+
+// Routes pour PWA (ajoutez à la fin)
+Route::get('/manifest.json', function() {
+    return response()->file(public_path('manifest.json'));
+});
+
+Route::get('/sw.js', function() {
+    return response()->file(public_path('sw.js'))
+        ->header('Content-Type', 'application/javascript');
+});
