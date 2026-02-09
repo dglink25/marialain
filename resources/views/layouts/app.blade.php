@@ -4,10 +4,6 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    
-    <link rel="manifest" href="{{ asset('manifest.json') }}">
-    <meta name="theme-color" content="#000000"/>
-
     <link rel="icon" type="image/png" href="Image.png">
     <title>CPEG MARIE-ALAIN</title>
 
@@ -127,17 +123,6 @@
             overflow: hidden;
         }
     </style>
-    <script>
-        // Enregistrer le Service Worker
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
-                    .then(registration => {
-                        console.log('SW enregistré:', registration);
-                    });
-            });
-        }
-    </script>
 </head>
 <body class="antialiased bg-gray-50 text-gray-800">
 
