@@ -1486,7 +1486,7 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
                 ->first();
 
             if (!$record) {
-                return back()->with('error', 'Association classe–matière non trouvée pour cette année académique.');
+                return back()->with('error', 'Association classe matière non trouvée pour cette année académique.');
             }
 
             // Mettre à jour le coefficient

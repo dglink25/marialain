@@ -12,7 +12,9 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Models\AcademicYear;
+use App\Models\ClassTeacherSubject;
 use Illuminate\Support\Facades\Validator;
+use Laravel\Tinker\ClassAliasAutoloader;
 
 class TimetableController extends Controller{
     public function index($classId) {
@@ -104,9 +106,19 @@ class TimetableController extends Controller{
                 ->orderBy('name')
                 ->get();
 
-            return view('censeur.timetables.edit', compact('class', 'timetable', 'teachers', 'subjects'));
+            // Récupérer le coefficient depuis la table class_teacher_subject
+            $classTeacherSubject = ClassTeacherSubject::where('academic_year_id', $activeYear->id)
+                ->where('class_id', $classId)
+                ->where('subject_id', $timetable->subject_id)
+                ->where('teacher_id', $timetable->teacher_id)
+                ->first();
 
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            $coef = $classTeacherSubject ? $classTeacherSubject->coefficient : $timetable->subject->coefficient ?? 1;
+
+            return view('censeur.timetables.edit', compact('class', 'timetable', 'teachers', 'subjects', 'coef'));
+
+        } 
+        catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             Log::error('Données non trouvées pour édition: ' . $e->getMessage());
             return redirect()->route('censeur.timetables.index', $classId)
                 ->with('error', 'Créneau introuvable.');
@@ -128,6 +140,7 @@ class TimetableController extends Controller{
             $validator = Validator::make($request->all(), [
                 'teacher_id' => 'required|exists:users,id',
                 'subject_id' => 'required|exists:subjects,id',
+                 'coef' => 'required|integer|min:1|max:10', 
                 'day' => 'required|in:Lundi,Mardi,Mercredi,Jeudi,Vendredi,Samedi',
                 'start_time' => 'required|date_format:H:i',
                 'end_time' => 'required|date_format:H:i|after:start_time',
@@ -135,6 +148,10 @@ class TimetableController extends Controller{
                 'end_time.after' => 'L\'heure de fin doit être après l\'heure de début.',
                 'start_time.date_format' => 'Format d\'heure invalide.',
                 'end_time.date_format' => 'Format d\'heure invalide.',
+                'coef.required' => 'Le coefficient est obligatoire.',
+                'coef.integer' => 'Le coefficient doit être un nombre entier.',
+                'coef.min' => 'Le coefficient doit être au minimum 1.',
+                'coef.max' => 'Le coefficient doit être au maximum 10.',
             ]);
 
             if ($validator->fails()) {
@@ -179,7 +196,7 @@ class TimetableController extends Controller{
                 'end_time' => $request->end_time,
             ]);
 
-            // Mettre à jour la table de relation class_teacher_subject
+            // Mettre à jour la table de relation class_teacher_subject avec le coefficient
             $this->updateClassTeacherSubject($classId, $oldData, $request->all());
 
             DB::commit();
@@ -218,11 +235,13 @@ class TimetableController extends Controller{
                 ->exists();
 
             if (!$existing) {
-                // Ajouter la nouvelle relation
+                // Ajouter la nouvelle relation avec le coefficient
                 DB::table('class_teacher_subject')->insert([
+                    'academic_year_id' => $oldData['academic_year_id'] ?? null,
                     'class_id' => $classId,
                     'teacher_id' => $newData['teacher_id'],
                     'subject_id' => $newData['subject_id'],
+                    'coefficient' => $newData['coef'],
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
@@ -295,6 +314,7 @@ class TimetableController extends Controller{
             $validator = Validator::make($request->all(), [
                 'teacher_id' => 'required|exists:users,id',
                 'subject_id' => 'required|exists:subjects,id',
+                'coef' => 'required|integer|min:1|max:10', 
                 'day' => 'required|in:Lundi,Mardi,Mercredi,Jeudi,Vendredi,Samedi',
                 'start_time' => 'required|date_format:H:i',
                 'end_time' => 'required|date_format:H:i|after:start_time',
@@ -353,6 +373,7 @@ class TimetableController extends Controller{
                     'class_id' => $classId,
                     'teacher_id' => $request->teacher_id,
                     'subject_id' => $request->subject_id,
+                    'coefficient' => $request->coef,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
@@ -369,7 +390,8 @@ class TimetableController extends Controller{
                 ->withInput()
                 ->with('error', 'Erreur lors de l\'ajout du créneau: ' . $e->getMessage());
         }
-    }  
+    } 
+
     public function download($classId){
         try {
             $activeYear = AcademicYear::where('active', true)->firstOrFail();

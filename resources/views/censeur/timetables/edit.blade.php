@@ -82,6 +82,12 @@
                                 <strong><i class="fas fa-book me-1"></i> Matière:</strong><br>
                                 {{ $timetable->subject->name }}
                             </div>
+
+                            <div class="col-md-6 mb-2">
+                                <strong><i class="fas fa-calculator me-1"></i>
+                                    Coefficient : </strong><br>  {{ $coef }}
+                            </div>
+
                             <div class="col-md-6 mb-2">
                                 <strong><i class="fas fa-user-tie me-1"></i> Enseignant:</strong><br>
                                 {{ $timetable->teacher->name }}
@@ -140,11 +146,31 @@
                                         <option value="{{ $subject->id }}" 
                                             {{ old('subject_id', $timetable->subject_id) == $subject->id ? 'selected' : '' }}
                                             data-subject="{{ $subject->name }}">
-                                            {{ $subject->name }} (Coefficient: {{ $subject->coefficient ?? 1 }})
+                                            {{ $subject->name }}
                                         </option>
                                     @endforeach
                                 </select>
                                 @error('subject_id')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <!-- Dans le formulaire de modification, après la matière -->
+                            <div class="col-12 col-md-6">
+                                <label class="form-label fw-semibold">
+                                    <i class="fas fa-calculator me-1"></i>
+                                    Coefficient
+                                </label>
+                                <select name="coef" class="form-select @error('coef') is-invalid @enderror" required>
+                                    <option value="">-- Sélectionner un coefficient --</option>
+                                    @for($i = 1; $i <= 10; $i++)
+                                        <option value="{{ $i }}" 
+                                            {{ old('coef', $coef) == $i ? 'selected' : '' }}>
+                                            Coef {{ $i }}
+                                        </option>
+                                    @endfor
+                                </select>
+                                @error('coef')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>

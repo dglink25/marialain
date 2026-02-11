@@ -290,11 +290,30 @@
                                     <option value="">-- Sélectionner une matière --</option>
                                     @foreach($subjects as $subject)
                                         <option value="{{ $subject->id }}" {{ old('subject_id') == $subject->id ? 'selected' : '' }}>
-                                            {{ $subject->name }} (Coef: {{ $subject->coefficient }})
+                                            {{ $subject->name }}
                                         </option>
                                     @endforeach
                                 </select>
                                 @error('subject_id')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">
+                                    <i class="fas fa-calculator me-1"></i>
+                                    Coefficient
+                                </label>
+                                <select name="coef" class="form-select @error('coef') is-invalid @enderror" required>
+                                    <option value="">-- Sélectionner un coefficient --</option>
+                                    @for($i = 1; $i <= 10; $i++)
+                                        <option value="{{ $i }}" 
+                                            {{ old('coef', $timetable->subject->coefficient ?? 1) == $i ? 'selected' : '' }}>
+                                            Coef {{ $i }}
+                                        </option>
+                                    @endfor
+                                </select>
+                                @error('coef')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
