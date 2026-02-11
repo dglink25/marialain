@@ -2,6 +2,10 @@
 @extends('layouts.app')
 
 @section('content')
+
+@php
+    $pageTitle = 'Ajouter une epreuve';
+@endphp
 <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8">
     <div class="container mx-auto px-4 sm:px-6 lg:px-8">
         

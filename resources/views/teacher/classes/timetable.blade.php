@@ -2,6 +2,9 @@
 
 @section('content')
 @php
+    $pageTitle = 'Emploi du temps';
+@endphp
+@php
     $joursSemaine = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
     
     // Créer une structure de données pour faciliter l'affichage

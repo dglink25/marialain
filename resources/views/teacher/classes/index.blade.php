@@ -1,6 +1,11 @@
 @extends('layouts.app')
 
 @section('content')
+
+@php
+    $pageTitle = 'Classes';
+@endphp
+
 <div class="container mx-auto px-4 py-8">
     {{-- En-tête avec animation --}}
     <div class="relative mb-10">
