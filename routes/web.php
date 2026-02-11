@@ -52,8 +52,10 @@ use App\Http\Controllers\Teacher\PrimaireScheduleController;
 use App\Http\Controllers\Teacher\NoteController;
 use App\Http\Controllers\Teacher\GradeController;
 use App\Http\Controllers\ContactController;
-
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\CahierDeTexteController;
+
+use App\Http\Controllers\Teacher\TeacherExamController;
 
 // Pour tester la page 400
 Route::get('/test-400', function () {
@@ -210,7 +212,7 @@ Route::middleware('auth')->group(function () {
 
     // Dashboards par rôle
 
-    Route::get('/dashboard/directeur', [DashboardPrimaireController::class, 'index'])->name('directeur.dashboard');
+    // Route::get('/dashboard/directeur', [DashboardPrimaireController::class, 'index'])->name('directeur.dashboard');
 
     Route::get('/dashboard/surveillant', [SurveillantController::class, 'surveillant'])->name('surveillant.dashboard');
     
@@ -624,4 +626,39 @@ Route::get('/manifest.json', function() {
 Route::get('/sw.js', function() {
     return response()->file(public_path('sw.js'))
         ->header('Content-Type', 'application/javascript');
+});
+
+Route::prefix('teacher')->name('teacher.')->middleware(['auth'])->group(function () {
+    
+    Route::prefix('exams')->name('exams.')->group(function () {
+        // GET routes
+        Route::get('/', [App\Http\Controllers\Teacher\TeacherExamController::class, 'index'])->name('index');
+        Route::get('/create', [App\Http\Controllers\Teacher\TeacherExamController::class, 'create'])->name('create');
+        Route::get('/evaluation-numbers', [App\Http\Controllers\Teacher\TeacherExamController::class, 'getEvaluationNumbers'])->name('evaluation-numbers');
+        Route::get('/{id}', [App\Http\Controllers\Teacher\TeacherExamController::class, 'show'])->name('show');
+        Route::get('/statistics', [App\Http\Controllers\Teacher\TeacherExamController::class, 'statistics'])->name('statistics');
+        
+        // POST route
+        Route::post('/', [App\Http\Controllers\Teacher\TeacherExamController::class, 'store'])->name('store');
+        Route::post('/store', [App\Http\Controllers\Teacher\TeacherExamController::class, 'store'])->name('store-alt'); // alias pour compatibilité
+        
+        // DELETE route
+        Route::delete('/{id}', [App\Http\Controllers\Teacher\TeacherExamController::class, 'destroy'])->name('destroy');
+    });
+    
+    // API pour les matières par classe
+    Route::get('/classes/{classId}/subjects', function ($classId) {
+        $teacher = Auth::user();
+        $class = App\Models\Classe::findOrFail($classId);
+        
+        $subjects = $class->subjects()
+            ->whereHas('teachers', function($q) use ($teacher) {
+                $q->where('teacher_id', $teacher->id);
+            })
+            ->get();
+            
+        return response()->json($subjects);
+    })->name('classes.subjects');
+    
+
 });
