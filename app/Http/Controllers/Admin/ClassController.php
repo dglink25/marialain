@@ -3,7 +3,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\Classe; // ✅ modèle correct
+use App\Models\Classe; 
 use App\Models\AcademicYear;
 use App\Models\Entity;
 

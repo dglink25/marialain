@@ -638,27 +638,32 @@ Route::prefix('teacher')->name('teacher.')->middleware(['auth'])->group(function
         Route::get('/{id}', [App\Http\Controllers\Teacher\TeacherExamController::class, 'show'])->name('show');
         Route::get('/statistics', [App\Http\Controllers\Teacher\TeacherExamController::class, 'statistics'])->name('statistics');
         
-        // POST route
+        // POST route - UNE SEULE méthode store
         Route::post('/', [App\Http\Controllers\Teacher\TeacherExamController::class, 'store'])->name('store');
-        Route::post('/store', [App\Http\Controllers\Teacher\TeacherExamController::class, 'store'])->name('store-alt'); // alias pour compatibilité
         
         // DELETE route
         Route::delete('/{id}', [App\Http\Controllers\Teacher\TeacherExamController::class, 'destroy'])->name('destroy');
     });
     
-    // API pour les matières par classe
+    // API pour les matières par classe - CORRIGÉ avec le bon namespace
     Route::get('/classes/{classId}/subjects', function ($classId) {
         $teacher = Auth::user();
-        $class = App\Models\Classe::findOrFail($classId);
+        $class = App\Models\Classe::with('subjects')->findOrFail($classId);
         
-        $subjects = $class->subjects()
+        $subjects = $class->subject()
             ->whereHas('teachers', function($q) use ($teacher) {
-                $q->where('teacher_id', $teacher->id);
+                $q->where('teacher_id', $teacher->id)
+                  ->where('academic_year_id', App\Models\AcademicYear::where('active', true)->first()->id);
             })
-            ->get();
+            ->get()
+            ->map(function($subject) {
+                return [
+                    'id' => $subject->id,
+                    'name' => $subject->name,
+                    'code' => $subject->code ?? '',
+                ];
+            });
             
         return response()->json($subjects);
     })->name('classes.subjects');
-    
-
 });

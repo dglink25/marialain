@@ -1,4 +1,3 @@
-{{-- resources/views/teacher/exams/create.blade.php --}}
 @extends('layouts.app')
 
 @section('content')

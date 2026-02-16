@@ -12,6 +12,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
+use Imagick;
+use Spatie\PdfToImage\Pdf;
 
 class TeacherExamController extends Controller
 {
@@ -73,7 +76,6 @@ class TeacherExamController extends Controller
         
         $exams = $query->orderBy('created_at', 'desc')->paginate(12);
         
-        // Pour les filtres
         $classes = Classe::whereHas('teachers', function($q) use ($teacher) {
             $q->where('teacher_id', $teacher->id);
         })->get();
@@ -88,8 +90,7 @@ class TeacherExamController extends Controller
     /**
      * Affiche le formulaire de création d'épreuve
      */
-    public function create()
-    {
+    public function create(Request $request){
         $teacher = Auth::user();
         
         $classes = Classe::with(['subjects' => function($q) use ($teacher) {
@@ -102,7 +103,120 @@ class TeacherExamController extends Controller
         })
         ->get();
         
-        return view('teacher.exams.create', compact('classes'));
+        // Pré-remplir si les paramètres sont présents
+        $selectedClassId = $request->query('class_id');
+        $selectedSubjectId = $request->query('subject_id');
+        
+        return view('teacher.exams.create', compact('classes', 'selectedClassId', 'selectedSubjectId'));
+    }
+    
+    /**
+     * Convertit un PDF en images PNG - Version ROBUSTE avec toutes les pages
+     */
+    private function convertPdfToPng($pdfPath)
+    {
+        $convertedPaths = [];
+        
+        try {
+            // Méthode 1: Utilisation de Spatie PDF to Image (recommandé)
+            if (class_exists('\Spatie\PdfToImage\Pdf')) {
+                try {
+                    $pdf = new Pdf($pdfPath);
+                    $pdf->setOutputFormat('png');
+                    $pdf->setResolution(150);
+                    $pdf->setCompressionQuality(90);
+                    
+                    $pageCount = $pdf->getNumberOfPages();
+                    
+                    // Créer un dossier temporaire
+                    $tempDir = sys_get_temp_dir() . '/exam_' . uniqid();
+                    if (!file_exists($tempDir)) {
+                        mkdir($tempDir, 0777, true);
+                    }
+                    
+                    // Sauvegarder toutes les pages
+                    $pdf->saveAllPagesAsImages($tempDir, 'page_');
+                    
+                    // Récupérer tous les fichiers PNG générés
+                    $files = glob($tempDir . '/*.png');
+                    foreach ($files as $index => $file) {
+                        $convertedPaths[] = [
+                            'path' => $file,
+                            'page' => $index + 1
+                        ];
+                    }
+                    
+                    Log::info('Conversion PDF → PNG réussie avec Spatie: ' . count($files) . ' pages');
+                    return $convertedPaths;
+                    
+                } catch (\Exception $e) {
+                    Log::warning('Erreur Spatie PDF to Image: ' . $e->getMessage());
+                    // Fallback à Imagick
+                }
+            }
+            
+            // Méthode 2: Utilisation de Imagick (fallback)
+            if (class_exists('Imagick')) {
+                $imagick = new Imagick();
+                $imagick->setResolution(150, 150);
+                $imagick->readImage($pdfPath);
+                
+                $pageCount = $imagick->getNumberImages();
+                
+                for ($i = 0; $i < $pageCount; $i++) {
+                    $imagick->setIteratorIndex($i);
+                    $imagick->setImageFormat('png');
+                    $imagick->setImageCompressionQuality(90);
+                    
+                    $tempPngPath = tempnam(sys_get_temp_dir(), 'exam_') . '_page_' . ($i + 1) . '.png';
+                    $imagick->writeImage($tempPngPath);
+                    
+                    $convertedPaths[] = [
+                        'path' => $tempPngPath,
+                        'page' => $i + 1
+                    ];
+                }
+                
+                $imagick->clear();
+                $imagick->destroy();
+                
+                Log::info('Conversion PDF → PNG réussie avec Imagick: ' . $pageCount . ' pages');
+                return $convertedPaths;
+            }
+            
+            // Méthode 3: Utilisation de Ghostscript (commande shell)
+            if (function_exists('shell_exec')) {
+                $tempDir = sys_get_temp_dir() . '/exam_' . uniqid();
+                if (!file_exists($tempDir)) {
+                    mkdir($tempDir, 0777, true);
+                }
+                
+                $outputFile = $tempDir . '/page_%d.png';
+                $command = "gs -dSAFER -dBATCH -dNOPAUSE -sDEVICE=png16m -r150 -sOutputFile={$outputFile} '{$pdfPath}' 2>&1";
+                
+                $output = shell_exec($command);
+                
+                $files = glob($tempDir . '/*.png');
+                foreach ($files as $index => $file) {
+                    $convertedPaths[] = [
+                        'path' => $file,
+                        'page' => $index + 1
+                    ];
+                }
+                
+                if (count($convertedPaths) > 0) {
+                    Log::info('Conversion PDF → PNG réussie avec Ghostscript: ' . count($files) . ' pages');
+                    return $convertedPaths;
+                }
+            }
+            
+            Log::warning('Aucune méthode de conversion PDF → PNG disponible');
+            return null;
+            
+        } catch (\Exception $e) {
+            Log::error('Erreur conversion PDF → PNG: ' . $e->getMessage());
+            return null;
+        }
     }
     
     /**
@@ -122,13 +236,7 @@ class TeacherExamController extends Controller
                 'numero_evaluation' => 'required|integer',
                 'titre' => 'required|string|max:255',
                 'description' => 'nullable|string|max:1000',
-                'file' => 'required|file|mimes:pdf|max:10240',
-            ], [
-                'file.required' => 'Veuillez sélectionner un fichier PDF.',
-                'file.mimes' => 'Seuls les fichiers PDF sont acceptés.',
-                'file.max' => 'Le fichier ne doit pas dépasser 10 Mo.',
-                'numero_evaluation.required' => 'Veuillez sélectionner le numéro de l\'évaluation.',
-                'titre.required' => 'Le titre est obligatoire.',
+                'file' => 'required|file|mimes:pdf|max:20480', // Augmenté à 20MB
             ]);
 
             $validator->after(function ($validator) use ($request) {
@@ -150,25 +258,89 @@ class TeacherExamController extends Controller
             // Upload du fichier sur Cloudinary
             if ($request->hasFile('file') && $request->file('file')->isValid()) {
                 try {
+                    $file = $request->file('file');
+                    $pdfPath = $file->getRealPath();
+                    $fileName = $file->getClientOriginalName();
+                    
                     $uploadApi = new UploadApi();
                     
-                    $uploaded = $uploadApi->upload(
-                        $request->file('file')->getRealPath(),
+                    // 1. Upload du PDF original
+                    Log::info('Upload du PDF original...');
+                    $pdfUpload = $uploadApi->upload(
+                        $pdfPath,
                         [
-                            'folder' => 'teacher_exams/' . $activeYear->id,
+                            'folder' => 'teacher_exams/' . $activeYear->id . '/pdf',
                             'resource_type' => 'auto',
-                            'public_id' => 'exam_' . time() . '_' . uniqid(),
+                            'public_id' => 'exam_pdf_' . time() . '_' . uniqid(),
+                            'use_filename' => true,
+                            'unique_filename' => true,
                         ]
                     );
-
-                    $fileUrl = $uploaded['secure_url'];
-                    $fileName = $request->file('file')->getClientOriginalName();
+                    
+                    $pdfUrl = $pdfUpload['secure_url'];
+                    $pdfPublicId = $pdfUpload['public_id'];
+                    
+                    // 2. Conversion PDF → PNG (toutes les pages)
+                    Log::info('Début conversion PDF → PNG...');
+                    $convertedPages = $this->convertPdfToPng($pdfPath);
+                    
+                    $previews = [];
+                    $totalPages = 0;
+                    
+                    if ($convertedPages && count($convertedPages) > 0) {
+                        $totalPages = count($convertedPages);
+                        Log::info("Conversion réussie: {$totalPages} pages");
+                        
+                        // Upload de chaque page convertie
+                        foreach ($convertedPages as $index => $page) {
+                            $pageNumber = $page['page'];
+                            $pngPath = $page['path'];
+                            
+                            if (file_exists($pngPath)) {
+                                try {
+                                    $pngUpload = $uploadApi->upload(
+                                        $pngPath,
+                                        [
+                                            'folder' => 'teacher_exams/' . $activeYear->id . '/previews',
+                                            'resource_type' => 'image',
+                                            'public_id' => 'exam_preview_' . time() . '_' . uniqid() . '_page_' . $pageNumber,
+                                        ]
+                                    );
+                                    
+                                    $previews[] = [
+                                        'page' => $pageNumber,
+                                        'url' => $pngUpload['secure_url'],
+                                        'public_id' => $pngUpload['public_id']
+                                    ];
+                                    
+                                    // Nettoyer le fichier temporaire
+                                    @unlink($pngPath);
+                                    
+                                } catch (\Exception $e) {
+                                    Log::error("Erreur upload page {$pageNumber}: " . $e->getMessage());
+                                }
+                            }
+                        }
+                        
+                        // Nettoyer le dossier temporaire
+                        $tempDir = dirname($convertedPages[0]['path']);
+                        if (is_dir($tempDir)) {
+                            array_map('unlink', glob("{$tempDir}/*.*"));
+                            rmdir($tempDir);
+                        }
+                    }
+                    
+                    // 3. Créer une vignette de la première page
+                    $thumbnailUrl = null;
+                    if (count($previews) > 0) {
+                        $thumbnailUrl = $previews[0]['url'];
+                    }
 
                 } catch (\Exception $e) {
                     Log::error('Erreur upload Cloudinary: ' . $e->getMessage());
                     return response()->json([
                         'success' => false,
-                        'message' => 'Erreur lors de l\'upload du fichier sur Cloudinary.'
+                        'message' => 'Erreur lors de l\'upload du fichier sur Cloudinary: ' . $e->getMessage()
                     ], 500);
                 }
             } else {
@@ -189,8 +361,12 @@ class TeacherExamController extends Controller
                 'numero_evaluation' => $request->numero_evaluation,
                 'titre' => $request->titre,
                 'description' => $request->description,
-                'file_url' => $fileUrl,
+                'file_url' => $pdfUrl,
                 'file_name' => $fileName,
+                'preview_url' => $thumbnailUrl,
+                'previews' => json_encode($previews), // Stocker toutes les pages
+                'total_pages' => $totalPages,
+                'pdf_public_id' => $pdfPublicId,
             ]);
 
             return response()->json([
@@ -204,13 +380,13 @@ class TeacherExamController extends Controller
             Log::error('Erreur soumission épreuve: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de la soumission de l\'épreuve.'
+                'message' => 'Erreur lors de la soumission de l\'épreuve: ' . $e->getMessage()
             ], 500);
         }
     }
 
     /**
-     * Affiche les détails d'une épreuve
+     * Affiche les détails d'une épreuve avec visionneuse PDF améliorée
      */
     public function show($id)
     {
@@ -218,7 +394,13 @@ class TeacherExamController extends Controller
             ->where('teacher_id', Auth::id())
             ->findOrFail($id);
             
-        return view('teacher.exams.show', compact('exam'));
+        // Décoder les prévisualisations
+        $previews = [];
+        if ($exam->previews) {
+            $previews = json_decode($exam->previews, true);
+        }
+        
+        return view('teacher.exams.show', compact('exam', 'previews'));
     }
 
     /**
@@ -228,6 +410,29 @@ class TeacherExamController extends Controller
     {
         try {
             $exam = TeacherExam::where('teacher_id', Auth::id())->findOrFail($id);
+            
+            // Supprimer les fichiers de Cloudinary
+            try {
+                $uploadApi = new UploadApi();
+                
+                // Supprimer le PDF
+                if ($exam->pdf_public_id) {
+                    $uploadApi->destroy($exam->pdf_public_id);
+                }
+                
+                // Supprimer les previews
+                if ($exam->previews) {
+                    $previews = json_decode($exam->previews, true);
+                    foreach ($previews as $preview) {
+                        if (isset($preview['public_id'])) {
+                            $uploadApi->destroy($preview['public_id']);
+                        }
+                    }
+                }
+            } catch (\Exception $e) {
+                Log::warning('Erreur suppression Cloudinary: ' . $e->getMessage());
+            }
+            
             $exam->delete();
             
             return response()->json([
