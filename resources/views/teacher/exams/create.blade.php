@@ -51,7 +51,7 @@
                                 class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
                             <option value="">Sélectionner une classe</option>
                             @foreach($classes as $class)
-                                <option value="{{ $class->id }}">{{ $class->name }}</option>
+                                <option value="{{ $class->id }}" {{ $selectedClassId == $class->id ? 'selected' : '' }}>{{ $class->name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -128,7 +128,7 @@
                                   class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"></textarea>
                     </div>
 
-                    {{-- Zone de dépôt de fichier PDF avec conversion en images --}}
+                    {{-- Zone de dépôt de fichier PDF --}}
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">
                             Sujet (PDF) <span class="text-red-500">*</span>
@@ -146,7 +146,7 @@
                                 <p class="text-sm text-gray-600">
                                     <span class="font-medium text-blue-600">Cliquez pour parcourir</span> ou glissez-déposez
                                 </p>
-                                <p class="text-xs text-gray-400 mt-1">PDF uniquement • Max 10 Mo</p>
+                                <p class="text-xs text-gray-400 mt-1">PDF uniquement • Max 20 Mo</p>
                             </div>
 
                             <div id="fileInfo" class="hidden">
@@ -157,7 +157,6 @@
                                         </svg>
                                         <div class="text-left">
                                             <p class="text-sm font-medium text-gray-700" id="fileName"></p>
-                                            <p class="text-xs text-gray-500" id="filePages"></p>
                                         </div>
                                     </div>
                                     <button type="button" onclick="removeFile()" class="text-gray-400 hover:text-red-500">
@@ -166,26 +165,6 @@
                                         </svg>
                                     </button>
                                 </div>
-                            </div>
-
-                            {{-- Barre de progression --}}
-                            <div id="progressContainer" class="hidden mt-3">
-                                <div class="flex items-center justify-between text-xs text-gray-600 mb-1">
-                                    <span>Conversion en cours...</span>
-                                    <span id="progressPercent">0%</span>
-                                </div>
-                                <div class="w-full bg-gray-200 rounded-full h-1.5">
-                                    <div id="progressBar" class="bg-blue-600 h-1.5 rounded-full transition-all duration-300" style="width: 0%"></div>
-                                </div>
-                                <p id="progressStatus" class="text-xs text-gray-500 mt-1"></p>
-                            </div>
-                        </div>
-
-                        {{-- Prévisualisation des pages converties --}}
-                        <div id="previewContainer" class="hidden mt-4">
-                            <p class="text-sm font-medium text-gray-700 mb-2">Aperçu des pages</p>
-                            <div id="pagePreviews" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 max-h-48 overflow-y-auto p-2 bg-gray-50 rounded-lg border border-gray-200">
-                                <!-- Les aperçus seront injectés ici -->
                             </div>
                         </div>
                     </div>
@@ -206,11 +185,11 @@
                     {{-- Boutons d'action --}}
                     <div class="flex justify-end gap-3 pt-4 border-t border-gray-200">
                         <a href="{{ route('teacher.exams.index') }}" 
-                           class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors">
+                           class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                             Annuler
                         </a>
                         <button type="submit" id="submitBtn" 
-                                class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                             Publier l'épreuve
                         </button>
                     </div>
@@ -220,32 +199,36 @@
     </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 <script>
-// Configuration de PDF.js
-pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
-
 document.addEventListener('DOMContentLoaded', function() {
     // Chargement des matières
     const classSelect = document.getElementById('class_id');
     const subjectSelect = document.getElementById('subject_id');
+    const selectedSubjectId = '{{ $selectedSubjectId ?? '' }}';
+    
+    if (classSelect.value) {
+        loadSubjects(classSelect.value);
+    }
     
     classSelect.addEventListener('change', function() {
-        const classId = this.value;
-        
+        loadSubjects(this.value);
+    });
+    
+    function loadSubjects(classId) {
         if (classId) {
             fetch(`/teacher/classes/${classId}/subjects`)
                 .then(response => response.json())
                 .then(data => {
                     subjectSelect.innerHTML = '<option value="">Sélectionner une matière</option>';
                     data.forEach(subject => {
-                        subjectSelect.innerHTML += `<option value="${subject.id}">${subject.name}</option>`;
+                        const selected = subject.id == selectedSubjectId ? 'selected' : '';
+                        subjectSelect.innerHTML += `<option value="${subject.id}" ${selected}>${subject.name}</option>`;
                     });
                 });
         } else {
             subjectSelect.innerHTML = '<option value="">Sélectionnez d\'abord une classe</option>';
         }
-    });
+    }
 
     // Gestion du type d'évaluation
     const typeSelect = document.getElementById('exam_type');
@@ -286,12 +269,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Drag & drop et conversion PDF
+    // Drag & drop
     const dropzone = document.getElementById('dropzone');
     const fileInput = document.getElementById('file');
-    let pdfPages = [];
 
-    // Prévention des comportements par défaut
     ['dragover', 'dragleave', 'drop'].forEach(eventName => {
         dropzone.addEventListener(eventName, preventDefaults, false);
     });
@@ -301,7 +282,6 @@ document.addEventListener('DOMContentLoaded', function() {
         e.stopPropagation();
     }
 
-    // Style au survol
     ['dragover'].forEach(eventName => {
         dropzone.addEventListener(eventName, () => {
             dropzone.classList.add('border-blue-500', 'bg-blue-50');
@@ -314,108 +294,29 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Gestion du drop
     dropzone.addEventListener('drop', (e) => {
         const files = e.dataTransfer.files;
         if (files.length > 0) {
             fileInput.files = files;
-            handlePDFConversion(files[0]);
+            handleFileSelect(files[0]);
         }
     });
 
     fileInput.addEventListener('change', function() {
         if (this.files.length > 0) {
-            handlePDFConversion(this.files[0]);
+            handleFileSelect(this.files[0]);
         }
     });
 
-    // Fonction de conversion PDF en images
-    async function handlePDFConversion(file) {
+    function handleFileSelect(file) {
         if (file.type !== 'application/pdf') {
             showToast('Veuillez sélectionner un fichier PDF', 'error');
             return;
         }
 
-        // Afficher la progression
         document.getElementById('uploadPlaceholder').classList.add('hidden');
-        document.getElementById('progressContainer').classList.remove('hidden');
         document.getElementById('fileName').textContent = file.name;
-        
-        try {
-            const arrayBuffer = await file.arrayBuffer();
-            const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-            const numPages = pdf.numPages;
-            
-            document.getElementById('filePages').textContent = `${numPages} page${numPages > 1 ? 's' : ''}`;
-            
-            pdfPages = [];
-            const previewContainer = document.getElementById('pagePreviews');
-            previewContainer.innerHTML = '';
-            
-            for (let i = 1; i <= numPages; i++) {
-                // Mise à jour de la progression
-                const progress = Math.round((i / numPages) * 100);
-                document.getElementById('progressBar').style.width = `${progress}%`;
-                document.getElementById('progressPercent').textContent = `${progress}%`;
-                document.getElementById('progressStatus').textContent = `Conversion page ${i}/${numPages}`;
-                
-                const page = await pdf.getPage(i);
-                const viewport = page.getViewport({ scale: 1.5 });
-                
-                const canvas = document.createElement('canvas');
-                const context = canvas.getContext('2d');
-                canvas.width = viewport.width;
-                canvas.height = viewport.height;
-                
-                await page.render({
-                    canvasContext: context,
-                    viewport: viewport
-                }).promise;
-                
-                // Convertir en PNG base64
-                const imgData = canvas.toDataURL('image/png');
-                pdfPages.push(imgData);
-                
-                // Ajouter l'aperçu
-                const previewDiv = document.createElement('div');
-                previewDiv.className = 'relative group';
-                previewDiv.innerHTML = `
-                    <img src="${imgData}" alt="Page ${i}" class="w-full h-auto rounded border border-gray-200 cursor-pointer hover:border-blue-500 transition-colors">
-                    <span class="absolute bottom-1 right-1 bg-black bg-opacity-50 text-white text-xs px-1 rounded">${i}</span>
-                `;
-                
-                previewDiv.addEventListener('click', () => {
-                    // Ouvrir l'image en grand
-                    window.open(imgData, '_blank');
-                });
-                
-                previewContainer.appendChild(previewDiv);
-            }
-            
-            // Masquer la progression et afficher l'aperçu
-            document.getElementById('progressContainer').classList.add('hidden');
-            document.getElementById('previewContainer').classList.remove('hidden');
-            document.getElementById('fileInfo').classList.remove('hidden');
-            
-            // Ajouter les données des pages au formulaire
-            const pagesInput = document.createElement('input');
-            pagesInput.type = 'hidden';
-            pagesInput.name = 'pdf_pages';
-            pagesInput.value = JSON.stringify(pdfPages);
-            pagesInput.id = 'pdfPagesInput';
-            
-            const existingInput = document.getElementById('pdfPagesInput');
-            if (existingInput) existingInput.remove();
-            
-            document.getElementById('examForm').appendChild(pagesInput);
-            
-            showToast('PDF converti avec succès', 'success');
-            
-        } catch (error) {
-            console.error('Erreur de conversion:', error);
-            showToast('Erreur lors de la conversion du PDF', 'error');
-            resetFileUpload();
-        }
+        document.getElementById('fileInfo').classList.remove('hidden');
     }
 
     // Soumission du formulaire
@@ -426,20 +327,16 @@ document.addEventListener('DOMContentLoaded', function() {
         e.preventDefault();
         hideErrors();
 
-        // Vérifier que le PDF a été converti
-        if (!document.getElementById('pdfPagesInput')) {
-            showToast('Veuillez d\'abord convertir un fichier PDF', 'error');
+        if (!fileInput.files.length) {
+            showToast('Veuillez sélectionner un fichier PDF', 'error');
             return;
         }
 
         submitBtn.disabled = true;
-        submitBtn.textContent = 'Publication en cours...';
+        submitBtn.innerHTML = '<span class="opacity-0">Publication...</span><div class="absolute inset-0 flex items-center justify-center"><div class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div></div>';
 
         try {
             const formData = new FormData(this);
-            
-            // Ajouter les pages converties
-            formData.append('pdf_pages', JSON.stringify(pdfPages));
             
             const response = await fetch('{{ route("teacher.exams.store") }}', {
                 method: 'POST',
@@ -464,13 +361,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     showToast(data.message || 'Une erreur est survenue', 'error');
                 }
                 submitBtn.disabled = false;
-                submitBtn.textContent = 'Publier l\'épreuve';
+                submitBtn.innerHTML = 'Publier l\'épreuve';
             }
         } catch (error) {
             console.error('Erreur:', error);
             showToast('Erreur de connexion', 'error');
             submitBtn.disabled = false;
-            submitBtn.textContent = 'Publier l\'épreuve';
+            submitBtn.innerHTML = 'Publier l\'épreuve';
         }
     });
 });
@@ -479,22 +376,7 @@ document.addEventListener('DOMContentLoaded', function() {
 function removeFile() {
     document.getElementById('file').value = '';
     document.getElementById('fileInfo').classList.add('hidden');
-    document.getElementById('previewContainer').classList.add('hidden');
     document.getElementById('uploadPlaceholder').classList.remove('hidden');
-    document.getElementById('progressContainer').classList.add('hidden');
-    
-    const pagesInput = document.getElementById('pdfPagesInput');
-    if (pagesInput) pagesInput.remove();
-    
-    pdfPages = [];
-}
-
-function resetFileUpload() {
-    document.getElementById('file').value = '';
-    document.getElementById('uploadPlaceholder').classList.remove('hidden');
-    document.getElementById('progressContainer').classList.add('hidden');
-    document.getElementById('fileInfo').classList.add('hidden');
-    document.getElementById('previewContainer').classList.add('hidden');
 }
 
 function showErrors(errors) {
@@ -558,7 +440,7 @@ function showToast(message, type = 'info') {
     toast.innerHTML = `
         <span style="color: ${iconColor}; font-weight: bold;">${icon}</span>
         <span style="color: #1f2937; font-size: 0.875rem;">${message}</span>
-        <button onclick="this.parentElement.remove()" style="margin-left: auto; color: #9ca3af; hover:color: #4b5563;">✕</button>
+        <button onclick="this.parentElement.remove()" style="margin-left: auto; color: #9ca3af;">✕</button>
     `;
 
     toastContainer.appendChild(toast);
@@ -597,9 +479,15 @@ style.textContent = `
             transform: translateX(100%);
         }
     }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    
+    .animate-spin {
+        animation: spin 1s linear infinite;
+    }
 `;
 document.head.appendChild(style);
 </script>
 @endsection
-
-Call to undefined method Spatie\PdfToImage\Pdf::setOutputFormat()
