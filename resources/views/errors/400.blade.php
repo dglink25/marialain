@@ -92,7 +92,7 @@
                 <span>Page précédente</span>
             </a>
             
-            <a href="{{ url('/') }}" 
+            <a href="{{ url('/home') }}" 
                class="px-8 py-4 bg-white text-gray-700 font-semibold rounded-xl border border-gray-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300 flex items-center gap-3 group">
                 <i class="fas fa-home group-hover:scale-110 transition-transform duration-300"></i>
                 <span>Accueil</span>
