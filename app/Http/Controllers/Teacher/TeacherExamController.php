@@ -112,19 +112,79 @@ class TeacherExamController extends Controller
     
     /**
      * Convertit un PDF en images PNG - Version ROBUSTE avec toutes les pages
+     * Utilise Imagick comme méthode principale
      */
     private function convertPdfToPng($pdfPath)
     {
         $convertedPaths = [];
         
         try {
-            // Méthode 1: Utilisation de Spatie PDF to Image (recommandé)
+            // Méthode 1: Utilisation de Imagick (la plus fiable)
+            if (class_exists('Imagick')) {
+                try {
+                    $imagick = new Imagick();
+                    $imagick->setResolution(150, 150);
+                    $imagick->readImage($pdfPath);
+                    
+                    $pageCount = $imagick->getNumberImages();
+                    
+                    for ($i = 0; $i < $pageCount; $i++) {
+                        $imagick->setIteratorIndex($i);
+                        
+                        // Créer une nouvelle instance pour chaque page
+                        $page = new Imagick();
+                        $page->setResolution(150, 150);
+                        $page->readImage($pdfPath . '[' . $i . ']');
+                        
+                        // Configuration pour PNG de qualité
+                        $page->setImageFormat('png');
+                        $page->setImageCompressionQuality(90);
+                        
+                        // Supprimer le canal alpha si présent
+                        if ($page->getImageAlphaChannel()) {
+                            $page->setImageAlphaChannel(Imagick::ALPHACHANNEL_REMOVE);
+                        }
+                        
+                        // Améliorer la qualité
+                        $page->setImageCompression(Imagick::COMPRESSION_ZIP);
+                        $page->setImageBackgroundColor('white');
+                        $page = $page->mergeImageLayers(Imagick::LAYERMETHOD_FLATTEN);
+                        
+                        $tempPngPath = sys_get_temp_dir() . '/exam_' . uniqid() . '_page_' . ($i + 1) . '.png';
+                        $page->writeImage($tempPngPath);
+                        
+                        $convertedPaths[] = [
+                            'path' => $tempPngPath,
+                            'page' => $i + 1
+                        ];
+                        
+                        $page->clear();
+                        $page->destroy();
+                    }
+                    
+                    $imagick->clear();
+                    $imagick->destroy();
+                    
+                    if (count($convertedPaths) > 0) {
+                        Log::info('Conversion PDF → PNG réussie avec Imagick: ' . $pageCount . ' pages');
+                        return $convertedPaths;
+                    }
+                    
+                } catch (\Exception $e) {
+                    Log::warning('Erreur Imagick: ' . $e->getMessage());
+                    // Fallback à Spatie
+                }
+            }
+            
+            // Méthode 2: Utilisation de Spatie PDF to Image
             if (class_exists('\Spatie\PdfToImage\Pdf')) {
                 try {
                     $pdf = new Pdf($pdfPath);
-                    $pdf->setOutputFormat('png');
-                    $pdf->setResolution(150);
-                    $pdf->setCompressionQuality(90);
+                    
+                    // Définir la résolution
+                    if (method_exists($pdf, 'setResolution')) {
+                        $pdf->setResolution(150);
+                    }
                     
                     $pageCount = $pdf->getNumberOfPages();
                     
@@ -135,53 +195,23 @@ class TeacherExamController extends Controller
                     }
                     
                     // Sauvegarder toutes les pages
-                    $pdf->saveAllPagesAsImages($tempDir, 'page_');
-                    
-                    // Récupérer tous les fichiers PNG générés
-                    $files = glob($tempDir . '/*.png');
-                    foreach ($files as $index => $file) {
+                    for ($i = 1; $i <= $pageCount; $i++) {
+                        $outputPath = $tempDir . '/page_' . $i . '.png';
+                        $pdf->setPage($i)->saveImage($outputPath);
+                        
                         $convertedPaths[] = [
-                            'path' => $file,
-                            'page' => $index + 1
+                            'path' => $outputPath,
+                            'page' => $i
                         ];
                     }
                     
-                    Log::info('Conversion PDF → PNG réussie avec Spatie: ' . count($files) . ' pages');
+                    Log::info('Conversion PDF → PNG réussie avec Spatie: ' . $pageCount . ' pages');
                     return $convertedPaths;
                     
                 } catch (\Exception $e) {
                     Log::warning('Erreur Spatie PDF to Image: ' . $e->getMessage());
-                    // Fallback à Imagick
+                    // Fallback à Ghostscript
                 }
-            }
-            
-            // Méthode 2: Utilisation de Imagick (fallback)
-            if (class_exists('Imagick')) {
-                $imagick = new Imagick();
-                $imagick->setResolution(150, 150);
-                $imagick->readImage($pdfPath);
-                
-                $pageCount = $imagick->getNumberImages();
-                
-                for ($i = 0; $i < $pageCount; $i++) {
-                    $imagick->setIteratorIndex($i);
-                    $imagick->setImageFormat('png');
-                    $imagick->setImageCompressionQuality(90);
-                    
-                    $tempPngPath = tempnam(sys_get_temp_dir(), 'exam_') . '_page_' . ($i + 1) . '.png';
-                    $imagick->writeImage($tempPngPath);
-                    
-                    $convertedPaths[] = [
-                        'path' => $tempPngPath,
-                        'page' => $i + 1
-                    ];
-                }
-                
-                $imagick->clear();
-                $imagick->destroy();
-                
-                Log::info('Conversion PDF → PNG réussie avec Imagick: ' . $pageCount . ' pages');
-                return $convertedPaths;
             }
             
             // Méthode 3: Utilisation de Ghostscript (commande shell)
@@ -192,30 +222,33 @@ class TeacherExamController extends Controller
                 }
                 
                 $outputFile = $tempDir . '/page_%d.png';
-                $command = "gs -dSAFER -dBATCH -dNOPAUSE -sDEVICE=png16m -r150 -sOutputFile={$outputFile} '{$pdfPath}' 2>&1";
+                $command = "gs -dSAFER -dBATCH -dNOPAUSE -sDEVICE=png16m -r150 -dTextAlphaBits=4 -dGraphicsAlphaBits=4 -sOutputFile={$outputFile} '{$pdfPath}' 2>&1";
                 
                 $output = shell_exec($command);
                 
                 $files = glob($tempDir . '/*.png');
-                foreach ($files as $index => $file) {
-                    $convertedPaths[] = [
-                        'path' => $file,
-                        'page' => $index + 1
-                    ];
-                }
-                
-                if (count($convertedPaths) > 0) {
+                if (count($files) > 0) {
+                    foreach ($files as $index => $file) {
+                        $convertedPaths[] = [
+                            'path' => $file,
+                            'page' => $index + 1
+                        ];
+                    }
+                    
                     Log::info('Conversion PDF → PNG réussie avec Ghostscript: ' . count($files) . ' pages');
                     return $convertedPaths;
                 }
             }
             
-            Log::warning('Aucune méthode de conversion PDF → PNG disponible');
-            return null;
+            // Méthode 4: Si aucune méthode ne fonctionne, on utilise directement le PDF
+            Log::warning('Aucune méthode de conversion disponible, utilisation du PDF original');
+            
+            // Retourner un chemin vide mais permettre de continuer avec le PDF original
+            return [];
             
         } catch (\Exception $e) {
             Log::error('Erreur conversion PDF → PNG: ' . $e->getMessage());
-            return null;
+            return [];
         }
     }
     
@@ -236,14 +269,15 @@ class TeacherExamController extends Controller
                 'numero_evaluation' => 'required|integer',
                 'titre' => 'required|string|max:255',
                 'description' => 'nullable|string|max:1000',
-                'file' => 'required|file|mimes:pdf|max:20480', // Augmenté à 20MB
+                'file' => 'required|file|mimes:pdf|max:20480',
+                'pdf_pages' => 'nullable|string' // Pages converties en base64
             ]);
 
             $validator->after(function ($validator) use ($request) {
-                if ($request->type === 'devoir' && !in_array($request->numero_evaluation, [1, 2])) {
+                if ($request->type === 'devoir' && !in_array((int)$request->numero_evaluation, [1, 2])) {
                     $validator->errors()->add('numero_evaluation', 'Pour un devoir, le numéro d\'évaluation doit être 1 ou 2.');
                 }
-                if ($request->type === 'interrogation' && !in_array($request->numero_evaluation, [1, 2, 3, 4, 5])) {
+                if ($request->type === 'interrogation' && !in_array((int)$request->numero_evaluation, [1, 2, 3, 4, 5])) {
                     $validator->errors()->add('numero_evaluation', 'Pour une interrogation, le numéro d\'évaluation doit être entre 1 et 5.');
                 }
             });
@@ -280,53 +314,87 @@ class TeacherExamController extends Controller
                     $pdfUrl = $pdfUpload['secure_url'];
                     $pdfPublicId = $pdfUpload['public_id'];
                     
-                    // 2. Conversion PDF → PNG (toutes les pages)
-                    Log::info('Début conversion PDF → PNG...');
-                    $convertedPages = $this->convertPdfToPng($pdfPath);
-                    
+                    // 2. Gestion des pages converties depuis le frontend
                     $previews = [];
                     $totalPages = 0;
                     
-                    if ($convertedPages && count($convertedPages) > 0) {
-                        $totalPages = count($convertedPages);
-                        Log::info("Conversion réussie: {$totalPages} pages");
-                        
-                        // Upload de chaque page convertie
-                        foreach ($convertedPages as $index => $page) {
-                            $pageNumber = $page['page'];
-                            $pngPath = $page['path'];
+                    if ($request->has('pdf_pages') && !empty($request->pdf_pages)) {
+                        try {
+                            $pages = json_decode($request->pdf_pages, true);
                             
-                            if (file_exists($pngPath)) {
-                                try {
+                            if (is_array($pages) && count($pages) > 0) {
+                                $totalPages = count($pages);
+                                
+                                foreach ($pages as $index => $pageBase64) {
+                                    // Créer un fichier temporaire à partir du base64
+                                    $imageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $pageBase64));
+                                    $tempImagePath = tempnam(sys_get_temp_dir(), 'page_') . '.png';
+                                    file_put_contents($tempImagePath, $imageData);
+                                    
+                                    // Upload sur Cloudinary
                                     $pngUpload = $uploadApi->upload(
-                                        $pngPath,
+                                        $tempImagePath,
                                         [
                                             'folder' => 'teacher_exams/' . $activeYear->id . '/previews',
                                             'resource_type' => 'image',
-                                            'public_id' => 'exam_preview_' . time() . '_' . uniqid() . '_page_' . $pageNumber,
+                                            'public_id' => 'exam_preview_' . time() . '_' . uniqid() . '_page_' . ($index + 1),
                                         ]
                                     );
                                     
                                     $previews[] = [
-                                        'page' => $pageNumber,
+                                        'page' => $index + 1,
                                         'url' => $pngUpload['secure_url'],
                                         'public_id' => $pngUpload['public_id']
                                     ];
                                     
                                     // Nettoyer le fichier temporaire
-                                    @unlink($pngPath);
-                                    
-                                } catch (\Exception $e) {
-                                    Log::error("Erreur upload page {$pageNumber}: " . $e->getMessage());
+                                    @unlink($tempImagePath);
                                 }
                             }
+                        } catch (\Exception $e) {
+                            Log::error('Erreur traitement des pages: ' . $e->getMessage());
                         }
+                    } else {
+                        // Fallback: convertir le PDF côté serveur
+                        Log::info('Aucune page reçue, tentative conversion serveur...');
+                        $convertedPages = $this->convertPdfToPng($pdfPath);
                         
-                        // Nettoyer le dossier temporaire
-                        $tempDir = dirname($convertedPages[0]['path']);
-                        if (is_dir($tempDir)) {
-                            array_map('unlink', glob("{$tempDir}/*.*"));
-                            rmdir($tempDir);
+                        if ($convertedPages && count($convertedPages) > 0) {
+                            $totalPages = count($convertedPages);
+                            
+                            foreach ($convertedPages as $page) {
+                                if (file_exists($page['path'])) {
+                                    try {
+                                        $pngUpload = $uploadApi->upload(
+                                            $page['path'],
+                                            [
+                                                'folder' => 'teacher_exams/' . $activeYear->id . '/previews',
+                                                'resource_type' => 'image',
+                                                'public_id' => 'exam_preview_' . time() . '_' . uniqid() . '_page_' . $page['page'],
+                                            ]
+                                        );
+                                        
+                                        $previews[] = [
+                                            'page' => $page['page'],
+                                            'url' => $pngUpload['secure_url'],
+                                            'public_id' => $pngUpload['public_id']
+                                        ];
+                                        
+                                        @unlink($page['path']);
+                                    } catch (\Exception $e) {
+                                        Log::error("Erreur upload page {$page['page']}: " . $e->getMessage());
+                                    }
+                                }
+                            }
+                            
+                            // Nettoyer le dossier temporaire si existant
+                            if (isset($convertedPages[0]['path'])) {
+                                $tempDir = dirname($convertedPages[0]['path']);
+                                if (is_dir($tempDir)) {
+                                    array_map('unlink', glob("{$tempDir}/*.*"));
+                                    rmdir($tempDir);
+                                }
+                            }
                         }
                     }
                     
@@ -364,7 +432,7 @@ class TeacherExamController extends Controller
                 'file_url' => $pdfUrl,
                 'file_name' => $fileName,
                 'preview_url' => $thumbnailUrl,
-                'previews' => json_encode($previews), // Stocker toutes les pages
+                'previews' => json_encode($previews),
                 'total_pages' => $totalPages,
                 'pdf_public_id' => $pdfPublicId,
             ]);
