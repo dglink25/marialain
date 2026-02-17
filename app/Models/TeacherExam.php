@@ -27,23 +27,23 @@ class TeacherExam extends Model
         'numero_evaluation' => 'integer',
     ];
 
-    public function teacher(): BelongsTo
-    {
+    public function teacher(): BelongsTo{
         return $this->belongsTo(User::class, 'teacher_id');
     }
 
-    public function class(): BelongsTo
-    {
+    public function class(): BelongsTo{
         return $this->belongsTo(Classe::class, 'class_id');
     }
 
-    public function subject(): BelongsTo
-    {
+    public function subject(): BelongsTo{
         return $this->belongsTo(Subject::class, 'subject_id');
     }
 
-    public function academicYear(): BelongsTo
-    {
+    public function academicYear(): BelongsTo {
         return $this->belongsTo(AcademicYear::class, 'academic_year_id');
+    }
+
+    public function classe(){
+        return $this->belongsTo(Classe::class, 'class_id');
     }
 }

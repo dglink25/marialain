@@ -54,7 +54,7 @@ use App\Http\Controllers\Teacher\GradeController;
 use App\Http\Controllers\ContactController;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\CahierDeTexteController;
-
+use App\Http\Controllers\Censeur\CenseurExamController;
 use App\Http\Controllers\Teacher\TeacherExamController;
 
 // Pour tester la page 400
@@ -666,4 +666,39 @@ Route::prefix('teacher')->name('teacher.')->middleware(['auth'])->group(function
             
         return response()->json($subjects);
     })->name('classes.subjects');
+});
+
+Route::middleware(['auth'])->group(function () {
+    
+    // Routes pour les épreuves du censeur
+    Route::prefix('censeur/exams')->name('censeur.exams.')->group(function () {
+        // Page principale des types par classe
+        Route::get('/types/{classe}', [CenseurExamController::class, 'types'])
+            ->name('types')
+            ->where('classe', '[0-9]+'); // Force l'ID à être numérique
+        
+        // Page d'un trimestre spécifique
+        Route::get('/trimestre/{classe}/{trimestre}', [CenseurExamController::class, 'trimestre'])
+            ->name('trimestre')
+            ->where(['classe' => '[0-9]+', 'trimestre' => '[1-3]']);
+        
+        // Liste des épreuves par trimestre, type et numéro
+        Route::get('/list/{classe}/{trimestre}/{type}/{numero}', [CenseurExamController::class, 'list'])
+            ->name('list')
+            ->where([
+                'classe' => '[0-9]+',
+                'trimestre' => '[1-3]',
+                'type' => 'devoir|interrogation',
+                'numero' => '[1-5]'
+            ]);
+        
+        // Téléchargement direct
+        Route::get('/download-all/{classe}', [CenseurExamController::class, 'downloadAll'])
+            ->name('download-all')
+            ->where('classe', '[0-9]+');
+        
+        // Téléchargement avec formulaire
+        Route::post('/download-copies', [CenseurExamController::class, 'downloadCopies'])
+            ->name('download-copies');
+    });
 });

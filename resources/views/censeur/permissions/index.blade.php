@@ -1,10 +1,14 @@
 @extends('layouts.app')
 @section('content')
 
+@php
+    $pageTitle = 'Autorisation';
+@endphp
+
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <!-- En-tête avec animation -->
     <div class="mb-8 animate-fade-in">
-        <h1 class="text-3xl font-bold text-gray-900 mb-2">Autorisations - {{ $classe->name }}</h1>
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">Autorisations {{ $classe->name }}</h1>
         <div class="w-20 h-1 bg-blue-600 rounded-full"></div>
     </div>
 

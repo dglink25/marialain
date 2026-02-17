@@ -14,13 +14,11 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
-class TeacherExamController extends Controller
-{
+class TeacherExamController extends Controller{
     /**
      * Affiche la liste des épreuves
      */
-    public function index(Request $request)
-    {
+    public function index(Request $request){
         $teacher = Auth::user();
         $activeYear = AcademicYear::where('active', true)->first();
         
@@ -111,8 +109,7 @@ class TeacherExamController extends Controller
     /**
      * Enregistre une nouvelle épreuve
      */
-    public function store(Request $request)
-    {
+    public function store(Request $request) {
         try {
             $activeYear = AcademicYear::where('active', true)->firstOrFail();
             $teacher = Auth::user();
