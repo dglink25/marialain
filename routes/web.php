@@ -488,7 +488,6 @@ Route::middleware(['auth'])->prefix('teacher')->name('teacher.')->group(function
         [NoteController::class, 'create']
     )->name('classes.notes.create');
 
-    // ENREGISTREMENT FORM
     Route::post(
         'classes/{class}/subjects/{subject}/notes/{type}/{num}/{trimestre}',
         [NoteController::class, 'store']

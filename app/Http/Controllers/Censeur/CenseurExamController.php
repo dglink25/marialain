@@ -13,13 +13,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use setasign\Fpdi\Fpdi;
 
-class CenseurExamController extends Controller
-{
-    /**
-     * Affiche les types d'évaluations pour une classe
-     */
-    public function types($classeId)
-    {
+class CenseurExamController extends Controller{
+    
+    public function types($classeId){
         // Vérifier que l'ID est numérique
         if (!is_numeric($classeId)) {
             abort(404);
@@ -75,11 +71,7 @@ class CenseurExamController extends Controller
         return view('censeur.exams.types', compact('classe', 'activeYear', 'stats', 'studentCount'));
     }
     
-    /**
-     * Télécharge toutes les épreuves d'un type spécifique (lien direct)
-     */
-    public function downloadAll(Request $request, $classeId)
-    {
+    public function downloadAll(Request $request, $classeId){
         try {
             // Vérifier que l'ID est numérique
             if (!is_numeric($classeId)) {
@@ -119,12 +111,8 @@ class CenseurExamController extends Controller
             return redirect()->back()->with('error', 'Erreur lors de la génération du PDF.');
         }
     }
-    
-    /**
-     * Télécharge les copies via formulaire
-     */
-    public function downloadCopies(Request $request)
-    {
+ 
+    public function downloadCopies(Request $request){
         try {
             $request->validate([
                 'classe_id' => 'required|numeric|exists:classes,id',
@@ -167,12 +155,8 @@ class CenseurExamController extends Controller
             return redirect()->back()->with('error', 'Erreur lors de la génération du PDF.');
         }
     }
-    
-    /**
-     * Génère un PDF avec l'épreuve + copies pour chaque élève
-     */
-    private function generateCopiesPDF($exam, $studentCount)
-    {
+
+    private function generateCopiesPDF($exam, $studentCount) {
         try {
             // Vérifier que la relation classe est chargée
             if (!$exam->relationLoaded('classe')) {
@@ -241,12 +225,8 @@ class CenseurExamController extends Controller
             throw $e;
         }
     }
-    
-    /**
-     * Obtient le nombre de pages d'un PDF
-     */
-    private function getPDFPageCount($filePath)
-    {
+
+    private function getPDFPageCount($filePath) {
         try {
             $pdf = new Fpdi();
             return $pdf->setSourceFile($filePath);
@@ -255,12 +235,8 @@ class CenseurExamController extends Controller
             return 1; // Par défaut, retourner 1 page
         }
     }
-    
-    /**
-     * Affiche les épreuves d'un trimestre spécifique
-     */
-    public function trimestre($classeId, $trimestre)
-    {
+
+    public function trimestre($classeId, $trimestre){
         if (!is_numeric($classeId)) {
             abort(404);
         }
@@ -275,11 +251,7 @@ class CenseurExamController extends Controller
         return view('censeur.exams.trimestre', compact('classe', 'trimestre', 'activeYear'));
     }
     
-    /**
-     * Affiche la liste des épreuves par trimestre, type et numéro
-     */
-    public function list(Request $request, $classeId, $trimestre, $type, $numero)
-    {
+    public function list(Request $request, $classeId, $trimestre, $type, $numero) {
         if (!is_numeric($classeId)) {
             abort(404);
         }
