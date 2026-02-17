@@ -56,6 +56,9 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\CahierDeTexteController;
 use App\Http\Controllers\Censeur\CenseurExamController;
 use App\Http\Controllers\Teacher\TeacherExamController;
+use App\Http\Controllers\ParentAuthController;
+use App\Http\Controllers\ParentDashboardController;
+use App\Http\Controllers\Parent\ChildController;
 
 // Pour tester la page 400
 Route::get('/test-400', function () {
@@ -701,3 +704,23 @@ Route::middleware(['auth'])->group(function () {
             ->name('download-copies');
     });
 });
+
+
+
+
+
+
+
+Route::prefix('parent')->name('parent.')->group(function () {
+    Route::get('/login', [ParentAuthController::class, 'showLoginForm'])->name('login');
+    Route::post('/login', [ParentAuthController::class, 'login']);
+    Route::post('/logout', [ParentAuthController::class, 'logout'])->name('logout');
+});
+
+Route::prefix('parent')->name('parent.')->middleware('auth:parent')->group(function () {
+    Route::get('/dashboard', [ParentDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/children/{student}/grades', [ParentDashboardController::class, 'grades'])->name('child.grades');
+    Route::get('/children/{student}/attendance', [ParentDashboardController::class, 'attendance'])->name('child.attendance');
+    Route::get('/children/{student}/payments', [ParentDashboardController::class, 'payments'])->name('child.payments');
+});
+

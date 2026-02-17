@@ -188,12 +188,11 @@
             <!-- Bouton hamburger -->
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menuNav">
                 <span class="navbar-toggler-icon"></span>
-            </button>
+            </button> 
 
             <!-- Menu -->
             <div class="collapse navbar-collapse" id="menuNav">
                 <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link" href="#accueil">Accueil</a></li>
                     <li class="nav-item"><a class="nav-link" href="#a-propos">À propos</a></li>
                     <li class="nav-item"><a class="nav-link" href="#programmes">Programmes</a></li>
                     <li class="nav-item"><a class="nav-link" href="#cours">Cours</a></li>
@@ -207,7 +206,12 @@
                         </ul>
                     </li>
                     <li class="nav-item">
-                        <a href="{{ route('students.create') }}" class="btn btn-orange ms-4">S'inscrire</a>
+                        <a href="{{ route('students.create') }}" class="btn btn-orange ms-4">Inscrire mon enfant</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="btn btn-orange ms-4" data-bs-toggle="modal" data-bs-target="#parentLoginModal">
+                            Espace Parent
+                        </a>
                     </li>
                 </ul>
             </div>
@@ -760,5 +764,385 @@
             }
         });
     </script>
+
+    <!-- Modal Connexion Parent -->
+<div class="modal fade" id="parentLoginModal" tabindex="-1" aria-labelledby="parentLoginModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 rounded-4 overflow-hidden">
+            <div class="modal-body p-0">
+                <button type="button" class="btn-close position-absolute top-0 end-0 m-3 z-3" data-bs-dismiss="modal" aria-label="Close"></button>
+                
+                <div class="row g-0">
+                    <!-- Partie gauche avec image et décoration -->
+                    <div class="col-lg-5 d-none d-lg-block position-relative" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                        <div class="h-100 d-flex flex-column justify-content-center align-items-center text-white p-4 position-relative">
+                            <!-- Décoration animée -->
+                            <div class="position-absolute top-0 start-0 w-100 h-100 overflow-hidden">
+                                <div class="shape-1"></div>
+                                <div class="shape-2"></div>
+                                <div class="shape-3"></div>
+                            </div>
+                            
+                            <!-- Contenu -->
+                            <div class="text-center position-relative" style="z-index: 1;">
+                                <img src="{{ asset('ursule/img/logo.png') }}" alt="Logo" style="height: 80px; filter: brightness(0) invert(1);" class="mb-4 animate__animated animate__fadeInDown">
+                                <h3 class="fw-bold mb-3 animate__animated animate__fadeInUp">Bienvenue!</h3>
+                                <p class="mb-4 animate__animated animate__fadeInUp animate__delay-1s">Connectez-vous pour suivre la scolarité de vos enfants</p>
+                                <div class="mt-4 animate__animated animate__fadeInUp animate__delay-2s">
+                                    <i class="fas fa-chart-line fa-2x mx-2"></i>
+                                    <i class="fas fa-graduation-cap fa-2x mx-2"></i>
+                                    <i class="fas fa-calendar-check fa-2x mx-2"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Partie droite avec formulaire -->
+                    <div class="col-lg-7 p-4 p-lg-5 bg-white">
+                        <div class="text-center mb-4">
+                            <h4 class="fw-bold text-dark mb-2 animate__animated animate__fadeInDown">Espace Parent</h4>
+                            <p class="text-muted small animate__animated animate__fadeIn">Accédez à votre espace sécurisé</p>
+                        </div>
+
+                        <!-- Messages d'erreur -->
+                        @if($errors->any())
+                            <div class="alert alert-danger alert-dismissible fade show animate__animated animate__shakeX" role="alert">
+                                @foreach($errors->all() as $error)
+                                    <i class="fas fa-exclamation-circle me-2"></i>{{ $error }}<br>
+                                @endforeach
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        @endif
+
+                        @if(session('error'))
+                            <div class="alert alert-danger alert-dismissible fade show animate__animated animate__shakeX" role="alert">
+                                <i class="fas fa-exclamation-circle me-2"></i>{{ session('error') }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        @endif
+
+                        <form method="POST" action="{{ route('parent.login') }}" class="animate__animated animate__fadeInUp" id="parentLoginForm">
+                            @csrf
+                            
+                            <!-- Champ Téléphone -->
+                            <div class="form-floating mb-3">
+                                <input type="tel" 
+                                       class="form-control @error('phone') is-invalid @enderror" 
+                                       id="phone" 
+                                       name="phone" 
+                                       placeholder="01XXXXXXXX" 
+                                       value="{{ old('phone') }}"
+                                       pattern="01[0-9]{8}"
+                                       title="Format: 01XXXXXXXX"
+                                       required>
+                                <label for="phone"><i class="fas fa-phone-alt me-2 text-orange"></i>Numéro de téléphone</label>
+                                @error('phone')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <!-- Champ Mot de passe -->
+                            <div class="form-floating mb-3 position-relative">
+                                <input type="password" 
+                                       class="form-control @error('password') is-invalid @enderror" 
+                                       id="password" 
+                                       name="password" 
+                                       placeholder="Mot de passe"
+                                       required>
+                                <label for="password"><i class="fas fa-lock me-2 text-orange"></i>Mot de passe</label>
+                                <button type="button" class="btn btn-link position-absolute end-0 top-50 translate-middle-y" onclick="togglePassword()">
+                                    <i class="far fa-eye" id="togglePasswordIcon"></i>
+                                </button>
+                                @error('password')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <!-- Options supplémentaires -->
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="remember" id="remember">
+                                    <label class="form-check-label small" for="remember">
+                                        Se souvenir de moi
+                                    </label>
+                                </div>
+                                <a href="#" class="text-orange text-decoration-none small" data-bs-toggle="modal" data-bs-target="#forgotPasswordModal">
+                                    Mot de passe oublié?
+                                </a>
+                            </div>
+
+                            <!-- Bouton de connexion -->
+                            <button type="submit" class="btn btn-orange w-100 py-3 mb-3 fw-bold" id="loginButton">
+                                <span class="spinner-border spinner-border-sm d-none" id="loginSpinner" role="status"></span>
+                                <span id="loginText">Se connecter</span>
+                            </button>
+
+                            <!-- Lien d'inscription -->
+                            <p class="text-center small text-muted mb-0">
+                                Pas encore inscrit? 
+                                <a href="{{ route('students.create') }}" class="text-orange text-decoration-none fw-bold">Inscrivez votre enfant</a>
+                            </p>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Mot de passe oublié -->
+<div class="modal fade" id="forgotPasswordModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 rounded-4">
+            <div class="modal-header border-0 bg-orange text-white">
+                <h5 class="modal-title"><i class="fas fa-key me-2"></i>Réinitialisation mot de passe</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p class="text-muted mb-3">Entrez votre numéro de téléphone pour recevoir un lien de réinitialisation.</p>
+                <div class="form-floating mb-3">
+                    <input type="tel" class="form-control" id="resetPhone" placeholder="01XXXXXXXX">
+                    <label for="resetPhone">Numéro de téléphone</label>
+                </div>
+                <button type="button" class="btn btn-orange w-100" onclick="sendResetLink()">
+                    Envoyer le lien
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Styles personnalisés pour la modal */
+.modal-content {
+    animation: modalSlideIn 0.5s ease;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Formes décoratives animées */
+.shape-1, .shape-2, .shape-3 {
+    position: absolute;
+    background: rgba(255,255,255,0.1);
+    border-radius: 50%;
+    animation: float 6s infinite ease-in-out;
+}
+
+.shape-1 {
+    width: 200px;
+    height: 200px;
+    top: -50px;
+    left: -50px;
+    animation-delay: 0s;
+}
+
+.shape-2 {
+    width: 150px;
+    height: 150px;
+    bottom: -30px;
+    right: -30px;
+    animation-delay: 2s;
+}
+
+.shape-3 {
+    width: 100px;
+    height: 100px;
+    bottom: 50px;
+    left: 50px;
+    animation-delay: 4s;
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0) rotate(0deg);
+    }
+    50% {
+        transform: translateY(-20px) rotate(180deg);
+    }
+}
+
+/* Effets de focus sur les inputs */
+.form-floating > .form-control:focus {
+    border-color: #ff6b35;
+    box-shadow: 0 0 0 0.2rem rgba(255, 107, 53, 0.25);
+}
+
+.form-floating > .form-control:focus + label {
+    color: #ff6b35;
+}
+
+/* Bouton orange personnalisé */
+.btn-orange {
+    background: linear-gradient(45deg, #ff6b35, #ff8c5a);
+    color: white;
+    border: none;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-orange:hover {
+    background: linear-gradient(45deg, #ff8c5a, #ff6b35);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 107, 53, 0.4);
+    color: white;
+}
+
+.btn-orange:active {
+    transform: translateY(0);
+}
+
+/* Animation de chargement */
+.spinner-border {
+    vertical-align: middle;
+    margin-right: 5px;
+}
+
+/* Effet de vague sur le bouton */
+.btn-orange::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 5px;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.5);
+    opacity: 0;
+    border-radius: 100%;
+    transform: scale(1, 1) translate(-50%);
+    transform-origin: 50% 50%;
+}
+
+.btn-orange:focus:not(:active)::after {
+    animation: ripple 1s ease-out;
+}
+
+@keyframes ripple {
+    0% {
+        transform: scale(0, 0);
+        opacity: 0.5;
+    }
+    20% {
+        transform: scale(25, 25);
+        opacity: 0.5;
+    }
+    100% {
+        opacity: 0;
+        transform: scale(40, 40);
+    }
+}
+
+/* Adaptation mobile */
+@media (max-width: 768px) {
+    .modal-dialog {
+        margin: 0.5rem;
+    }
+    
+    .modal-content {
+        border-radius: 1rem !important;
+    }
+}
+</style>
+
+<script>
+// Fonction pour afficher/masquer le mot de passe
+function togglePassword() {
+    const passwordInput = document.getElementById('password');
+    const icon = document.getElementById('togglePasswordIcon');
+    
+    if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+    } else {
+        passwordInput.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+    }
+}
+
+// Animation du bouton de connexion
+document.getElementById('parentLoginForm')?.addEventListener('submit', function(e) {
+    const button = document.getElementById('loginButton');
+    const spinner = document.getElementById('loginSpinner');
+    const text = document.getElementById('loginText');
+    
+    button.disabled = true;
+    spinner.classList.remove('d-none');
+    text.textContent = 'Connexion en cours...';
+});
+
+// Remplir avec un compte démo
+function fillDemoAccount() {
+    document.getElementById('phone').value = '0197212045';
+    document.getElementById('password').value = 'password123';
+    
+    // Animation de confirmation
+    Swal.fire({
+        icon: 'success',
+        title: 'Compte démo rempli!',
+        text: 'Cliquez sur Se connecter pour continuer',
+        timer: 2000,
+        showConfirmButton: false
+    });
+}
+
+// Info mode démo
+function showDemoInfo() {
+    Swal.fire({
+        title: 'Mode Démo',
+        html: `
+            <p><strong>Téléphone:</strong> 0197212045</p>
+            <p><strong>Mot de passe:</strong> password123</p>
+            <p class="text-muted small mt-2">Ceci est un compte de démonstration</p>
+        `,
+        icon: 'info',
+        confirmButtonColor: '#ff6b35'
+    });
+}
+
+// Simulation envoi lien de réinitialisation
+function sendResetLink() {
+    const phone = document.getElementById('resetPhone').value;
+    if (!phone) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Champ requis',
+            text: 'Veuillez entrer votre numéro de téléphone',
+            confirmButtonColor: '#ff6b35'
+        });
+        return;
+    }
+    
+    Swal.fire({
+        icon: 'success',
+        title: 'Lien envoyé!',
+        text: 'Un lien de réinitialisation a été envoyé à votre numéro',
+        timer: 3000,
+        showConfirmButton: false
+    });
+    
+    setTimeout(() => {
+        bootstrap.Modal.getInstance(document.getElementById('forgotPasswordModal')).hide();
+    }, 2000);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    @if($errors->any() || session('error'))
+        // Afficher le modal automatiquement s'il y a des erreurs
+        var myModal = new bootstrap.Modal(document.getElementById('parentLoginModal'));
+        myModal.show();
+    @endif
+});
+</script>
 </body>
 </html>
