@@ -124,7 +124,7 @@ return [
     ],
 
     'aliases' => [
-        // ...
+        
         'Cloudinary' => CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary::class,
     ],
 

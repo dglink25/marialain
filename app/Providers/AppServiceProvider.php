@@ -22,13 +22,27 @@ class AppServiceProvider extends ServiceProvider{
         if ($this->app->environment('production')) {
             URL::forceScheme('https');
         }
-        Configuration::instance([
-            'cloud' => [
-                'cloud_name' => env('CLOUDINARY_CLOUD_NAME'),
-                'api_key'    => env('CLOUDINARY_API_KEY'),
-                'api_secret' => env('CLOUDINARY_API_SECRET'),
-            ],
-        ]);
+         $cloudName = config('cloudinary.cloud_name');
+        $apiKey = config('cloudinary.api_key');
+        $apiSecret = config('cloudinary.api_secret');
+        $cloudUrl = config('cloudinary.cloud_url');
+
+        try {
+            if ($cloudUrl) {
+                Configuration::instance($cloudUrl);
+            } elseif ($cloudName && $apiKey && $apiSecret) {
+                Configuration::instance([
+                    'cloud' => [
+                        'cloud_name' => $cloudName,
+                        'api_key' => $apiKey,
+                        'api_secret' => $apiSecret
+                    ]
+                ]);
+            }
+        } 
+        catch (\Exception $e) {
+            //Log::error('Erreur configuration Cloudinary: ' . $e->getMessage());
+        }
     }
 
     
