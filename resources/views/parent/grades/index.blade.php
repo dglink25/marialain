@@ -178,8 +178,13 @@
                                                     
                                                     <!-- Rang (simplifié) -->
                                                     <td class="text-center">
-                                                        <span class="badge bg-secondary">-</span>
+                                                        @if($subjectStats['rang'])
+                                                            <span class="badge bg-secondary">{{ $subjectStats['rang'] }}<sup>ème</sup></span>
+                                                        @else
+                                                            <span class="text-muted">-</span>
+                                                        @endif
                                                     </td>
+                                                    
                                                 @else
                                                     <td colspan="13" class="text-center text-muted">
                                                         Aucune note
@@ -213,7 +218,7 @@
                                             <h3 class="mb-0">{{ number_format($trimestreStats['conduite_finale'], 2) }}/20</h3>
                                             <small class="text-white-50">
                                                 Base: {{ number_format($trimestreStats['conduite_base'], 2) }} | 
-                                                Pénalité: {{ $trimestreStats['total_punishment_hours']/2 }} pts
+                                                Punition reçu: {{ $trimestreStats['total_punishment_hours']/2 }} pts
                                             </small>
                                         </div>
                                         <i class="fas fa-gavel fa-3x opacity-50"></i>
@@ -244,8 +249,8 @@
                                         <div>
                                             <h6 class="text-white-50 mb-1">Rang</h6>
                                             <h3 class="mb-0">
-                                                @if(isset($rangs[$trimestre]))
-                                                    {{ $rangs[$trimestre] }}/{{ $effectif }}
+                                                 @if(isset($stats[$trimestre]['rang_general']))
+                                                    {{ $stats[$trimestre]['rang_general'] }}/{{ $effectif }}
                                                 @else
                                                     -/{{ $effectif }}
                                                 @endif

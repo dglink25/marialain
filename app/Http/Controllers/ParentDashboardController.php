@@ -224,17 +224,20 @@ class ParentDashboardController extends Controller{
                             );
                         }
 
-                    } elseif ($moyenneInterro > 0 && $nbDevoirs == 0) {
+                    } 
+                    elseif ($moyenneInterro > 0 && $nbDevoirs == 0) {
                         
                         // Pas de devoir
                         $moyenneSur20 = $moyenneInterro;
 
-                    } elseif ($moyenneInterro == 0 && $nbDevoirs > 0) {
+                    } 
+                    elseif ($moyenneInterro == 0 && $nbDevoirs > 0) {
                         
                         // Pas d'interrogation
                         $moyenneSur20 = round($devoirs->avg(), 2);
 
-                    } else {
+                    } 
+                    else {
                         
                         $moyenneSur20 = 0;
                     }
@@ -252,7 +255,8 @@ class ParentDashboardController extends Controller{
                         'moyenne_interro' => $moyenneInterro,
                         'moyenne_devoir' => $moyenneDevoir,
                         'moyenne_sur_20' => $moyenneSur20,
-                        'moyenne_coeff' => $moyenneCoeff
+                        'moyenne_coeff' => $moyenneCoeff,
+                        'rang' => $subjectRanks[$classSubject->subject_id] ?? null
                     ];
 
                     if ($moyenneSur20 > 0) {
@@ -263,7 +267,7 @@ class ParentDashboardController extends Controller{
                 }
 
                 // Récupérer la note de conduite de base
-                $conduiteBase = $conducts[$trimestre]->grade ?? 10; // Note par défaut si non définie
+                $conduiteBase = $conducts[$trimestre]->grade ?? null; // Note par défaut si non définie
                 
                 // Calculer la conduite finale (note de base - moitié des heures de punition)
                 $conduiteFinale = max(0, $conduiteBase - ($totalPunishmentHours / 2));
@@ -276,6 +280,71 @@ class ParentDashboardController extends Controller{
                     $moyenneGenerale = round(($totalWeighted + $conduiteFinale) / ($totalCoeff + 1), 2);
                 }
 
+                $classAverages[$student->id] = [
+                    'moyenne' => $moyenneGenerale,
+                    'subject_averages' => collect($subjectStats)->pluck('moyenne_sur_20', null)->toArray()
+                ];
+
+                // Trier les élèves par moyenne générale pour obtenir les rangs
+                uasort($classAverages, function($a, $b) {
+                    return $b['moyenne'] <=> $a['moyenne'];
+                });
+
+                // Calculer les rangs par matière
+                foreach ($subjects as $classSubject) {
+                    $subjectId = $classSubject->subject_id;
+                    $subjectScores = [];
+                    
+                    foreach ($classAverages as $studentId => $data) {
+                        if (isset($data['subject_averages'][$subjectId]) && $data['subject_averages'][$subjectId] > 0) {
+                            $subjectScores[$studentId] = $data['subject_averages'][$subjectId];
+                        }
+                    }
+                    
+                    // Trier par note décroissante
+                    arsort($subjectScores);
+                    
+                    // Trouver le rang de notre élève
+                    $rank = 1;
+                    foreach ($subjectScores as $studentId => $score) {
+                        if ($studentId == $student->id) {
+                            $subjectRanks[$subjectId] = $rank;
+                            break;
+                        }
+                        $rank++;
+                    }
+                    
+                    // Si l'élève n'a pas de note dans cette matière
+                    if (!isset($subjectRanks[$subjectId])) {
+                        $subjectRanks[$subjectId] = null;
+                    }
+                }
+
+                // Trouver le rang général de notre élève
+                $generalRank = null;
+                $rank = 0;
+                $previousScore = null;
+                $sameRankCount = 0;
+
+                foreach ($classAverages as $studentId => $data) {
+                    $rank++;
+
+                    if ($previousScore !== null && $data['moyenne'] == $previousScore) {
+                        $sameRankCount++;
+                    } else {
+                        $rank = $rank - $sameRankCount;
+                        $sameRankCount = 0;
+                    }
+
+                    if ($studentId == $student->id) {
+                        $generalRank = $rank;
+                        break;
+                    }
+
+                    $previousScore = $data['moyenne'];
+                }
+
+
                 $stats[$trimestre] = [
                     'subjects' => $subjectStats,
                     'moyenne_generale' => $moyenneGenerale,
@@ -284,7 +353,8 @@ class ParentDashboardController extends Controller{
                     'total_coeff' => $totalCoeff,
                     'total_weighted' => round($totalWeighted, 2),
                     'total_punishment_hours' => $totalPunishmentHours,
-                    'matieres_avec_notes' => $matieresAvecNotes
+                    'matieres_avec_notes' => $matieresAvecNotes,
+                    'rang_general' => $generalRank,
                 ];
 
                 // Stocker pour le calcul du rang
