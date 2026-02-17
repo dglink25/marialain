@@ -131,7 +131,7 @@
                                         Effectif de la classe: <strong>{{ $studentCount }} élève(s)</strong>
                                     </p>
                                     <p class="text-xs text-blue-600 mt-1">
-                                        Le PDF généré contiendra l'épreuve + 1 copie par élève
+                                        Le PDF généré contiendra l'ensemble des Épreuves de toutes les professeurs ayant soumis une épreuve pour ces critères
                                     </p>
                                 </div>
                             </div>
