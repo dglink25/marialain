@@ -6,141 +6,197 @@
 @section('page-title', 'Tableau de bord')
 
 @section('breadcrumb')
-    <li class="breadcrumb-item active">Accueil</li>
+    <li class="breadcrumb-item active" aria-current="page">@if($activeAcademicYear)
+                                Année académique : <strong>{{ $activeAcademicYear->name }}</strong>
+                            @endif</li>
 @endsection
 
 @section('content')
 <div class="row g-4">
-    <!-- Carte de bienvenue -->
+    <!-- Message de bienvenue personnalisé avec année académique -->
     <div class="col-12">
-        <div class="card border-0 bg-gradient-orange text-white overflow-hidden" style="background: linear-gradient(135deg, #ff6b35, #ff8c5a); border-radius: 20px;">
-            <div class="card-body p-4 position-relative">
-                <div class="position-absolute top-0 end-0 opacity-10">
-                    <i class="fas fa-school fa-6x"></i>
+        <div class="card bg-success text-white border-0">
+            <div class="card-body p-4">
+                <div class="d-flex flex-wrap align-items-center gap-4">
+                    <div class="bg-white bg-opacity-20 rounded-circle p-3">
+                        <i class="fas fa-hand-wave fa-3x"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h2 class="h3 mb-2">Bonjour, {{ auth('parent')->user()->full_name }}!</h2>
+                        <p class="mb-0 opacity-75">
+                            Bienvenue dans votre espace parent.
+                        </p>
+                    </div>
+                    <div class="d-none d-md-block">
+                        <img src="{{ asset('ursule/img/family-icon.png') }}" alt="" style="max-height: 80px;" loading="lazy">
+                    </div>
                 </div>
-                <h4 class="fw-bold mb-2 animate__animated animate__fadeInDown">
-                    Bonjour, {{ auth('parent')->user()->full_name }}!
-                </h4>
-                <p class="mb-0 opacity-75 animate__animated animate__fadeInUp">
-                    Bienvenue dans votre espace parent. Suivez la scolarité de vos enfants en temps réel.
-                </p>
             </div>
         </div>
     </div>
 
-    <!-- Statistiques -->
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm h-100 hover-card">
-            <div class="card-body text-center">
-                <div class="bg-primary bg-opacity-10 rounded-circle p-3 d-inline-block mb-3">
-                    <i class="fas fa-child fa-2x text-primary"></i>
-                </div>
-                <h3 class="fw-bold mb-0">{{ auth('parent')->user()->students->count() }}</h3>
-                <p class="text-muted mb-0">Enfants inscrits</p>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm h-100 hover-card">
-            <div class="card-body text-center">
+    <!-- Cartes de statistiques simplifiées avec données réelles -->
+    <div class="col-md-6 col-lg-3">
+        <div class="card h-100 text-center">
+            <div class="card-body">
                 <div class="bg-success bg-opacity-10 rounded-circle p-3 d-inline-block mb-3">
-                    <i class="fas fa-star fa-2x text-success"></i>
+                    <i class="fas fa-child fa-2x text-success"></i>
                 </div>
-                <h3 class="fw-bold mb-0">12</h3>
-                <p class="text-muted mb-0">Nouveautés</p>
+                <h3 class="h2 fw-bold mb-1">{{ $totalStudents }}</h3>
+                <p class="text-muted mb-0">Enfant(s) inscrit(s)</p>
+                @if($activeAcademicYear)
+                    <small class="text-muted">{{ $activeAcademicYear->name }}</small>
+                @endif
             </div>
         </div>
     </div>
 
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm h-100 hover-card">
-            <div class="card-body text-center">
-                <div class="bg-warning bg-opacity-10 rounded-circle p-3 d-inline-block mb-3">
-                    <i class="fas fa-calendar fa-2x text-warning"></i>
-                </div>
-                <h3 class="fw-bold mb-0">3</h3>
-                <p class="text-muted mb-0">Événements à venir</p>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm h-100 hover-card">
-            <div class="card-body text-center">
+    <div class="col-md-6 col-lg-3">
+        <div class="card h-100 text-center">
+            <div class="card-body">
                 <div class="bg-danger bg-opacity-10 rounded-circle p-3 d-inline-block mb-3">
                     <i class="fas fa-credit-card fa-2x text-danger"></i>
                 </div>
-                <h3 class="fw-bold mb-0">75%</h3>
-                <p class="text-muted mb-0">Paiements effectués</p>
+                <h3 class="h2 fw-bold mb-1">{{ $paymentPercentage }}%</h3>
+                <p class="text-muted mb-0">Scolarité payée</p>
+                @if($paymentPercentage < 100)
+                    <small class="text-warning">Paiement en cours</small>
+                @else
+                    <small class="text-success">À jour</small>
+                @endif
             </div>
         </div>
     </div>
 
-    <!-- Liste des enfants -->
+    <!-- Section Enfants avec données dynamiques -->
     <div class="col-12">
-        <div class="card border-0 shadow-sm">
+        <div class="card">
             <div class="card-header bg-transparent border-0 pt-4">
-                <h5 class="fw-bold mb-0"><i class="fas fa-users me-2 text-orange"></i>Mes enfants</h5>
+                <h2 class="h4 mb-0">
+                    <i class="fas fa-users me-2 text-success"></i>
+                    Mes enfants
+                    @if($activeAcademicYear)
+                        <small class="text-muted ms-2">({{ $activeAcademicYear->name }})</small>
+                    @endif
+                </h2>
             </div>
             <div class="card-body">
-                <div class="row g-4">
-                    @forelse(auth('parent')->user()->students as $student)
-                        <div class="col-md-6">
-                            <div class="card border-0 bg-light hover-card">
-                                <div class="card-body">
-                                    <div class="d-flex align-items-center mb-3">
-                                        <div class="profile-avatar me-3" style="width: 50px; height: 50px; font-size: 1.5rem;">
-                                            {{ substr($student->first_name, 0, 1) }}{{ substr($student->last_name, 0, 1) }}
-                                        </div>
-                                        <div>
-                                            <h5 class="fw-bold mb-1">{{ $student->full_name }}</h5>
-                                            <p class="text-muted small mb-0">
-                                                <i class="fas fa-graduation-cap me-1"></i>{{ $student->classe->name ?? 'Non assigné' }}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="row g-2 mb-3">
-                                        <div class="col-4 text-center">
-                                            <div class="bg-white rounded-3 p-2">
-                                                <small class="text-muted d-block">Moyenne</small>
-                                                <strong class="text-orange">14.5</strong>
+                @forelse($students as $student)
+                    @php
+                        $stats = App\Http\Controllers\ParentDashboardController::getStudentStats($student, $activeAcademicYear?->id);
+                        $totalPaid = $student->payments->sum('amount');
+                        $schoolFees = $student->classe?->school_fees ?? 0;
+                        $paymentStatus = $schoolFees > 0 ? round(($totalPaid / $schoolFees) * 100) : 0;
+                    @endphp
+                    <div class="row g-4 mb-4">
+                        <div class="col-12">
+                            <div class="border rounded-4 p-4 hover-shadow">
+                                <div class="row align-items-center">
+                                    <!-- Info enfant -->
+                                    <div class="col-md-4 mb-3 mb-md-0">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="profile-avatar" style="width: 60px; height: 60px; font-size: 1.8rem;">
+                                                {{ substr($student->first_name, 0, 1) }}{{ substr($student->last_name, 0, 1) }}
                                             </div>
-                                        </div>
-                                        <div class="col-4 text-center">
-                                            <div class="bg-white rounded-3 p-2">
-                                                <small class="text-muted d-block">Absences</small>
-                                                <strong class="text-warning">2</strong>
-                                            </div>
-                                        </div>
-                                        <div class="col-4 text-center">
-                                            <div class="bg-white rounded-3 p-2">
-                                                <small class="text-muted d-block">Rang</small>
-                                                <strong class="text-success">8<small class="text-muted">/25</small></strong>
+                                            <div>
+                                                <h3 class="h5 fw-bold mb-1">{{ $student->full_name }}</h3>
+                                                <p class="text-muted small mb-0">
+                                                    <i class="fas fa-graduation-cap me-1"></i>
+                                                    {{ $student->classe->name ?? 'Classe non assignée' }}
+                                                </p>
                                             </div>
                                         </div>
                                     </div>
-                                    
-                                    <div class="d-flex gap-2">
-                                        <a href="{{ route('parent.child.grades', $student) }}" class="btn btn-sm btn-outline-orange flex-fill">
-                                            <i class="fas fa-chart-line me-1"></i>Notes
-                                        </a>
-                                        <a href="{{ route('parent.child.attendance', $student) }}" class="btn btn-sm btn-outline-orange flex-fill">
-                                            <i class="fas fa-calendar-check me-1"></i>Présences
-                                        </a>
-                                        <a href="{{ route('parent.child.payments', $student) }}" class="btn btn-sm btn-outline-orange flex-fill">
-                                            <i class="fas fa-credit-card me-1"></i>Paiements
-                                        </a>
+
+                                    <!-- Actions simplifiées -->
+                                    <div class="col-md-5">
+                                        <div class="d-flex gap-2 flex-wrap">
+                                            <a href="{{ route('parent.child.grades', $student) }}" 
+                                               class="btn btn-outline-success flex-fill"
+                                               aria-label="Voir les notes de {{ $student->first_name }}">
+                                                <i class="fas fa-chart-line me-1"></i>
+                                                Notes
+                                            </a>
+                                            @if($student->classe)
+                                                <a href="{{ route('parent.child.timetable', $student) }}" 
+                                                   class="btn btn-outline-success flex-fill"
+                                                   aria-label="Voir l'emploi du temps de {{ $student->first_name }}">
+                                                    <i class="fas fa-calendar-alt me-1"></i>
+                                                    Emploi du temps
+                                                </a>
+                                            @endif
+                                        </div>
+                                    </div>
+
+                                    <!-- Statut rapide -->
+                                    <div class="col-md-3">
+                                        <div class="d-flex justify-content-end gap-2">
+                                            @if($paymentStatus >= 100)
+                                                <span class="badge bg-success p-2">
+                                                    <i class="fas fa-check-circle me-1"></i>Scolarité à jour
+                                                </span>
+                                            @elseif($paymentStatus >= 50)
+                                                <span class="badge bg-warning p-2">
+                                                    <i class="fas fa-clock me-1"></i>{{ $paymentStatus }}% payé
+                                                </span>
+                                            @else
+                                                <span class="badge bg-danger p-2">
+                                                    <i class="fas fa-exclamation-circle me-1"></i>{{ $paymentStatus }}% payé
+                                                </span>
+                                            @endif
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
+                    </div>
+                @empty
+                    <div class="text-center py-5">
+                        <div class="mb-4">
+                            <i class="fas fa-child fa-4x text-muted"></i>
+                        </div>
+                        <h3 class="h5 mb-3">Aucun enfant inscrit</h3>
+                        <p class="text-muted mb-4">
+                            Vous n'avez pas encore d'enfants inscrits dans notre établissement pour l'année {{ $activeAcademicYear?->name ?? 'en cours' }}.
+                        </p>
+                        <a href="{{ route('parent.contact') }}" class="btn btn-success">
+                            <i class="fas fa-headset me-2"></i>
+                            Contacter l'administration
+                        </a>
+                    </div>
+                @endforelse
+            </div>
+        </div>
+    </div>
+
+    <!-- Section Actualités et Événements -->
+    <div class="col-md-7">
+        <div class="card h-100">
+            <div class="card-header bg-transparent border-0 pt-4">
+                <h2 class="h4 mb-0">
+                    <i class="fas fa-newspaper me-2 text-success"></i>
+                    Dernières Nouvelles
+                </h2>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    @forelse($news as $item)
+                        <div class="list-group-item px-0">
+                            <div class="d-flex gap-3">
+                                <div class="bg-{{ $item->badge_color }} bg-opacity-10 rounded-3 p-3 text-center" style="min-width: 70px;">
+                                    <span class="d-block fw-bold text-{{ $item->badge_color }}">{{ $item->day }}</span>
+                                    <span class="small text-muted">{{ $item->month }}</span>
+                                </div>
+                                <div>
+                                    <h3 class="h6 fw-bold mb-1">{{ $item->title }}</h3>
+                                    <p class="small text-muted mb-1">{{ $item->description }}</p>
+                                    <span class="badge bg-{{ $item->badge_color }}">{{ $item->badge }}</span>
+                                </div>
+                            </div>
+                        </div>
                     @empty
-                        <div class="col-12 text-center py-5">
-                            <img src="{{ asset('ursule/img/empty.svg') }}" alt="Aucun enfant" style="max-width: 200px;" class="mb-3">
-                            <h5>Aucun enfant trouvé</h5>
-                            <p class="text-muted">Vous n'avez pas encore d'enfants inscrits dans notre établissement.</p>
+                        <div class="text-center py-4">
+                            <p class="text-muted mb-0">Aucune actualité pour le moment</p>
                         </div>
                     @endforelse
                 </div>
@@ -148,91 +204,36 @@
         </div>
     </div>
 
-    <!-- Dernières notes et calendrier -->
-    <div class="col-md-7">
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-transparent border-0 pt-4">
-                <h5 class="fw-bold mb-0"><i class="fas fa-star me-2 text-orange"></i>Dernières notes</h5>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Élève</th>
-                                <th>Matière</th>
-                                <th>Note</th>
-                                <th>Date</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>
-                                    <div class="d-flex align-items-center">
-                                        <div class="profile-avatar me-2" style="width: 30px; height: 30px; font-size: 0.9rem;">JD</div>
-                                        <span>Jean Dupont</span>
-                                    </div>
-                                </td>
-                                <td>Mathématiques</td>
-                                <td><span class="badge bg-success">16/20</span></td>
-                                <td>15/03/2024</td>
-                                <td><a href="#" class="text-orange"><i class="fas fa-eye"></i></a></td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <div class="d-flex align-items-center">
-                                        <div class="profile-avatar me-2" style="width: 30px; height: 30px; font-size: 0.9rem;">MM</div>
-                                        <span>Marie Martin</span>
-                                    </div>
-                                </td>
-                                <td>Français</td>
-                                <td><span class="badge bg-warning">12/20</span></td>
-                                <td>14/03/2024</td>
-                                <td><a href="#" class="text-orange"><i class="fas fa-eye"></i></a></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-
+    <!-- Section Aide et Support -->
     <div class="col-md-5">
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-transparent border-0 pt-4">
-                <h5 class="fw-bold mb-0"><i class="fas fa-calendar-alt me-2 text-orange"></i>Calendrier</h5>
-            </div>
-            <div class="card-body">
-                <div class="list-group list-group-flush">
-                    <div class="list-group-item d-flex align-items-center">
-                        <div class="bg-orange text-white rounded-3 p-2 me-3 text-center" style="min-width: 50px;">
-                            <div class="small">MAR</div>
-                            <div class="fw-bold">20</div>
-                        </div>
-                        <div>
-                            <h6 class="mb-1">Composition 1er trimestre</h6>
-                            <small class="text-muted">Début des examens</small>
-                        </div>
-                    </div>
-                    <div class="list-group-item d-flex align-items-center">
-                        <div class="bg-info text-white rounded-3 p-2 me-3 text-center" style="min-width: 50px;">
-                            <div class="small">VEN</div>
-                            <div class="fw-bold">23</div>
-                        </div>
-                        <div>
-                            <h6 class="mb-1">Réunion parents-profs</h6>
-                            <small class="text-muted">Salle polyvalente</small>
+        <div class="card h-100 bg-success text-white">
+            <div class="card-body d-flex flex-column">
+                <div class="text-center mb-4">
+                    <i class="fas fa-headset fa-3x mb-3"></i>
+                    <h3 class="h4 mb-2">Besoin d'aide ?</h3>
+                    <p class="small opacity-75">
+                        Notre équipe est là pour vous accompagner
+                    </p>
+                </div>
+                
+                <div class="mt-auto">
+                    <div class="bg-white bg-opacity-10 rounded-4 p-3 mb-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <i class="fas fa-phone-alt fa-lg"></i>
+                            <div>
+                                <span class="small opacity-75">Appelez-nous</span>
+                                <div class="h6 mb-0">+229 01 97 21 20 45</div>
+                            </div>
                         </div>
                     </div>
-                    <div class="list-group-item d-flex align-items-center">
-                        <div class="bg-success text-white rounded-3 p-2 me-3 text-center" style="min-width: 50px;">
-                            <div class="small">LUN</div>
-                            <div class="fw-bold">26</div>
-                        </div>
-                        <div>
-                            <h6 class="mb-1">Journée sportive</h6>
-                            <small class="text-muted">Stade de l'école</small>
+                    
+                    <div class="bg-white bg-opacity-10 rounded-4 p-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <i class="fas fa-envelope fa-lg"></i>
+                            <div>
+                                <span class="small opacity-75">Envoyez-nous un email</span>
+                                <div class="h6 mb-0">cpegmariealain@gmail.com</div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -242,39 +243,54 @@
 </div>
 
 <style>
-.hover-card {
-    transition: all 0.3s ease;
-    cursor: pointer;
-}
-
-.hover-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1) !important;
-}
-
-.bg-gradient-orange {
-    background: linear-gradient(135deg, #ff6b35, #ff8c5a);
-}
-
-.btn-outline-orange {
-    color: #ff6b35;
-    border-color: #ff6b35;
-    background: transparent;
+.hover-shadow {
     transition: all 0.3s ease;
 }
+.hover-shadow:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+    transform: translateY(-2px);
+}
 
-.btn-outline-orange:hover {
-    background: #ff6b35;
+.bg-opacity-20 {
+    --bs-bg-opacity: 0.2;
+}
+
+.profile-avatar {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #198754, #20c997);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     color: white;
-    border-color: #ff6b35;
+    font-weight: 700;
+    font-size: 1.3rem;
 }
 
-.opacity-10 {
-    opacity: 0.1;
+/* Mode contraste élevé */
+@media (prefers-contrast: high) {
+    .card {
+        border: 2px solid black;
+    }
+    
+    .btn {
+        border: 2px solid currentColor;
+    }
 }
 
-.opacity-75 {
-    opacity: 0.75;
+/* Pour les petits écrans */
+@media (max-width: 576px) {
+    .profile-avatar {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+    }
+    
+    .btn {
+        font-size: 0.875rem;
+        padding: 0.625rem 1rem;
+    }
 }
 </style>
 @endsection

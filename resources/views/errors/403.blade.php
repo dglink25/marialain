@@ -87,19 +87,6 @@
                 <span>Page d'accueil</span>
             </a>
             
-            @auth
-            <a href="{{ route('dashboard') }}" 
-               class="px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold rounded-xl shadow-md hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300 flex items-center gap-3 group">
-                <i class="fas fa-tachometer-alt group-hover:scale-110 transition-transform duration-300"></i>
-                <span>Tableau de bord</span>
-            </a>
-            @else
-            <a href="{{ route('login') }}" 
-               class="px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold rounded-xl shadow-md hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300 flex items-center gap-3 group">
-                <i class="fas fa-sign-in-alt group-hover:scale-110 transition-transform duration-300"></i>
-                <span>Se connecter</span>
-            </a>
-            @endauth
         </div>
 
         <!-- Conseils -->

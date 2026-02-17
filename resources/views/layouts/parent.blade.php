@@ -3,15 +3,12 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Espace Parent - CPEG MARIE-ALAIN')</title>
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
-    
-    <!-- Animate.css -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
     
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -22,294 +19,414 @@
     <!-- SweetAlert2 -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     
-    <!-- Custom Parent CSS -->
     <style>
         :root {
-            --primary-orange: #ff6b35;
-            --secondary-orange: #ff8c5a;
-            --dark-bg: #1e3c72;
-            --light-bg: #f8f9fa;
+            --primary: #2E7D32;
+            --primary-light: #4CAF50;
+            --primary-dark: #1B5E20;
+            --secondary: #FF8F00;
+            --secondary-light: #FFB300;
+            --danger: #C62828;
+            --warning: #FFB300;
+            --success: #2E7D32;
+            --text-dark: #263238;
+            --text-light: #546E7A;
+            --bg-light: #F5F7FA;
+            --white: #FFFFFF;
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.1);
+            --shadow-md: 0 4px 20px rgba(0,0,0,0.15);
+            --shadow-lg: 0 8px 30px rgba(0,0,0,0.2);
+            --radius-sm: 12px;
+            --radius-md: 20px;
+            --radius-lg: 30px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--light-bg);
+            font-family: 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-light);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            line-height: 1.6;
+            font-size: 16px;
         }
-        
-        /* Navbar personnalisée */
+
+        /* Pour les malvoyants - texte plus grand */
+        @media (prefers-contrast: high) {
+            body {
+                font-size: 18px;
+            }
+        }
+
+        /* Skip link pour accessibilité */
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            background: var(--primary);
+            color: white;
+            padding: 8px 16px;
+            text-decoration: none;
+            border-radius: 0 0 var(--radius-sm) 0;
+            z-index: 10000;
+            transition: top 0.3s;
+        }
+
+        .skip-link:focus {
+            top: 0;
+            outline: 3px solid var(--secondary);
+        }
+
+        /* Navigation */
         .parent-navbar {
-            background: white;
-            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
-            padding: 1rem 0;
+            background: var(--white);
+            box-shadow: var(--shadow-sm);
+            padding: 0.75rem 0;
             position: sticky;
             top: 0;
             z-index: 1000;
-            animation: slideDown 0.5s ease;
         }
-        
-        @keyframes slideDown {
-            from {
-                transform: translateY(-100%);
-            }
-            to {
-                transform: translateY(0);
-            }
-        }
-        
+
         .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
             font-weight: 700;
-            color: var(--dark-bg) !important;
-            transition: all 0.3s ease;
+            color: var(--text-dark) !important;
+            font-size: 1.25rem;
         }
-        
-        .navbar-brand:hover {
-            transform: translateY(-2px);
+
+        .navbar-brand img {
+            height: 45px;
+            width: auto;
+            border-radius: 8px;
         }
-        
+
         .nav-link {
-            color: var(--dark-bg) !important;
+            color: var(--text-dark) !important;
             font-weight: 500;
-            padding: 0.5rem 1rem !important;
-            margin: 0 0.2rem;
+            padding: 0.75rem 1.25rem !important;
             border-radius: 50px;
-            transition: all 0.3s ease;
+            transition: var(--transition);
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
             position: relative;
         }
-        
+
+        .nav-link i {
+            font-size: 1.2rem;
+            color: var(--primary);
+        }
+
         .nav-link:hover,
+        .nav-link:focus {
+            background: rgba(46, 125, 50, 0.1);
+            color: var(--primary) !important;
+            outline: 2px solid transparent;
+        }
+
+        .nav-link:focus-visible {
+            outline: 3px solid var(--secondary);
+            outline-offset: 2px;
+        }
+
         .nav-link.active {
-            color: var(--primary-orange) !important;
-            background: rgba(255, 107, 53, 0.1);
+            background: var(--primary);
+            color: white !important;
         }
-        
-        .nav-link::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%) scaleX(0);
-            width: 30px;
-            height: 3px;
-            background: linear-gradient(45deg, var(--primary-orange), var(--secondary-orange));
-            border-radius: 10px;
-            transition: transform 0.3s ease;
+
+        .nav-link.active i {
+            color: white;
         }
-        
-        .nav-link:hover::after,
-        .nav-link.active::after {
-            transform: translateX(-50%) scaleX(1);
-        }
-        
-        /* Dropdown menu */
+
+        /* Menu déroulant accessible */
         .dropdown-menu {
             border: none;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-            border-radius: 15px;
-            padding: 0.5rem;
-            animation: fadeInUp 0.3s ease;
+            box-shadow: var(--shadow-md);
+            border-radius: var(--radius-md);
+            padding: 0.75rem;
+            min-width: 240px;
+            border: 1px solid rgba(0,0,0,0.05);
         }
-        
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
+
         .dropdown-item {
-            border-radius: 10px;
-            padding: 0.7rem 1rem;
-            transition: all 0.3s ease;
+            border-radius: var(--radius-sm);
+            padding: 0.875rem 1.25rem;
+            transition: var(--transition);
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
-        
-        .dropdown-item:hover {
-            background: linear-gradient(45deg, var(--primary-orange), var(--secondary-orange));
-            color: white !important;
-            transform: translateX(5px);
-        }
-        
+
         .dropdown-item i {
             width: 20px;
-            margin-right: 10px;
+            color: var(--primary);
+            font-size: 1.1rem;
         }
-        
-        /* Profile avatar */
+
+        .dropdown-item:hover,
+        .dropdown-item:focus {
+            background: rgba(46, 125, 50, 0.1);
+            color: var(--primary);
+            transform: translateX(5px);
+        }
+
+        .dropdown-item:focus-visible {
+            outline: 3px solid var(--secondary);
+            outline-offset: -2px;
+        }
+
+        /* Avatar profil */
         .profile-avatar {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(45deg, var(--primary-orange), var(--secondary-orange));
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
-            font-weight: bold;
-            font-size: 1.2rem;
-            transition: all 0.3s ease;
-            cursor: pointer;
+            font-weight: 700;
+            font-size: 1.3rem;
+            text-transform: uppercase;
+            border: 3px solid var(--white);
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition);
         }
-        
-        .profile-avatar:hover {
+
+        .profile-avatar:hover,
+        .profile-avatar:focus {
             transform: scale(1.1);
-            box-shadow: 0 5px 15px rgba(255, 107, 53, 0.4);
+            box-shadow: 0 5px 20px rgba(46, 125, 50, 0.3);
         }
-        
-        /* Main content */
+
+        /* Badge notifications */
+        .notification-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -8px;
+            background: var(--danger);
+            color: white;
+            border-radius: 50px;
+            min-width: 22px;
+            height: 22px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 6px;
+            border: 2px solid var(--white);
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* Contenu principal */
         .main-content {
             flex: 1;
             padding: 2rem 0;
-            animation: fadeIn 0.5s ease;
         }
-        
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-            to {
-                opacity: 1;
-            }
-        }
-        
-        /* Page header */
+
+        /* En-tête de page amélioré */
         .page-header {
-            background: white;
-            border-radius: 20px;
-            padding: 1.5rem;
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
             margin-bottom: 2rem;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+            box-shadow: var(--shadow-sm);
             display: flex;
+            flex-wrap: wrap;
             justify-content: space-between;
             align-items: center;
-            animation: slideInLeft 0.5s ease;
+            gap: 1.5rem;
+            border-left: 6px solid var(--primary);
         }
-        
-        @keyframes slideInLeft {
-            from {
-                opacity: 0;
-                transform: translateX(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-        
+
         .page-title {
             margin: 0;
             font-weight: 700;
-            color: var(--dark-bg);
-            position: relative;
-            padding-left: 15px;
+            color: var(--text-dark);
+            font-size: 2rem;
+            line-height: 1.2;
         }
-        
-        .page-title::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 5px;
-            height: 30px;
-            background: linear-gradient(45deg, var(--primary-orange), var(--secondary-orange));
-            border-radius: 10px;
+
+        @media (max-width: 768px) {
+            .page-title {
+                font-size: 1.5rem;
+            }
         }
-        
-        /* Breadcrumb */
-        .breadcrumb {
-            background: transparent;
-            padding: 0;
-            margin: 0;
+
+        /* Boutons accessibles */
+        .btn {
+            padding: 0.875rem 2rem;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: var(--transition);
+            border: 2px solid transparent;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            min-width: 44px;
+            min-height: 44px;
         }
-        
-        .breadcrumb-item a {
-            color: var(--dark-bg);
-            text-decoration: none;
-            transition: color 0.3s ease;
+
+        .btn:focus-visible {
+            outline: 3px solid var(--secondary);
+            outline-offset: 2px;
         }
-        
-        .breadcrumb-item a:hover {
-            color: var(--primary-orange);
-        }
-        
-        .breadcrumb-item.active {
-            color: var(--primary-orange);
-        }
-        
-        /* Footer */
-        .parent-footer {
-            background: linear-gradient(135deg, var(--dark-bg) 0%, #2a5298 100%);
+
+        .btn-primary {
+            background: var(--primary);
             color: white;
-            padding: 3rem 0 1rem;
-            margin-top: auto;
-            position: relative;
+            border-color: var(--primary);
+        }
+
+        .btn-primary:hover,
+        .btn-primary:focus {
+            background: var(--primary-dark);
+            border-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-outline-primary {
+            background: transparent;
+            color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .btn-outline-primary:hover,
+        .btn-outline-primary:focus {
+            background: var(--primary);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .btn-lg {
+            padding: 1rem 2.5rem;
+            font-size: 1.125rem;
+        }
+
+        /* Cartes améliorées */
+        .card {
+            border: none;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition);
+            background: var(--white);
             overflow: hidden;
         }
-        
-        .parent-footer::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, var(--primary-orange), var(--secondary-orange), var(--primary-orange));
-            animation: gradientMove 3s ease infinite;
-            background-size: 200% 100%;
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-md);
         }
-        
-        @keyframes gradientMove {
-            0% {
-                background-position: 0% 50%;
-            }
-            50% {
-                background-position: 100% 50%;
-            }
-            100% {
-                background-position: 0% 50%;
+
+        .card-body {
+            padding: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .card-body {
+                padding: 1.5rem;
             }
         }
-        
-        .footer-title {
-            font-size: 1.2rem;
+
+        /* Badges colorés */
+        .badge {
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
             font-weight: 600;
-            margin-bottom: 1.5rem;
-            position: relative;
-            padding-bottom: 10px;
+            font-size: 0.875rem;
         }
-        
+
+        .badge-success {
+            background: rgba(46, 125, 50, 0.15);
+            color: var(--primary-dark);
+        }
+
+        .badge-warning {
+            background: rgba(255, 143, 0, 0.15);
+            color: var(--secondary);
+        }
+
+        .badge-danger {
+            background: rgba(198, 40, 40, 0.15);
+            color: var(--danger);
+        }
+
+        /* Footer */
+        .parent-footer {
+            background: var(--text-dark);
+            color: white;
+            padding: 4rem 0 2rem;
+            margin-top: 3rem;
+            position: relative;
+        }
+
+        .footer-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: white;
+            position: relative;
+            padding-bottom: 0.75rem;
+        }
+
         .footer-title::after {
             content: '';
             position: absolute;
             bottom: 0;
             left: 0;
-            width: 50px;
-            height: 2px;
-            background: var(--primary-orange);
+            width: 60px;
+            height: 3px;
+            background: var(--secondary);
+            border-radius: 3px;
         }
-        
+
         .footer-link {
             color: rgba(255,255,255,0.8);
             text-decoration: none;
-            transition: all 0.3s ease;
-            display: inline-block;
-            margin-bottom: 0.5rem;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0.5rem 0;
+            font-size: 1rem;
         }
-        
-        .footer-link:hover {
-            color: var(--primary-orange);
+
+        .footer-link:hover,
+        .footer-link:focus {
+            color: var(--secondary);
             transform: translateX(5px);
+            outline: none;
         }
-        
+
+        .footer-link:focus-visible {
+            outline: 2px solid var(--secondary);
+            outline-offset: 4px;
+            border-radius: 4px;
+        }
+
         .social-icon {
-            width: 35px;
-            height: 35px;
+            width: 44px;
+            height: 44px;
             background: rgba(255,255,255,0.1);
             border-radius: 50%;
             display: inline-flex;
@@ -317,106 +434,126 @@
             justify-content: center;
             color: white;
             margin-right: 0.5rem;
-            transition: all 0.3s ease;
-            text-decoration: none;
+            transition: var(--transition);
+            font-size: 1.2rem;
         }
-        
-        .social-icon:hover {
-            background: var(--primary-orange);
+
+        .social-icon:hover,
+        .social-icon:focus {
+            background: var(--secondary);
             transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(255, 107, 53, 0.4);
+            color: var(--text-dark);
         }
-        
+
         .copyright {
-            border-top: 1px solid rgba(255,255,255,0.1);
-            padding-top: 1.5rem;
-            margin-top: 2rem;
             text-align: center;
-            font-size: 0.9rem;
+            padding-top: 2rem;
+            margin-top: 3rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
             color: rgba(255,255,255,0.7);
+            font-size: 0.95rem;
         }
-        
-        /* Loader */
+
+        /* Loader accessible */
         .page-loader {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: white;
+            background: var(--white);
             display: flex;
             justify-content: center;
             align-items: center;
             z-index: 9999;
-            transition: opacity 0.5s ease, visibility 0.5s ease;
+            transition: opacity 0.3s;
         }
-        
+
         .loader {
-            width: 50px;
-            height: 50px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid var(--primary-orange);
+            width: 60px;
+            height: 60px;
+            border: 4px solid var(--bg-light);
+            border-top: 4px solid var(--primary);
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
-        
+
+        .loader-text {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+        }
+
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        
-        /* Notifications */
-        .notification-badge {
+
+        /* Messages flash */
+        .flash-message {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            max-width: 400px;
+            animation: slideInRight 0.3s ease;
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Accessibilité */
+        .visually-hidden {
             position: absolute;
-            top: 0;
-            right: 0;
-            background: var(--primary-orange);
-            color: white;
-            border-radius: 50%;
-            width: 18px;
-            height: 18px;
-            font-size: 0.7rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transform: translate(25%, -25%);
-            animation: pulse 2s infinite;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
         }
-        
-        @keyframes pulse {
-            0% {
-                box-shadow: 0 0 0 0 rgba(255, 107, 53, 0.7);
-            }
-            70% {
-                box-shadow: 0 0 0 10px rgba(255, 107, 53, 0);
-            }
-            100% {
-                box-shadow: 0 0 0 0 rgba(255, 107, 53, 0);
-            }
+
+        /* Focus visible */
+        *:focus-visible {
+            outline: 3px solid var(--secondary);
+            outline-offset: 2px;
         }
-        
+
         /* Responsive */
-        @media (max-width: 768px) {
+        @media (max-width: 991px) {
             .navbar-nav {
                 padding: 1rem 0;
             }
             
             .nav-link {
-                padding: 0.8rem 1rem !important;
+                padding: 1rem !important;
+                border-radius: var(--radius-sm);
             }
             
+            .nav-link i {
+                width: 24px;
+            }
+            
+            .profile-avatar {
+                margin: 0.5rem 0;
+            }
+        }
+
+        @media (max-width: 576px) {
             .page-header {
                 flex-direction: column;
-                gap: 1rem;
                 text-align: center;
-            }
-            
-            .page-title {
-                padding-left: 0;
-            }
-            
-            .page-title::before {
-                display: none;
+                padding: 1.5rem;
             }
             
             .footer-title::after {
@@ -431,47 +568,70 @@
             .social-icons {
                 text-align: center;
             }
+            
+            .btn {
+                width: 100%;
+            }
+        }
+
+        /* Impression */
+        @media print {
+            .parent-navbar,
+            .parent-footer,
+            .page-header {
+                display: none;
+            }
         }
     </style>
     
     @stack('styles')
 </head>
 <body>
+    <!-- Lien d'évitement pour accessibilité -->
+    <a href="#main-content" class="skip-link">Aller au contenu principal</a>
+
     <!-- Page Loader -->
-    <div class="page-loader" id="pageLoader">
+    <div class="page-loader" id="pageLoader" role="status" aria-label="Chargement">
         <div class="loader"></div>
+        <span class="loader-text">Chargement de la page en cours...</span>
     </div>
 
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg parent-navbar">
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg parent-navbar" aria-label="Navigation principale">
         <div class="container">
-            <a class="navbar-brand d-flex align-items-center" href="{{ route('parent.dashboard') }}">
-                <img src="{{ asset('ursule/img/logo.png') }}" alt="Logo" style="height: 40px;" class="me-2">
+            <a class="navbar-brand" href="{{ route('parent.dashboard') }}" aria-label="Accueil CPEG MARIE-ALAIN">
+                <img src="{{ asset('ursule/img/logo.png') }}" alt="" loading="lazy">
                 <span>CPEG MARIE-ALAIN</span>
             </a>
             
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#parentNavbar">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#parentNavbar" 
+                    aria-controls="parentNavbar" aria-expanded="false" aria-label="Menu navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             
             <div class="collapse navbar-collapse" id="parentNavbar">
-                <ul class="navbar-nav ms-auto align-items-center">
+                <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('parent.dashboard') ? 'active' : '' }}" 
-                           href="{{ route('parent.dashboard') }}">
-                            <i class="fas fa-home me-1"></i> Tableau de bord
+                           href="{{ route('parent.dashboard') }}"
+                           aria-current="{{ request()->routeIs('parent.dashboard') ? 'page' : false }}">
+                            <i class="fas fa-home" aria-hidden="true"></i>
+                            <span>Tableau de bord</span>
                         </a>
                     </li>
                     
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-child me-1"></i> Mes enfants
+                        <a class="nav-link dropdown-toggle" href="#" role="button" 
+                           data-bs-toggle="dropdown" aria-expanded="false"
+                           aria-haspopup="true">
+                            <i class="fas fa-child" aria-hidden="true"></i>
+                            <span>Mes enfants</span>
                         </a>
-                        <ul class="dropdown-menu">
+                        <ul class="dropdown-menu" aria-label="Sélectionner un enfant">
                             @foreach(auth('parent')->user()->students as $student)
                                 <li>
                                     <a class="dropdown-item" href="">
-                                        <i class="fas fa-user-graduate"></i>
+                                        <i class="fas fa-user-graduate" aria-hidden="true"></i>
                                         {{ $student->full_name }}
                                     </a>
                                 </li>
@@ -479,35 +639,23 @@
                         </ul>
                     </li>
                     
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#notificationsModal">
-                            <i class="fas fa-bell"></i>
-                            <span class="notification-badge">3</span>
-                        </a>
-                    </li>
-                    
-                    <li class="nav-item dropdown ms-2">
-                        <a class="nav-link" href="#" role="button" data-bs-toggle="dropdown">
-                            <div class="profile-avatar">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link" href="#" role="button" 
+                           data-bs-toggle="dropdown" aria-expanded="false"
+                           aria-label="Menu utilisateur">
+                            <div class="profile-avatar" aria-hidden="true">
                                 {{ substr(auth('parent')->user()->full_name, 0, 1) }}
                             </div>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
-                            <li>
-                                <a class="dropdown-item" href="">
-                                    <i class="fas fa-user-circle"></i> Mon profil
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="">
-                                    <i class="fas fa-cog"></i> Paramètres
-                                </a>
-                            </li>
                             <li><hr class="dropdown-divider"></li>
                             <li>
-                                <a class="dropdown-item text-danger" href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                                    <i class="fas fa-sign-out-alt"></i> Déconnexion
-                                </a>
+                                <button class="dropdown-item text-danger" 
+                                        onclick="confirmLogout(event)"
+                                        aria-label="Se déconnecter">
+                                    <i class="fas fa-sign-out-alt"></i>
+                                    Déconnexion
+                                </button>
                             </li>
                         </ul>
                     </li>
@@ -521,21 +669,42 @@
         @csrf
     </form>
 
+    <!-- Messages flash -->
+    @if(session('success'))
+        <div class="flash-message" role="alert" aria-live="polite">
+            <div class="alert alert-success alert-dismissible fade show">
+                <i class="fas fa-check-circle me-2"></i>
+                {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+            </div>
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div class="flash-message" role="alert" aria-live="assertive">
+            <div class="alert alert-danger alert-dismissible fade show">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                {{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+            </div>
+        </div>
+    @endif
+
     <!-- Main Content -->
-    <main class="main-content">
+    <main class="main-content" id="main-content">
         <div class="container">
             <!-- Page Header -->
-            <div class="page-header animate__animated animate__fadeIn">
+            <header class="page-header">
                 <h1 class="page-title">@yield('page-title', 'Tableau de bord')</h1>
                 
                 @hasSection('breadcrumb')
-                    <nav aria-label="breadcrumb">
+                    <nav aria-label="Fil d'Ariane">
                         <ol class="breadcrumb">
                             @yield('breadcrumb')
                         </ol>
                     </nav>
                 @endif
-            </div>
+            </header>
             
             <!-- Content -->
             @yield('content')
@@ -543,43 +712,59 @@
     </main>
 
     <!-- Footer -->
-    <footer class="parent-footer">
+    <footer class="parent-footer" role="contentinfo">
         <div class="container">
-            <div class="row">
-                <div class="col-md-4 mb-4">
-                    <h5 class="footer-title">CPEG MARIE-ALAIN</h5>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <h2 class="footer-title">CPEG MARIE-ALAIN</h2>
                     <p class="text-white-50">
                         Un établissement dédié à l'excellence académique et à l'épanouissement de chaque enfant.
                     </p>
                     <div class="social-icons">
-                        <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
-                        <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
-                        <a href="#" class="social-icon"><i class="fab fa-linkedin-in"></i></a>
-                        <a href="#" class="social-icon"><i class="fab fa-whatsapp"></i></a>
+                        <a href="#" class="social-icon" aria-label="Facebook">
+                            <i class="fab fa-facebook-f" aria-hidden="true"></i>
+                        </a>
+                        <a href="#" class="social-icon" aria-label="Twitter">
+                            <i class="fab fa-twitter" aria-hidden="true"></i>
+                        </a>
+                        <a href="#" class="social-icon" aria-label="LinkedIn">
+                            <i class="fab fa-linkedin-in" aria-hidden="true"></i>
+                        </a>
+                        <a href="#" class="social-icon" aria-label="WhatsApp">
+                            <i class="fab fa-whatsapp" aria-hidden="true"></i>
+                        </a>
                     </div>
                 </div>
                 
-                <div class="col-md-2 mb-4">
-                    <h5 class="footer-title">Liens rapides</h5>
+                <div class="col-md-2">
+                    <h2 class="footer-title">Liens rapides</h2>
                     <ul class="list-unstyled">
                         <li><a href="{{ route('parent.dashboard') }}" class="footer-link">Tableau de bord</a></li>
-                        <li><a href="#" class="footer-link">Notes</a></li>
-                        <li><a href="#" class="footer-link">Emploi du temps</a></li>
-                        <li><a href="#" class="footer-link">Paiements</a></li>
+                        <li><a href="" class="footer-link">Notes</a></li>
+                        <li><a href="" class="footer-link">Emploi du temps</a></li>
                     </ul>
                 </div>
                 
-                <div class="col-md-3 mb-4">
-                    <h5 class="footer-title">Contact</h5>
-                    <ul class="list-unstyled text-white-50">
-                        <li class="mb-2"><i class="fas fa-map-marker-alt me-2 text-orange"></i> Quartier Aitchédji, Abomey-Calavi</li>
-                        <li class="mb-2"><i class="fas fa-phone me-2 text-orange"></i> +229 01 97 21 20 45</li>
-                        <li class="mb-2"><i class="fas fa-envelope me-2 text-orange"></i> cpegmariealain@gmail.com</li>
-                    </ul>
+                <div class="col-md-3">
+                    <h2 class="footer-title">Contact</h2>
+                    <address class="text-white-50" style="font-style: normal;">
+                        <p class="mb-2">
+                            <i class="fas fa-map-marker-alt me-2 text-warning" aria-hidden="true"></i>
+                            Quartier Aitchédji, Abomey-Calavi
+                        </p>
+                        <p class="mb-2">
+                            <i class="fas fa-phone me-2 text-warning" aria-hidden="true"></i>
+                            <a href="tel:+22997212045" class="text-white-50 text-decoration-none">+229 01 97 21 20 45</a>
+                        </p>
+                        <p class="mb-2">
+                            <i class="fas fa-envelope me-2 text-warning" aria-hidden="true"></i>
+                            <a href="mailto:cpegmariealain@gmail.com" class="text-white-50 text-decoration-none">cpegmariealain@gmail.com</a>
+                        </p>
+                    </address>
                 </div>
                 
-                <div class="col-md-3 mb-4">
-                    <h5 class="footer-title">Horaires</h5>
+                <div class="col-md-3">
+                    <h2 class="footer-title">Horaires</h2>
                     <ul class="list-unstyled text-white-50">
                         <li class="mb-2">Lundi - Vendredi: 8h - 17h</li>
                         <li class="mb-2">Samedi: 9h - 12h</li>
@@ -589,52 +774,66 @@
             </div>
             
             <div class="copyright">
-                &copy; {{ date('Y') }} CPEG MARIE-ALAIN. Tous droits réservés. | Espace Parent
+                <p>&copy; {{ date('Y') }} CPEG MARIE-ALAIN. Tous droits réservés.</p>
+                <p class="small">Espace Parent - Version accessible</p>
             </div>
         </div>
     </footer>
 
     <!-- Notifications Modal -->
-    <div class="modal fade" id="notificationsModal" tabindex="-1">
+    <div class="modal fade" id="notificationsModal" tabindex="-1" 
+         aria-labelledby="notificationsModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <div class="modal-header bg-orange text-white">
-                    <h5 class="modal-title"><i class="fas fa-bell me-2"></i>Notifications</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" id="notificationsModalLabel">
+                        <i class="fas fa-bell me-2" aria-hidden="true"></i>
+                        Notifications
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" 
+                            data-bs-dismiss="modal" aria-label="Fermer"></button>
                 </div>
                 <div class="modal-body">
                     <div class="list-group list-group-flush">
-                        <div class="list-group-item d-flex align-items-center">
-                            <div class="bg-info bg-opacity-10 rounded-circle p-3 me-3">
-                                <i class="fas fa-star text-info"></i>
-                            </div>
-                            <div>
-                                <h6 class="mb-1">Nouvelle note disponible</h6>
-                                <p class="mb-0 small text-muted">Il y a 2 heures</p>
-                            </div>
-                        </div>
-                        <div class="list-group-item d-flex align-items-center">
-                            <div class="bg-success bg-opacity-10 rounded-circle p-3 me-3">
-                                <i class="fas fa-credit-card text-success"></i>
-                            </div>
-                            <div>
-                                <h6 class="mb-1">Paiement enregistré</h6>
-                                <p class="mb-0 small text-muted">Il y a 1 jour</p>
+                        <div class="list-group-item p-3">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="bg-info bg-opacity-10 rounded-circle p-3">
+                                    <i class="fas fa-star text-info fa-lg"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1">Nouvelle note disponible</h6>
+                                    <p class="mb-0 small text-muted">Il y a 2 heures</p>
+                                </div>
                             </div>
                         </div>
-                        <div class="list-group-item d-flex align-items-center">
-                            <div class="bg-warning bg-opacity-10 rounded-circle p-3 me-3">
-                                <i class="fas fa-calendar text-warning"></i>
+                        <div class="list-group-item p-3">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="bg-success bg-opacity-10 rounded-circle p-3">
+                                    <i class="fas fa-credit-card text-success fa-lg"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1">Paiement enregistré</h6>
+                                    <p class="mb-0 small text-muted">Il y a 1 jour</p>
+                                </div>
                             </div>
-                            <div>
-                                <h6 class="mb-1">Réunion parents-professeurs</h6>
-                                <p class="mb-0 small text-muted">Dans 3 jours</p>
+                        </div>
+                        <div class="list-group-item p-3">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="bg-warning bg-opacity-10 rounded-circle p-3">
+                                    <i class="fas fa-calendar text-warning fa-lg"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1">Réunion parents-professeurs</h6>
+                                    <p class="mb-0 small text-muted">Dans 3 jours</p>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary w-100">Voir toutes les notifications</button>
+                    <button type="button" class="btn btn-outline-success w-100">
+                        Voir toutes les notifications
+                    </button>
                 </div>
             </div>
         </div>
@@ -645,67 +844,175 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <script>
-        // Cache le loader quand la page est chargée
+        // Configuration de SweetAlert2 pour les parents
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 5000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer)
+                toast.addEventListener('mouseleave', Swal.resumeTimer)
+            }
+        });
+
+        // Cache le loader
         window.addEventListener('load', function() {
             setTimeout(function() {
-                document.getElementById('pageLoader').style.opacity = '0';
-                setTimeout(function() {
-                    document.getElementById('pageLoader').style.visibility = 'hidden';
-                }, 500);
+                const loader = document.getElementById('pageLoader');
+                if (loader) {
+                    loader.style.opacity = '0';
+                    setTimeout(function() {
+                        loader.style.display = 'none';
+                    }, 300);
+                }
             }, 500);
         });
-        
-        // Gestion des messages flash
-        @if(session('success'))
+
+        // Fonction de confirmation de déconnexion améliorée
+        window.confirmLogout = function(event) {
+            event.preventDefault();
+            
             Swal.fire({
+                title: 'Confirmation de déconnexion',
+                text: 'Êtes-vous sûr de vouloir vous déconnecter ?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#2E7D32',
+                cancelButtonColor: '#C62828',
+                confirmButtonText: 'Oui, me déconnecter',
+                cancelButtonText: 'Non, rester connecté',
+                reverseButtons: true,
+                focusCancel: true,
+                allowOutsideClick: false,
+                allowEscapeKey: true,
+                customClass: {
+                    confirmButton: 'btn btn-success btn-lg',
+                    cancelButton: 'btn btn-danger btn-lg',
+                    popup: 'rounded-4'
+                },
+                buttonsStyling: false
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Afficher un message de chargement
+                    Swal.fire({
+                        title: 'Déconnexion en cours...',
+                        html: 'Veuillez patienter',
+                        allowOutsideClick: false,
+                        showConfirmButton: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+                    
+                    // Soumettre le formulaire
+                    document.getElementById('logout-form').submit();
+                }
+            });
+        };
+
+        // Gestion des messages flash avec SweetAlert2
+        @if(session('success'))
+            Toast.fire({
                 icon: 'success',
-                title: 'Succès!',
-                text: '{{ session('success') }}',
-                timer: 3000,
-                showConfirmButton: false,
-                toast: true,
-                position: 'top-end'
+                title: '{{ session('success') }}',
+                background: '#2E7D32',
+                color: 'white'
             });
         @endif
         
         @if(session('error'))
-            Swal.fire({
+            Toast.fire({
                 icon: 'error',
-                title: 'Erreur!',
-                text: '{{ session('error') }}',
-                timer: 3000,
-                showConfirmButton: false,
-                toast: true,
-                position: 'top-end'
+                title: '{{ session('error') }}',
+                background: '#C62828',
+                color: 'white'
             });
         @endif
-        
-        // Animation des liens actifs
-        document.querySelectorAll('.nav-link').forEach(link => {
-            if (link.href === window.location.href) {
-                link.classList.add('active');
-            }
-        });
-        
-        // Confirmation avant déconnexion
-        document.querySelectorAll('a[href*="logout"]').forEach(link => {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                Swal.fire({
-                    title: 'Déconnexion',
-                    text: 'Voulez-vous vraiment vous déconnecter?',
-                    icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonColor: '#ff6b35',
-                    cancelButtonColor: '#6c757d',
-                    confirmButtonText: 'Oui, déconnecter',
-                    cancelButtonText: 'Annuler'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        document.getElementById('logout-form').submit();
+
+        @if(session('warning'))
+            Toast.fire({
+                icon: 'warning',
+                title: '{{ session('warning') }}',
+                background: '#FF8F00',
+                color: 'white'
+            });
+        @endif
+
+        @if(session('info'))
+            Toast.fire({
+                icon: 'info',
+                title: '{{ session('info') }}',
+                background: '#0288D1',
+                color: 'white'
+            });
+        @endif
+
+        // Détection des erreurs de formulaire
+        document.addEventListener('DOMContentLoaded', function() {
+            const forms = document.querySelectorAll('form');
+            forms.forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    // Vérifier les champs requis
+                    const requiredFields = form.querySelectorAll('[required]');
+                    let hasError = false;
+                    
+                    requiredFields.forEach(field => {
+                        if (!field.value.trim()) {
+                            hasError = true;
+                            field.classList.add('is-invalid');
+                            
+                            // Message d'erreur pour le champ
+                            Toast.fire({
+                                icon: 'error',
+                                title: 'Veuillez remplir tous les champs obligatoires',
+                                timer: 3000
+                            });
+                        }
+                    });
+                    
+                    if (hasError) {
+                        e.preventDefault();
                     }
                 });
             });
+        });
+
+        // Support pour la navigation au clavier
+        document.addEventListener('keydown', function(e) {
+            // Touche Echap pour fermer les modales
+            if (e.key === 'Escape') {
+                const modals = document.querySelectorAll('.modal.show');
+                modals.forEach(modal => {
+                    const modalInstance = bootstrap.Modal.getInstance(modal);
+                    if (modalInstance) {
+                        modalInstance.hide();
+                    }
+                });
+            }
+        });
+
+        // Animation douce du scroll
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                const href = this.getAttribute('href');
+                if (href !== '#') {
+                    e.preventDefault();
+                    document.querySelector(href).scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+
+        // Mise à jour du lien actif dans la navigation
+        const currentLocation = window.location.href;
+        document.querySelectorAll('.nav-link').forEach(link => {
+            if (link.href === currentLocation) {
+                link.classList.add('active');
+                link.setAttribute('aria-current', 'page');
+            }
         });
     </script>
     

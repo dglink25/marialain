@@ -722,5 +722,7 @@ Route::prefix('parent')->name('parent.')->middleware('auth:parent')->group(funct
     Route::get('/children/{student}/grades', [ParentDashboardController::class, 'grades'])->name('child.grades');
     Route::get('/children/{student}/attendance', [ParentDashboardController::class, 'attendance'])->name('child.attendance');
     Route::get('/children/{student}/payments', [ParentDashboardController::class, 'payments'])->name('child.payments');
+    Route::get('/child/{student}/timetable', [ParentDashboardController::class, 'timetable'])->name('child.timetable');
+    Route::get('/contact', [ParentDashboardController::class, 'contact'])->name('contact');
 });
 

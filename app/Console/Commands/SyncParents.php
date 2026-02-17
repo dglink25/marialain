@@ -15,6 +15,37 @@ class SyncParents extends Command
     public function handle() {
         $this->info('Début de la synchronisation des parents...');
 
+        $totalStudents = Student::count();
+
+        $studentsWithoutPhone = Student::whereNull('parent_phone')
+            ->orWhere('parent_phone', '')
+            ->count();
+
+        $studentsWithPhone = Student::whereNotNull('parent_phone')
+            ->where('parent_phone', '!=', '')
+            ->count();
+
+        $distinctPhones = Student::whereNotNull('parent_phone')
+            ->where('parent_phone', '!=', '')
+            ->distinct('parent_phone')
+            ->count('parent_phone');
+
+        $duplicatePhones = $studentsWithPhone - $distinctPhones;
+
+        $this->newLine();
+        $this->table(
+            ['Statistique', 'Nombre'],
+            [
+                ['Total élèves', $totalStudents],
+                ['Sans numéro', $studentsWithoutPhone],
+                ['Avec numéro', $studentsWithPhone],
+                ['Numéros différents', $distinctPhones],
+                ['Élèves avec numéro en doublon', $duplicatePhones],
+            ]
+        );
+        $this->newLine();
+
+
         $parentPhones = Student::whereNotNull('parent_phone')
             ->distinct()
             ->pluck('parent_phone');
@@ -27,7 +58,6 @@ class SyncParents extends Command
 
         foreach ($parentPhones as $rawPhone) {
 
-            // Nettoyage du numéro
             $phone = $this->normalizePhone($rawPhone);
 
             if (!$phone) {
@@ -35,8 +65,17 @@ class SyncParents extends Command
                 continue;
             }
 
-            $student = Student::where('parent_phone', $rawPhone)->first();
-            if (!$student) continue;
+            // Mise à jour des students si le numéro a changé
+            if ($rawPhone !== $phone) {
+                Student::where('parent_phone', $rawPhone)
+                    ->update(['parent_phone' => $phone]);
+            }
+
+            $student = Student::where('parent_phone', $phone)->first();
+            if (!$student) {
+                $bar->advance();
+                continue;
+            }
 
             $parentName = trim($student->parent_full_name ?? 'Parent ' . $phone);
             $parentEmail = $student->parent_email ?? null;
@@ -52,9 +91,11 @@ class SyncParents extends Command
 
             if ($parent->wasRecentlyCreated) {
                 $created++;
-                $this->line("\n✓ Parent créé : {$parent->full_name} ({$phone})");
-            } else {
+                $this->line("\n Parent créé : {$parent->full_name} ({$phone})");
+            } 
+            else {
                 $updated++;
+                $this->line("\n Parent mise à jours : {$parent->full_name} ({$phone})");
             }
 
             $bar->advance();
