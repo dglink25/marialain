@@ -106,7 +106,9 @@ class TeacherExamController extends Controller{
         return view('teacher.exams.create', compact('classes', 'selectedClassId', 'selectedSubjectId'));
     }
     
-
+    /**
+     * Enregistre une nouvelle épreuve
+     */
     public function store(Request $request) {
         try {
             $activeYear = AcademicYear::where('active', true)->firstOrFail();
@@ -133,15 +135,10 @@ class TeacherExamController extends Controller{
             });
 
             if ($validator->fails()) {
-                // Si c'est une requête AJAX
-                if ($request->ajax() || $request->wantsJson()) {
-                    return response()->json([
-                        'success' => false,
-                        'errors' => $validator->errors()
-                    ], 422);
-                }
-                // Sinon, redirection avec erreurs
-                return redirect()->back()->withErrors($validator)->withInput();
+                return response()->json([
+                    'success' => false,
+                    'errors' => $validator->errors()
+                ], 422);
             }
 
             // Upload du fichier sur Cloudinary
@@ -152,18 +149,20 @@ class TeacherExamController extends Controller{
                     
                     $uploadApi = new UploadApi();
                     
+                    // Upload du PDF
                     Log::info('Upload du PDF sur Cloudinary...');
                     $pdfUpload = $uploadApi->upload(
                         $file->getRealPath(),
                         [
                             'folder' => 'teacher_exams/' . $activeYear->id,
-                            'resource_type' => 'raw',
+                            'resource_type' => 'raw', // Important pour les PDF
                             'public_id' => pathinfo($fileName, PATHINFO_FILENAME) . '_' . time(),
                             'use_filename' => true,
                             'unique_filename' => true,
                         ]
                     );
                     
+                    // Récupérer l'URL sécurisée
                     $pdfUrl = $pdfUpload['secure_url'];
                     $pdfPublicId = $pdfUpload['public_id'];
                     
@@ -171,29 +170,16 @@ class TeacherExamController extends Controller{
 
                 } catch (\Exception $e) {
                     Log::error('Erreur upload Cloudinary: ' . $e->getMessage());
-                    
-                    $errorMessage = 'Erreur lors de l\'upload du fichier. Vérifiez la configuration Cloudinary.';
-                    
-                    if ($request->ajax() || $request->wantsJson()) {
-                        return response()->json([
-                            'success' => false,
-                            'message' => $errorMessage
-                        ], 500);
-                    }
-                    
-                    return redirect()->back()->with('error', $errorMessage)->withInput();
-                }
-            } else {
-                $errorMessage = 'Fichier invalide ou manquant.';
-                
-                if ($request->ajax() || $request->wantsJson()) {
                     return response()->json([
                         'success' => false,
-                        'message' => $errorMessage
-                    ], 400);
+                        'message' => 'Erreur lors de l\'upload du fichier: ' . $e->getMessage()
+                    ], 500);
                 }
-                
-                return redirect()->back()->with('error', $errorMessage)->withInput();
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Fichier invalide ou manquant.'
+                ], 400);
             }
 
             // Création de l'épreuve
@@ -210,38 +196,28 @@ class TeacherExamController extends Controller{
                 'file_url' => $pdfUrl,
                 'file_name' => $fileName,
                 'pdf_public_id' => $pdfPublicId,
-                'total_pages' => 1,
+                'total_pages' => 1, // Valeur par défaut
             ]);
 
-            // Succès - réponse selon le type de requête
-            if ($request->ajax() || $request->wantsJson()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Épreuve publiée avec succès.',
-                    'data' => $exam,
-                    'redirect' => route('teacher.exams.index')
-                ], 201);
-            }
-            
-            return redirect()->route('teacher.exams.index')
-                ->with('success', 'Épreuve publiée avec succès.');
+            return response()->json([
+                'success' => true,
+                'message' => 'Épreuve publiée avec succès.',
+                'data' => $exam,
+                'redirect' => route('teacher.exams.index')
+            ], 201);
 
         } catch (\Exception $e) {
             Log::error('Erreur soumission épreuve: ' . $e->getMessage());
-            
-            $errorMessage = 'Erreur lors de la soumission: ' . $e->getMessage();
-            
-            if ($request->ajax() || $request->wantsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => $errorMessage
-                ], 500);
-            }
-            
-            return redirect()->back()->with('error', $errorMessage)->withInput();
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la soumission: ' . $e->getMessage()
+            ], 500);
         }
     }
 
+    /**
+     * Affiche les détails d'une épreuve
+     */
     public function show($id) {
         $exam = TeacherExam::with(['class', 'subject', 'teacher'])
             ->where('teacher_id', Auth::id())

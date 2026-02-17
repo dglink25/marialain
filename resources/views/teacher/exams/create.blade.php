@@ -39,7 +39,7 @@
 
             {{-- Corps du formulaire --}}
             <div class="p-6">
-                <form id="examForm" action="{{ route('teacher.exams.store') }}" method="POST" enctype="multipart/form-data" class="space-y-5">
+                <form id="examForm" enctype="multipart/form-data" class="space-y-5">
                     @csrf
 
                     {{-- Sélection de la classe --}}
@@ -170,23 +170,17 @@
                     </div>
 
                     {{-- Messages d'erreur --}}
-                    @if ($errors->any())
-                    <div class="rounded-lg border border-red-200 bg-red-50 p-4">
+                    <div id="errorMessages" class="hidden rounded-lg border border-red-200 bg-red-50 p-4">
                         <div class="flex gap-2">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                             <div class="flex-1">
                                 <p class="text-sm font-medium text-red-800 mb-1">Veuillez corriger :</p>
-                                <ul class="list-disc pl-5 text-sm text-red-700 space-y-1">
-                                    @foreach ($errors->all() as $error)
-                                        <li>{{ $error }}</li>
-                                    @endforeach
-                                </ul>
+                                <ul id="errorList" class="list-disc pl-5 text-sm text-red-700 space-y-1"></ul>
                             </div>
                         </div>
                     </div>
-                    @endif
 
                     {{-- Boutons d'action --}}
                     <div class="flex justify-end gap-3 pt-4 border-t border-gray-200">
@@ -195,7 +189,7 @@
                             Annuler
                         </a>
                         <button type="submit" id="submitBtn" 
-                                class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 transition-colors">
+                                class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                             Soumettre l'épreuve
                         </button>
                     </div>
@@ -316,7 +310,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function handleFileSelect(file) {
         if (file.type !== 'application/pdf') {
-            alert('Veuillez sélectionner un fichier PDF');
+            showToast('Veuillez sélectionner un fichier PDF', 'error');
             return;
         }
 
@@ -325,14 +319,55 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('fileInfo').classList.remove('hidden');
     }
 
-    // Validation avant soumission
+    // Soumission du formulaire
     const examForm = document.getElementById('examForm');
-    
-    examForm.addEventListener('submit', function(e) {
+    const submitBtn = document.getElementById('submitBtn');
+
+    examForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        hideErrors();
+
         if (!fileInput.files.length) {
-            e.preventDefault();
-            alert('Veuillez sélectionner un fichier PDF');
+            showToast('Veuillez sélectionner un fichier PDF', 'error');
             return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="opacity-0">Publication...</span><div class="absolute inset-0 flex items-center justify-center"><div class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div></div>';
+
+        try {
+            const formData = new FormData(this);
+            
+            const response = await fetch('{{ route("teacher.exams.store") }}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                }
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                showToast('Épreuve soumise avec succès !', 'success');
+                setTimeout(() => {
+                    window.location.href = data.redirect || '{{ route("teacher.exams.index") }}';
+                }, 1500);
+            } else {
+                if (data.errors) {
+                    showErrors(data.errors);
+                } else {
+                    showToast(data.message || 'Une erreur est survenue', 'error');
+                }
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Soumettre l\'épreuve';
+            }
+        } catch (error) {
+            console.error('Erreur:', error);
+            showToast('Erreur de connexion', 'error');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = 'Soumettre l\'épreuve';
         }
     });
 });
@@ -343,5 +378,116 @@ function removeFile() {
     document.getElementById('fileInfo').classList.add('hidden');
     document.getElementById('uploadPlaceholder').classList.remove('hidden');
 }
+
+function showErrors(errors) {
+    const errorDiv = document.getElementById('errorMessages');
+    const errorList = document.getElementById('errorList');
+    
+    errorList.innerHTML = '';
+    
+    Object.values(errors).forEach(errorArray => {
+        errorArray.forEach(error => {
+            const li = document.createElement('li');
+            li.textContent = error;
+            errorList.appendChild(li);
+        });
+    });
+    
+    errorDiv.classList.remove('hidden');
+    errorDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function hideErrors() {
+    document.getElementById('errorMessages').classList.add('hidden');
+    document.getElementById('errorList').innerHTML = '';
+}
+
+function showToast(message, type = 'info') {
+    let toastContainer = document.getElementById('toastContainer');
+    
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'toastContainer';
+        toastContainer.style.cssText = `
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        `;
+        document.body.appendChild(toastContainer);
+    }
+
+    const toast = document.createElement('div');
+    toast.style.cssText = `
+        background: white;
+        border-left: 4px solid ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
+        border-radius: 0.5rem;
+        padding: 0.75rem 1rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        animation: slideIn 0.3s ease-out;
+        min-width: 300px;
+    `;
+
+    const icon = type === 'success' ? '✓' : type === 'error' ? '✕' : 'ℹ';
+    const iconColor = type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6';
+
+    toast.innerHTML = `
+        <span style="color: ${iconColor}; font-weight: bold;">${icon}</span>
+        <span style="color: #1f2937; font-size: 0.875rem;">${message}</span>
+        <button onclick="this.parentElement.remove()" style="margin-left: auto; color: #9ca3af;">✕</button>
+    `;
+
+    toastContainer.appendChild(toast);
+
+    setTimeout(() => {
+        if (toast.parentNode) {
+            toast.style.animation = 'slideOut 0.3s ease-out forwards';
+            setTimeout(() => {
+                if (toast.parentNode) toast.remove();
+            }, 300);
+        }
+    }, 5000);
+}
+
+// Styles pour les animations
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateX(100%);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+    
+    @keyframes slideOut {
+        from {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        to {
+            opacity: 0;
+            transform: translateX(100%);
+        }
+    }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    
+    .animate-spin {
+        animation: spin 1s linear infinite;
+    }
+`;
+document.head.appendChild(style);
 </script>
 @endsection
