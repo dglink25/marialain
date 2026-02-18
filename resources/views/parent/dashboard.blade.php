@@ -169,41 +169,6 @@
         </div>
     </div>
 
-    <!-- Section Actualités et Événements -->
-    <div class="col-md-7">
-        <div class="card h-100">
-            <div class="card-header bg-transparent border-0 pt-4">
-                <h2 class="h4 mb-0">
-                    <i class="fas fa-newspaper me-2 text-success"></i>
-                    Dernières Nouvelles
-                </h2>
-            </div>
-            <div class="card-body">
-                <div class="list-group list-group-flush">
-                    @forelse($news as $item)
-                        <div class="list-group-item px-0">
-                            <div class="d-flex gap-3">
-                                <div class="bg-{{ $item->badge_color }} bg-opacity-10 rounded-3 p-3 text-center" style="min-width: 70px;">
-                                    <span class="d-block fw-bold text-{{ $item->badge_color }}">{{ $item->day }}</span>
-                                    <span class="small text-muted">{{ $item->month }}</span>
-                                </div>
-                                <div>
-                                    <h3 class="h6 fw-bold mb-1">{{ $item->title }}</h3>
-                                    <p class="small text-muted mb-1">{{ $item->description }}</p>
-                                    <span class="badge bg-{{ $item->badge_color }}">{{ $item->badge }}</span>
-                                </div>
-                            </div>
-                        </div>
-                    @empty
-                        <div class="text-center py-4">
-                            <p class="text-muted mb-0">Aucune actualité pour le moment</p>
-                        </div>
-                    @endforelse
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Section Aide et Support -->
     <div class="col-md-5">
         <div class="card h-100 bg-success text-white">
