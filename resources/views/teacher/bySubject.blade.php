@@ -6,19 +6,26 @@
 
 @php
     use Illuminate\Support\Str;
+    $pageTitle = 'Classes';
 @endphp
 
 <div class="container mx-auto px-4 py-8">
 
-    <h1 class="text-3xl font-bold text-indigo-700 mb-6 text-center sm:text-left">Cahier de texte - {{ $teacher->name }}</h1>
+    <h1 class="text-3xl font-bold text-indigo-700 mb-6 text-center sm:text-left">
+        <i class="fas fa-book-open mr-3"></i>Cahier de texte - {{ $teacher->name }}
+    </h1>
 
     {{-- Header avec statistiques --}}
     <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200 mb-8">
         <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
             <div class="text-center lg:text-left">
-                <h2 class="text-xl font-bold text-gray-800">Classe : <span class="text-indigo-600">{{ $class->name }}</span></h2>
+                <h2 class="text-xl font-bold text-gray-800">
+                    <i class="fas fa-users mr-2 text-indigo-600"></i>Classe : 
+                    <span class="text-indigo-600">{{ $class->name }}</span>
+                </h2>
                 <p class="text-sm text-gray-600 mt-2">
-                    Matière : <span class="text-indigo-600 font-semibold">{{ $subject->name }}</span>
+                    <i class="fas fa-book mr-2 text-indigo-600"></i>Matière : 
+                    <span class="text-indigo-600 font-semibold">{{ $subject->name }}</span>
                 </p>
             </div>
             
@@ -48,7 +55,9 @@
     <div class="bg-white rounded-xl shadow-md p-5 mb-6 border border-gray-200">
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-                <h3 class="text-lg font-semibold text-gray-800 mb-2">Filtrer les résultats</h3>
+                <h3 class="text-lg font-semibold text-gray-800 mb-2">
+                    <i class="fas fa-filter mr-2 text-indigo-600"></i>Filtrer les résultats
+                </h3>
                 <div class="flex flex-wrap gap-3">
                     <div class="relative">
                         <select id="filter-month" class="appearance-none bg-white border border-gray-300 rounded-lg pl-4 pr-10 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all w-full md:w-48">
@@ -82,9 +91,6 @@
                     <div class="relative">
                         <input type="date" id="filter-date" 
                             class="bg-white border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all w-full md:w-48">
-                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-700">
-                            <i class="fas fa-calendar-alt text-sm"></i>
-                        </div>
                     </div>
                     
                     <button onclick="resetFilters()" 
@@ -96,16 +102,15 @@
             
             <div class="flex items-center gap-3">
                 <div id="selected-count" class="hidden bg-indigo-100 text-indigo-800 px-3 py-1.5 rounded-full text-sm font-medium">
+                    <i class="fas fa-check-circle mr-1.5"></i>
                     <span id="count-number">0</span> sélectionné(s)
                 </div>
-                
             </div>
         </div>
     </div>
 
     {{-- Barre d'actions de validation --}}
-    @if(auth()->id() == 4)
-    @if($canValidate)
+    @if(auth()->id() == 4 && $canValidate)
     <div id="validation-actions" class="hidden bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl shadow-md p-4 mb-6 border border-gray-300">
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
@@ -121,7 +126,7 @@
                 </button>
                 <button onclick="deselectAllEntries()" 
                     class="px-4 py-2 bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 rounded-lg transition-colors text-sm font-medium shadow-sm">
-                    <i class="far fa-square mr-2"></i>Tout désélectionner
+                    <i class="fas fa-square mr-2"></i>Tout désélectionner
                 </button>
                 <button onclick="validateSelected('validate')" 
                     class="px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg transition-all text-sm font-medium shadow-sm hover:shadow-md">
@@ -134,7 +139,6 @@
             </div>
         </div>
     </div>
-    @endif
     @endif
 
     {{-- Entries --}}
@@ -153,7 +157,7 @@
                 <table class="w-full text-sm text-gray-700">
                     <thead>
                         <tr class="bg-gradient-to-r from-gray-800 to-gray-900 text-white text-left">
-                            @if($canValidate)
+                            @if(auth()->id() == 4 && $canValidate)
                             <th class="px-4 py-4 font-semibold text-center w-12">
                                 <input type="checkbox" id="select-all-checkbox" class="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" onchange="toggleSelectAll(this)">
                             </th>
@@ -194,7 +198,7 @@
                             data-month="{{ $month }}"
                             data-status="{{ $status }}"
                             data-date="{{ $date }}">
-                            @if($canValidate)
+                            @if(auth()->id() == 4 && $canValidate)
                             <td class="px-4 py-4 text-center align-middle">
                                 <input type="checkbox" class="entry-checkbox w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" 
                                     value="{{ $entry->id }}" data-entry-id="{{ $entry->id }}">
@@ -203,10 +207,10 @@
                             <td class="px-6 py-4 align-middle">
                                 <div class="flex flex-col">
                                     <span class="font-medium text-gray-900 whitespace-nowrap">
-                                        {{ $startDate->translatedFormat('l d F Y') }}
+                                        <i class="fas fa-calendar-day mr-1.5 text-gray-500"></i>{{ $startDate->translatedFormat('l d F Y') }}
                                     </span>
                                     <span class="text-sm text-gray-600 whitespace-nowrap">
-                                        <i class="fas fa-clock mr-1 text-gray-400"></i>{{ $startDate->format('H:i') }} - {{ $endDate->format('H:i') }}
+                                        <i class="fas fa-clock mr-1.5 text-gray-400"></i>{{ $startDate->format('H:i') }} - {{ $endDate->format('H:i') }}
                                     </span>
                                 </div>
                             </td>
@@ -215,7 +219,6 @@
                                     <i class="fas fa-hourglass-half mr-1.5"></i>{{ ltrim($duration, '-') }}
                                 </span>
                             </td>
-
                             <td class="px-6 py-4 align-middle">
                                 <div class="max-w-md">
                                     <p class="text-gray-800 line-clamp-2 content-preview mb-1" 
@@ -223,7 +226,7 @@
                                         {{ Str::limit($entry->content, 100) }}
                                     </p>
                                     @if(strlen($entry->content) > 100)
-                                        <button onclick="openFullContentModal('{{ addslashes(htmlspecialchars($entry->content)) }}')" 
+                                        <button onclick="openFullContentModal('{{ addslashes(str_replace(["\r", "\n"], ' ', $entry->content)) }}')" 
                                             class="inline-flex items-center text-indigo-600 hover:text-indigo-800 text-xs font-medium transition-colors group">
                                             <i class="fas fa-expand-alt mr-1.5 group-hover:scale-110 transition-transform"></i>Voir plus
                                         </button>
@@ -322,14 +325,16 @@
                 data-date="{{ $date }}">
                 <div class="flex justify-between items-start mb-4">
                     <div class="flex items-center space-x-3">
-                        @if($canValidate)
+                        @if(auth()->id() == 4 && $canValidate)
                         <input type="checkbox" class="entry-checkbox w-5 h-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" 
                             value="{{ $entry->id }}" data-entry-id="{{ $entry->id }}">
                         @endif
                         <div>
-                            <h3 class="font-semibold text-gray-900 text-sm">{{ $startDate->format('d/m/Y') }}</h3>
+                            <h3 class="font-semibold text-gray-900 text-sm">
+                                <i class="fas fa-calendar-day mr-1.5 text-indigo-500"></i>{{ $startDate->format('d/m/Y') }}
+                            </h3>
                             <p class="text-xs text-gray-600 mt-0.5">
-                                <i class="fas fa-clock mr-1 text-gray-400"></i>{{ $startDate->format('H:i') }} - {{ $endDate->format('H:i') }}
+                                <i class="fas fa-clock mr-1.5 text-gray-400"></i>{{ $startDate->format('H:i') }} - {{ $endDate->format('H:i') }}
                             </p>
                         </div>
                     </div>
@@ -345,7 +350,7 @@
                         {{ $entry->content }}
                     </p>
                     @if(strlen($entry->content) > 150)
-                        <button onclick="openFullContentModal('{{ addslashes(htmlspecialchars($entry->content)) }}')" 
+                        <button onclick="openFullContentModal('{{ addslashes(str_replace(["\r", "\n"], ' ', $entry->content)) }}')" 
                             class="inline-flex items-center text-indigo-600 hover:text-indigo-800 text-xs font-medium transition-colors group">
                             <i class="fas fa-expand-alt mr-1.5 group-hover:scale-110 transition-transform"></i>Voir plus
                         </button>
@@ -382,7 +387,9 @@
                     
                     @if($entry->is_validated && $entry->validator)
                     <div class="text-xs text-gray-600 bg-gray-50 p-3 rounded-lg border border-gray-200">
-                        <div class="font-medium text-gray-700 mb-1.5">Validation:</div>
+                        <div class="font-medium text-gray-700 mb-1.5">
+                            <i class="fas fa-check-circle text-green-500 mr-1.5"></i>Validation:
+                        </div>
                         <div class="space-y-1.5">
                             <div class="flex items-center">
                                 <i class="fas fa-user-check mr-2 text-gray-400 flex-shrink-0"></i>
@@ -409,23 +416,23 @@
                         <i class="fas fa-history mr-1.5 text-gray-400"></i>
                         <span>Créé {{ $entry->created_at->diffForHumans() }}</span>
                     </div>
-                    @if(auth()->id() == 4)
-                    @if($canValidate)
+                    @if(auth()->id() == 4 && $canValidate)
                     <div class="flex gap-2">
                         @if(!$entry->is_validated)
                             <button onclick="showValidateModal({{ $entry->id }}, 'validate')" 
                                 class="inline-flex items-center justify-center bg-gradient-to-br from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-3 py-1.5 rounded-lg transition-all text-xs font-medium shadow-sm hover:shadow-md group">
                                 <i class="fas fa-check mr-1.5 group-hover:scale-110 transition-transform"></i>
+                                <span class="sr-only md:not-sr-only md:ml-1">Valider</span>
                             </button>
                         @endif
                         @if($entry->is_validated)
                             <button onclick="showValidateModal({{ $entry->id }}, 'reject')" 
                                 class="inline-flex items-center justify-center bg-gradient-to-br from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-3 py-1.5 rounded-lg transition-all text-xs font-medium shadow-sm hover:shadow-md group">
                                 <i class="fas fa-times mr-1.5 group-hover:scale-110 transition-transform"></i>
+                                <span class="sr-only md:not-sr-only md:ml-1">Rejeter</span>
                             </button>
                         @endif
                     </div>
-                    @endif
                     @endif
                 </div>
             </div>
@@ -433,7 +440,7 @@
         </div>
         
         {{-- Message aucun résultat après filtrage --}}
-        <div id="no-results" class="hidden bg-gradient-to-r from-gray-50 to-gray-100 border border-gray-200 text-gray-800 p-8 rounded-2xl shadow-sm text-center">
+        <div id="no-results" class="hidden bg-gradient-to-r from-gray-50 to-gray-100 border border-gray-200 text-gray-800 p-8 rounded-2xl shadow-sm text-center mt-8">
             <div class="inline-flex items-center justify-center w-16 h-16 bg-gray-200 rounded-full mb-4">
                 <i class="fas fa-search text-2xl text-gray-500"></i>
             </div>
@@ -553,12 +560,7 @@ let selectedEntries = new Set();
 function decodeHtmlContent(html) {
     const txt = document.createElement('textarea');
     txt.innerHTML = html;
-    return txt.value
-        .replace(/\\'/g, "'")
-        .replace(/\\"/g, '"')
-        .replace(/\\n/g, '\n')
-        .replace(/\\r/g, '\r')
-        .replace(/\\t/g, '\t');
+    return txt.value;
 }
 
 // Fonctions pour le contenu complet
@@ -604,7 +606,8 @@ function selectAllEntries() {
             selectedEntries.add(cb.value);
         }
     });
-    document.getElementById('select-all-checkbox').checked = true;
+    const selectAllCheckbox = document.getElementById('select-all-checkbox');
+    if (selectAllCheckbox) selectAllCheckbox.checked = true;
     updateSelectedUI();
 }
 
@@ -614,7 +617,8 @@ function deselectAllEntries() {
         cb.checked = false;
         selectedEntries.delete(cb.value);
     });
-    document.getElementById('select-all-checkbox').checked = false;
+    const selectAllCheckbox = document.getElementById('select-all-checkbox');
+    if (selectAllCheckbox) selectAllCheckbox.checked = false;
     updateSelectedUI();
 }
 
@@ -639,17 +643,16 @@ function updateSelectedUI() {
     const validationActions = document.getElementById('validation-actions');
     const selectionInfo = document.getElementById('selection-info');
     
-    countNumber.textContent = count;
+    if (countNumber) countNumber.textContent = count;
     
     if (count > 0) {
-        selectedCount.classList.remove('hidden');
+        if (selectedCount) selectedCount.classList.remove('hidden');
         if (validationActions) validationActions.classList.remove('hidden');
         if (selectionInfo) {
             selectionInfo.textContent = `${count} cahier(s) sélectionné(s)`;
-            selectionInfo.className = "text-sm text-gray-600 mt-1";
         }
     } else {
-        selectedCount.classList.add('hidden');
+        if (selectedCount) selectedCount.classList.add('hidden');
         if (validationActions) validationActions.classList.add('hidden');
         if (selectionInfo) selectionInfo.textContent = "Sélectionnez les cahiers à valider";
     }
@@ -671,7 +674,7 @@ function applyFilters() {
         
         let show = true;
         
-        if (monthFilter !== 'all' && month !== monthFilter) {
+        if (monthFilter !== 'all' && month != monthFilter) {
             show = false;
         }
         
@@ -686,8 +689,6 @@ function applyFilters() {
         if (show) {
             row.style.display = '';
             visibleCount++;
-            
-            // Animation d'apparition
             row.style.animation = 'fadeIn 0.3s ease-out';
         } else {
             row.style.display = 'none';
@@ -699,20 +700,23 @@ function applyFilters() {
     const entriesContainer = document.getElementById('entries-cards-container');
     const tableBody = document.getElementById('entries-table-body');
     
-    if (visibleCount === 0) {
-        if (noResults) noResults.classList.remove('hidden');
-        if (entriesContainer) entriesContainer.classList.add('hidden');
-        if (tableBody) tableBody.parentElement.parentElement.classList.add('hidden');
-    } else {
-        if (noResults) noResults.classList.add('hidden');
-        if (entriesContainer) entriesContainer.classList.remove('hidden');
-        if (tableBody) tableBody.parentElement.parentElement.classList.remove('hidden');
+    if (noResults) {
+        if (visibleCount === 0) {
+            noResults.classList.remove('hidden');
+            if (entriesContainer) entriesContainer.classList.add('hidden');
+            if (tableBody) tableBody.parentElement.parentElement.classList.add('hidden');
+        } else {
+            noResults.classList.add('hidden');
+            if (entriesContainer) entriesContainer.classList.remove('hidden');
+            if (tableBody) tableBody.parentElement.parentElement.classList.remove('hidden');
+        }
     }
     
     // Réinitialiser la sélection
     selectedEntries.clear();
     updateSelectedUI();
-    document.getElementById('select-all-checkbox').checked = false;
+    const selectAllCheckbox = document.getElementById('select-all-checkbox');
+    if (selectAllCheckbox) selectAllCheckbox.checked = false;
 }
 
 function resetFilters() {
@@ -752,6 +756,7 @@ function showValidateModal(entryId, action) {
 function closeValidateModal() {
     document.getElementById('validate-modal').classList.add('hidden');
     document.body.style.overflow = 'auto';
+    document.getElementById('validation-notes').value = '';
 }
 
 // Fonctions de validation multiple
@@ -788,6 +793,7 @@ function validateSelected(action) {
 function closeValidateMultipleModal() {
     document.getElementById('validate-multiple-modal').classList.add('hidden');
     document.body.style.overflow = 'auto';
+    document.getElementById('validate-multiple-notes').value = '';
 }
 
 async function confirmValidateMultiple() {
@@ -831,7 +837,7 @@ async function confirmValidateMultiple() {
         }
     } catch (error) {
         console.error('Error:', error);
-        showToast('Vous ne pouvez pas tout valider ou révoquez. Veuillez réessayer un à un.', 'error');
+        showToast('Une erreur est survenue lors de la validation multiple.', 'error');
     } finally {
         confirmBtn.innerHTML = originalText;
         confirmBtn.disabled = false;
@@ -854,12 +860,10 @@ function showToast(message, type = 'info') {
         info: 'bg-blue-500'
     };
     
-    toast.className = `fixed top-5 right-5 ${colors[type]} text-white px-4 py-3 rounded-lg shadow-lg z-50 transform translate-x-full opacity-0 transition-all duration-300`;
+    toast.className = `fixed top-5 right-5 ${colors[type]} text-white px-4 py-3 rounded-lg shadow-lg z-50 transform translate-x-full opacity-0 transition-all duration-300 flex items-center`;
     toast.innerHTML = `
-        <div class="flex items-center">
-            <i class="fas fa-${icons[type]} mr-3"></i>
-            <span>${message}</span>
-        </div>
+        <i class="fas fa-${icons[type]} mr-3"></i>
+        <span>${message}</span>
     `;
     
     document.body.appendChild(toast);
@@ -891,25 +895,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 selectedEntries.add(e.target.value);
             } else {
                 selectedEntries.delete(e.target.value);
-                document.getElementById('select-all-checkbox').checked = false;
+                const selectAllCheckbox = document.getElementById('select-all-checkbox');
+                if (selectAllCheckbox) selectAllCheckbox.checked = false;
             }
             updateSelectedUI();
         }
     });
     
     // Écouteurs pour les filtres
-    document.getElementById('filter-month').addEventListener('change', applyFilters);
-    document.getElementById('filter-status').addEventListener('change', applyFilters);
-    document.getElementById('filter-date').addEventListener('change', applyFilters);
+    const filterMonth = document.getElementById('filter-month');
+    const filterStatus = document.getElementById('filter-status');
+    const filterDate = document.getElementById('filter-date');
     
-    // Écouteurs pour les boutons "Voir plus"
-    document.querySelectorAll('.see-more-btn').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            const content = this.previousElementSibling.getAttribute('data-full-content');
-            openFullContentModal(content);
-        });
-    });
+    if (filterMonth) filterMonth.addEventListener('change', applyFilters);
+    if (filterStatus) filterStatus.addEventListener('change', applyFilters);
+    if (filterDate) filterDate.addEventListener('change', applyFilters);
     
     // Fermer les modals avec Escape
     document.addEventListener('keydown', function(event) {
@@ -1134,4 +1134,7 @@ select {
 </style>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+{{-- Meta CSRF pour les requêtes AJAX --}}
+<meta name="csrf-token" content="{{ csrf_token() }}">
 @endsection

@@ -389,11 +389,12 @@ class CahierDeTexteController extends Controller{
             // Récupérer tous les cahiers de texte pour la période
             $cahiers = CahierDeTexte::with(['teacher', 'classe'])
                 ->where('subject_id', $subjectId)
+                ->where('is_validated', true)
                 ->whereBetween('course_start_date', [$startDate, $endDate])
                 ->get();
 
             if ($cahiers->isEmpty()) {
-                return back()->with('error', "Aucun cahier de texte trouvé pour la période sélectionnée.");
+                return back()->with('error', "Aucun cahier de texte validé par le censeur trouvé pour la période sélectionnée.");
             }
 
             // Grouper par enseignant
@@ -519,6 +520,7 @@ class CahierDeTexteController extends Controller{
                 'grand_total_brut_total' => $grand_total_brut_total,
                 'grand_total_aib' => $grand_total_aib
             ]);
+
 
             $filename = 'rapport_enseignants_' . Str::slug($subject->name) . '_' . now()->format('Y-m-d') . '.pdf';
             return $pdf->download($filename);
