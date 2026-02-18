@@ -228,6 +228,42 @@
                                                 Modifier
                                             </button>
                                         </div>
+                                        
+                                        <!-- Modal pour cette classe - DÉPLACÉE ICI pour être dans la boucle mais à l'intérieur de la cellule -->
+                                        <div id="modal-{{ $teacher->id }}-{{ $classe->id }}" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm" style="display: none;">
+                                            <div class="bg-white rounded-xl shadow-xl w-full max-w-md transform transition-all duration-200 scale-95 opacity-0 modal-amount-content">
+                                                <div class="p-5 border-b border-gray-100">
+                                                    <div class="flex items-center justify-between">
+                                                        <h3 class="text-lg font-medium text-gray-900">{{ $classe->name }}</h3>
+                                                        <button onclick="closeAmountModal('modal-{{ $teacher->id }}-{{ $classe->id }}')" class="text-gray-400 hover:text-gray-600">
+                                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                                            </svg>
+                                                        </button>
+                                                    </div>
+                                                    <p class="text-xs text-gray-500 mt-1">Enseignant: {{ $teacher->name }}</p>
+                                                </div>
+                                                <form action="{{ route('enseignants.classe.paiement', ['teacher' => $teacher->id, 'class' => $classe->id, 'subject' => $subject->id]) }}" method="POST" class="p-5">
+                                                    @csrf
+                                                    <div>
+                                                        <label class="block text-xs font-medium text-gray-600 mb-1.5">Montant brut (FCFA)</label>
+                                                        <input type="number" name="amount" min="0" step="0.01" value="{{ $amountBrut }}" 
+                                                               class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-indigo-300 focus:ring-1 focus:ring-indigo-200 transition-colors"
+                                                               placeholder="Saisir le montant">
+                                                    </div>
+                                                    <div class="flex justify-end space-x-2 mt-5">
+                                                        <button type="button" onclick="closeAmountModal('modal-{{ $teacher->id }}-{{ $classe->id }}')" 
+                                                                class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                                                            Annuler
+                                                        </button>
+                                                        <button type="submit" 
+                                                                class="px-4 py-2 text-sm text-white bg-indigo-500 hover:bg-indigo-600 rounded-lg transition-colors">
+                                                            Enregistrer
+                                                        </button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
                                     @endforeach
                                 </div>
                                 @else
@@ -258,48 +294,6 @@
                                 </div>
                             </td>
                         </tr>
-                        
-                        <!-- Modales montant -->
-                        @foreach($teacherClasses as $classe)
-                        @php
-                            $pivot = $classe->pivot;
-                            $amountBrut = $pivot->amount_brut ?? 0;
-                        @endphp
-                        <div id="modal-{{ $teacher->id }}-{{ $classe->id }}" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm">
-                            <div class="bg-white rounded-xl shadow-xl w-full max-w-md transform transition-all duration-200 scale-95 opacity-0 modal-amount-content">
-                                <div class="p-5 border-b border-gray-100">
-                                    <div class="flex items-center justify-between">
-                                        <h3 class="text-lg font-medium text-gray-900">{{ $classe->name }}</h3>
-                                        <button onclick="closeAmountModal('modal-{{ $teacher->id }}-{{ $classe->id }}')" class="text-gray-400 hover:text-gray-600">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                                            </svg>
-                                        </button>
-                                    </div>
-                                    <p class="text-xs text-gray-500 mt-1">Enseignant: {{ $teacher->name }}</p>
-                                </div>
-                                <form action="{{ route('enseignants.classe.paiement', ['teacher' => $teacher->id, 'class' => $classe->id, 'subject' => $subject->id]) }}" method="POST" class="p-5">
-                                    @csrf
-                                    <div>
-                                        <label class="block text-xs font-medium text-gray-600 mb-1.5">Montant brut (FCFA)</label>
-                                        <input type="number" name="amount" min="0" step="0.01" value="{{ $amountBrut }}" 
-                                               class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-indigo-300 focus:ring-1 focus:ring-indigo-200 transition-colors"
-                                               placeholder="Saisir le montant">
-                                    </div>
-                                    <div class="flex justify-end space-x-2 mt-5">
-                                        <button type="button" onclick="closeAmountModal('modal-{{ $teacher->id }}-{{ $classe->id }}')" 
-                                                class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                                            Annuler
-                                        </button>
-                                        <button type="submit" 
-                                                class="px-4 py-2 text-sm text-white bg-indigo-500 hover:bg-indigo-600 rounded-lg transition-colors">
-                                            Enregistrer
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                        @endforeach
                         @endforeach
                     </tbody>
                 </table>
@@ -345,7 +339,7 @@
                         <div class="bg-gray-50/50 rounded-lg p-3 border border-gray-100">
                             <div class="flex items-center justify-between mb-2">
                                 <span class="text-xs font-medium text-gray-700 bg-white px-2 py-1 rounded border border-gray-200">{{ $classe->name }}</span>
-                                <button onclick="openAmountModal('modal-{{ $teacher->id }}-{{ $classe->id }}')"
+                                <button onclick="openAmountModal('modal-mobile-{{ $teacher->id }}-{{ $classe->id }}')"
                                         class="text-xs text-indigo-500 hover:text-indigo-700">
                                     Modifier
                                 </button>
@@ -361,6 +355,42 @@
                                 </svg>
                                 Cahier de texte
                             </a>
+                        </div>
+                        
+                        <!-- Modal mobile pour cette classe -->
+                        <div id="modal-mobile-{{ $teacher->id }}-{{ $classe->id }}" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm" style="display: none;">
+                            <div class="bg-white rounded-xl shadow-xl w-full max-w-md transform transition-all duration-200 scale-95 opacity-0 modal-amount-content">
+                                <div class="p-5 border-b border-gray-100">
+                                    <div class="flex items-center justify-between">
+                                        <h3 class="text-lg font-medium text-gray-900">{{ $classe->name }}</h3>
+                                        <button onclick="closeAmountModal('modal-mobile-{{ $teacher->id }}-{{ $classe->id }}')" class="text-gray-400 hover:text-gray-600">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-1">Enseignant: {{ $teacher->name }}</p>
+                                </div>
+                                <form action="{{ route('enseignants.classe.paiement', ['teacher' => $teacher->id, 'class' => $classe->id, 'subject' => $subject->id]) }}" method="POST" class="p-5">
+                                    @csrf
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-600 mb-1.5">Montant brut (FCFA)</label>
+                                        <input type="number" name="amount" min="0" step="0.01" value="{{ $amountBrut }}" 
+                                               class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-indigo-300 focus:ring-1 focus:ring-indigo-200 transition-colors"
+                                               placeholder="Saisir le montant">
+                                    </div>
+                                    <div class="flex justify-end space-x-2 mt-5">
+                                        <button type="button" onclick="closeAmountModal('modal-mobile-{{ $teacher->id }}-{{ $classe->id }}')" 
+                                                class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                                            Annuler
+                                        </button>
+                                        <button type="submit" 
+                                                class="px-4 py-2 text-sm text-white bg-indigo-500 hover:bg-indigo-600 rounded-lg transition-colors">
+                                            Enregistrer
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
                         </div>
                     @endforeach
                 </div>
@@ -410,9 +440,15 @@ function closePdfModal() {
 
 // Modales montant
 function openAmountModal(id) {
+    console.log('Opening modal:', id); // Pour déboguer
     const modal = document.getElementById(id);
+    if (!modal) {
+        console.error('Modal not found:', id);
+        return;
+    }
     const content = modal.querySelector('.modal-amount-content');
     modal.classList.remove('hidden');
+    modal.style.display = 'flex'; // Forcer l'affichage en flex
     setTimeout(() => {
         content.classList.remove('scale-95', 'opacity-0');
         content.classList.add('scale-100', 'opacity-100');
@@ -420,12 +456,18 @@ function openAmountModal(id) {
 }
 
 function closeAmountModal(id) {
+    console.log('Closing modal:', id); // Pour déboguer
     const modal = document.getElementById(id);
+    if (!modal) {
+        console.error('Modal not found:', id);
+        return;
+    }
     const content = modal.querySelector('.modal-amount-content');
     content.classList.remove('scale-100', 'opacity-100');
     content.classList.add('scale-95', 'opacity-0');
     setTimeout(() => {
         modal.classList.add('hidden');
+        modal.style.display = 'none'; // Cacher complètement
     }, 200);
 }
 
@@ -439,7 +481,7 @@ document.addEventListener('click', function(event) {
         }
         
         // Amount modals
-        document.querySelectorAll('[id^="modal-"]').forEach(modal => {
+        document.querySelectorAll('[id^="modal-"], [id^="modal-mobile-"]').forEach(modal => {
             if (!modal.classList.contains('hidden') && modal.id !== 'pdfModal') {
                 closeAmountModal(modal.id);
             }
@@ -455,7 +497,7 @@ document.addEventListener('keydown', function(event) {
             closePdfModal();
         }
         
-        document.querySelectorAll('[id^="modal-"]').forEach(modal => {
+        document.querySelectorAll('[id^="modal-"], [id^="modal-mobile-"]').forEach(modal => {
             if (!modal.classList.contains('hidden') && modal.id !== 'pdfModal') {
                 closeAmountModal(modal.id);
             }
@@ -466,8 +508,13 @@ document.addEventListener('keydown', function(event) {
 
 <style>
 /* Transitions douces */
-[id^="modal-"] {
+[id^="modal-"], [id^="modal-mobile-"] {
     transition: opacity 0.2s ease;
+    display: none;
+}
+
+[id^="modal-"]:not(.hidden), [id^="modal-mobile-"]:not(.hidden) {
+    display: flex !important;
 }
 
 .modal-amount-content, #pdfModalContent {
