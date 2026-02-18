@@ -397,7 +397,6 @@
          Période du <strong>{{ date('d/m/Y', strtotime($start)) }}</strong> au <strong>{{ date('d/m/Y', strtotime($end)) }}</strong>
     </div>
 
-    <!-- TABLEAU PRINCIPAL -->
     <table class="main-table">
         <thead>
             <tr class="teacher-header">
@@ -414,7 +413,7 @@
                 <!-- Sous-colonnes Informations -->
                 <th style="font-weight: bold; background-color: #e8f5e8; color: black;">Classe assignée</th>
                 <th style="font-weight: bold; background-color: #e8f5e8; color: black;">Heures total</th>
-                <th style="font-weight: bold; background-color: #e8f5e8; color: black;">Montant reçu / heure</th>
+                <th style="font-weight: bold; background-color: #e8f5e8; color: black;">Montant reçu </th>
                 <th style="font-weight: bold; background-color: #e8f5e8;color: black;">MOntant brut total</th>
                 <th style="font-weight: bold; background-color: #e8f5e8; color: black;">AIB (5%)</th>
                 <th style="font-weight: bold; background-color: #e8f5e8; color: black;">Emmagement</th>

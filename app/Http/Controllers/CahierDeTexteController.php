@@ -467,11 +467,12 @@ class CahierDeTexteController extends Controller{
                 
                 // Calculer les montants pour chaque classe de cet enseignant
                 foreach ($classes as $classe) {
-                    $rate = $classe->amount_brut;
+                    $rate = $classe->amount_brut ;
                     $classe->total_brut = round($totalHours * $rate, 2);
                     $classe->aib = round($classe->total_brut * 0.05, 2);
                     // Emmagement reste vide comme dans la vue
                     $classe->emmagement = '';
+                    $classe->amount_brut = $classe->aib - $classe->total_brut;
                 }
                 
                 // Créer l'objet enseignant avec les propriétés attendues par la vue
@@ -503,6 +504,7 @@ class CahierDeTexteController extends Controller{
             $grand_total_aib = collect($teachersData)->sum('teacher_total_aib');
 
             // Générer le PDF
+
             $pdf = PDF::loadView('teacher.pdf', [
                 'subject' => $subject,
                 'teachers' => $teachersData,
