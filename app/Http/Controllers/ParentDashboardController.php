@@ -143,6 +143,11 @@ class ParentDashboardController extends Controller{
             // Charger les relations nécessaires
             $student->load(['classe']);
 
+            // Déplacer ces variables en dehors de la boucle foreach des trimestres
+            $allClassStudents = Student::where('class_id', $student->class_id)
+                ->where('academic_year_id', $activeYear->id)
+                ->get();
+
             // Récupérer toutes les matières de la classe avec leurs coefficients
             $subjects = ClassTeacherSubject::where('class_id', $student->class_id)
                 ->with(['subject', 'teacher'])
@@ -173,129 +178,114 @@ class ParentDashboardController extends Controller{
             $stats = [];
             $allMoyennesCoeff = []; // Pour calculer le rang
 
+
+            // Déplacer ces variables en dehors de la boucle foreach des trimestres
+            $allClassStudents = Student::where('class_id', $student->class_id)
+                ->where('academic_year_id', $activeYear->id)
+                ->get();
+
+            // Récupérer toutes les notes pour tous les élèves de la classe
+            $allGrades = Grade::whereIn('student_id', $allClassStudents->pluck('id'))
+                ->where('academic_year_id', $activeYear->id)
+                ->get()
+                ->groupBy(['student_id', 'trimestre', 'subject_id', 'type']);
+
             foreach ($trimestres as $trimestre) {
                 $trimestreGrades = $grades[$trimestre] ?? collect();
                 
-                // Calculer la moyenne générale du trimestre
-                $totalWeighted = 0;
-                $totalCoeff = 0;
-                $subjectStats = [];
-                $matieresAvecNotes = 0;
+                // Calculer d'abord les moyennes pour tous les élèves de la classe
+                $classAveragesForRank = [];
+                $subjectScoresForRank = [];
 
-                foreach ($subjects as $classSubject) {
-                    $subjectGrades = $trimestreGrades[$classSubject->subject_id] ?? collect();
+                foreach ($allClassStudents as $classStudent) {
+                    $studentTrimestreGrades = $allGrades[$classStudent->id][$trimestre] ?? collect();
                     
-                    // Séparer interrogations et devoirs
-                    $interrogations = collect();
-                    $devoirs = collect();
-                    
-                    if ($subjectGrades->isNotEmpty()) {
-                        if (isset($subjectGrades['interrogation'])) {
-                            $interrogations = collect($subjectGrades['interrogation'])->pluck('value');
-                        }
-                        if (isset($subjectGrades['devoir'])) {
-                            $devoirs = collect($subjectGrades['devoir'])->pluck('value');
-                        }
-                    }
-                    
-                    // Calculer la moyenne des interrogations
-                    $moyenneInterro = $interrogations->isNotEmpty() ? round($interrogations->avg(), 2) : 0;
-                    
-                    // Calculer la moyenne des devoirs
-                    $moyenneDevoir = $devoirs->isNotEmpty() ? round($devoirs->avg(), 2) : 0;
+                    $totalWeighted = 0;
+                    $totalCoeff = 0;
+                    $studentSubjectAverages = [];
 
-                    // Calcul personnalisé de la moyenne sur 20
-
-                    $nbDevoirs = $devoirs->count();
-
-                    if ($moyenneInterro > 0 && $nbDevoirs > 0) {
+                    foreach ($subjects as $classSubject) {
+                        $subjectGrades = $studentTrimestreGrades[$classSubject->subject_id] ?? collect();
                         
-                        if ($nbDevoirs >= 2) {
-                            // moyenneInterro + 2 devoirs / 3
-                            $moyenneSur20 = round(
-                                ($moyenneInterro + $devoirs->take(2)->sum()) / 3,
-                                2
-                            );
+                        $interrogations = collect();
+                        $devoirs = collect();
+                        
+                        if ($subjectGrades->isNotEmpty()) {
+                            if (isset($subjectGrades['interrogation'])) {
+                                $interrogations = collect($subjectGrades['interrogation'])->pluck('value');
+                            }
+                            if (isset($subjectGrades['devoir'])) {
+                                $devoirs = collect($subjectGrades['devoir'])->pluck('value');
+                            }
+                        }
+                        
+                        // Calcul personnalisé de la moyenne sur 20
+                        $nbDevoirs = $devoirs->count();
+
+                        if ($interrogations->isNotEmpty() && $nbDevoirs > 0) {
+                            if ($nbDevoirs >= 2) {
+                                $moyenneSur20 = round(
+                                    ($interrogations->avg() + $devoirs->take(2)->sum()) / 3,
+                                    2
+                                );
+                            } else {
+                                $moyenneSur20 = round(
+                                    ($interrogations->avg() + $devoirs->first()) / 2,
+                                    2
+                                );
+                            }
+                        } elseif ($interrogations->isNotEmpty() && $nbDevoirs == 0) {
+                            $moyenneSur20 = round($interrogations->avg(), 2);
+                        } elseif ($interrogations->isEmpty() && $nbDevoirs > 0) {
+                            $moyenneSur20 = round($devoirs->avg(), 2);
                         } else {
-                            // moyenneInterro + 1 devoir / 2
-                            $moyenneSur20 = round(
-                                ($moyenneInterro + $devoirs->first()) / 2,
-                                2
-                            );
+                            $moyenneSur20 = 0;
                         }
 
-                    } 
-                    elseif ($moyenneInterro > 0 && $nbDevoirs == 0) {
-                        
-                        // Pas de devoir
-                        $moyenneSur20 = $moyenneInterro;
+                        $studentSubjectAverages[$classSubject->subject_id] = $moyenneSur20;
 
-                    } 
-                    elseif ($moyenneInterro == 0 && $nbDevoirs > 0) {
-                        
-                        // Pas d'interrogation
-                        $moyenneSur20 = round($devoirs->avg(), 2);
-
-                    } 
-                    else {
-                        
-                        $moyenneSur20 = 0;
+                        if ($moyenneSur20 > 0) {
+                            $totalWeighted += $moyenneSur20 * $classSubject->coefficient;
+                            $totalCoeff += $classSubject->coefficient;
+                        }
                     }
 
+                    // Récupérer la conduite pour cet élève
+                    $studentConduct = Conduct::where('student_id', $classStudent->id)
+                        ->where('academic_year_id', $activeYear->id)
+                        ->where('trimestre', $trimestre)
+                        ->first();
                     
-                    // Moyenne coefficientée
-                    $moyenneCoeff = round($moyenneSur20 * $classSubject->coefficient, 2);
+                    $conduiteBase = $studentConduct->grade ?? 10;
                     
-                    $subjectStats[$classSubject->subject_id] = [
-                        'name' => $classSubject->subject->name,
-                        'coefficient' => $classSubject->coefficient,
-                        'teacher' => $classSubject->teacher->name,
-                        'interrogations' => $interrogations->values(),
-                        'devoirs' => $devoirs->values(),
-                        'moyenne_interro' => $moyenneInterro,
-                        'moyenne_devoir' => $moyenneDevoir,
-                        'moyenne_sur_20' => $moyenneSur20,
-                        'moyenne_coeff' => $moyenneCoeff,
-                        'rang' => $subjectRanks[$classSubject->subject_id] ?? null
-                    ];
-
-                    if ($moyenneSur20 > 0) {
-                        $totalWeighted += $moyenneSur20 * $classSubject->coefficient;
-                        $totalCoeff += $classSubject->coefficient;
-                        $matieresAvecNotes++;
+                    $studentPunishments = Punishment::where('student_id', $classStudent->id)
+                        ->where('academic_year_id', $activeYear->id)
+                        ->get();
+                    
+                    $studentPunishmentHours = $studentPunishments->sum('hours');
+                    $conduiteFinale = max(0, $conduiteBase - ($studentPunishmentHours / 2));
+                    
+                    if ($totalCoeff > 0) {
+                        $moyenneGenerale = round(($totalWeighted + $conduiteFinale) / ($totalCoeff + 1), 2);
+                        $classAveragesForRank[$classStudent->id] = [
+                            'moyenne' => $moyenneGenerale,
+                            'subject_averages' => $studentSubjectAverages
+                        ];
                     }
                 }
 
-                // Récupérer la note de conduite de base
-                $conduiteBase = $conducts[$trimestre]->grade ?? null; // Note par défaut si non définie
-                
-                // Calculer la conduite finale (note de base - moitié des heures de punition)
-                $conduiteFinale = max(0, $conduiteBase - ($totalPunishmentHours / 2));
-                $conduiteFinale = round($conduiteFinale, 2);
-
-                // Moyenne générale du trimestre (incluant la conduite)
-                $moyenneGenerale = 0;
-                if ($totalCoeff > 0 || $matieresAvecNotes > 0) {
-                    // Somme des moyennes coeff + conduite divisé par (total coeff + 1)
-                    $moyenneGenerale = round(($totalWeighted + $conduiteFinale) / ($totalCoeff + 1), 2);
-                }
-
-                $classAverages[$student->id] = [
-                    'moyenne' => $moyenneGenerale,
-                    'subject_averages' => collect($subjectStats)->pluck('moyenne_sur_20', null)->toArray()
-                ];
-
-                // Trier les élèves par moyenne générale pour obtenir les rangs
-                uasort($classAverages, function($a, $b) {
+                // Trier les élèves par moyenne générale pour les rangs généraux
+                uasort($classAveragesForRank, function($a, $b) {
                     return $b['moyenne'] <=> $a['moyenne'];
                 });
 
                 // Calculer les rangs par matière
+                $subjectRanks = [];
                 foreach ($subjects as $classSubject) {
                     $subjectId = $classSubject->subject_id;
                     $subjectScores = [];
                     
-                    foreach ($classAverages as $studentId => $data) {
+                    foreach ($classAveragesForRank as $studentId => $data) {
                         if (isset($data['subject_averages'][$subjectId]) && $data['subject_averages'][$subjectId] > 0) {
                             $subjectScores[$studentId] = $data['subject_averages'][$subjectId];
                         }
@@ -320,30 +310,96 @@ class ParentDashboardController extends Controller{
                     }
                 }
 
-                // Trouver le rang général de notre élève
+                // Calculer le rang général
                 $generalRank = null;
                 $rank = 0;
-                $previousScore = null;
-                $sameRankCount = 0;
-
-                foreach ($classAverages as $studentId => $data) {
+                foreach ($classAveragesForRank as $studentId => $data) {
                     $rank++;
-
-                    if ($previousScore !== null && $data['moyenne'] == $previousScore) {
-                        $sameRankCount++;
-                    } else {
-                        $rank = $rank - $sameRankCount;
-                        $sameRankCount = 0;
-                    }
-
                     if ($studentId == $student->id) {
                         $generalRank = $rank;
                         break;
                     }
-
-                    $previousScore = $data['moyenne'];
                 }
 
+                // Ensuite, calculer les stats pour l'élève spécifique (comme avant)
+                $totalWeighted = 0;
+                $totalCoeff = 0;
+                $subjectStats = [];
+                $matieresAvecNotes = 0;
+
+                foreach ($subjects as $classSubject) {
+                    $subjectGrades = $trimestreGrades[$classSubject->subject_id] ?? collect();
+                    
+                    $interrogations = collect();
+                    $devoirs = collect();
+                    
+                    if ($subjectGrades->isNotEmpty()) {
+                        if (isset($subjectGrades['interrogation'])) {
+                            $interrogations = collect($subjectGrades['interrogation'])->pluck('value');
+                        }
+                        if (isset($subjectGrades['devoir'])) {
+                            $devoirs = collect($subjectGrades['devoir'])->pluck('value');
+                        }
+                    }
+                    
+                    $moyenneInterro = $interrogations->isNotEmpty() ? round($interrogations->avg(), 2) : 0;
+                    $moyenneDevoir = $devoirs->isNotEmpty() ? round($devoirs->avg(), 2) : 0;
+
+                    // Calcul personnalisé de la moyenne sur 20
+                    $nbDevoirs = $devoirs->count();
+
+                    if ($interrogations->isNotEmpty() && $nbDevoirs > 0) {
+                        if ($nbDevoirs >= 2) {
+                            $moyenneSur20 = round(
+                                ($moyenneInterro + $devoirs->take(2)->sum()) / 3,
+                                2
+                            );
+                        } else {
+                            $moyenneSur20 = round(
+                                ($moyenneInterro + $devoirs->first()) / 2,
+                                2
+                            );
+                        }
+                    } elseif ($interrogations->isNotEmpty() && $nbDevoirs == 0) {
+                        $moyenneSur20 = $moyenneInterro;
+                    } elseif ($interrogations->isEmpty() && $nbDevoirs > 0) {
+                        $moyenneSur20 = round($devoirs->avg(), 2);
+                    } else {
+                        $moyenneSur20 = 0;
+                    }
+                    
+                    $moyenneCoeff = round($moyenneSur20 * $classSubject->coefficient, 2);
+                    
+                    $subjectStats[$classSubject->subject_id] = [
+                        'name' => $classSubject->subject->name,
+                        'coefficient' => $classSubject->coefficient,
+                        'teacher' => $classSubject->teacher->name,
+                        'interrogations' => $interrogations->values(),
+                        'devoirs' => $devoirs->values(),
+                        'moyenne_interro' => $moyenneInterro,
+                        'moyenne_devoir' => $moyenneDevoir,
+                        'moyenne_sur_20' => $moyenneSur20,
+                        'moyenne_coeff' => $moyenneCoeff,
+                        'rang' => $subjectRanks[$classSubject->subject_id] ?? null
+                    ];
+
+                    if ($moyenneSur20 > 0) {
+                        $totalWeighted += $moyenneSur20 * $classSubject->coefficient;
+                        $totalCoeff += $classSubject->coefficient;
+                        $matieresAvecNotes++;
+                    }
+                }
+
+                // Récupérer la note de conduite de base
+                $conduiteBase = $conducts[$trimestre]->grade ?? 10;
+                $conduiteFinale = max(0, $conduiteBase - ($totalPunishmentHours / 2));
+                $conduiteFinale = round($conduiteFinale, 2);
+
+                // Moyenne générale du trimestre
+                $moyenneGenerale = 0;
+                if ($totalCoeff > 0 || $matieresAvecNotes > 0) {
+                    $moyenneGenerale = round(($totalWeighted + $conduiteFinale) / ($totalCoeff + 1), 2);
+                }
 
                 $stats[$trimestre] = [
                     'subjects' => $subjectStats,
@@ -355,14 +411,10 @@ class ParentDashboardController extends Controller{
                     'total_punishment_hours' => $totalPunishmentHours,
                     'matieres_avec_notes' => $matieresAvecNotes,
                     'rang_general' => $generalRank,
+                    'effectif_classe' => count($classAveragesForRank)
                 ];
-
-                // Stocker pour le calcul du rang
-                if ($moyenneGenerale > 0) {
-                    $allMoyennesCoeff[$trimestre] = $moyenneGenerale;
-                }
             }
-
+            
             // Calculer les statistiques générales
             $effectif = $student->classe->students()->where('academic_year_id', $activeYear->id)->count();
             
@@ -389,55 +441,6 @@ class ParentDashboardController extends Controller{
         }
     }
 
-    /**
-     * Calculer les moyennes de la classe
-     */
-    private function calculateClassAverages($classId, $academicYearId){
-        // Récupérer tous les élèves de la classe
-        $students = Student::where('class_id', $classId)
-            ->where('academic_year_id', $academicYearId)
-            ->get();
-
-        $allAverages = [];
-
-        foreach ($students as $student) {
-            $grades = Grade::where('student_id', $student->id)
-                ->where('academic_year_id', $academicYearId)
-                ->get()
-                ->groupBy('subject_id');
-
-            $totalWeighted = 0;
-            $totalCoeff = 0;
-
-            foreach ($grades as $subjectId => $subjectGrades) {
-                $classSubject = ClassTeacherSubject::where('class_id', $classId)
-                    ->where('subject_id', $subjectId)
-                    ->first();
-
-                if ($classSubject) {
-                    $toutesNotes = $subjectGrades->pluck('value');
-                    $moyenneSur20 = $toutesNotes->isNotEmpty() ? $toutesNotes->avg() : 0;
-                    
-                    $totalWeighted += $moyenneSur20 * $classSubject->coefficient;
-                    $totalCoeff += $classSubject->coefficient;
-                }
-            }
-
-            if ($totalCoeff > 0) {
-                $allAverages[] = $totalWeighted / $totalCoeff;
-            }
-        }
-
-        return [
-            'plus_forte' => !empty($allAverages) ? round(max($allAverages), 2) : 0,
-            'plus_faible' => !empty($allAverages) ? round(min($allAverages), 2) : 0,
-            'moyenne_classe' => !empty($allAverages) ? round(array_sum($allAverages) / count($allAverages), 2) : 0
-        ];
-    }
-
-    /**
-     * Calculer les rangs par trimestre
-     */
     private function calculateRanks($classId, $academicYearId, $studentStats){
         $students = Student::where('class_id', $classId)
             ->where('academic_year_id', $academicYearId)
@@ -494,17 +497,6 @@ class ParentDashboardController extends Controller{
         }
 
         return $rangs;
-    }
-
-    
-    public function attendance(Student $student) {
-      
-        return view('parent.child.attendance', compact('student'));
-    }
-
-    public function payments(Student $student)  {
-     
-        return view('parent.child.payments', compact('student'));
     }
 
     public function timetable($studentId) {
@@ -595,6 +587,107 @@ class ParentDashboardController extends Controller{
             return redirect()->route('parent.dashboard')
                 ->with('error', 'Erreur lors du chargement de l\'emploi du temps: ' . $e->getMessage());
         }
+    }
+
+    private function calculateClassAverages($classId, $academicYearId){
+        // Récupérer tous les élèves de la classe
+        $students = Student::where('class_id', $classId)
+            ->where('academic_year_id', $academicYearId)
+            ->get();
+
+        // Récupérer toutes les matières de la classe
+        $subjects = ClassTeacherSubject::where('class_id', $classId)
+            ->with(['subject', 'teacher'])
+            ->get();
+
+        // Récupérer toutes les notes pour tous les élèves
+        $allGrades = Grade::whereIn('student_id', $students->pluck('id'))
+            ->where('academic_year_id', $academicYearId)
+            ->get()
+            ->groupBy(['student_id', 'trimestre', 'subject_id', 'type']);
+
+        $trimestreAverages = [1 => [], 2 => [], 3 => []];
+
+        foreach ($students as $student) {
+            for ($trimestre = 1; $trimestre <= 3; $trimestre++) {
+                $studentTrimestreGrades = $allGrades[$student->id][$trimestre] ?? collect();
+                
+                $totalWeighted = 0;
+                $totalCoeff = 0;
+
+                foreach ($subjects as $classSubject) {
+                    $subjectGrades = $studentTrimestreGrades[$classSubject->subject_id] ?? collect();
+                    
+                    $interrogations = collect();
+                    $devoirs = collect();
+                    
+                    if ($subjectGrades->isNotEmpty()) {
+                        if (isset($subjectGrades['interrogation'])) {
+                            $interrogations = collect($subjectGrades['interrogation'])->pluck('value');
+                        }
+                        if (isset($subjectGrades['devoir'])) {
+                            $devoirs = collect($subjectGrades['devoir'])->pluck('value');
+                        }
+                    }
+                    
+                    // Calcul personnalisé de la moyenne sur 20 (MÊME LOGIQUE QUE POUR L'ÉLÈVE)
+                    $nbDevoirs = $devoirs->count();
+
+                    if ($interrogations->isNotEmpty() && $nbDevoirs > 0) {
+                        if ($nbDevoirs >= 2) {
+                            $moyenneSur20 = ($interrogations->avg() + $devoirs->take(2)->sum()) / 3;
+                        } else {
+                            $moyenneSur20 = ($interrogations->avg() + $devoirs->first()) / 2;
+                        }
+                    } elseif ($interrogations->isNotEmpty() && $nbDevoirs == 0) {
+                        $moyenneSur20 = $interrogations->avg();
+                    } elseif ($interrogations->isEmpty() && $nbDevoirs > 0) {
+                        $moyenneSur20 = $devoirs->avg();
+                    } else {
+                        $moyenneSur20 = 0;
+                    }
+                    
+                    if ($moyenneSur20 > 0) {
+                        $totalWeighted += $moyenneSur20 * $classSubject->coefficient;
+                        $totalCoeff += $classSubject->coefficient;
+                    }
+                }
+
+                // Récupérer les punitions pour la conduite
+                $punishments = Punishment::where('student_id', $student->id)
+                    ->where('academic_year_id', $academicYearId)
+                    ->get();
+                
+                $totalPunishmentHours = $punishments->sum('hours');
+                
+                // Récupérer la conduite
+                $conduct = Conduct::where('student_id', $student->id)
+                    ->where('academic_year_id', $academicYearId)
+                    ->where('trimestre', $trimestre)
+                    ->first();
+                
+                $conduiteBase = $conduct->grade ?? 10;
+                $conduiteFinale = max(0, $conduiteBase - ($totalPunishmentHours / 2));
+
+                if ($totalCoeff > 0) {
+                    $moyenneAvecConduite = ($totalWeighted + $conduiteFinale) / ($totalCoeff + 1);
+                    $trimestreAverages[$trimestre][] = $moyenneAvecConduite;
+                }
+            }
+        }
+
+        // Calculer les stats pour chaque trimestre
+        $result = [];
+        for ($trimestre = 1; $trimestre <= 3; $trimestre++) {
+            $averages = $trimestreAverages[$trimestre];
+            $result[$trimestre] = [
+                'plus_forte' => !empty($averages) ? round(max($averages), 2) : 0,
+                'plus_faible' => !empty($averages) ? round(min($averages), 2) : 0,
+                'moyenne_classe' => !empty($averages) ? round(array_sum($averages) / count($averages), 2) : 0
+            ];
+        }
+
+        return $result;
     }
 
 }

@@ -271,7 +271,10 @@
                                 <div class="card-body text-center py-4">
                                     <i class="fas fa-arrow-up fa-2x mb-3"></i>
                                     <h4 class="h5 mb-2">Plus forte moyenne</h4>
-                                    <h2 class="display-6 fw-bold mb-0">{{ number_format($classAverages['plus_forte'], 2) }}</h2>
+                                    <h2 class="display-6 fw-bold mb-0">
+                                        {{ number_format($classAverages[$trimestre]['plus_forte'] ?? 0, 2) }}
+                                    </h2>
+                                    <small class="text-white-50">Trimestre {{ $trimestre }}</small>
                                 </div>
                             </div>
                         </div>
@@ -281,7 +284,10 @@
                                 <div class="card-body text-center py-4">
                                     <i class="fas fa-arrow-down fa-2x mb-3"></i>
                                     <h4 class="h5 mb-2">Plus faible moyenne</h4>
-                                    <h2 class="display-6 fw-bold mb-0">{{ number_format($classAverages['plus_faible'], 2) }}</h2>
+                                    <h2 class="display-6 fw-bold mb-0">
+                                        {{ number_format($classAverages[$trimestre]['plus_faible'] ?? 0, 2) }}
+                                    </h2>
+                                    <small class="text-white-50">Trimestre {{ $trimestre }}</small>
                                 </div>
                             </div>
                         </div>
@@ -291,7 +297,10 @@
                                 <div class="card-body text-center py-4">
                                     <i class="fas fa-chart-bar fa-2x mb-3"></i>
                                     <h4 class="h5 mb-2">Moyenne de la classe</h4>
-                                    <h2 class="display-6 fw-bold mb-0">{{ number_format($classAverages['moyenne_classe'], 2) }}</h2>
+                                    <h2 class="display-6 fw-bold mb-0">
+                                        {{ number_format($classAverages[$trimestre]['moyenne_classe'] ?? 0, 2) }}
+                                    </h2>
+                                    <small class="text-white-50">Trimestre {{ $trimestre }}</small>
                                 </div>
                             </div>
                         </div>
