@@ -61,20 +61,20 @@ use App\Http\Controllers\ParentDashboardController;
 use App\Http\Controllers\Parent\ChildController;
 
 // Pour tester la page 400
-Route::get('/test-400', function () {
+Route::get('/400', function () {
     abort(400);
 });
 
 // Pour tester la page 500
-Route::get('/test-500', function () {
+Route::get('/500', function () {
     abort(500);
 });
 
-Route::get('/test-404', function () {
+Route::get('/404', function () {
     abort(404);
 });
 
-Route::get('/test-403', function () {
+Route::get('/403', function () {
     abort(403);
 });
 
@@ -616,7 +616,7 @@ Route::get('/session-expired', function () {
     abort(419);
 });
 
-Route::get('/test-419', function () {
+Route::get('/419', function () {
     abort(419);
 });
 
