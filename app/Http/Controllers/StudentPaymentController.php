@@ -36,7 +36,7 @@ class StudentPaymentController extends Controller{
 
         // Générer PDF
         $pdf = Pdf::loadView('pdf.receipt', compact('payment'));
-        $pdfPath = storage_path("app/public/receipts/recu_{$payment->id}.pdf");
+        $pdfPath = storage_path("./receipts/recu_{$payment->id}.pdf");
         $pdf->save($pdfPath);
 
         // Mettre à jour la colonne receipt
