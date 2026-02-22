@@ -38,23 +38,20 @@
 
         <!-- Section Filtres et Export -->
         <div class="bg-white border border-gray-200 rounded-lg p-6 mb-6">
-            <!-- Bouton Envoyer mails de rappel - Bien positionné 
+    
             <div class="mb-6">
-                <h2 class="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                    <i class="fas fa-envelope"></i>
-                    Communication
-                </h2>
+               
                 <form id="mailForm" method="POST" action="{{ route('students.mail.sendAll') }}">
                     @csrf
                     <button type="submit" 
                         class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition duration-200 font-medium flex items-center gap-2">
                         <i class="fas fa-paper-plane"></i>
-                        Envoyer mails de rappel à tous
+                        Envoyer un message de rappel
                     </button>
                     <p>:pour non payement de contribution au parents</p>
                 </form>
             </div>
-            -->
+         
 
             <!-- Filtres de recherche -->
             <div class="mb-4">

@@ -105,8 +105,7 @@ class AdminAuthController extends Controller{
     }
 
 
-    public function createAdmin(Request $request)
-    {
+    public function createAdmin(Request $request){
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',

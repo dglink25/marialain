@@ -13,8 +13,7 @@ use App\Mail\PaymentReceiptMail;
 
 class StudentPaymentController extends Controller{
     // Afficher les paiements d'un étudiant
-    public function index(Student $student)
-    {
+    public function index(Student $student) {
         $payments = $student->payments()->latest()->get();
         return view('admin.students.payments.index', compact('student','payments'));
     }

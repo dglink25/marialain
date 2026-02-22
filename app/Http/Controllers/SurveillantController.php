@@ -145,8 +145,10 @@ class SurveillantController extends Controller{
         if ($student && $student->parent_email) {
             try {
                 if ($student->parent_email) {
+                    /*
                     Mail::to($student->parent_email)
                         ->send(new PunishmentNotification($student, $request->reason, $request->hours));
+                        */
                 }
             } catch (\Exception $e) {
                 return back()->withErrors("Punition enregistrée mais échec d’envoi du mail.");

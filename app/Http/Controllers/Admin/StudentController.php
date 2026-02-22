@@ -137,7 +137,7 @@ class StudentController extends Controller{
 
             return redirect()->back()->with('success', 'Inscription réussie avec succès.');
         } catch (Exception $e) {
-            \Log::error('Erreur inscription élève : ' . $e->getMessage());
+            //Log::error('Erreur inscription élève : ' . $e->getMessage());
             return redirect()->back()->with('error', 'Erreur lors de l’inscription : ' . $e->getMessage());
         }
     }
