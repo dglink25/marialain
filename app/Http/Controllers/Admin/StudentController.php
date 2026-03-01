@@ -18,14 +18,8 @@ use App\Models\AcademicYear;
 use App\Mail\StudentRegistered;
 use Illuminate\Support\Facades\Schema;
 use Cloudinary\Api\Upload\UploadApi; // API upload
-
-
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
-
-
 use Exception;
-
-
 
 class StudentController extends Controller{
     public function checkActiveYear(){
@@ -38,13 +32,13 @@ class StudentController extends Controller{
     }
 
     public function store(Request $request){
-        // ✅ Vérifie si une année académique est active
+        // Vérifie si une année académique est active
         $activeYear = AcademicYear::where('active', true)->first();
         if (!$activeYear) {
             return redirect()->back()->with('error', 'Aucune année académique active trouvée.');
         }
 
-        // ✅ Validation des données
+        // Validation des données
         $validator = Validator::make($request->all(), [
             'first_name'            => 'required|string|max:255',
             'last_name'             => 'required|string|max:255',
@@ -52,6 +46,7 @@ class StudentController extends Controller{
             'birth_place'           => 'required|string|max:255',
             'entity_id'             => 'required|exists:entities,id',
             'classe_id'             => 'required|exists:classes,id',
+            'registration_type'     => 'required|in:new,re_registration',
             'birth_certificate'     => 'nullable|max:2048',
             'vaccination_card'      => 'nullable|max:2048',
             'previous_report_card'  => 'nullable|max:2048',
@@ -70,7 +65,7 @@ class StudentController extends Controller{
 
         $data = $validator->validated();
 
-        // ✅ Upload Cloudinary (sécurisé)
+        // Upload Cloudinary (sécurisé)
         foreach (['birth_certificate', 'vaccination_card', 'previous_report_card', 'diploma_certificate'] as $fileField) {
             if ($request->hasFile($fileField) && $request->file($fileField)->isValid()) {
 
@@ -88,11 +83,24 @@ class StudentController extends Controller{
             }
         }
 
-        // ✅ Calcul automatique de l’âge (corrigé)
+        // Calcul automatique de l’âge (corrigé)
         $data['age'] = now()->diffInYears($data['birth_date']);
+        
+        $classe = Classe::query()
+                ->where('id', $data['classe_id'])
+                ->where('academic_year_id', $activeYear->id)
+                ->firstOrFail();
+
+        $totalFees = $classe->school_fees ?? 0;
+        if ($data['registration_type'] === 'new') {
+            $totalFees += $classe->registration_fee ?? 0;
+        } elseif ($data['registration_type'] === 're_registration') {
+            $totalFees += $classe->re_registration_fee ?? 0;
+        }
+
 
         try {
-            // ✅ Préparation des données d’inscription
+            // Préparation des données d’inscription
             $studentData = [
                 'first_name'           => $data['first_name'],
                 'last_name'            => $data['last_name'],
@@ -102,6 +110,8 @@ class StudentController extends Controller{
                 'entity_id'            => $data['entity_id'],
                 'academic_year_id'     => $activeYear->id,
                 'class_id'             => $data['classe_id'],
+                'registration_type'    => $data['registration_type'],
+                'total_fees'           => $totalFees,
                 'birth_certificate'    => $data['birth_certificate'] ?? null,
                 'vaccination_card'     => $data['vaccination_card'] ?? null,
                 'previous_report_card' => $data['previous_report_card'] ?? null,
@@ -113,10 +123,10 @@ class StudentController extends Controller{
                 'age'                  => $data['age'],
             ];
 
-            // ✅ Création de l’élève
+            // Création de l’élève
             $student = Student::create($studentData);
 
-            // ✅ Si la colonne school_fees existe
+            // Si la colonne school_fees existe
             if (Schema::hasColumn('students', 'school_fees') && isset($data['school_fees'])) {
                 $student->update([
                     'school_fees' => $data['school_fees'],
@@ -124,7 +134,7 @@ class StudentController extends Controller{
                     'is_validated' => true,
                 ]);
 
-                // ✅ Création du paiement associé
+                // Création du paiement associé
                 $student->payments()->create([
                     'tranche'      => 1,
                     'amount'       => $data['school_fees'],
@@ -132,11 +142,12 @@ class StudentController extends Controller{
                 ]);
             }
 
-            // ✅ Envoi de mail (désactivé pour tests)
+            // Envoi de mail (désactivé pour tests)
             // Mail::to($student->parent_email)->send(new StudentRegistered($student));
 
             return redirect()->back()->with('success', 'Inscription réussie avec succès.');
-        } catch (Exception $e) {
+        } 
+        catch (Exception $e) {
             //Log::error('Erreur inscription élève : ' . $e->getMessage());
             return redirect()->back()->with('error', 'Erreur lors de l’inscription : ' . $e->getMessage());
         }

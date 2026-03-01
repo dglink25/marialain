@@ -11,6 +11,8 @@ class Classe extends Model{
         'academic_year_id',
         'entity_id',
         'school_fees',
+        'registration_fee',
+        're_registration_fee',
         'description',
     ];
 

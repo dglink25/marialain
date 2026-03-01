@@ -236,6 +236,15 @@
                                            required>
                                 </div>
                             </div>
+
+                            <div class="form-group">
+                                <label for="registration_type">Type d'inscription <span class="text-danger">*</span></label>
+                                <select name="registration_type" id="registration_type" class="form-control" required>
+                                    <option value="">Sélectionnez le type</option>
+                                    <option value="new" {{ old('registration_type') == 'new' ? 'selected' : '' }}>Nouvelle inscription</option>
+                                    <option value="re_registration" {{ old('registration_type') == 're_registration' ? 'selected' : '' }}>Réinscription</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -334,6 +343,46 @@
         e.target.value = value;
     });
 </script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const classeSelect = document.getElementById('classe_id');
+    const registrationTypeSelect = document.getElementById('registration_type');
+    const feesDisplay = document.createElement('div');
+    feesDisplay.className = 'alert alert-info mt-2';
+    feesDisplay.id = 'fees-display';
+    
+    // Insérer après le select du type d'inscription
+    registrationTypeSelect.parentNode.appendChild(feesDisplay);
+    
+    function updateFees() {
+        const classeId = classeSelect.value;
+        const registrationType = registrationTypeSelect.value;
+        
+        if (!classeId || !registrationType) {
+            feesDisplay.innerHTML = 'Sélectionnez une classe et un type d\'inscription';
+            return;
+        }
+        
+        // Récupérer les frais de la classe (vous devrez peut-être faire un appel AJAX)
+        fetch(`/api/classes/${classeId}/fees`)
+            .then(response => response.json())
+            .then(data => {
+                let totalFees = data.school_fees || 0;
+                if (registrationType === 'new') {
+                    totalFees += data.registration_fee || 0;
+                } else if (registrationType === 're_registration') {
+                    totalFees += data.re_registration_fee || 0;
+                }
+                feesDisplay.innerHTML = `<strong>Total des frais à payer :</strong> ${totalFees.toLocaleString()} FCFA`;
+            });
+    }
+    
+    classeSelect.addEventListener('change', updateFees);
+    registrationTypeSelect.addEventListener('change', updateFees);
+});
+</script>
+
 @else
 <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4">
     <div class="max-w-md w-full bg-white rounded-2xl shadow-2xl p-8 text-center">

@@ -32,8 +32,8 @@
 
             <!-- Formulaire d'ajout -->
             <form method="POST" action="{{ route('admin.classes.store') }}" 
-                  id="classForm"
-                  class="hidden bg-gray-50 border border-gray-200 rounded-lg p-4 mt-4">
+                id="classForm"
+                class="hidden bg-gray-50 border border-gray-200 rounded-lg p-4 mt-4">
                 @csrf
                 <h3 class="text-md font-semibold mb-4 text-gray-700">Nouvelle classe</h3>
 
@@ -41,8 +41,8 @@
                     <div>
                         <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Nom de la classe</label>
                         <input type="text" name="name" id="name" 
-                               class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500 transition duration-200" 
-                               required placeholder="Ex: Terminale A">
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500 transition duration-200" 
+                            required placeholder="Ex: Terminale A">
                     </div>
 
                     <div>
@@ -67,11 +67,30 @@
                         </select>
                     </div>
 
+                    {{-- NOUVEAU : Frais de scolarité --}}
                     <div>
                         <label for="school_fees" class="block text-sm font-medium text-gray-700 mb-1">Frais de scolarité (FCFA)</label>
                         <input type="number" step="0.01" name="school_fees" id="school_fees" 
-                               class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500 transition duration-200" 
-                               required placeholder="Ex: 150000">
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500 transition duration-200" 
+                            required placeholder="Ex: 150000">
+                    </div>
+
+                    {{-- NOUVEAU : Frais d'inscription --}}
+                    <div>
+                        <label for="registration_fee" class="block text-sm font-medium text-gray-700 mb-1">Frais d'inscription (FCFA)</label>
+                        <input type="number" step="0.01" name="registration_fee" id="registration_fee" 
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500 transition duration-200" 
+                            placeholder="Ex: 25000">
+                        <p class="text-xs text-gray-500 mt-1">Pour les nouvelles inscriptions</p>
+                    </div>
+
+                    {{-- NOUVEAU : Frais de réinscription --}}
+                    <div>
+                        <label for="re_registration_fee" class="block text-sm font-medium text-gray-700 mb-1">Frais de réinscription (FCFA)</label>
+                        <input type="number" step="0.01" name="re_registration_fee" id="re_registration_fee" 
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500 transition duration-200" 
+                            placeholder="Ex: 15000">
+                        <p class="text-xs text-gray-500 mt-1">Pour les réinscriptions</p>
                     </div>
                 </div>
 
@@ -135,6 +154,12 @@
                                 Frais de scolarité
                             </th>
                             <th class="px-4 py-3 text-left font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">
+                                Frais d'inscription 
+                            </th>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">
+                                Frais réinscription 
+                            </th>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">
                                 Actions
                             </th>
                         </tr>
@@ -153,6 +178,28 @@
                             </td>
                             <td class="px-4 py-3 whitespace-nowrap text-gray-700 font-semibold">
                                 {{ number_format($classe->school_fees, 0, ',', ' ') }} FCFA
+                            </td>
+                            <td class="px-4 py-3 whitespace-nowrap text-gray-700"> 
+                                @if($classe->registration_fee) 
+                                <span class="font-medium">
+                                    {{ number_format($classe->registration_fee, 0, ',', ' ') }} FCFA
+                                </span> 
+                                @else 
+                                <span class="text-gray-400 text-xs">
+                                    Non défini
+                                </span> 
+                                @endif 
+                            </td> 
+                            <td class="px-4 py-3 whitespace-nowrap text-gray-700"> 
+                                @if($classe->re_registration_fee) 
+                                <span class="font-medium">
+                                    {{ number_format($classe->re_registration_fee, 0, ',', ' ') }} FCFA
+                                </span> 
+                                @else 
+                                <span class="text-gray-400 text-xs">
+                                    Non défini
+                                </span> 
+                                @endif 
                             </td>
                             <td class="px-4 py-3 whitespace-nowrap">
                                 <div class="flex flex-col sm:flex-row gap-2">

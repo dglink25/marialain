@@ -140,6 +140,14 @@
             <label for="parent_phone" class="block text-sm font-semibold text-gray-700 mb-1">Téléphone du parent</label>
             <input type="text" name="parent_phone" id="parent_phone" value="{{ old('parent_phone') }}" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none" required>
         </div>
+
+        <a href="{{ route('accueil') }}" 
+          class="w-full sm:w-auto px-8 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition duration-200 flex items-center justify-center font-semibold">
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+          Annuler
+        </a>
         <div class="mt-4">
             <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Enregistrer</button>
         </div>

@@ -9,8 +9,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\StudentRegistered;
 use App\Mail\StudentValidated;
 
-class StudentsController extends Controller
-{
+class StudentsController extends Controller{
     public function create() {
         $entities = \App\Models\Entity::all();
         return view('admin.students.inscription', compact('entities'));

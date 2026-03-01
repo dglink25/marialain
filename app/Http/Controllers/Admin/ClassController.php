@@ -7,27 +7,25 @@ use App\Models\Classe;
 use App\Models\AcademicYear;
 use App\Models\Entity;
 
-class ClassController extends Controller{
-    public function checkActiveYear(){
+class ClassController extends Controller
+{
+    public function checkActiveYear()
+    {
         $activeYear = AcademicYear::where('active', 1)->first();
         if (!$activeYear) {
-            // Retourner une vue d’erreur si pas d’année active
             return view('errors.no_active_year');
         }
         return $activeYear;
     }
 
-
-
     public function index(Request $request)
     {
         try {
-            // Vérifier si une année scolaire active existe
             $activeYear = AcademicYear::where('active', true)->first();
 
             if (!$activeYear) {
                 return view('admin.classes.index', [
-                    'classes' => collect(),   // liste vide
+                    'classes' => collect(),
                     'entities' => Entity::all(),
                     'years' => collect(),
                     'activeYear' => null,
@@ -35,18 +33,12 @@ class ClassController extends Controller{
                 ]);
             }
 
-
-            // Toutes les entités pour le filtre
             $entities = Entity::all();
-
-            // On ne garde que l'année active (inutile de faire un get() ici, sauf si tu veux plusieurs actives)
             $years = AcademicYear::where('active', 1)->get();
 
-            // Récupérer les classes de l'année active
             $query = Classe::with('entity', 'academicYear')
                             ->where('academic_year_id', $activeYear->id);
 
-            // Filtre par entité si sélectionnée
             if ($request->filled('entity_id')) {
                 $query->where('entity_id', $request->entity_id);
             }
@@ -60,8 +52,8 @@ class ClassController extends Controller{
         }
     }
 
-
-    public function edit($id){
+    public function edit($id)
+    {
         if (!$this->checkActiveYear() instanceof AcademicYear) {
             return $this->checkActiveYear();
         }
@@ -72,46 +64,69 @@ class ClassController extends Controller{
         return view('admin.classes.edit', compact('classe', 'entities', 'years'));
     }
 
-    public function update(Request $request, $id){
+    public function update(Request $request, $id)
+    {
         if (!$this->checkActiveYear() instanceof AcademicYear) {
             return $this->checkActiveYear();
         }
+        
         $request->validate([
             'name' => 'required|string|max:255',
             'academic_year_id' => 'required|exists:academic_years,id',
             'entity_id' => 'required|exists:entities,id',
             'school_fees' => 'required|numeric|min:0',
+            'registration_fee' => 'nullable|numeric|min:0', // NOUVEAU
+            're_registration_fee' => 'nullable|numeric|min:0', // NOUVEAU
         ]);
 
         $classe = Classe::findOrFail($id);
-        $classe->update($request->only('name', 'academic_year_id', 'entity_id', 'school_fees'));
+        $classe->update($request->only(
+            'name', 
+            'academic_year_id', 
+            'entity_id', 
+            'school_fees',
+            'registration_fee',      // NOUVEAU
+            're_registration_fee'     // NOUVEAU
+        ));
 
-        return redirect()->route('admin.classes.index')->with('success', 'Classe mise à jour.');
+        return redirect()->route('admin.classes.index')->with('success', 'Classe mise à jour avec succès.');
     }
 
-    public function destroy($id){
+    public function destroy($id)
+    {
         if (!$this->checkActiveYear() instanceof AcademicYear) {
             return $this->checkActiveYear();
         }
         $classe = Classe::findOrFail($id);
         $classe->delete();
 
-        return redirect()->route('admin.classes.index')->with('success', 'Classe supprimée.');
+        return redirect()->route('admin.classes.index')->with('success', 'Classe supprimée avec succès.');
     }
 
-    public function store(Request $request){
+    public function store(Request $request)
+    {
         if (!$this->checkActiveYear() instanceof AcademicYear) {
             return $this->checkActiveYear();
         }
+        
         $request->validate([
             'name' => 'required|string|max:255',
             'academic_year_id' => 'required|exists:academic_years,id',
             'entity_id' => 'required|exists:entities,id',
             'school_fees' => 'required|numeric|min:0',
+            'registration_fee' => 'nullable|numeric|min:0', // NOUVEAU
+            're_registration_fee' => 'nullable|numeric|min:0', // NOUVEAU
         ]);
 
-        Classe::create($request->only('name', 'academic_year_id', 'entity_id', 'school_fees'));
+        Classe::create($request->only(
+            'name', 
+            'academic_year_id', 
+            'entity_id', 
+            'school_fees',
+            'registration_fee',      // NOUVEAU
+            're_registration_fee'     // NOUVEAU
+        ));
 
-        return redirect()->route('admin.classes.index')->with('success', 'Classe créée.');
+        return redirect()->route('admin.classes.index')->with('success', 'Classe créée avec succès.');
     }
 }

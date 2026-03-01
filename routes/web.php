@@ -94,12 +94,6 @@ Route::prefix('censeur')->middleware('auth')->group(function () {
 Route::get('/payments/{payment}/receipt', [StudentController::class, 'downloadReceipt'])
     ->name('payments.receipt');
 
-/*
-|--------------------------------------------------------------------------
-| Routes publiques
-|--------------------------------------------------------------------------
-*/
-
 
 Route::get('/', fn() => view('accueil'))->name('accueil');
 //Route::get('/home', fn() => view('welcome'))->name('home');
@@ -290,12 +284,6 @@ Route::get('/inscription', [StudentController::class, 'inscription'])->name('stu
 Route::post('/inscription', [StudentController::class, 'store'])->name('students.store');
 
 
-/*
-|--------------------------------------------------------------------------
-| Zone Censeur
-|--------------------------------------------------------------------------
-*/
-
 //Gestion de notes Censeur
 Route::middleware(['auth'])->get('/classes', [CenseurNoteController::class, 'index'])->name('censeur.notes.index');
 Route::middleware(['auth'])->get('/classes/{classId}/students/{studentId}/bulletin/{trimestre}', 
@@ -380,11 +368,6 @@ Route::get('/censeur/classes/{classId}/bulletin-trimestre/{trimestre}/all-pdf',
     [App\Http\Controllers\Censeur\NoteController::class, 'downloadAllBulletinsPdf'])
     ->name('censeur.classes.bulletin.all-pdf');
 
-/*
-|--------------------------------------------------------------------------
-| Zone Enseignant
-|--------------------------------------------------------------------------
-*/
 Route::prefix('teacher')->name('teacher.')->middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
@@ -395,11 +378,6 @@ Route::prefix('teacher')->name('teacher.')->middleware('auth')->group(function (
 });
 
 
-/*
-|--------------------------------------------------------------------------
-| Étudiants - Paiements
-|--------------------------------------------------------------------------
-*/
 Route::prefix('students')->name('students.')->group(function () {
     Route::get('{student}/payments', [StudentPaymentController::class,'index'])->name('payments.index');
     Route::get('{student}/payments/create', [StudentPaymentController::class,'create'])->name('payments.create');
@@ -407,11 +385,6 @@ Route::prefix('students')->name('students.')->group(function () {
 });
 
 
-/*
-|--------------------------------------------------------------------------
-| Archives
-|--------------------------------------------------------------------------
-*/
 Route::middleware(['auth'])->group(function () {
     Route::get('/archives', [ArchiveController::class, 'index'])->name('archives.index');
     Route::get('/archives/{id}', [ArchiveController::class, 'show'])->name('archives.show');
@@ -421,11 +394,6 @@ Route::middleware(['auth'])->group(function () {
 });
 
 
-/*
-|--------------------------------------------------------------------------
-| Divers
-|--------------------------------------------------------------------------
-*/
 // Afficher le profil d’un enseignant
 Route::middleware(['auth'])->get('/enseignants/{user}', [ProfileController::class, 'show'])->name('enseignants.show');
 
@@ -455,11 +423,6 @@ Route::middleware(['auth'])->prefix('surveillant')->group(function () {
 
 });
 
-/*
-
-Gestion notes côté enseignants
-
-*/
 
 Route::middleware(['auth'])->get('classes/{class}/{subject}/{trimestre}/notes', 
     [NoteController::class, 'showClassNotes']
@@ -705,12 +668,6 @@ Route::middleware(['auth'])->group(function () {
     });
 });
 
-
-
-
-
-
-
 Route::prefix('parent')->name('parent.')->group(function () {
     Route::get('/login', [ParentAuthController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [ParentAuthController::class, 'login']);
@@ -726,3 +683,14 @@ Route::prefix('parent')->name('parent.')->middleware('auth:parent')->group(funct
     Route::get('/contact', [ParentDashboardController::class, 'contact'])->name('contact');
 });
 
+Route::get('/api/classes/{id}/fees', function($id) {
+    $classe = App\Models\Classe::find($id);
+    if (!$classe) {
+        return response()->json(['error' => 'Classe non trouvée'], 404);
+    }
+    return response()->json([
+        'school_fees' => $classe->school_fees,
+        'registration_fee' => $classe->registration_fee,
+        're_registration_fee' => $classe->re_registration_fee,
+    ]);
+});
