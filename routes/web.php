@@ -275,11 +275,6 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
 
 });
 
-/*
-|--------------------------------------------------------------------------
-| Inscription publique
-|--------------------------------------------------------------------------
-*/
 Route::get('/inscription', [StudentController::class, 'inscription'])->name('students.create');
 Route::post('/inscription', [StudentController::class, 'store'])->name('students.store');
 
@@ -694,3 +689,6 @@ Route::get('/api/classes/{id}/fees', function($id) {
         're_registration_fee' => $classe->re_registration_fee,
     ]);
 });
+
+Route::put('/students/{student}/update-registration-type', [StudentPaymentController::class, 'updateRegistrationType'])
+    ->name('students.update-registration-type');

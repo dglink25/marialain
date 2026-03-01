@@ -51,8 +51,6 @@
                     <p>:pour non payement de contribution au parents</p>
                 </form>
             </div>
-         
-
             <!-- Filtres de recherche -->
             <div class="mb-4">
                 <h2 class="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
