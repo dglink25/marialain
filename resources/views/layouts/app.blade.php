@@ -362,6 +362,21 @@
                                         <i class="fas fa-school w-5"></i>
                                         <span class="ml-2">Classes</span>
                                     </a>
+
+                                    <a href="{{ route('censeur.invitations.index') }}" class="flex items-center px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('censeur.invitations.index') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
+                                        <i class="fas fa-chalkboard-teacher w-5"></i>
+                                        <span class="ml-2">Invitations</span>
+                                    </a>
+                                    <a href="{{ route('censeur.classes.index') }}" class="flex items-center px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('censeur.classes.index') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
+                                        <i class="fas fa-list w-5"></i>
+                                        <span class="ml-2">Gestion Emploi du temps</span>
+                                    </a>
+                                    <a href="{{ route('censeur.notes.index') }}"
+                                        class="flex items-center px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('censeur.notes.index') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
+                                        <i class="fas fa-sticky-note w-5"></i>
+                                        <span class="ml-2">Gestion de notes</span>
+                                    </a>
+
                                     @break
 
                                 @case('super_admin')
@@ -406,6 +421,20 @@
                                     <a href="{{ route('admin.classes.index') }}" class="flex items-center px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('admin.classes.index') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
                                         <i class="fas fa-school w-5"></i>
                                         <span class="ml-2">Classes</span>
+                                    </a>
+
+                                    <a href="{{ route('censeur.invitations.index') }}" class="flex items-center px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('censeur.invitations.index') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
+                                        <i class="fas fa-chalkboard-teacher w-5"></i>
+                                        <span class="ml-2">Invitations</span>
+                                    </a>
+                                    <a href="{{ route('censeur.classes.index') }}" class="flex items-center px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('censeur.classes.index') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
+                                        <i class="fas fa-list w-5"></i>
+                                        <span class="ml-2">Gestion Emploi du temps</span>
+                                    </a>
+                                    <a href="{{ route('censeur.notes.index') }}"
+                                        class="flex items-center px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('censeur.notes.index') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
+                                        <i class="fas fa-sticky-note w-5"></i>
+                                        <span class="ml-2">Gestion de notes</span>
                                     </a>
                                     @break
 

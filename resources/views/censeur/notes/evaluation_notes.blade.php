@@ -54,7 +54,7 @@
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div class="text-center">
                         <div class="text-2xl font-bold text-gray-900">{{ $stats['total_etudiants'] }}</div>
-                        <div class="text-sm text-gray-600">Étudiants</div>
+                        <div class="text-sm text-gray-600">Apprenants</div>
                     </div>
                     
                     <div class="text-center">

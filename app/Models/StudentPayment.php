@@ -15,8 +15,7 @@ class StudentPayment extends Model
         'payment_date' => 'date',
     ];
 
-    public function student()
-    {
+    public function student(){
         return $this->belongsTo(Student::class);
     }
 

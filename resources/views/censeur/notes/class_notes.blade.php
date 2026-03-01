@@ -86,7 +86,7 @@
                     <tbody class="divide-y divide-gray-200">
                         @foreach($classe->students as $student)
                             @php
-                                // CORRECTION: Accès correct aux données
+                                
                                 $grades = isset($gradesData[$student->id][$subject->id]) 
                                     ? $gradesData[$student->id][$subject->id] 
                                     : null;

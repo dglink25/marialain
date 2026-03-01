@@ -207,6 +207,7 @@
         </div>
 
         <!-- Boutons d'action -->
+        @if(auth()->user()->id ==1 || auth()->user()->id == 6)
         <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mt-6">
             
             @if(count($bulletin) > 0)
@@ -217,6 +218,7 @@
             </a>
             @endif
         </div>
+        @endif
     </div>
 </div>
 
