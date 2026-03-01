@@ -18,6 +18,85 @@
       {{ session('error') }}
     </div>
   @endif
+
+        <!-- Modal d'accès non autorisé -->
+        <div id="accessModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                <!-- Overlay -->
+                <div id="modalOverlay" class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+
+                <!-- Espace pour centrer la modal -->
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+                <!-- Contenu de la modal -->
+                <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                    <!-- En-tête de la modal -->
+                    <div class="bg-gradient-to-r from-red-600 to-red-700 px-6 py-4">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-shield-alt text-white text-2xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <h3 class="text-lg font-semibold text-white" id="modal-title">
+                                    Accès non autorisé
+                                </h3>
+                                <p class="text-red-100 text-sm mt-1">
+                                    Sécurité - Zone restreinte
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Corps de la modal -->
+                    <div class="bg-white px-6 py-6">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0">
+                                <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-lock text-red-600 text-xl"></i>
+                                </div>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-gray-700 font-medium">
+                                    Cette fonctionnalité est strictement réservée à :
+                                </p>
+                                <ul class="mt-3 space-y-2">
+                                    <li class="flex items-center text-gray-600">
+                                        <i class="fas fa-user-tie text-blue-500 w-6"></i>
+                                        <span>La Secrétaire Comptable</span>
+                                    </li>
+                                    <li class="flex items-center text-gray-600">
+                                        <i class="fas fa-crown text-yellow-500 w-6"></i>
+                                        <span>Le Directeur Fondateur</span>
+                                    </li>
+                                </ul>
+                                <div class="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                    <p class="text-sm text-gray-500">
+                                        <i class="fas fa-info-circle text-blue-500 mr-1"></i>
+                                        Pour obtenir l'accès, veuillez contacter l'administrateur ou utiliser un compte disposant des privilèges nécessaires.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pied de la modal -->
+                    <div class="bg-gray-50 px-6 py-3 flex justify-end space-x-3">
+                        <button type="button" 
+                                onclick="closeModal()"
+                                class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-200">
+                            <i class="fas fa-times mr-2"></i>
+                            Fermer
+                        </button>
+                        <a href="{{ route('home') }}" 
+                           class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-lg text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-200">
+                            <i class="fas fa-home mr-2"></i>
+                            Retour à l'accueil
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Carte principale du bulletin -->
         <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden mb-6">
             
@@ -207,18 +286,16 @@
         </div>
 
         <!-- Boutons d'action -->
-        @if(auth()->user()->id ==1 || auth()->user()->id == 6)
         <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mt-6">
             
             @if(count($bulletin) > 0)
-            <a href="{{ route('censeur.classes.notes.bulletin.pdf', [$classe->id, $student->id, $trimestre]) }}"
+            <button onclick="checkAccessAndShowModal({{ auth()->user()->id }}, '{{ route('censeur.classes.notes.bulletin.pdf', [$classe->id, $student->id, $trimestre]) }}')"
                class="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 shadow-sm">
                 <i class="fas fa-file-pdf mr-2"></i>
                 Télécharger le bulletin PDF
-            </a>
+            </button>
             @endif
         </div>
-        @endif
     </div>
 </div>
 
@@ -262,6 +339,54 @@
                 cell.title = 'Note: ' + note;
             }
         });
+    });
+
+    // Fonction pour vérifier l'accès et afficher la modal
+    function checkAccessAndShowModal(userId, redirectUrl) {
+        // IDs autorisés : 7 (Secrétaire Comptable) et 6 (Directeur Fondateur)
+        const authorizedIds = [6, 7];
+        
+        if (!authorizedIds.includes(userId)) {
+            showModal();
+        } else {
+            // Rediriger vers la route si autorisé
+            window.location.href = redirectUrl;
+        }
+    }
+
+    // Fonction pour afficher la modal
+    function showModal() {
+        const modal = document.getElementById('accessModal');
+        modal.classList.remove('hidden');
+        
+        // Empêcher le scroll du body
+        document.body.style.overflow = 'hidden';
+        
+        // Animation d'apparition
+        setTimeout(() => {
+            modal.querySelector('.transform').classList.add('scale-100', 'opacity-100');
+        }, 10);
+    }
+
+    // Fonction pour fermer la modal
+    function closeModal() {
+        const modal = document.getElementById('accessModal');
+        modal.classList.add('hidden');
+        
+        // Réactiver le scroll
+        document.body.style.overflow = 'auto';
+    }
+
+    // Fermer la modal avec la touche Echap
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            closeModal();
+        }
+    });
+
+    // Fermer la modal en cliquant sur l'overlay
+    document.getElementById('modalOverlay')?.addEventListener('click', function() {
+        closeModal();
     });
 </script>
 @endsection
