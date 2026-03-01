@@ -14,9 +14,7 @@ use App\Models\Conduct;
 use App\Models\Punishment;
 use App\Models\ClassTeacherSubject;
 
-
 class ParentDashboardController extends Controller{
-   
     public function index(){
         // Récupérer l'année académique active
         $activeAcademicYear = AcademicYear::where('active', true)->first();
@@ -34,22 +32,31 @@ class ParentDashboardController extends Controller{
             }])
             ->get();
 
-        // Calculer les statistiques globales
+        // Calculer les statistiques globales avec le nouveau système total_fees
         $totalStudents = $students->count();
         
-        // Calculer le pourcentage global de scolarité payée
-        $totalSchoolFees = 0;
+        // Calculer le pourcentage global de scolarité payée (utilisant total_fees)
+        $totalFeesToPay = 0;
         $totalPaid = 0;
         
         foreach ($students as $student) {
-            if ($student->classe && $student->classe->school_fees) {
-                $totalSchoolFees += $student->classe->school_fees;
-                $totalPaid += $student->payments->sum('amount');
+            // Utiliser total_fees s'il existe, sinon calculer à partir de la classe
+            if ($student->total_fees) {
+                $totalFeesToPay += $student->total_fees;
+            } elseif ($student->classe) {
+                $totalFeesToPay += $student->classe->school_fees ?? 0;
+                // Ajouter les frais d'inscription si le type est défini
+                if ($student->registration_type === 'new') {
+                    $totalFeesToPay += $student->classe->registration_fee ?? 0;
+                } elseif ($student->registration_type === 're_registration') {
+                    $totalFeesToPay += $student->classe->re_registration_fee ?? 0;
+                }
             }
+            $totalPaid += $student->payments->sum('amount');
         }
         
-        $paymentPercentage = $totalSchoolFees > 0 
-            ? round(($totalPaid / $totalSchoolFees) * 100) 
+        $paymentPercentage = $totalFeesToPay > 0 
+            ? round(($totalPaid / $totalFeesToPay) * 100) 
             : 0;
 
         // Récupérer les dernières notes pour chaque élève
@@ -89,12 +96,13 @@ class ParentDashboardController extends Controller{
             'paymentPercentage',
             'latestGrades',
             'news',
-            'activeAcademicYear'
+            'activeAcademicYear',
+            'totalFeesToPay',
+            'totalPaid'
         ));
     }
 
-    public static function getStudentStats($student, $academicYearId = null) {
-    
+    public static function getStudentStats($student, $academicYearId = null)  {
         // Nombre d'absences (à adapter selon votre structure)
         $absences = 0; // À implémenter selon votre modèle d'absence
         
@@ -112,14 +120,28 @@ class ParentDashboardController extends Controller{
             // Calcul du rang (simplifié - à adapter selon votre logique)
             $rank = rand(1, max($totalStudents, 1)); // Exemple temporaire
         }
+
+        // Calculer la moyenne générale (simplifié)
         $average = 1;
-        
+
+        // Récupérer les informations de frais
+        $totalFees = $student->total_fees;
+        $totalPaid = $student->payments->sum('amount');
+        $remainingFees = $totalFees - $totalPaid;
+        $paymentStatus = $totalFees > 0 ? round(($totalPaid / $totalFees) * 100) : 0;
 
         return [
             'average' => $average ? round($average, 1) : null,
             'absences' => $absences,
             'rank' => $rank,
-            'total_students' => $totalStudents
+            'total_students' => $totalStudents,
+            'total_fees' => $totalFees,
+            'total_paid' => $totalPaid,
+            'remaining_fees' => $remainingFees,
+            'payment_status' => $paymentStatus,
+            'registration_type' => $student->registration_type,
+            'registration_type_label' => $student->registration_type === 'new' ? 'Nouvelle inscription' : 
+                                        ($student->registration_type === 're_registration' ? 'Réinscription' : 'Non défini')
         ];
     }
 
@@ -142,6 +164,12 @@ class ParentDashboardController extends Controller{
 
             // Charger les relations nécessaires
             $student->load(['classe']);
+
+            // Récupérer les informations de frais
+            $totalFees = $student->total_fees;
+            $totalPaid = $student->payments()->where('academic_year_id', $activeYear->id)->sum('amount');
+            $remainingFees = $totalFees - $totalPaid;
+            $paymentStatus = $totalFees > 0 ? round(($totalPaid / $totalFees) * 100) : 0;
 
             // Déplacer ces variables en dehors de la boucle foreach des trimestres
             $allClassStudents = Student::where('class_id', $student->class_id)
@@ -176,13 +204,6 @@ class ParentDashboardController extends Controller{
             // Calculer les statistiques par trimestre
             $trimestres = [1, 2, 3];
             $stats = [];
-            $allMoyennesCoeff = []; // Pour calculer le rang
-
-
-            // Déplacer ces variables en dehors de la boucle foreach des trimestres
-            $allClassStudents = Student::where('class_id', $student->class_id)
-                ->where('academic_year_id', $activeYear->id)
-                ->get();
 
             // Récupérer toutes les notes pour tous les élèves de la classe
             $allGrades = Grade::whereIn('student_id', $allClassStudents->pluck('id'))
@@ -321,7 +342,7 @@ class ParentDashboardController extends Controller{
                     }
                 }
 
-                // Ensuite, calculer les stats pour l'élève spécifique (comme avant)
+                // Ensuite, calculer les stats pour l'élève spécifique
                 $totalWeighted = 0;
                 $totalCoeff = 0;
                 $subjectStats = [];
@@ -432,7 +453,11 @@ class ParentDashboardController extends Controller{
                 'activeYear',
                 'effectif',
                 'classAverages',
-                'rangs'
+                'rangs',
+                'totalFees',
+                'totalPaid',
+                'remainingFees',
+                'paymentStatus'
             ));
 
         } catch (\Exception $e) {

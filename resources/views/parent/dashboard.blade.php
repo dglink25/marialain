@@ -1,4 +1,3 @@
-{{-- resources/views/parent/dashboard.blade.php --}}
 @extends('layouts.parent')
 
 @section('title', 'Tableau de bord - Espace Parent')
@@ -6,9 +5,11 @@
 @section('page-title', 'Tableau de bord')
 
 @section('breadcrumb')
-    <li class="breadcrumb-item active" aria-current="page">@if($activeAcademicYear)
-                                Année académique : <strong>{{ $activeAcademicYear->name }}</strong>
-                            @endif</li>
+    <li class="breadcrumb-item active" aria-current="page">
+        @if($activeAcademicYear)
+            Année académique : <strong>{{ $activeAcademicYear->name }}</strong>
+        @endif
+    </li>
 @endsection
 
 @section('content')
@@ -35,7 +36,7 @@
         </div>
     </div>
 
-    <!-- Cartes de statistiques simplifiées avec données réelles -->
+    <!-- Cartes de statistiques avec les nouvelles données -->
     <div class="col-md-6 col-lg-3">
         <div class="card h-100 text-center">
             <div class="card-body">
@@ -68,7 +69,33 @@
         </div>
     </div>
 
-    <!-- Section Enfants avec données dynamiques -->
+    <div class="col-md-6 col-lg-3">
+        <div class="card h-100 text-center">
+            <div class="card-body">
+                <div class="bg-info bg-opacity-10 rounded-circle p-3 d-inline-block mb-3">
+                    <i class="fas fa-money-bill-wave fa-2x text-info"></i>
+                </div>
+                <h3 class="h2 fw-bold mb-1">{{ number_format($totalFeesToPay ?? 0, 0, ',', ' ') }} FCFA</h3>
+                <p class="text-muted mb-0">Total frais</p>
+                <small class="text-muted">Inscription + scolarité</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3">
+        <div class="card h-100 text-center">
+            <div class="card-body">
+                <div class="bg-warning bg-opacity-10 rounded-circle p-3 d-inline-block mb-3">
+                    <i class="fas fa-hand-holding-usd fa-2x text-warning"></i>
+                </div>
+                <h3 class="h2 fw-bold mb-1">{{ number_format($totalPaid ?? 0, 0, ',', ' ') }} FCFA</h3>
+                <p class="text-muted mb-0">Déjà payé</p>
+                <small class="text-success">Montant versé</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section Enfants avec données dynamiques améliorées -->
     <div class="col-12">
         <div class="card">
             <div class="card-header bg-transparent border-0 pt-4">
@@ -85,14 +112,24 @@
                     @php
                         $stats = App\Http\Controllers\ParentDashboardController::getStudentStats($student, $activeAcademicYear?->id);
                         $totalPaid = $student->payments->sum('amount');
-                        $schoolFees = $student->classe?->school_fees ?? 0;
-                        $paymentStatus = $schoolFees > 0 ? round(($totalPaid / $schoolFees) * 100) : 0;
+                        $totalFees = $student->total_fees ?? 0;
+                        
+                        // Calcul du détail des frais
+                        $schoolFees = $student->classe->school_fees ?? 0;
+                        $registrationFee = 0;
+                        if ($student->registration_type === 'new') {
+                            $registrationFee = $student->classe->registration_fee ?? 0;
+                        } elseif ($student->registration_type === 're_registration') {
+                            $registrationFee = $student->classe->re_registration_fee ?? 0;
+                        }
+                        
+                        $paymentStatus = $totalFees > 0 ? round(($totalPaid / $totalFees) * 100) : 0;
                     @endphp
                     <div class="row g-4 mb-4">
                         <div class="col-12">
                             <div class="border rounded-4 p-4 hover-shadow">
                                 <div class="row align-items-center">
-                                    <!-- Info enfant -->
+                                    <!-- Info enfant améliorée avec type d'inscription -->
                                     <div class="col-md-4 mb-3 mb-md-0">
                                         <div class="d-flex align-items-center gap-3">
                                             <div class="profile-avatar" style="width: 60px; height: 60px; font-size: 1.8rem;">
@@ -100,16 +137,43 @@
                                             </div>
                                             <div>
                                                 <h3 class="h5 fw-bold mb-1">{{ $student->full_name }}</h3>
-                                                <p class="text-muted small mb-0">
+                                                <p class="text-muted small mb-1">
                                                     <i class="fas fa-graduation-cap me-1"></i>
                                                     {{ $student->classe->name ?? 'Classe non assignée' }}
                                                 </p>
+                                                @if($student->registration_type)
+                                                    <span class="badge {{ $student->registration_type == 'new' ? 'bg-purple' : 'bg-indigo' }} bg-opacity-10 text-dark p-2">
+                                                        <i class="fas {{ $student->registration_type == 'new' ? 'fa-star' : 'fa-redo-alt' }} me-1"></i>
+                                                        {{ $student->registration_type == 'new' ? 'Nouvelle inscription' : 'Réinscription' }}
+                                                    </span>
+                                                @endif
                                             </div>
                                         </div>
                                     </div>
 
-                                    <!-- Actions simplifiées -->
-                                    <div class="col-md-5">
+                                    <!-- Détail des frais -->
+                                    <div class="col-md-3 mb-3 mb-md-0">
+                                        <div class="bg-light p-3 rounded-3">
+                                            <div class="small text-muted mb-2">Détail des frais</div>
+                                            <div class="d-flex justify-content-between small mb-1">
+                                                <span>Scolarité:</span>
+                                                <span class="fw-bold">{{ number_format($schoolFees, 0, ',', ' ') }}</span>
+                                            </div>
+                                            @if($registrationFee > 0)
+                                            <div class="d-flex justify-content-between small mb-1">
+                                                <span>Inscription:</span>
+                                                <span class="fw-bold">{{ number_format($registrationFee, 0, ',', ' ') }}</span>
+                                            </div>
+                                            @endif
+                                            <div class="d-flex justify-content-between fw-bold border-top pt-1 mt-1">
+                                                <span>Total:</span>
+                                                <span class="text-success">{{ number_format($totalFees, 0, ',', ' ') }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Actions -->
+                                    <div class="col-md-3 mb-3 mb-md-0">
                                         <div class="d-flex gap-2 flex-wrap">
                                             <a href="{{ route('parent.child.grades', $student) }}" 
                                                class="btn btn-outline-success flex-fill"
@@ -128,22 +192,35 @@
                                         </div>
                                     </div>
 
-                                    <!-- Statut rapide -->
-                                    <div class="col-md-3">
-                                        <div class="d-flex justify-content-end gap-2">
-                                            @if($paymentStatus >= 100)
-                                                <span class="badge bg-success p-2">
-                                                    <i class="fas fa-check-circle me-1"></i>Scolarité à jour
-                                                </span>
-                                            @elseif($paymentStatus >= 50)
-                                                <span class="badge bg-warning p-2">
-                                                    <i class="fas fa-clock me-1"></i>{{ $paymentStatus }}% payé
-                                                </span>
-                                            @else
-                                                <span class="badge bg-danger p-2">
-                                                    <i class="fas fa-exclamation-circle me-1"></i>{{ $paymentStatus }}% payé
-                                                </span>
-                                            @endif
+                                    <!-- Statut de paiement amélioré -->
+                                    <div class="col-md-2">
+                                        <div class="text-end">
+                                            <div class="mb-2">
+                                                @if($paymentStatus >= 100)
+                                                    <span class="badge bg-success p-2 w-100">
+                                                        <i class="fas fa-check-circle me-1"></i>Payé intégralement
+                                                    </span>
+                                                @elseif($paymentStatus >= 50)
+                                                    <span class="badge bg-warning p-2 w-100">
+                                                        <i class="fas fa-clock me-1"></i>{{ $paymentStatus }}% payé
+                                                    </span>
+                                                @else
+                                                    <span class="badge bg-danger p-2 w-100">
+                                                        <i class="fas fa-exclamation-circle me-1"></i>{{ $paymentStatus }}% payé
+                                                    </span>
+                                                @endif
+                                            </div>
+                                            <div class="small text-muted">
+                                                Reste: <span class="fw-bold text-danger">{{ number_format($totalFees - $totalPaid, 0, ',', ' ') }}</span>
+                                            </div>
+                                            <div class="progress mt-2" style="height: 5px;">
+                                                <div class="progress-bar bg-success" role="progressbar" 
+                                                     style="width: {{ $paymentStatus }}%;" 
+                                                     aria-valuenow="{{ $paymentStatus }}" 
+                                                     aria-valuemin="0" 
+                                                     aria-valuemax="100">
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -205,6 +282,52 @@
             </div>
         </div>
     </div>
+
+    <!-- Section Résumé des frais -->
+    <div class="col-md-7">
+        <div class="card h-100">
+            <div class="card-header bg-transparent border-0 pt-4">
+                <h3 class="h5 mb-0">
+                    <i class="fas fa-info-circle me-2 text-success"></i>
+                    Informations sur les frais de scolarité
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info bg-info bg-opacity-10 border-info">
+                    <div class="d-flex gap-3">
+                        <i class="fas fa-lightbulb fa-2x text-info"></i>
+                        <div>
+                            <h5 class="h6 mb-2">Composition des frais</h5>
+                            <p class="small mb-2">
+                                Les frais totaux comprennent :
+                            </p>
+                            <ul class="small mb-0">
+                                <li><strong>Frais de scolarité</strong> : Montant annuel pour l'enseignement</li>
+                                <li><strong>Frais d'inscription</strong> : Pour les nouveaux élèves</li>
+                                <li><strong>Frais de réinscription</strong> : Pour les élèves déjà inscrits</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-light p-3 rounded-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="small text-muted">État des paiements global</span>
+                            <div class="h4 mb-0">{{ $paymentPercentage }}%</div>
+                        </div>
+                        <div class="text-end">
+                            <span class="small text-muted">Total payé / Total à payer</span>
+                            <div class="fw-bold">
+                                {{ number_format($totalPaid ?? 0, 0, ',', ' ') }} / 
+                                {{ number_format($totalFeesToPay ?? 0, 0, ',', ' ') }} FCFA
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <style>
@@ -220,6 +343,10 @@
     --bs-bg-opacity: 0.2;
 }
 
+.bg-opacity-10 {
+    --bs-bg-opacity: 0.1;
+}
+
 .profile-avatar {
     width: 50px;
     height: 50px;
@@ -231,6 +358,14 @@
     color: white;
     font-weight: 700;
     font-size: 1.3rem;
+}
+
+.bg-purple {
+    background-color: #6f42c1 !important;
+}
+
+.bg-indigo {
+    background-color: #6610f2 !important;
 }
 
 /* Mode contraste élevé */

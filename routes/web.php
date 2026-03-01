@@ -692,3 +692,6 @@ Route::get('/api/classes/{id}/fees', function($id) {
 
 Route::put('/students/{student}/update-registration-type', [StudentPaymentController::class, 'updateRegistrationType'])
     ->name('students.update-registration-type');
+
+Route::get('/parent/child/{student}/payments', [ParentDashboardController::class, 'payments'])
+    ->name('parent.child.payments');

@@ -582,6 +582,24 @@
                 display: none;
             }
         }
+
+        .bg-purple {
+            background-color: #6f42c1 !important;
+        }
+
+        .bg-indigo {
+            background-color: #6610f2 !important;
+        }
+
+        .progress {
+            background-color: #e9ecef;
+            border-radius: 0.25rem;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            transition: width 0.3s ease;
+        }
     </style>
     
     @stack('styles')
