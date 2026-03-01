@@ -32,7 +32,6 @@ class ParentDashboardController extends Controller{
             }])
             ->get();
 
-        // Calculer les statistiques globales avec le nouveau système total_fees
         $totalStudents = $students->count();
         
         // Calculer le pourcentage global de scolarité payée (utilisant total_fees)
