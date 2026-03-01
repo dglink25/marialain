@@ -53,7 +53,7 @@ class ParentDashboardController extends Controller{
                     $totalFeesToPay += $student->classe->re_registration_fee ?? 0;
                 }
             }
-            $totalPaid += $student->school_fees_paid;
+            $totalPaid += $student->payments->sum('amount');
         }
         
         $paymentPercentage = $totalFeesToPay > 0 

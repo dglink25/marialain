@@ -111,7 +111,7 @@
                 @forelse($students as $student)
                     @php
                         $stats = App\Http\Controllers\ParentDashboardController::getStudentStats($student, $activeAcademicYear?->id);
-                        $totalPaid = $student->school_fees_paid;
+                        $totalPaid = $student->payments->sum('amount');
                         $totalFees = $student->total_fees ?? 0;
                         
                         // Calcul du détail des frais

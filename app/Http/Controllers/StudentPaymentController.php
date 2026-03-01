@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Mail;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Mail\PaymentReceiptMail;
+use App\Models\AcademicYear;
 
 class StudentPaymentController extends Controller
 {
@@ -39,6 +40,7 @@ class StudentPaymentController extends Controller
 
     // Stocker un paiement
     public function store(Request $request, Student $student){
+        $activeAcademicYear = AcademicYear::where('active', true)->first();
         $student->load('classe');
         
         // Calculer le montant total des frais
@@ -65,6 +67,7 @@ class StudentPaymentController extends Controller
         $payment = $student->payments()->create([
             'tranche' => $request->tranche,
             'amount' => $request->amount,
+            'academic_year_id' => $activeAcademicYear->id,
             'payment_date' => $request->payment_date,
         ]);
 

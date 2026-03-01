@@ -9,7 +9,13 @@ class StudentPayment extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['student_id','tranche','amount','payment_date','receipt'];
+    protected $fillable = [
+        'student_id','tranche',
+        'amount',
+        'payment_date',
+        'receipt',
+        'academic_year_id'
+    ];
 
     protected $casts = [
         'payment_date' => 'date',
