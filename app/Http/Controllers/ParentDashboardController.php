@@ -43,7 +43,8 @@ class ParentDashboardController extends Controller{
             // Utiliser total_fees s'il existe, sinon calculer à partir de la classe
             if ($student->total_fees) {
                 $totalFeesToPay += $student->total_fees;
-            } elseif ($student->classe) {
+            } 
+            elseif ($student->classe) {
                 $totalFeesToPay += $student->classe->school_fees ?? 0;
                 // Ajouter les frais d'inscription si le type est défini
                 if ($student->registration_type === 'new') {
@@ -52,7 +53,7 @@ class ParentDashboardController extends Controller{
                     $totalFeesToPay += $student->classe->re_registration_fee ?? 0;
                 }
             }
-            $totalPaid += $student->payments->sum('amount');
+            $totalPaid += $student->school_fees_paid;
         }
         
         $paymentPercentage = $totalFeesToPay > 0 

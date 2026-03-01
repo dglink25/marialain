@@ -29,6 +29,7 @@ class Student extends Model{
         'school_fees',
         'is_validated',
         'amount_paid',
+        'school_fees_paid',
         'registration_type',
         'total_fees',
     ];
