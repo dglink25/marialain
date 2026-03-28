@@ -34,15 +34,15 @@
                     <div class="ml-5 w-0 flex-1">
                         <dl>
                             <dt class="text-sm font-medium text-gray-500 truncate">Élèves primaire</dt>
-                            <dd class="text-lg font-medium text-gray-900">624</dd>
+                            <dd class="text-lg font-medium text-gray-900"> $primaryStudentsCount</dd>
                         </dl>
                     </div>
                 </div>
             </div>
             <div class="bg-gray-50 px-5 py-3">
                 <div class="text-sm">
-                    <span class="text-green-600 font-medium">+8%</span>
-                    <span class="text-gray-500">vs l'année dernière</span>
+                    <span class="text-green-600 font-medium"></span>
+                    <span class="text-gray-500"></span>
                 </div>
             </div>
         </div>
@@ -59,15 +59,15 @@
                     <div class="ml-5 w-0 flex-1">
                         <dl>
                             <dt class="text-sm font-medium text-gray-500 truncate">Enseignants</dt>
-                            <dd class="text-lg font-medium text-gray-900">24</dd>
+                            <dd class="text-lg font-medium text-gray-900">$primaryTeacherCount</dd>
                         </dl>
                     </div>
                 </div>
             </div>
             <div class="bg-gray-50 px-5 py-3">
                 <div class="text-sm">
-                    <span class="text-green-600 font-medium">+2</span>
-                    <span class="text-gray-500">nouveaux cette année</span>
+                    <span class="text-green-600 font-medium"> </span>
+                    <span class="text-gray-500"></span>
                 </div>
             </div>
         </div>
@@ -84,20 +84,20 @@
                     <div class="ml-5 w-0 flex-1">
                         <dl>
                             <dt class="text-sm font-medium text-gray-500 truncate">Classes</dt>
-                            <dd class="text-lg font-medium text-gray-900">18</dd>
+                            <dd class="text-lg font-medium text-gray-900"> $primaryClassCount</dd>
                         </dl>
                     </div>
                 </div>
             </div>
             <div class="bg-gray-50 px-5 py-3">
                 <div class="text-sm">
-                    <span class="text-green-600 font-medium">100%</span>
-                    <span class="text-gray-500">avec enseignants attribués</span>
+                    <span class="text-green-600 font-medium"></span>
+                    <span class="text-gray-500"></span>
                 </div>
             </div>
         </div>
 
-        <!-- Taux de réussite -->
+        <!-- Taux de réussite 
         <div class="bg-white overflow-hidden shadow rounded-lg border border-gray-200 hover:shadow-md transition-shadow duration-300">
             <div class="p-5">
                 <div class="flex items-center">
@@ -120,7 +120,7 @@
                     <span class="text-gray-500">vs dernier trimestre</span>
                 </div>
             </div>
-        </div>
+        </div> -->
     </div>
 
     <!-- Contenu principal -->

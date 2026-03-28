@@ -86,20 +86,67 @@
                 </select>
             </div>
 
+            {{-- NOUVEAU : Section Frais --}}
             <div class="md:col-span-2">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">Frais de scolarité</h2>
+            </div>
+
+            <div>
                 <label for="school_fees" class="block text-sm font-medium text-gray-700 mb-2">Frais de scolarité (FCFA) *</label>
                 <div class="relative">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span class="text-gray-500"></span>
-                    </div>
                     <input type="number" step="0.01" name="school_fees" id="school_fees" 
                            value="{{ old('school_fees', $classe->school_fees) }}" 
-                           class="w-full px-4 py-3 pl-16 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
                            placeholder="0.00"
                            min="0"
                            required>
                 </div>
                 <p class="text-sm text-gray-500 mt-1">Montant total des frais de scolarité pour l'année</p>
+            </div>
+
+            {{-- NOUVEAU : Frais d'inscription --}}
+            <div>
+                <label for="registration_fee" class="block text-sm font-medium text-gray-700 mb-2">Frais d'inscription (FCFA)</label>
+                <div class="relative">
+                    <input type="number" step="0.01" name="registration_fee" id="registration_fee" 
+                           value="{{ old('registration_fee', $classe->registration_fee) }}" 
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
+                           placeholder="0.00"
+                           min="0">
+                </div>
+                <p class="text-sm text-gray-500 mt-1">Frais pour les nouvelles inscriptions</p>
+            </div>
+
+            {{-- NOUVEAU : Frais de réinscription --}}
+            <div>
+                <label for="re_registration_fee" class="block text-sm font-medium text-gray-700 mb-2">Frais de réinscription (FCFA)</label>
+                <div class="relative">
+                    <input type="number" step="0.01" name="re_registration_fee" id="re_registration_fee" 
+                           value="{{ old('re_registration_fee', $classe->re_registration_fee) }}" 
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
+                           placeholder="0.00"
+                           min="0">
+                </div>
+                <p class="text-sm text-gray-500 mt-1">Frais pour les réinscriptions</p>
+            </div>
+
+            {{-- Résumé des frais totaux (optionnel) --}}
+            <div class="md:col-span-2 mt-4 p-4 bg-blue-50 rounded-lg">
+                <h3 class="font-semibold text-blue-800 mb-2">Récapitulatif des frais pour un élève</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                    <div>
+                        <span class="text-gray-600">Nouvelle inscription :</span>
+                        <span class="font-bold text-blue-700 ml-2" id="totalNewFees">
+                            {{ number_format(($classe->school_fees ?? 0) + ($classe->registration_fee ?? 0), 0, ',', ' ') }} FCFA
+                        </span>
+                    </div>
+                    <div>
+                        <span class="text-gray-600">Réinscription :</span>
+                        <span class="font-bold text-blue-700 ml-2" id="totalReFees">
+                            {{ number_format(($classe->school_fees ?? 0) + ($classe->re_registration_fee ?? 0), 0, ',', ' ') }} FCFA
+                        </span>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -138,19 +185,40 @@
         });
     });
 
-    // Formatage automatique des frais de scolarité
-    const schoolFeesInput = document.getElementById('school_fees');
-    
-    schoolFeesInput.addEventListener('blur', function() {
-        if (this.value) {
-            this.value = parseFloat(this.value).toFixed(2);
-        }
-    });
+    // Mise à jour dynamique du récapitulatif des frais
+    function updateTotalFees() {
+        const schoolFees = parseFloat(document.getElementById('school_fees').value) || 0;
+        const registrationFee = parseFloat(document.getElementById('registration_fee').value) || 0;
+        const reRegistrationFee = parseFloat(document.getElementById('re_registration_fee').value) || 0;
+        
+        const totalNewFees = schoolFees + registrationFee;
+        const totalReFees = schoolFees + reRegistrationFee;
+        
+        document.getElementById('totalNewFees').textContent = totalNewFees.toLocaleString('fr-FR', {minimumFractionDigits: 0, maximumFractionDigits: 0}) + ' FCFA';
+        document.getElementById('totalReFees').textContent = totalReFees.toLocaleString('fr-FR', {minimumFractionDigits: 0, maximumFractionDigits: 0}) + ' FCFA';
+    }
 
-    // Validation en temps réel
-    schoolFeesInput.addEventListener('input', function() {
-        if (this.value < 0) {
-            this.value = 0;
+    // Ajouter les écouteurs d'événements
+    document.getElementById('school_fees').addEventListener('input', updateTotalFees);
+    document.getElementById('registration_fee').addEventListener('input', updateTotalFees);
+    document.getElementById('re_registration_fee').addEventListener('input', updateTotalFees);
+
+    // Formatage automatique des montants
+    const feeInputs = ['school_fees', 'registration_fee', 're_registration_fee'];
+    feeInputs.forEach(inputId => {
+        const input = document.getElementById(inputId);
+        if (input) {
+            input.addEventListener('blur', function() {
+                if (this.value) {
+                    this.value = parseFloat(this.value).toFixed(2);
+                }
+            });
+
+            input.addEventListener('input', function() {
+                if (this.value < 0) {
+                    this.value = 0;
+                }
+            });
         }
     });
 </script>

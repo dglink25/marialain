@@ -7,13 +7,27 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\PunishmentNotification;
 
+use App\Http\Controllers\Controller;
+use App\Models\User;
+
+use Illuminate\Support\Facades\Hash;
+
+
+use App\Models\Teacher;
+use App\Models\SchoolClass;
+
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
+
+
+
 class SurveillantController extends Controller{
     // Liste des classes du secondaire pour l'année active
     public function classesList() {
         $activeYear = AcademicYear::where('active', true)->first();
         if (!$activeYear) return back()->withErrors("Aucune année académique active trouvée.");
 
-        $secondary = Entity::where('name', 'secondaire')->first();
+        $secondary = Entity::where('name', 'Secondaire')->first();
         if (!$secondary) return back()->withErrors("L'entité 'secondaire' est introuvable.");
 
         $classes = Classe::where('academic_year_id', $activeYear->id)
@@ -31,12 +45,28 @@ class SurveillantController extends Controller{
     // Attribuer conduite à tous les élèves d'une classe
     public function assignConducts(Request $request, $classId) {
         $request->validate([
-            'grade' => 'required|string|max:2',
+            'grade' => [
+                'required',
+                'numeric',
+                'min:0',
+                'max:20',
+                'regex:/^\d+(\.\d{1,2})?$/'
+            ],
+            'trimestre' => 'required|integer|in:1,2,3',
             'comment' => 'nullable|string|max:255',
         ]);
 
+        // Convertir en numérique si besoin
+        $grade = (float) $request->grade;
+        $trimestre = (int) $request->trimestre;
+
+        // Validation supplémentaire pour le grade
+        if ($grade < 0 || $grade > 20) {
+            return back()->withErrors(['grade' => 'La note de conduite doit être entre 0 et 20.']);
+        }
+
         $activeYear = AcademicYear::where('active', true)->first();
-        $secondary = Entity::where('name', 'secondaire')->first();
+        $secondary = Entity::where('name', 'Secondaire')->first();
 
         if (!$activeYear || !$secondary) {
             return back()->withErrors("Impossible d'attribuer la conduite.");
@@ -47,27 +77,33 @@ class SurveillantController extends Controller{
             ->where('class_id', $classId)
             ->get();
 
+        // Vérifier s'il y a des élèves
+        if ($students->isEmpty()) {
+            return back()->withErrors("Aucun élève trouvé dans cette classe.");
+        }
+
         foreach ($students as $student) {
             Conduct::updateOrCreate(
                 [
                     'student_id' => $student->id,
                     'academic_year_id' => $activeYear->id,
                     'entity_id' => $secondary->id,
+                    'trimestre' => $trimestre, // Ajouter trimestre dans la clé unique
                 ],
                 [
-                    'grade' => $request->grade,
+                    'grade' => $grade,
                     'comment' => $request->comment,
                 ]
             );
         }
 
-        return back()->with('success', "Conduite attribuée à tous les élèves de la classe.");
+        return back()->with('success', "Conduite attribuée à {$students->count()} élève(s) de la classe.");
     }
 
     // Liste des élèves d’une classe
     public function classStudents($classId) {
         $activeYear = AcademicYear::where('active', true)->first();
-        $secondary = Entity::where('name', 'secondaire')->first();
+        $secondary = Entity::where('name', 'Secondaire')->first();
 
         if (!$activeYear || !$secondary) {
             return back()->withErrors("Impossible de charger les élèves.");
@@ -90,7 +126,7 @@ class SurveillantController extends Controller{
         ]);
 
         $activeYear = AcademicYear::where('active', true)->first();
-        $secondary = Entity::where('name', 'secondaire')->first();
+        $secondary = Entity::where('name', 'Secondaire')->first();
 
         if (!$activeYear || !$secondary) {
             return back()->withErrors("Impossible de punir l’élève.");
@@ -109,8 +145,10 @@ class SurveillantController extends Controller{
         if ($student && $student->parent_email) {
             try {
                 if ($student->parent_email) {
+                    /*
                     Mail::to($student->parent_email)
                         ->send(new PunishmentNotification($student, $request->reason, $request->hours));
+                        */
                 }
             } catch (\Exception $e) {
                 return back()->withErrors("Punition enregistrée mais échec d’envoi du mail.");
@@ -124,5 +162,52 @@ class SurveillantController extends Controller{
     public function punishmentsHistory($studentId) {
         $student = Student::with('punishments')->findOrFail($studentId);
         return view('surveillant.students.history', compact('student'));
+    }
+    public function surveillant(){
+        try {
+            // 🔹 Récupération des données principales
+            $studentsCount = Student::count();
+            //dd(Student::count());
+
+            $teachersCount = User::count();
+            $classesCount  = Classe::count();
+            $academicYearsCount = AcademicYear::count();
+            
+
+            // 🔹 Année académique active
+            $activeYear = AcademicYear::where('active', true)->first();
+            
+            // 🔹 Si aucune année active trouvée, on le gère
+            if (!$activeYear) {
+                $activeYear = AcademicYear::latest('id')->first();
+            }
+
+            // 🔹 Nombre d'élèves dans l'année active
+            $studentsInActiveYear = 0;
+            if ($activeYear) {
+                $studentsInActiveYear = Student::where('academic_year_id', $activeYear->id)->count();
+            }
+
+            // 🔹 Retour à la vue
+            //return view('admin.dashboard', compact('academicYearsCount','classesCount','invitationsCount'));
+            return view('dashboards.surveillant', [
+                'studentsCount' => $studentsCount,
+                'teachersCount' => $teachersCount,
+                'classesCount' => $classesCount,
+                'academicYearsCount' => $academicYearsCount,
+                'activeYear' => $activeYear,
+                'studentsInActiveYear' => $studentsInActiveYear,
+            ]);
+
+        } 
+        catch (\Throwable $e) {
+            Log::error('Erreur Dashboard Fondateur : ' . $e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+
+            // 🔹 Retour avec message d’erreur
+            return back()->with('error', "Une erreur est survenue lors du chargement du tableau de bord.");
+        }
     }
 }

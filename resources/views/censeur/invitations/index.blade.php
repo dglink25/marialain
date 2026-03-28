@@ -118,6 +118,7 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date d'invitation</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date de réponse</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
@@ -163,6 +164,22 @@
                             @else
                                 <span class="text-gray-400">--</span>
                             @endif
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+
+                            <form action="{{ route('teacher_invitations.destroy', $inv->id) }}" method="POST"
+                                onsubmit="return confirm('Voulez-vous vraiment supprimer cet enseignant ?')">
+                                @csrf
+                                @method('DELETE')
+
+                                <button type="submit"
+                                    class="p-2 bg-red-100 text-red-600 rounded-full hover:bg-red-200 hover:text-red-800 transition">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M19 7H5m3 0V5a2 2 0 012-2h4a2 2 0 012 2v2m-5 4v6m4-6v6m-8-6v6"/>
+                                    </svg>
+                                </button>
+                            </form>
                         </td>
                     </tr>
                     @endforeach

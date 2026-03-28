@@ -81,6 +81,27 @@ class User extends Authenticatable
         return $this->hasMany(Schedule::class, 'teacher_id');
     }
 
+    public function invitationTeacher(){
+        return $this->hasOne(TeacherInvitation::class, 'user_id');
+    }
+
+    public function cahiers(){
+        return $this->hasMany(CahierDeTexte::class, 'teacher_id');
+    }
+
+    // Relations avec les matières via pivot table
+    public function subjects()
+    {
+        return $this->belongsToMany(Subject::class, 'class_teacher_subject', 'teacher_id', 'subject_id')
+                    ->withPivot('class_id')
+                    ->withTimestamps();
+    }
+
+    public function class() {
+        return $this->belongsToMany(Classe::class, 'class_teacher_subject', 'teacher_id', 'class_id')
+                ->withPivot('subject_id', 'amount_brut')
+                ->withTimestamps();
+    }
 
 
 }

@@ -11,7 +11,14 @@
         Saisie des notes {{ ucfirst($type) }} {{ $num }} - Classe {{ $classe->name }} / Trimestre {{ $trimestre }}
     </h1>
 
-    <form method="POST" action="{{ route('teacher.classes.notes.store', [$classe->id, $type, $num, $trimestre]) }}">
+    <form action="{{ route('teacher.classes.notes.store', [
+            'class' => $classe->id,
+            'subject' => $subject->id,
+            'type' => $type,
+            'num' => $num,
+            'trimestre' => $trimestre
+        ]) }}" method="POST">
+
         @csrf
         <input type="hidden" name="subject_id" value="1"> {{--à remplacer dynamiquement --}}
         <input type="hidden" name="trimestre" value="1"> {{-- à gérer dynamiquement --}}

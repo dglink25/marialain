@@ -97,7 +97,8 @@
                         </div>
 
                         <p>Cordialement,<br>
-                        <strong>La Secrétairerie</strong></p>
+                        <strong>La Secrétaire</strong></p><br><br><br>
+                        
                     </div>
 
                     <!-- Pied de page -->

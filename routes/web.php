@@ -10,6 +10,8 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\InvitationResponseController;
 use App\Http\Controllers\StudentPaymentController;
 use App\Http\Controllers\ArchiveController;
+use App\Http\Controllers\welcomeController;
+use App\Http\Controllers\DashboardPrimaireController;
 
 // Admin
 use App\Http\Controllers\Admin\AdminAuthController;
@@ -49,21 +51,58 @@ use App\Http\Controllers\Teacher\PrimaireSubjectController;
 use App\Http\Controllers\Teacher\PrimaireScheduleController;
 use App\Http\Controllers\Teacher\NoteController;
 use App\Http\Controllers\Teacher\GradeController;
+use App\Http\Controllers\ContactController;
+use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\CahierDeTexteController;
+use App\Http\Controllers\Censeur\CenseurExamController;
+use App\Http\Controllers\Teacher\TeacherExamController;
+use App\Http\Controllers\ParentAuthController;
+use App\Http\Controllers\ParentDashboardController;
+use App\Http\Controllers\Parent\ChildController;
 
-/*
-|--------------------------------------------------------------------------
-| Routes publiques
-|--------------------------------------------------------------------------
-*/
+// Pour tester la page 400
+Route::get('/400', function () {
+    abort(400);
+});
+
+// Pour tester la page 500
+Route::get('/500', function () {
+    abort(500);
+});
+
+Route::get('/404', function () {
+    abort(404);
+});
+
+Route::get('/403', function () {
+    abort(403);
+});
+
+Route::prefix('censeur')->middleware('auth')->group(function () {
+
+    Route::get('/permissions/{classId}', [App\Http\Controllers\Censeur\NoteController::class, 'permissions'])
+        ->name('censeur.permissions.index');
+
+    Route::post('/permissions/{classId}/{trimestre}/toggle', [App\Http\Controllers\Censeur\NoteController::class, 'toggle'])
+        ->name('censeur.permissions.toggle');
+
+    Route::post('/permissions/{classId}/{trimestre}/dates', [App\Http\Controllers\Censeur\NoteController::class, 'setDates'])
+        ->name('censeur.permissions.dates');
+
+});
+
+Route::get('/payments/{payment}/receipt', [StudentController::class, 'downloadReceipt'])
+    ->name('payments.receipt');
 
 
 Route::get('/', fn() => view('accueil'))->name('accueil');
-Route::get('/home', fn() => view('welcome'))->name('home');
+//Route::get('/home', fn() => view('welcome'))->name('home');
 
-
+Route::get('/home', [App\Http\Controllers\welcomeController::class, 'index'])->name('home');
 
 Route::get('/admin/entities/{entity}/classes', [EntityController::class, 'getClasses']);
 
+Route::post('/contact/send', [ContactController::class, 'send'])->name('contact.send');
 //primaire
 Route:: get('/primaire/classe/classes', [ClassesprimaireController::class, 'index'])-> name('primaire.classe.classes');
 Route:: post('/primaire/classe/classes', [ClassesprimaireController::class, 'store'])-> name('primaire.classe.store');
@@ -74,6 +113,7 @@ Route::get('/primaire/ecoliers/pdf', [StudentsController::class, 'downloadPrimai
     ->name('primaire.ecoliers.liste.pdf');
 Route::get('/primaire/classe/{id}/pdf', [ClassesprimaireController::class, 'downloadClassStudents'])-> name('primaire.classe.pdf');
 Route::get('/primaire/enseignants/pdf', [primaryteacherController::class, 'downloadTeachersList'])->name('primaire.enseignants.pdf');
+Route::get('/primaire/enseignants/{id}/show', [primaryteacherController::class, 'show'])-> name('primaire.enseignants.show');
 Route::get('/', function () {
     return view('accueil');
 })->name('accueil');
@@ -102,7 +142,7 @@ Route::middleware(['auth'])->prefix('teacher/primaire')->name('teacher.')->group
 
 
 Route::get('/', fn() => view('accueil'))->name('accueil');
-Route::get('/home', fn() => view('welcome'))->name('home');
+//Route::get('/home', fn() => view('welcome'))->name('home');
 
 
 
@@ -168,9 +208,13 @@ Route::middleware('auth')->group(function () {
     Route::post('/profil/photo', [ProfileController::class, 'updatePhoto'])->name('profile.photo');
 
     // Dashboards par rôle
-    Route::get('/dashboard/directeur', fn() => view('dashboards.directeur', ['user' => auth()->user()]))->name('directeur.dashboard');
 
-    Route::get('/dashboard/surveillant', fn() => view('dashboards.surveillant', ['user' => auth()->user()]))->name('surveillant.dashboard');
+    // Route::get('/dashboard/directeur', [DashboardPrimaireController::class, 'index'])->name('directeur.dashboard');
+
+    Route::get('/dashboard/surveillant', [SurveillantController::class, 'surveillant'])->name('surveillant.dashboard');
+    
+   // Route::get('/dashboard/surveillant', fn() => view('dashboards.surveillant', ['user' => auth()->user()]))->name('surveillant.dashboard');
+
     
     Route::get('dashboard', [CenseurDashboardController::class, 'index'])->name('censeur.dashboard');
 
@@ -231,30 +275,55 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
 
 });
 
-/*
-|--------------------------------------------------------------------------
-| Inscription publique
-|--------------------------------------------------------------------------
-*/
 Route::get('/inscription', [StudentController::class, 'inscription'])->name('students.create');
 Route::post('/inscription', [StudentController::class, 'store'])->name('students.store');
 
 
-/*
-|--------------------------------------------------------------------------
-| Zone Censeur
-|--------------------------------------------------------------------------
-*/
-
 //Gestion de notes Censeur
-Route::get('/classes', [CenseurNoteController::class, 'index'])->name('censeur.notes.index');
-Route::get('/classes/{classId}/students/{studentId}/bulletin/{trimestre}', 
+Route::middleware(['auth'])->get('/classes', [CenseurNoteController::class, 'index'])->name('censeur.notes.index');
+Route::middleware(['auth'])->get('/classes/{classId}/students/{studentId}/bulletin/{trimestre}', 
     [App\Http\Controllers\Censeur\NoteController::class, 'bulletin']
 )->name('teacher.classes.students.bulletin');
 
-Route::get('/classes/{classId}/trimestres/{trimestre}/eleves', 
+//Téléchargement excel et pdf 
+Route::middleware(['auth'])->get('/censeur/classes/{classId}/trimestres/{trimestre}/notes/pdf', [App\Http\Controllers\Censeur\NoteController::class, 'telechargerPDF'])
+    ->name('censeur.classes.notes.pdf');
+
+Route::middleware(['auth'])->get('/censeur/classes/{classId}/trimestres/{trimestre}/notes/excel', [App\Http\Controllers\Censeur\NoteController::class, 'telechargerExcel'])
+    ->name('censeur.classes.notes.excel');
+
+Route::middleware(['auth'])->get('/censeur/classes/{classId}/students/{studentId}/bulletin/{trimestre}/pdf',
+    [App\Http\Controllers\Censeur\NoteController::class, 'downloadPdf']
+)->name('censeur.classes.notes.bulletin.pdf');
+
+// Route pour consulter les notes d'une évaluation spécifique
+Route::middleware(['auth'])->get('classes/{classId}/notes/{subjectId}/{type}/{sequence}/trimestre/{trimestre}', 
+    [App\Http\Controllers\Censeur\NoteController::class, 'viewEvaluationNotes']
+)->name('censeur.evaluation.notes.view');
+
+// Notes par trimestre
+Route::middleware(['auth'])->get('/censeur/classes/{id}/notes/{trimestre}/{subjectId}', [App\Http\Controllers\Censeur\NoteController::class, 'notes_trimestre'])
+    ->name('censeur.classes.notes');
+
+Route::middleware(['auth'])->get('/censeur/classes/{classId}/trimestres/{trimestre}/subjects/{subjectId}/notes/pdf', 
+    [App\Http\Controllers\Censeur\NoteController::class, 'exportNotesPDF']
+)->name('censeur.notes.export.pdf');
+
+Route::middleware(['auth'])->get('/censeur/classes/{classId}/trimestres/{trimestre}/matieres', 
+    [App\Http\Controllers\Censeur\NoteController::class, 'matiere']
+)->name('censeur.classes.trimestre.matiere');
+
+Route::middleware(['auth'])->get('censeur/classes/{class}/{trimestre}/{subject}/notes', 
+    [App\Http\Controllers\Censeur\NoteController::class, 'showClassNote']
+)->name('censeur.classes.notes.list');
+
+Route::middleware(['auth'])->get('/classes/{classId}/trimestres/{trimestre}/eleves', 
     [App\Http\Controllers\Censeur\NoteController::class, 'listeEleves']
 )->name('teacher.classes.trimestres.eleves');
+
+Route::middleware(['auth'])->post('/censeur/classes/{classe}/subjects/{subject}/coefficient', 
+    [App\Http\Controllers\Censeur\NoteController::class, 'setCoefficient']
+)->name('censeur.subjects.coefficient');
 
 Route::prefix('censeur')->name('censeur.')->middleware('auth')->group(function () {
 
@@ -290,13 +359,10 @@ Route::prefix('censeur')->name('censeur.')->middleware('auth')->group(function (
     Route::get('classes/{class}/timetables/download', [TimetableController::class, 'downloadPDF'])->name('timetables.download');
     
 });
+Route::get('/censeur/classes/{classId}/bulletin-trimestre/{trimestre}/all-pdf', 
+    [App\Http\Controllers\Censeur\NoteController::class, 'downloadAllBulletinsPdf'])
+    ->name('censeur.classes.bulletin.all-pdf');
 
-
-/*
-|--------------------------------------------------------------------------
-| Zone Enseignant
-|--------------------------------------------------------------------------
-*/
 Route::prefix('teacher')->name('teacher.')->middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
@@ -307,11 +373,6 @@ Route::prefix('teacher')->name('teacher.')->middleware('auth')->group(function (
 });
 
 
-/*
-|--------------------------------------------------------------------------
-| Étudiants - Paiements
-|--------------------------------------------------------------------------
-*/
 Route::prefix('students')->name('students.')->group(function () {
     Route::get('{student}/payments', [StudentPaymentController::class,'index'])->name('payments.index');
     Route::get('{student}/payments/create', [StudentPaymentController::class,'create'])->name('payments.create');
@@ -319,11 +380,6 @@ Route::prefix('students')->name('students.')->group(function () {
 });
 
 
-/*
-|--------------------------------------------------------------------------
-| Archives
-|--------------------------------------------------------------------------
-*/
 Route::middleware(['auth'])->group(function () {
     Route::get('/archives', [ArchiveController::class, 'index'])->name('archives.index');
     Route::get('/archives/{id}', [ArchiveController::class, 'show'])->name('archives.show');
@@ -333,19 +389,14 @@ Route::middleware(['auth'])->group(function () {
 });
 
 
-/*
-|--------------------------------------------------------------------------
-| Divers
-|--------------------------------------------------------------------------
-*/
 // Afficher le profil d’un enseignant
-Route::get('/enseignants/{user}', [ProfileController::class, 'show'])->name('enseignants.show');
+Route::middleware(['auth'])->get('/enseignants/{user}', [ProfileController::class, 'show'])->name('enseignants.show');
 
 // Export PDF des enseignants d’une classe (Censeur)
-Route::get('/classes/{class}/enseignants/export', [ClasseController::class, 'export'])->name('enseignants.export');
+Route::middleware(['auth'])->get('/classes/{class}/enseignants/export', [ClasseController::class, 'export'])->name('enseignants.export');
 
 // Sujet -> enseignants
-Route::get('subjects/{subject}/teachers', [SubjectController::class, 'teachers'])->name('subjects.teachers');
+Route::middleware(['auth'])->get('subjects/{subject}/teachers', [SubjectController::class, 'teachers'])->name('subjects.teachers');
 
 
 // Surveillant
@@ -367,36 +418,55 @@ Route::middleware(['auth'])->prefix('surveillant')->group(function () {
 
 });
 
-/*
 
-Gestion notes côté enseignants
+Route::middleware(['auth'])->get('classes/{class}/{subject}/{trimestre}/notes', 
+    [NoteController::class, 'showClassNotes']
+)->name('teacher.classes.notes.list');
 
-*/
 
-Route::get('classes/{class}/{trimestre}/notes', [NoteController::class, 'showClassNotes'])->name('teacher.classes.notes.list');
+// Afficher les notes d’un trimestre pour une classe et une matière
+Route::middleware(['auth'])->get('/classes/{classId}/subjects/{subjectId}/notes/{trimestre}', 
+    [App\Http\Controllers\Teacher\NoteController::class, 'index'])
+    ->middleware(['auth'])
+    ->name('classes.notes.subject');
 
 Route::middleware(['auth'])->prefix('teacher')->name('teacher.')->group(function () {
 
+    // Choisir un trimestre pour une classe et une matière
+    Route::get('/classes/{classId}/subjects/{subjectId}/notes/trimestres', 
+        [App\Http\Controllers\Teacher\NoteController::class, 'chooseTrimestre'])
+        ->name('classes.notes.trimestres.subject');
     
-    Route::get('/classes/{id}/notes/trimestres', [App\Http\Controllers\Teacher\NoteController::class, 'chooseTrimestre'])
-        ->name('classes.notes.trimestres');
-        
-    // Notes par trimestre
-    Route::get('/classes/{id}/notes/{trimestre}', [App\Http\Controllers\Teacher\NoteController::class, 'index'])
-        ->name('classes.notes');
+   // LECTURE DES NOTES
+    Route::get(
+        'classes/{class}/subjects/{subject}/notes/read/{type}/{num}/{trimestre}',
+        [NoteController::class, 'read']
+    )->name('classes.notes.read');
+
+    // CREATION FORMULAIRE
+    Route::get(
+        'classes/{class}/subjects/{subject}/notes/{type}/{num}/{trimestre}/create',
+        [NoteController::class, 'create']
+    )->name('classes.notes.create');
+
+    Route::post(
+        'classes/{class}/subjects/{subject}/notes/{type}/{num}/{trimestre}',
+        [NoteController::class, 'store']
+    )->name('classes.notes.store');
+
+    // EDITION
+    Route::get(
+        'classes/{class}/subjects/{subject}/notes/{type}/{num}/{trimestre}/edit',
+        [NoteController::class, 'edit']
+    )->name('classes.notes.edit');
     
-    // Insertion des notes
-    Route::get('/classes/{id}/notes/{type}/{num}/{trimestre}/create', [App\Http\Controllers\Teacher\NoteController::class, 'create'])->name('classes.notes.create');
-    Route::post('/classes/{id}/notes/{type}/{num}/{trimestre}', [App\Http\Controllers\Teacher\NoteController::class, 'store'])->name('classes.notes.store');
-    Route::get('classes/{class}/notes/read/{type}/{num}/{trimestre}', [App\Http\Controllers\Teacher\NoteController::class, 'read'])->name('classes.notes.read');
 
-    // Formulaire modification des notes
-    Route::get('/teacher/classes/{id}/notes/{type}/{num}/{trimestre}/edit', [App\Http\Controllers\Teacher\NoteController::class, 'edit'])
-        ->name('classes.notes.edit');
+    // UPDATE
+    Route::put(
+        'classes/{class}/subjects/{subject}/notes/{type}/{num}/{trimestre}',
+        [NoteController::class, 'update']
+    )->name('classes.notes.update');
 
-    // Mettre à jour les notes
-    Route::put('/teacher/classes/{id}/notes/{type}/{num}/{trimestre}/update', [App\Http\Controllers\Teacher\NoteController::class, 'update'])
-        ->name('classes.notes.update');
 
 
     // Supprimer toutes les notes de ce type/séquence
@@ -408,4 +478,220 @@ Route::middleware(['auth'])->prefix('teacher')->name('teacher.')->group(function
     Route::post('/classes/{id}/notes/calc/trimestre', [App\Http\Controllers\Teacher\NoteController::class, 'calcTrimestre'])->name('classes.notes.calc.trimestre');
 });
 
+Route::middleware(['auth'])->prefix('censeur')->group(function () {
+    Route::post('/classes/{classeId}/subjects/{subjectId}/coefficient', [SubjectController::class, 'setCoefficient'])->name('subjects.setCoefficient');
+});
 
+
+Route::middleware(['auth'])->prefix('teacher')->group(function () {
+    Route::get('/classes/{classeId}/cahier', [CahierDeTexteController::class, 'show'])->name('teacher.cahier.show');
+    Route::post('/classes/cahier/store', [CahierDeTexteController::class, 'store'])->name('teacher.cahier.store');
+    
+    Route::get(
+        '/teacher/cahier/history/{classId}/{subjectId}',
+        [CahierDeTexteController::class, 'history']
+    )->name('teacher.cahier.history.subject');
+
+});
+
+
+Route::middleware(['auth'])->get('teachers/{subject}/active', [CahierDeTexteController::class, 'activeTeachers'])->name('teachers.active');
+
+Route::middleware(['auth'])->get('/teachers/active', [CahierDeTexteController::class, 'subjects'])
+    ->name('subject.teachers.active');
+
+Route::middleware(['auth'])->get('/censeur/classes/{classId}/trimestre/{trimestre}/points', 
+    [CenseurNoteController::class, 'pointsDisponibles']
+)->name('censeur.classes.trimestre.points');
+
+Route::middleware(['auth'])->post('/censeur/notes/autoriser-modification', [CenseurNoteController::class, 'autoriserModification'])
+    ->name('censeur.notes.autoriserModification');
+
+Route::middleware(['auth'])->delete('/teacher-invitations/{invitation}', [CenseurInvitationController::class, 'destroy'])
+    ->name('teacher_invitations.destroy');
+
+Route::middleware(['auth'])->post('/teacher/cahier/update/{id}', [CahierDeTexteController::class, 'update'])->name('teacher.cahier.update');
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/enseignants/matiere/{subject}', [CahierDeTexteController::class, 'indexBySubject'])
+        ->name('enseignants.bySubject');
+});
+
+Route::middleware(['auth'])->get('/enseignants/{teacher}/classe/{classe}/matiere/{subject}/cahier', 
+    [CahierDeTexteController::class, 'showTeacherCahier'])
+    ->name('enseignants.cahier.matiere');
+
+Route::middleware(['auth'])->post('/enseignants/{teacher}/classe/{class}/matiere/{subject}/paiement', 
+    [CahierDeTexteController::class, 'setBrutAmount'])
+    ->name('enseignants.classe.paiement');
+
+Route::middleware(['auth'])->post('/subject/{subject}/pdf', [CahierDeTexteController::class, 'downloadPdf'])
+    ->name('subject.teachers.pdf');
+    
+Route::middleware(['auth'])->delete('/censeur/timetables/{class}/{timetable}/delete', 
+    [\App\Http\Controllers\Censeur\TimetableController::class, 'destroy']
+)->name('censeur.timetables.delete');
+
+
+// routes/web.php
+
+Route::middleware(['auth'])->prefix('cahier-de-texte')->group(function () {
+    // Vue pour voir les cahiers d'un enseignant spécifique
+    Route::get('/teacher/{teacher}/class/{classe}/subject/{subject}', 
+        [CahierDeTexteController::class, 'showTeacherCahier'])
+        ->name('cahier.teacher.view');
+    
+    // Validation individuelle
+    Route::post('/{cahier}/validate', 
+        [CahierDeTexteController::class, 'validateEntry'])
+        ->name('cahier.validate');
+    
+    // Validation multiple
+    Route::post('/validate-multiple', 
+        [CahierDeTexteController::class, 'validateMultiple'])
+        ->name('cahier.validate.multiple');
+    
+    // Téléchargement du rapport
+    Route::get('/teacher/{teacher}/class/{classe}/subject/{subject}/download', 
+        [CahierDeTexteController::class, 'downloadReport'])
+        ->name('cahier.teacher.download');
+});
+
+// Gestion des sessions expirées
+Route::get('/session-expired', [\App\Http\Controllers\Auth\ExpiredSessionController::class, 'show'])
+    ->name('session.expired');
+
+Route::post('/refresh-csrf', [\App\Http\Controllers\Auth\ExpiredSessionController::class, 'refreshCsrf'])
+    ->name('csrf.refresh');
+
+// Route pour regénérer la session (optionnel)
+Route::get('/refresh-session', function () {
+    session()->regenerate();
+    return back()->with('status', 'Session rafraîchie avec succès.');
+})->name('session.refresh');
+
+Route::get('/session-expired', function () {
+    abort(419);
+});
+
+Route::get('/419', function () {
+    abort(419);
+});
+
+// Routes pour PWA (ajoutez à la fin)
+Route::get('/manifest.json', function() {
+    return response()->file(public_path('manifest.json'));
+});
+
+Route::get('/sw.js', function() {
+    return response()->file(public_path('sw.js'))
+        ->header('Content-Type', 'application/javascript');
+});
+
+Route::prefix('teacher')->name('teacher.')->middleware(['auth'])->group(function () {
+    
+    Route::prefix('exams')->name('exams.')->group(function () {
+        // GET routes
+        Route::get('/', [App\Http\Controllers\Teacher\TeacherExamController::class, 'index'])->name('index');
+        Route::get('/create', [App\Http\Controllers\Teacher\TeacherExamController::class, 'create'])->name('create');
+        Route::get('/evaluation-numbers', [App\Http\Controllers\Teacher\TeacherExamController::class, 'getEvaluationNumbers'])->name('evaluation-numbers');
+        Route::get('/{id}', [App\Http\Controllers\Teacher\TeacherExamController::class, 'show'])->name('show');
+        Route::get('/statistics', [App\Http\Controllers\Teacher\TeacherExamController::class, 'statistics'])->name('statistics');
+        
+        // POST route - UNE SEULE méthode store
+        Route::post('/', [App\Http\Controllers\Teacher\TeacherExamController::class, 'store'])->name('store');
+        
+        // DELETE route
+        Route::delete('/{id}', [App\Http\Controllers\Teacher\TeacherExamController::class, 'destroy'])->name('destroy');
+    });
+    
+    // API pour les matières par classe - CORRIGÉ avec le bon namespace
+    Route::get('/classes/{classId}/subjects', function ($classId) {
+        $teacher = Auth::user();
+        $class = App\Models\Classe::with('subjects')->findOrFail($classId);
+        
+        $subjects = $class->subject()
+            ->whereHas('teachers', function($q) use ($teacher) {
+                $q->where('teacher_id', $teacher->id)
+                  ->where('academic_year_id', App\Models\AcademicYear::where('active', true)->first()->id);
+            })
+            ->get()
+            ->map(function($subject) {
+                return [
+                    'id' => $subject->id,
+                    'name' => $subject->name,
+                    'code' => $subject->code ?? '',
+                ];
+            });
+            
+        return response()->json($subjects);
+    })->name('classes.subjects');
+});
+
+Route::middleware(['auth'])->group(function () {
+    
+    // Routes pour les épreuves du censeur
+    Route::prefix('censeur/exams')->name('censeur.exams.')->group(function () {
+        // Page principale des types par classe
+        Route::get('/types/{classe}', [CenseurExamController::class, 'types'])
+            ->name('types')
+            ->where('classe', '[0-9]+'); // Force l'ID à être numérique
+        
+        // Page d'un trimestre spécifique
+        Route::get('/trimestre/{classe}/{trimestre}', [CenseurExamController::class, 'trimestre'])
+            ->name('trimestre')
+            ->where(['classe' => '[0-9]+', 'trimestre' => '[1-3]']);
+        
+        // Liste des épreuves par trimestre, type et numéro
+        Route::get('/list/{classe}/{trimestre}/{type}/{numero}', [CenseurExamController::class, 'list'])
+            ->name('list')
+            ->where([
+                'classe' => '[0-9]+',
+                'trimestre' => '[1-3]',
+                'type' => 'devoir|interrogation',
+                'numero' => '[1-5]'
+            ]);
+        
+        // Téléchargement direct
+        Route::get('/download-all/{classe}', [CenseurExamController::class, 'downloadAll'])
+            ->name('download-all')
+            ->where('classe', '[0-9]+');
+        
+        // Téléchargement avec formulaire
+        Route::post('/download-copies', [CenseurExamController::class, 'downloadCopies'])
+            ->name('download-copies');
+    });
+});
+
+Route::prefix('parent')->name('parent.')->group(function () {
+    Route::get('/login', [ParentAuthController::class, 'showLoginForm'])->name('login');
+    Route::post('/login', [ParentAuthController::class, 'login']);
+    Route::post('/logout', [ParentAuthController::class, 'logout'])->name('logout');
+});
+
+Route::prefix('parent')->name('parent.')->middleware('auth:parent')->group(function () {
+    Route::get('/dashboard', [ParentDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/children/{student}/grades', [ParentDashboardController::class, 'grades'])->name('child.grades');
+    Route::get('/children/{student}/attendance', [ParentDashboardController::class, 'attendance'])->name('child.attendance');
+    Route::get('/children/{student}/payments', [ParentDashboardController::class, 'payments'])->name('child.payments');
+    Route::get('/child/{student}/timetable', [ParentDashboardController::class, 'timetable'])->name('child.timetable');
+    Route::get('/contact', [ParentDashboardController::class, 'contact'])->name('contact');
+});
+
+Route::get('/api/classes/{id}/fees', function($id) {
+    $classe = App\Models\Classe::find($id);
+    if (!$classe) {
+        return response()->json(['error' => 'Classe non trouvée'], 404);
+    }
+    return response()->json([
+        'school_fees' => $classe->school_fees,
+        'registration_fee' => $classe->registration_fee,
+        're_registration_fee' => $classe->re_registration_fee,
+    ]);
+});
+
+Route::put('/students/{student}/update-registration-type', [StudentPaymentController::class, 'updateRegistrationType'])
+    ->name('students.update-registration-type');
+
+Route::get('/parent/child/{student}/payments', [ParentDashboardController::class, 'payments'])
+    ->name('parent.child.payments');

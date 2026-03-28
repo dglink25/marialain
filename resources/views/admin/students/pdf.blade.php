@@ -195,7 +195,7 @@
                 <td>{{ $student->gender ?? '- -' }}</td>
                 <td>{{ $student->entity->name ?? '-' }}</td>
                 <td>{{ $student->classe->name ?? '-' }}</td>
-                <td>{{ $student->school_fees_paid ?? '- -' }} FCFA</td>
+                <td>{{ number_format($student->total_paid, 2) }} FCFA</td>
                 <td>{{ number_format($student->remaining_fees, 2) }} FCFA</td>
                 <td>{{ $student->birth_date }}</td>
                 <td>

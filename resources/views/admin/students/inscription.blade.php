@@ -89,7 +89,7 @@
 
       <!-- Entité et Classe -->
       <div>
-        <label class="block text-sm font-semibold text-gray-700 mb-1">Entité</label>
+        <label class="block text-sm font-semibold text-gray-700 mb-1">Niveau</label>
         <select name="entity_id" id="entity_id" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none" required>
           <option value="">Sélectionnez une entité</option>
           @foreach($entities as $entity)
@@ -107,23 +107,23 @@
       <!-- Carnet de vaccination -->
       <div id="vaccination_card_div" class="hidden md:col-span-2">
         <label class="block text-sm font-semibold text-gray-700 mb-1">Carnet de vaccination (PDF)</label>
-        <input type="file" name="vaccination_card" accept="application/pdf" class="w-full border border-gray-300 rounded-lg px-4 py-2">
+        <input type="file" name="vaccination_card" accept="image/*" class="w-full border border-gray-300 rounded-lg px-4 py-2">
       </div>
 
       <!-- Documents -->
       <div class="md:col-span-2">
         <label class="block text-sm font-semibold text-gray-700 mb-1">Acte de naissance (PDF)</label>
-        <input type="file" name="birth_certificate" accept="application/pdf" class="w-full border border-gray-300 rounded-lg px-4 py-2" required>
+        <input type="file" name="birth_certificate" accept="image/*" class="w-full border border-gray-300 rounded-lg px-4 py-2">
       </div>
 
       <div class="md:col-span-2">
         <label class="block text-sm font-semibold text-gray-700 mb-1">Bulletin de notes année antérieure (PDF)</label>
-        <input type="file" name="previous_report_card" accept="application/pdf" class="w-full border border-gray-300 rounded-lg px-4 py-2">
+        <input type="file" name="previous_report_card" accept="image/*" class="w-full border border-gray-300 rounded-lg px-4 py-2">
       </div>
 
       <div class="md:col-span-2">
         <label class="block text-sm font-semibold text-gray-700 mb-1">Relevé de notes diplôme obtenu (optionnel)</label>
-        <input type="file" name="diploma_certificate" accept="application/pdf" class="w-full border border-gray-300 rounded-lg px-4 py-2">
+        <input type="file" name="diploma_certificate" accept="image/*" class="w-full border border-gray-300 rounded-lg px-4 py-2">
         <p class="text-xs text-gray-500 mt-1">Pour les élèves de 6ème ou 2nde uniquement</p>
       </div>
 
@@ -140,6 +140,14 @@
             <label for="parent_phone" class="block text-sm font-semibold text-gray-700 mb-1">Téléphone du parent</label>
             <input type="text" name="parent_phone" id="parent_phone" value="{{ old('parent_phone') }}" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none" required>
         </div>
+
+        <a href="{{ route('accueil') }}" 
+          class="w-full sm:w-auto px-8 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition duration-200 flex items-center justify-center font-semibold">
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+          Annuler
+        </a>
         <div class="mt-4">
             <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Enregistrer</button>
         </div>

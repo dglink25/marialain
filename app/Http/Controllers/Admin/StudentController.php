@@ -16,6 +16,10 @@ use Illuminate\Support\Facades\Storage;
 use ZipArchive;
 use App\Models\AcademicYear;
 use App\Mail\StudentRegistered;
+use Illuminate\Support\Facades\Schema;
+use Cloudinary\Api\Upload\UploadApi; // API upload
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+use Exception;
 
 class StudentController extends Controller{
     public function checkActiveYear(){
@@ -26,112 +30,130 @@ class StudentController extends Controller{
         }
         return $activeYear;
     }
-    
+
     public function store(Request $request){
-        if (!$this->checkActiveYear() instanceof AcademicYear) {
-            return $this->checkActiveYear();
+        // Vérifie si une année académique est active
+        $activeYear = AcademicYear::where('active', true)->first();
+        if (!$activeYear) {
+            return redirect()->back()->with('error', 'Aucune année académique active trouvée.');
         }
 
+        // Validation des données
         $validator = Validator::make($request->all(), [
-                'first_name' => 'required|string',
-                'last_name' => 'required|string',
-                'birth_date' => 'required|date',
-                'birth_place' => 'required|string',
-                'entity_id' => 'required|exists:entities,id',
-                'classe_id' => 'required|exists:classes,id',
-                'birth_certificate' => 'required|mimes:pdf|max:2048',
-                'vaccination_card' => 'nullable|mimes:pdf|max:2048',
-                'previous_report_card' => 'nullable|mimes:pdf|max:2048',
-                'diploma_certificate' => 'nullable|mimes:pdf|max:2048',
-                'parent_full_name' => 'required|string',
-                'parent_email' => 'required|email',
-                'parent_phone' => 'required|string',
-                'num_educ' => 'required|string',
-                'gender' => 'required|string',
-            ]);
+            'first_name'            => 'required|string|max:255',
+            'last_name'             => 'required|string|max:255',
+            'birth_date'            => 'required|date',
+            'birth_place'           => 'required|string|max:255',
+            'entity_id'             => 'required|exists:entities,id',
+            'classe_id'             => 'required|exists:classes,id',
+            'registration_type'     => 'required|in:new,re_registration',
+            'birth_certificate'     => 'nullable|max:2048',
+            'vaccination_card'      => 'nullable|max:2048',
+            'previous_report_card'  => 'nullable|max:2048',
+            'diploma_certificate'   => 'nullable|max:2048',
+            'parent_full_name'      => 'required|string|max:255',
+            'parent_email'          => 'required|email|max:255',
+            'parent_phone'          => 'required|string|max:20',
+            'num_educ'              => 'required|string|max:50|unique:students,num_educ',
+            'gender'                => 'required|string|in:M,F',
+            'school_fees'           => 'nullable|numeric|min:0',
+        ]);
 
-            if ($validator->fails()) {
-                return redirect()->back()
-                                ->withErrors($validator)
-                                ->withInput();
-            }
+        if ($validator->fails()) {
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
 
-        $data = $request->all();
+        $data = $validator->validated();
 
-        // Upload fichiers
-        foreach (['birth_certificate','vaccination_card','previous_report_card','diploma_certificate'] as $fileField) {
-            if ($request->hasFile($fileField)) {
-                $data[$fileField] = $request->file($fileField)->store('students_files','public');
+        // Upload Cloudinary (sécurisé)
+        foreach (['birth_certificate', 'vaccination_card', 'previous_report_card', 'diploma_certificate'] as $fileField) {
+            if ($request->hasFile($fileField) && $request->file($fileField)->isValid()) {
+
+                $uploadApi = new UploadApi();
+
+                $uploaded = $uploadApi->upload(
+                    $request->file($fileField)->getRealPath(),
+                    [
+                        'folder' => 'students_files',
+                        'resource_type' => 'auto', // 👈 IMPORTANT : gère PDF, images, vidéos, etc.
+                    ]
+                );
+
+                $data[$fileField] = $uploaded['secure_url'];
             }
         }
 
-        // Calcul automatique de l'âge
-        $data['age'] = now()->diffInYears($request->birth_date);
-        $data['age'] = (-1)*$data['age'];
-        var_dump($data['age']);
+        // Calcul automatique de l’âge (corrigé)
+        $data['age'] = now()->diffInYears($data['birth_date']);
+        
+        $classe = Classe::query()
+                ->where('id', $data['classe_id'])
+                ->where('academic_year_id', $activeYear->id)
+                ->firstOrFail();
+
+        $totalFees = $classe->school_fees ?? 0;
+        if ($data['registration_type'] === 'new') {
+            $totalFees += $classe->registration_fee ?? 0;
+        } elseif ($data['registration_type'] === 're_registration') {
+            $totalFees += $classe->re_registration_fee ?? 0;
+        }
+
 
         try {
-            $activeYear = AcademicYear::where('active', true)->firstOrFail();
-
+            // Préparation des données d’inscription
             $studentData = [
-                'first_name'            => $data['first_name'],
-                'last_name'             => $data['last_name'],
-                'birth_date'            => $data['birth_date'],
-                'birth_place'           => $data['birth_place'],
-                'gender'                => $data['gender'],
-                'entity_id'             => $data['entity_id'],
-                'academic_year_id'      => $activeYear->id,
-                'class_id'              => $data['classe_id'],
-                'birth_certificate'     => $data['birth_certificate'] ?? null,
-                'vaccination_card'      => $data['vaccination_card'] ?? null,
-                'previous_report_card'  => $data['previous_report_card'] ?? null,
-                'diploma_certificate'   => $data['diploma_certificate'] ?? null,
-                'parent_full_name'      => $data['parent_full_name'],
-                'parent_email'          => $data['parent_email'],
-                'parent_phone'          => $data['parent_phone'],
-                'num_educ'              => $data['num_educ'],
-                'age'                   => $data['age'],
+                'first_name'           => $data['first_name'],
+                'last_name'            => $data['last_name'],
+                'birth_date'           => $data['birth_date'],
+                'birth_place'          => $data['birth_place'],
+                'gender'               => $data['gender'],
+                'entity_id'            => $data['entity_id'],
+                'academic_year_id'     => $activeYear->id,
+                'class_id'             => $data['classe_id'],
+                'registration_type'    => $data['registration_type'],
+                'total_fees'           => $totalFees,
+                'birth_certificate'    => $data['birth_certificate'] ?? null,
+                'vaccination_card'     => $data['vaccination_card'] ?? null,
+                'previous_report_card' => $data['previous_report_card'] ?? null,
+                'diploma_certificate'  => $data['diploma_certificate'] ?? null,
+                'parent_full_name'     => $data['parent_full_name'],
+                'parent_email'         => $data['parent_email'],
+                'parent_phone'         => $data['parent_phone'],
+                'num_educ'             => $data['num_educ'],
+                'age'                  => $data['age'],
             ];
 
-            // Ajoute school_fees uniquement si la colonne existe dans la table students
-            if (\Schema::hasColumn('students', 'school_fees') && isset($data['school_fees'])) {
-                $studentData['school_fees'] = $data['school_fees'];
-                $studentData['amount_paid'] = $data['school_fees'];
+            // Création de l’élève
+            $student = Student::create($studentData);
 
-                $student = Student::create($studentData);
+            // Si la colonne school_fees existe
+            if (Schema::hasColumn('students', 'school_fees') && isset($data['school_fees'])) {
                 $student->update([
+                    'school_fees' => $data['school_fees'],
+                    'amount_paid' => $data['school_fees'],
                     'is_validated' => true,
                 ]);
 
-                // Crée le paiement associé
-                $payment = $student->payments()->create([
+                // Création du paiement associé
+                $student->payments()->create([
                     'tranche'      => 1,
                     'amount'       => $data['school_fees'],
                     'payment_date' => now(),
                 ]);
-
-                // Envoi d'email aux parents
-                Mail::to($student->parent_email)->send(new StudentValidated($student));
-
-                // Met à jour les montants payés
-                $student->school_fees_paid = $student->payments()->sum('amount');
-                $student->fully_paid = $student->school_fees_paid >= ($student->classe->school_fees ?? 0);
-                $student->save();
-
-                return redirect()->back()->with('success', 'Inscription réussi avec succès.');
             }
 
-            $student = Student::create($studentData);
-            // Envoi d'email aux parents
-            Mail::to($student->parent_email)->send(new StudentRegistered($student));
-            
-            return redirect()->back()->with('success', 'Inscription réussi avec succès.');
-        } 
-        catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Erreur lors de l\'ajout : '.$e->getMessage());
-        }
+            // Envoi de mail (désactivé pour tests)
+            // Mail::to($student->parent_email)->send(new StudentRegistered($student));
 
+            return redirect()->back()->with('success', 'Inscription réussie avec succès.');
+        } 
+        catch (Exception $e) {
+            //Log::error('Erreur inscription élève : ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Erreur lors de l’inscription : ' . $e->getMessage());
+        }
     }
+
+
 
     // Méthode pour récupérer les classes par entité
     public function getClassesByEntity($entity_id){
@@ -166,21 +188,21 @@ class StudentController extends Controller{
         $student = Student::findOrFail($id);
 
         $validated = $request->validate([
-            'first_name' => 'required|string',
-            'last_name' => 'required|string',
-            'birth_date' => 'required|date',
-            'birth_place' => 'required|string',
-            'entity_id' => 'required|exists:entities,id',
-            'class_id' => 'required|exists:classes,id',
+            'first_name' => 'nullable|string',
+            'last_name' => 'nullable|string',
+            'birth_date' => 'nullable|date',
+            'birth_place' => 'nullable|string',
+            'entity_id' => 'nullable|exists:entities,id',
+            'class_id' => 'nullable|exists:classes,id',
             'birth_certificate' => 'nullable|mimes:pdf|max:2048',
             'vaccination_card' => 'nullable|mimes:pdf|max:2048',
             'previous_report_card' => 'nullable|mimes:pdf|max:2048',
             'diploma_certificate' => 'nullable|mimes:pdf|max:2048',
-            'parent_full_name' => 'required|string',
-            'parent_email' => 'required|email',
-            'parent_phone' => 'required|string',
-            'num_educ' => 'required|string',
-            'gender' => 'required|string',
+            'parent_full_name' => 'nullable|string',
+            'parent_email' => 'nullable|email',
+            'parent_phone' => 'nullable|string',
+            'num_educ' => 'nullable|string',
+            'gender' => 'nullable|string',
         ]);
 
         $data['age'] = now()->diffInYears($request->birth_date);
@@ -297,8 +319,15 @@ class StudentController extends Controller{
 
 
     public function exportPdf(Request $request){
+
+        $activeYear = AcademicYear::where('active', true)->first();
+        if (!$activeYear) {
+            return back()->with('error', 'Aucune année académique active trouvée.');
+        }
+
         $query = Student::with('entity', 'classe')
-            ->where('is_validated', 1); // uniquement les validés
+            ->where('is_validated', 1)
+            ->where('academic_year_id', $activeYear->id); // uniquement les validés
 
         $className = 'Toutes les classes';
 
@@ -312,7 +341,8 @@ class StudentController extends Controller{
             }
         }
 
-        $students = $query->orderBy('last_name')
+        $students = $query
+                        ->orderBy('last_name')
                         ->orderBy('first_name')
                         ->get();
 
@@ -330,9 +360,16 @@ class StudentController extends Controller{
 
 
     public function exportAllPdf(){
+
+        $activeYear = AcademicYear::where('active', true)->first();
+        if (!$activeYear) {
+            return back()->with('error', 'Aucune année académique active trouvée.');
+        }
+
         // Récupérer toutes les classes avec leurs élèves validés
-        $classes = \App\Models\Classe::with(['students' => function($q) {
+        $classes = \App\Models\Classe::with(['students' => function($q) use ($activeYear) {
             $q->where('is_validated', 1)
+            ->where('academic_year_id', $activeYear->id)
             ->orderBy('last_name')
             ->orderBy('first_name');
         }])->get();
@@ -394,11 +431,33 @@ class StudentController extends Controller{
 
             return view('admin.students.pending', compact('students', 'activeYear'));
 
-        } catch (\Exception $e) {
+        } 
+        catch (\Exception $e) {
             // Gestion d'autres erreurs inattendues
             dd($e->getMessage());
             return redirect()->back()->with('error', 'Une erreur est survenue : '.$e->getMessage());
         }
     }
+
+    public function downloadReceipt(StudentPayment $payment){
+        try {
+            if (!$payment) {
+                return redirect()->back()->with('error', 'Reçu non trouvé.');
+            }
+
+            $student = $payment->student; // Assure-toi que la relation student existe dans le modèle StudentPayment
+
+            $pdf = Pdf::loadView('pdf.receipt', [
+                'student' => $student,
+                'payment' => $payment
+            ])->setPaper('A4', 'portrait');
+
+            return $pdf->download('recu_'.$payment->id.'.pdf');
+
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Erreur lors de la génération du PDF : '.$e->getMessage());
+        }
+    }
+
 
 }

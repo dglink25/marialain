@@ -35,7 +35,7 @@ class InvitationPController extends Controller
         if (!$activeYear instanceof AcademicYear) return $activeYear;
 
         // Récupère entités primaire + maternelle
-        $entities = Entity::whereIn('name', ['primaire', 'maternelle'])->pluck('id');
+        $entities = Entity::whereIn('slug', ['primaire', 'maternelle'])->pluck('id');
 
         $classes = Classe::where('academic_year_id', $activeYear->id)
             ->whereIn('entity_id', $entities)
@@ -80,7 +80,7 @@ class InvitationPController extends Controller
                 'name'     => $data['name'],
                 'email'    => $data['email'],
                 'password' => Hash::make($plainPassword),
-                'role_id'  => 6, // adapte si différent
+                'role_id'  => 8, // adapte si différent
             ]);
 
             // 4) créer invitation (assure-toi que la colonne academic_year_id existe)
@@ -109,7 +109,8 @@ class InvitationPController extends Controller
 
             return back()->with('success', "Invitation envoyée à {$user->email}.");
 
-        } catch (\Swift_TransportException $e) {
+        }
+        catch (\Swift_TransportException $e) {
             DB::rollBack();
             Log::error('Mail transport error sending teacher invitation', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             return back()->with('error', "Erreur d'envoi du mail : vérifiez la configuration mail. ({$e->getMessage()})");

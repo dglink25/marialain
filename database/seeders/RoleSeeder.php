@@ -19,14 +19,18 @@ class RoleSeeder extends Seeder {
         ];
 
         foreach ($roles as $roleName) {
-            $role = Role::firstOrCreate(['name' => $roleName]);
+            $role = Role::firstOrCreate([
+                    'name' => $roleName ,
+                    'display_name' => 'Directeur Primaire'
+
+        ]);
 
             User::firstOrCreate(
                 ['email' => $roleName.'@gmail.com'],
                 [
                     'name' => ucfirst(str_replace('_',' ',$roleName)),
                     'password' => Hash::make('12345678'),
-                    'role_id' => $role->id
+                    'role_id' => $role->id, 
                 ]
             );
         }

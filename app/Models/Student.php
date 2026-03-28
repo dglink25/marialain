@@ -29,7 +29,30 @@ class Student extends Model{
         'school_fees',
         'is_validated',
         'amount_paid',
+        'school_fees_paid',
+        'registration_type',
+        'total_fees',
     ];
+
+    public function calculateTotalFees(){
+        if (!$this->classe) {
+            return 0;
+        }
+
+        $fees = $this->classe->school_fees ?? 0;
+        
+        if ($this->registration_type === 'new') {
+            $fees += $this->classe->registration_fee ?? 0;
+        } elseif ($this->registration_type === 're_registration') {
+            $fees += $this->classe->re_registration_fee ?? 0;
+        }
+        
+        return $fees;
+    }
+
+    public function getRemainingFeesAttribute(){
+        return $this->total_fees - $this->total_paid;
+    }
 
 
     public function entity() {
@@ -40,34 +63,27 @@ class Student extends Model{
         return $this->belongsTo(Classe::class, 'class_id');
     }
 
-    public function payments()
-    {
+    public function payments(){
         return $this->hasMany(StudentPayment::class);
     }
 
-    // Calcul montant total payé
-    public function getTotalPaidAttribute()
-    {
+    public function getTotalPaidAttribute(){
         return $this->payments->sum('amount');
     }
 
-    // Calcul montant restant
-    public function getRemainingFeesAttribute(){
-        return $this->classe->school_fees - $this->total_paid;
+    public function getPaidAttribute(){
+        return $this->classe->school_fees;
     }
 
-    // Vérifier si tout payé
-    public function getIsFullyPaidAttribute(){
-        return $this->remaining_fees <= 0;
+    public function getIsFullyPaidAttribute() {
+        return ($this->total_fees - $this->total_paid) <= 0;
     }
 
-    public function academicYear()
-    {
+    public function academicYear(){
         return $this->belongsTo(AcademicYear::class, 'academic_year_id');
     }
 
-    public function punishments()
-    {
+    public function punishments(){
         return $this->hasMany(Punishment::class);
     }
 
@@ -77,9 +93,8 @@ class Student extends Model{
     }
 
 
-    // 🔹 Accesseur pour le nom complet
-    public function getFullNameAttribute(): string
-    {
+    // Accesseur pour le nom complet
+    public function getFullNameAttribute(): string{
         return "{$this->last_name} {$this->first_name}";
     }
 

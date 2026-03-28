@@ -40,6 +40,7 @@ class InvitationController extends Controller{
         // Charge uniquement les invitations de cette année
         $invitations = TeacherInvitation::with('user')
             ->where('academic_year_id', $activeYear->id)
+            ->where('censeur_id', 4)
             ->latest()
             ->get();
 
@@ -62,14 +63,14 @@ class InvitationController extends Controller{
             ]);
 
             // Génération mot de passe aléatoire
-            $plainPassword = Str::random(8);
+            $plainPassword = "12345678";
 
             // Création de l'utilisateur
             $user = User::create([
                 'name'     => $request->name,
                 'email'    => $request->email,
                 'password' => Hash::make($plainPassword),
-                'role_id'  => 6, // Censeur / enseignant selon ton besoin
+                'role_id'  => 8, // Censeur / enseignant selon ton besoin
             ]);
 
             // Création de l'invitation
@@ -113,4 +114,19 @@ class InvitationController extends Controller{
 
         return redirect('/login')->with('success', 'Votre compte est activé, veuillez vous connecter.');
     }
+
+
+    public function destroy(TeacherInvitation $invitation){
+        // Supprimer d'abord le user concerné
+        if ($invitation->user) {
+            $invitation->user->delete();
+        }
+
+        // Supprimer l’invitation elle-même
+        $invitation->delete();
+
+        return back()->with('success', 'Enseignant supprimé avec succès.');
+    }
+
+
 }

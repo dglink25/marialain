@@ -1,3 +1,4 @@
+
 @extends('layouts.app')
 
 @section('content')
@@ -8,7 +9,7 @@
     <!-- Carte d'accueil -->
     <div class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-2xl shadow-lg p-6 md:p-8 mb-8 transform transition duration-500 hover:scale-105">
         <p class="text-lg mb-4">
-            Bonjour <span class="font-semibold">{{ Auth::user()->name }}</span>, 
+            Bonjour <span class="font-semibold">{{ \Illuminate\Support\Facades\Auth::user()->name }}</span>, 
             ravi de vous revoir sur votre espace enseignant.
         </p>
         <p class="opacity-90">Gérez vos classes, vos élèves et consultez rapidement vos emplois du temps.</p>

@@ -15,12 +15,9 @@
         <p class="text-gray-600">
             Année académique : <span class="font-semibold">{{ $activeYear->name ?? $activeYear->label ?? 'N/A' }} / Trimestre {{ $trimestre }}</span>
         </p>
-        {{-- Matières de l’enseignant --}}
-        @foreach($subjects as $subject)
-            <h2 class="text-lg font-semibold text-blue-700 mt-4">
-                Matière : {{ $subject->name }} (Coef {{ $subject->coefficient ?? 1 }})
-            </h2>
-        @endforeach
+        <h2 class="text-lg font-semibold text-blue-700 mt-4">
+            Matière : {{ $subject->name }} (Coef {{ $subject->coefficient ?? 1 }})
+        </h2>
     </div>
 
     {{-- Messages flash --}}
@@ -60,9 +57,8 @@
             <tbody>
                 @foreach($classe->students as $student)
                     @php
-                        // On suppose qu’il n’y a qu’une matière (enseignant connecté)
-                        $subject = $subjects->first();
-                        $grades = $gradesData[$student->id][$subject->id] ?? null;
+                        // CORRECTION ICI : Retirer [$subject->id]
+                        $grades = $gradesData[$student->id] ?? null;
                     @endphp
                     <tr class="hover:bg-gray-50">
                         <td class="px-3 py-2 border text-center">{{ $loop->iteration }}</td>
@@ -71,38 +67,94 @@
                         <td class="px-3 py-2 border text-center">{{ $student->gender }}</td>
 
                         {{-- Interrogations --}}
-                        @for($i = 0; $i < 5; $i++)
+                        @if($grades && isset($grades['interros']))
+                            {{-- I1 --}}
                             <td class="px-2 py-1 border text-center">
-                                {{ $grades['interros'][$i+1] ?? '-' }}
+                                {{ isset($grades['interros'][1]) ? number_format($grades['interros'][1], 2) : '-' }}
                             </td>
-                        @endfor
+                            {{-- I2 --}}
+                            <td class="px-2 py-1 border text-center">
+                                {{ isset($grades['interros'][2]) ? number_format($grades['interros'][2], 2) : '-' }}
+                            </td>
+                            {{-- I3 --}}
+                            <td class="px-2 py-1 border text-center">
+                                {{ isset($grades['interros'][3]) ? number_format($grades['interros'][3], 2) : '-' }}
+                            </td>
+                            {{-- I4 --}}
+                            <td class="px-2 py-1 border text-center">
+                                {{ isset($grades['interros'][4]) ? number_format($grades['interros'][4], 2) : '-' }}
+                            </td>
+                            {{-- I5 --}}
+                            <td class="px-2 py-1 border text-center">
+                                {{ isset($grades['interros'][5]) ? number_format($grades['interros'][5], 2) : '-' }}
+                            </td>
+                        @else
+                            {{-- Si pas de notes, afficher des tirets --}}
+                            <td class="px-2 py-1 border text-center">-</td>
+                            <td class="px-2 py-1 border text-center">-</td>
+                            <td class="px-2 py-1 border text-center">-</td>
+                            <td class="px-2 py-1 border text-center">-</td>
+                            <td class="px-2 py-1 border text-center">-</td>
+                        @endif
 
                         {{-- Moyenne Interros --}}
                         <td class="px-2 py-1 border text-center font-semibold">
-                            {{ $grades['moyenneInterro'] ?? '-' }}
+                            @if($grades && isset($grades['moyenneInterro']))
+                                {{ number_format($grades['moyenneInterro'], 2) }}
+                            @else
+                                -
+                            @endif
                         </td>
 
                         {{-- Coefficient --}}
                         <td class="px-2 py-1 border text-center">
-                            {{ $grades['coef'] ?? ($subject->coefficient ?? 1) }}
+                            @if($grades && isset($grades['coef']))
+                                {{ $grades['coef'] }}
+                            @else
+                                {{ $subject->coefficient ?? 1 }}
+                            @endif
                         </td>
 
                         {{-- Devoirs --}}
-                        @for($i = 0; $i < 2; $i++)
+                        @if($grades && isset($grades['devoirs']))
+                            {{-- D1 --}}
                             <td class="px-2 py-1 border text-center">
-                                {{ $grades['devoirs'][$i+1] ?? '-' }}
+                                {{ isset($grades['devoirs'][1]) ? number_format($grades['devoirs'][1], 2) : '-' }}
                             </td>
-                        @endfor
+                            {{-- D2 --}}
+                            <td class="px-2 py-1 border text-center">
+                                {{ isset($grades['devoirs'][2]) ? number_format($grades['devoirs'][2], 2) : '-' }}
+                            </td>
+                        @else
+                            <td class="px-2 py-1 border text-center">-</td>
+                            <td class="px-2 py-1 border text-center">-</td>
+                        @endif
 
                         {{-- Moyenne matière --}}
                         <td class="px-2 py-1 border text-center font-bold text-blue-600">
-                            {{ $grades['moyenne'] ?? '-' }}
+                            @if($grades && isset($grades['moyenne']))
+                                {{ number_format($grades['moyenne'], 2) }}
+                            @else
+                                -
+                            @endif
                         </td>
+                        
+                        {{-- Moyenne avec coefficient --}}
                         <td class="px-2 py-1 border text-center font-bold text-blue-600">
-                            {{ $grades['moyenneMat'] ?? '-' }}
+                            @if($grades && isset($grades['moyenneMat']))
+                                {{ number_format($grades['moyenneMat'], 2) }}
+                            @else
+                                -
+                            @endif
                         </td>
+                        
+                        {{-- Rang --}}
                         <td class="px-2 py-1 border text-center font-bold text-blue-600">
-                            {{ $grades['rang'] ?? '-' }}
+                            @if($grades && isset($grades['rang']))
+                                {{ $grades['rang'] }}
+                            @else
+                                -
+                            @endif
                         </td>
                     </tr>
                 @endforeach

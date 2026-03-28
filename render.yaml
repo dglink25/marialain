@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: maralain
+    env: docker
+    plan: starter  # tu peux ajuster selon ton plan
+    region: oregon  # ou région la plus proche
+    dockerfilePath: Dockerfile
+    buildCommand: ""
+    startCommand: ""
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_URL
+        value: https://marialain.onrender.com

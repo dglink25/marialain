@@ -34,8 +34,6 @@ class ClasseController extends Controller{
         return view('censeur.classes.index', compact('classes', 'activeYear'));
     }
 
-
-
     public function students($classId){
 
         $activeYear = AcademicYear::where('active', true)->first();

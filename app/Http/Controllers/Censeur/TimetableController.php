@@ -10,176 +10,448 @@ use App\Models\Subject;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use App\Models\AcademicYear;
+use App\Models\ClassTeacherSubject;
+use Illuminate\Support\Facades\Validator;
+use Laravel\Tinker\ClassAliasAutoloader;
 
 class TimetableController extends Controller{
-    public function index($classId){
-        // Vérifie s'il existe une année active
-        $activeYear = AcademicYear::where('active', true)->first();
+    public function index($classId) {
+        try {
+            // Vérifie s'il existe une année active
+            $activeYear = AcademicYear::where('active', true)->first();
 
-        if (!$activeYear) {
-            return back()->with('error', 'Aucune année scolaire active trouvée.');
+            if (!$activeYear) {
+                return back()->with('error', 'Aucune année scolaire active trouvée.');
+            }
+
+            // Vérifie si la classe existe et appartient à l'année active
+            $class = Classe::where('id', $classId)
+                ->where('academic_year_id', $activeYear->id)
+                ->firstOrFail();
+
+            // Récupération des emplois du temps pour cette classe et année
+            $timetables = Timetable::where('class_id', $classId)
+                ->where('academic_year_id', $activeYear->id)
+                ->with(['teacher', 'subject'])
+                ->get()
+                ->groupBy('day'); // Grouper par jour pour faciliter le traitement
+
+            // Jours de la semaine dans l'ordre
+            $daysOrder = ['Lundi' => 1, 'Mardi' => 2, 'Mercredi' => 3, 'Jeudi' => 4, 'Vendredi' => 5, 'Samedi' => 6];
+            
+            // Trier les emplois du temps par jour et heure
+            $sortedTimetables = collect($timetables)->map(function($dayCourses) {
+                return $dayCourses->sortBy('start_time');
+            })->sortBy(function($value, $key) use ($daysOrder) {
+                return $daysOrder[$key] ?? 99;
+            });
+
+            // Génération des heures (7h à 18h)
+            $hours = [];
+            for ($h = 7; $h < 18; $h++) {
+                $hours[] = [
+                    'slot' => sprintf('%02dh-%02dh', $h, $h + 1),
+                    'start' => sprintf('%02d:00', $h),
+                    'end' => sprintf('%02d:00', $h + 1)
+                ];
+            }
+
+            // Récupère seulement les matières et profs de l'année active
+            $subjects = Subject::where('academic_year_id', $activeYear->id)
+                ->where('coefficient', '>', 0)
+                ->orderBy('name')
+                ->get();
+
+            $teachers = User::whereHas('role', fn($q) => $q->where('id', 8))
+                ->whereHas('invitationTeacher', fn($q) => $q->where('censeur_id', 4))
+                ->orderBy('name')
+                ->get();
+
+            return view('censeur.timetables.index', compact(
+                'class', 
+                'hours', 
+                'sortedTimetables', 
+                'subjects', 
+                'teachers', 
+                'activeYear',
+                'daysOrder'
+            ));
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            Log::error('Classe non trouvée: ' . $e->getMessage());
+            return back()->with('error', 'Classe introuvable.');
+        } catch (\Exception $e) {
+            Log::error('Erreur chargement emploi du temps: ' . $e->getMessage());
+            return back()->with('error', 'Erreur lors du chargement de l\'emploi du temps: ' . $e->getMessage());
         }
-
-        // Vérifie si la classe existe et appartient à l’année active
-        $class = Classe::where('id', $classId)
-            ->where('academic_year_id', $activeYear->id)
-            ->first();
-
-        if (!$class) {
-            return back()->with('error', 'Classe introuvable pour l’année scolaire active.');
-        }
-
-        // Récupération des emplois du temps pour cette classe et année
-        $timetables = Timetable::where('class_id', $classId)
-            ->where('academic_year_id', $activeYear->id)
-            ->with('teacher', 'subject')
-            ->orderBy('day')
-            ->orderBy('start_time')
-            ->get();
-
-        // Génération des heures sous forme "07h-08h", "08h-09h", ...
-        $hours = [];
-        for ($h = 7; $h < 19; $h++) {
-            $hours[] = sprintf('%02dh-%02dh', $h, $h + 1);
-        }
-
-        // Récupère seulement les matières et profs de l’année active
-        $subjects = Subject::where('academic_year_id', $activeYear->id)->get();
-        $teachers = User::whereHas('role', fn($q) => $q->where('name', 'teacher'))->get();
-
-        return view('censeur.timetables.index', compact('class', 'hours', 'timetables', 'subjects', 'teachers', 'activeYear'));
     }
 
+    public function edit($classId, $id) {
+        try {
+            $activeYear = AcademicYear::where('active', true)->firstOrFail();
+            $class = Classe::findOrFail($classId);
+            $timetable = Timetable::where('id', $id)
+                ->where('class_id', $classId)
+                ->firstOrFail();
 
-    public function edit($classId, $id){
-        
-        $class = Classe::findOrFail($classId);
-        $timetable = Timetable::findOrFail($id);
-        $teachers = User::whereHas('role', fn($q) => $q->where('name','teacher'))->get();
-        $subjects = Subject::all();
+            $teachers = User::whereHas('role', fn($q) => $q->where('id', 8))
+                ->whereHas('invitationTeacher', fn($q) => $q->where('censeur_id', 4))
+                ->orderBy('name')
+                ->get();
 
-        return view('censeur.timetables.edit', compact('class','timetable','teachers','subjects'));
+            $subjects = Subject::where('academic_year_id', $activeYear->id)
+                ->where('coefficient', '>', 0)
+                ->orderBy('name')
+                ->get();
+
+            // Récupérer le coefficient depuis la table class_teacher_subject
+            $classTeacherSubject = ClassTeacherSubject::where('academic_year_id', $activeYear->id)
+                ->where('class_id', $classId)
+                ->where('subject_id', $timetable->subject_id)
+                ->where('teacher_id', $timetable->teacher_id)
+                ->first();
+
+            $coef = $classTeacherSubject ? $classTeacherSubject->coefficient : $timetable->subject->coefficient ?? 1;
+
+            return view('censeur.timetables.edit', compact('class', 'timetable', 'teachers', 'subjects', 'coef'));
+
+        } 
+        catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            Log::error('Données non trouvées pour édition: ' . $e->getMessage());
+            return redirect()->route('censeur.timetables.index', $classId)
+                ->with('error', 'Créneau introuvable.');
+        } catch (\Exception $e) {
+            Log::error('Erreur édition emploi du temps: ' . $e->getMessage());
+            return redirect()->route('censeur.timetables.index', $classId)
+                ->with('error', 'Erreur lors du chargement de l\'édition: ' . $e->getMessage());
+        }
     }
 
     public function update(Request $request, $classId, $id){
-        $activeYear = AcademicYear::where('active', true)->firstOrFail();
-        $request->validate([
-            'teacher_id' => 'required|exists:users,id',
-            'subject_id' => 'required|exists:subjects,id',
-            'day' => 'required|in:Lundi,Mardi,Mercredi,Jeudi,Vendredi,Samedi',
-            'start_time' => 'nullable',
-            'end_time' => 'nullable|after:start_time',
-        ]);
-
-        $timetable = Timetable::findOrFail($id);
-
-        // anciennes valeurs avant modification
-        $oldTeacherId = $timetable->teacher_id;
-        $oldSubjectId = $timetable->subject_id;
-
         DB::beginTransaction();
+        while (DB::transactionLevel() > 0) {
+            DB::rollBack();
+        }
         try {
+            $activeYear = AcademicYear::where('active', true)->firstOrFail();
 
-            $timetable->update($request->only('teacher_id','subject_id','day','start_time','end_time'));
+            $validator = Validator::make($request->all(), [
+                'teacher_id' => 'required|exists:users,id',
+                'subject_id' => 'required|exists:subjects,id',
+                 'coef' => 'required|integer|min:1|max:10', 
+                'day' => 'required|in:Lundi,Mardi,Mercredi,Jeudi,Vendredi,Samedi',
+                'start_time' => 'required|date_format:H:i',
+                'end_time' => 'required|date_format:H:i|after:start_time',
+            ], [
+                'end_time.after' => 'L\'heure de fin doit être après l\'heure de début.',
+                'start_time.date_format' => 'Format d\'heure invalide.',
+                'end_time.date_format' => 'Format d\'heure invalide.',
+                'coef.required' => 'Le coefficient est obligatoire.',
+                'coef.integer' => 'Le coefficient doit être un nombre entier.',
+                'coef.min' => 'Le coefficient doit être au minimum 1.',
+                'coef.max' => 'Le coefficient doit être au maximum 10.',
+            ]);
 
-            $affected = DB::table('class_teacher_subject')
+            if ($validator->fails()) {
+                return back()
+                    ->withErrors($validator)
+                    ->withInput()
+                    ->with('error', 'Veuillez corriger les erreurs ci-dessous.');
+            }
+
+            // Vérifier les conflits d'horaire
+            $conflict = Timetable::where('class_id', $classId)
+                ->where('academic_year_id', $activeYear->id)
+                ->where('day', $request->day)
+                ->where('id', '!=', $id)
+                ->where(function ($query) use ($request) {
+                    $query->where(function ($q) use ($request) {
+                        $q->where('start_time', '<', $request->end_time)
+                          ->where('end_time', '>', $request->start_time);
+                    });
+                })
+                ->exists();
+
+            if ($conflict) {
+                return back()
+                    ->withInput()
+                    ->with('error', 'Conflit d\'horaire : un cours existe déjà sur ce créneau.');
+            }
+
+            $timetable = Timetable::where('id', $id)
                 ->where('class_id', $classId)
-                ->where('teacher_id', $oldTeacherId)
-                ->where('subject_id', $oldSubjectId)
-                ->update([
-                    'teacher_id' => $request->teacher_id,
-                    'subject_id' => $request->subject_id,
+                ->firstOrFail();
+
+            // Sauvegarder les anciennes valeurs
+            $oldData = $timetable->toArray();
+
+            // Mettre à jour le créneau
+            $timetable->update([
+                'teacher_id' => $request->teacher_id,
+                'subject_id' => $request->subject_id,
+                'day' => $request->day,
+                'start_time' => $request->start_time,
+                'end_time' => $request->end_time,
+            ]);
+
+            // Mettre à jour la table de relation class_teacher_subject avec le coefficient
+            $this->updateClassTeacherSubject($classId, $oldData, $request->all());
+
+            DB::commit();
+
+            return redirect()->route('censeur.timetables.index', $classId)
+                ->with('success', 'Créneau modifié avec succès.');
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            DB::rollBack();
+            Log::error('Créneau non trouvé pour modification: ' . $e->getMessage());
+            return back()->with('error', 'Créneau introuvable.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Erreur modification emploi du temps: ' . $e->getMessage());
+            return back()
+                ->withInput()
+                ->with('error', 'Erreur lors de la modification du créneau: ' . $e->getMessage());
+        }
+    }
+
+    private function updateClassTeacherSubject($classId, $oldData, $newData) {
+        try {
+            // Supprimer l'ancienne relation si elle existe
+            DB::table('class_teacher_subject')
+                ->where('class_id', $classId)
+                ->where('teacher_id', $oldData['teacher_id'])
+                ->where('subject_id', $oldData['subject_id'])
+                ->delete();
+
+            // Vérifier si la nouvelle relation existe déjà
+            $existing = DB::table('class_teacher_subject')
+                ->where('class_id', $classId)
+                ->where('teacher_id', $newData['teacher_id'])
+                ->where('subject_id', $newData['subject_id'])
+                ->exists();
+
+            if (!$existing) {
+                // Ajouter la nouvelle relation avec le coefficient
+                DB::table('class_teacher_subject')->insert([
+                    'academic_year_id' => $oldData['academic_year_id'] ?? null,
+                    'class_id' => $classId,
+                    'teacher_id' => $newData['teacher_id'],
+                    'subject_id' => $newData['subject_id'],
+                    'coefficient' => $newData['coef'],
+                    'created_at' => now(),
                     'updated_at' => now(),
                 ]);
+            }
 
-            if ($affected === 0) {
-                // Rien trouvé : soit la ligne n'existait pas, soit elle a déjà été modifiée.
-                // Pour éviter doublons on supprime d'abord toute éventuelle ligne identique (nouvelle combinaison)
+        } catch (\Exception $e) {
+            Log::error('Erreur mise à jour class_teacher_subject: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    public function destroy($classId, $timetableId){
+        DB::beginTransaction();
+        while (DB::transactionLevel() > 0) {
+            DB::rollBack();
+        }
+
+        try {
+            $timetable = Timetable::where('id', $timetableId)
+                ->where('class_id', $classId)
+                ->firstOrFail();
+
+            // Sauvegarder les données pour suppression de la relation
+            $teacherId = $timetable->teacher_id;
+            $subjectId = $timetable->subject_id;
+
+            $timetable->delete();
+
+            // Vérifier si d'autres créneaux utilisent la même relation
+            $otherTimetables = Timetable::where('class_id', $classId)
+                ->where('teacher_id', $teacherId)
+                ->where('subject_id', $subjectId)
+                ->exists();
+
+            // Si aucun autre créneau n'utilise cette relation, la supprimer
+            if (!$otherTimetables) {
                 DB::table('class_teacher_subject')
                     ->where('class_id', $classId)
-                    ->where('teacher_id', $request->teacher_id)
-                    ->where('subject_id', $request->subject_id)
+                    ->where('teacher_id', $teacherId)
+                    ->where('subject_id', $subjectId)
                     ->delete();
+            }
 
-                // Puis on insère la nouvelle relation
+            DB::commit();
+
+            return redirect()->back()->with('success', 'Emploi du temps supprimé avec succès.');
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            DB::rollBack();
+            Log::error('Emploi du temps non trouvé pour suppression: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Emploi du temps introuvable.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Erreur suppression emploi du temps: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Erreur lors de la suppression: ' . $e->getMessage());
+        }
+    }
+    
+    public function store(Request $request, $classId){
+        DB::beginTransaction();
+        while (DB::transactionLevel() > 0) {
+            DB::rollBack();
+        }
+
+
+        try {
+            $activeYear = AcademicYear::where('active', true)->firstOrFail();
+
+            $validator = Validator::make($request->all(), [
+                'teacher_id' => 'required|exists:users,id',
+                'subject_id' => 'required|exists:subjects,id',
+                'coef' => 'required|integer|min:1|max:10', 
+                'day' => 'required|in:Lundi,Mardi,Mercredi,Jeudi,Vendredi,Samedi',
+                'start_time' => 'required|date_format:H:i',
+                'end_time' => 'required|date_format:H:i|after:start_time',
+            ], [
+                'end_time.after' => 'L\'heure de fin doit être après l\'heure de début.',
+                'start_time.date_format' => 'Format d\'heure invalide.',
+                'end_time.date_format' => 'Format d\'heure invalide.',
+            ]);
+
+            if ($validator->fails()) {
+                return back()
+                    ->withErrors($validator)
+                    ->withInput()
+                    ->with('error', 'Veuillez corriger les erreurs ci-dessous.');
+            }
+
+            // Vérifier les conflits d'horaire
+            $conflict = Timetable::where('class_id', $classId)
+                ->where('academic_year_id', $activeYear->id)
+                ->where('day', $request->day)
+                ->where(function ($query) use ($request) {
+                    $query->where(function ($q) use ($request) {
+                        $q->where('start_time', '<', $request->end_time)
+                          ->where('end_time', '>', $request->start_time);
+                    });
+                })
+                ->exists();
+
+            if ($conflict) {
+                return back()
+                    ->withInput()
+                    ->with('error', 'Conflit d\'horaire : un cours existe déjà sur ce créneau.');
+            }
+
+            // Créer le nouveau créneau
+            Timetable::create([
+                'class_id' => $classId,
+                'teacher_id' => $request->teacher_id,
+                'subject_id' => $request->subject_id,
+                'day' => $request->day,
+                'start_time' => $request->start_time,
+                'end_time' => $request->end_time,
+                'academic_year_id' => $activeYear->id,
+            ]);
+
+            // Vérifier si la relation existe déjà
+            $existingRelation = DB::table('class_teacher_subject')
+                ->where('class_id', $classId)
+                ->where('teacher_id', $request->teacher_id)
+                ->where('subject_id', $request->subject_id)
+                ->exists();
+
+            if (!$existingRelation) {
                 DB::table('class_teacher_subject')->insert([
-                    'class_id'   => $classId,
+                    'academic_year_id' => $activeYear->id,
+                    'class_id' => $classId,
                     'teacher_id' => $request->teacher_id,
                     'subject_id' => $request->subject_id,
+                    'coefficient' => $request->coef,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
             }
 
             DB::commit();
-        } 
-        catch (\Throwable $e) {
+
+            return redirect()->back()->with('success', 'Créneau ajouté avec succès.');
+
+        } catch (\Exception $e) {
             DB::rollBack();
-            // log pour debug
-            Log::error('Timetable update error: '.$e->getMessage(), [
-                'class_id' => $classId,
-                'timetable_id' => $id,
-                'oldTeacher' => $oldTeacherId,
-                'oldSubject' => $oldSubjectId,
-                'newTeacher' => $request->teacher_id,
-                'newSubject' => $request->subject_id,
-            ]);
-            return back()->with('error', 'Erreur lors de la mise à jour : '.$e->getMessage());
+            Log::error('Erreur ajout créneau: ' . $e->getMessage());
+            return back()
+                ->withInput()
+                ->with('error', 'Erreur lors de l\'ajout du créneau: ' . $e->getMessage());
         }
+    } 
 
-        return redirect()->route('censeur.timetables.index', $classId)
-                        ->with('success','Créneau modifié avec succès.');
+    public function download($classId){
+        try {
+            $activeYear = AcademicYear::where('active', true)->firstOrFail();
+            $class = Classe::findOrFail($classId);
+
+            // Utilisation de la même logique de tri que dans index()
+            $timetables = Timetable::where('class_id', $classId)
+                ->where('academic_year_id', $activeYear->id)
+                ->with(['teacher', 'subject'])
+                ->orderByRaw("
+                    CASE 
+                        WHEN day = 'Lundi' THEN 1
+                        WHEN day = 'Mardi' THEN 2
+                        WHEN day = 'Mercredi' THEN 3
+                        WHEN day = 'Jeudi' THEN 4
+                        WHEN day = 'Vendredi' THEN 5
+                        WHEN day = 'Samedi' THEN 6
+                        ELSE 7
+                    END
+                ")
+                ->orderBy('start_time')
+                ->get();
+
+            $pdf = Pdf::loadView('censeur.timetables.pdf', compact('class', 'timetables', 'activeYear'));
+
+            return $pdf->download('emploi-du-temps-' . $class->name . '.pdf');
+
+        } catch (\Exception $e) {
+            Log::error('Erreur génération PDF: ' . $e->getMessage());
+            return back()->with('error', 'Erreur lors de la génération du PDF: ' . $e->getMessage());
+        }
     }
 
-    public function store(Request $request, $classId){
-        $activeYear = AcademicYear::where('active', true)->firstOrFail();
+    /**
+     * Méthode alternative utilisant une collection pour le tri
+     * Utile si vous préférez trier côté PHP plutôt que côté base de données
+     */
+    private function getOrderedTimetables($classId, $activeYearId) {
+        $timetables = Timetable::where('class_id', $classId)
+            ->where('academic_year_id', $activeYearId)
+            ->with(['teacher', 'subject'])
+            ->get();
 
-        if (!$this->checkActiveYear() instanceof AcademicYear) {
-            return $this->checkActiveYear();
-        }
+        // Définir l'ordre des jours
+        $dayOrder = [
+            'Lundi' => 1,
+            'Mardi' => 2,
+            'Mercredi' => 3,
+            'Jeudi' => 4,
+            'Vendredi' => 5,
+            'Samedi' => 6
+        ];
 
-        $request->validate([
-            'teacher_id' => 'required|exists:users,id',
-            'subject_id' => 'required|exists:subjects,id',
-            'start_time' => 'required',
-            'end_time' => 'required|after:start_time',
-        ]);
-
-        Timetable::create([
-            'class_id' => $classId,
-            'teacher_id' => $request->teacher_id,
-            'subject_id' => $request->subject_id,
-            'day' => $request->day,
-            'start_time' => $request->start_time,
-            'end_time' => $request->end_time,
-            'academic_year_id' => $activeYear->id,
-        ]);
-
-        DB::table('class_teacher_subject')->insert([
-            'academic_year_id' => $activeYear->id,
-            'class_id'   => $classId,
-            'teacher_id' => $request->teacher_id,
-            'subject_id' => $request->subject_id,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
-        return back()->with('success', 'Créneau ajouté avec succès.');
-    }
-
-    public function destroy($id){
-        if (!$this->checkActiveYear() instanceof AcademicYear) {
-            return $this->checkActiveYear();
-        }
-
-        Timetable::findOrFail($id)->delete();
-        DB::table('class_teacher_subject')
-        ->where('class_id', $classId)
-        ->where('teacher_id', $teacher_id)
-        ->where('subject_id', $subjectId)
-        ->delete();
-        return back()->with('success', 'Créneau supprimé.');
+        // Trier la collection
+        return $timetables->sortBy(function ($timetable) use ($dayOrder) {
+            return [
+                $dayOrder[$timetable->day] ?? 7, // Ordre du jour
+                $timetable->start_time // Puis par heure de début
+            ];
+        })->values();
     }
 
     public function downloadPDF($classId){

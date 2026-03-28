@@ -38,23 +38,19 @@
 
         <!-- Section Filtres et Export -->
         <div class="bg-white border border-gray-200 rounded-lg p-6 mb-6">
-            <!-- Bouton Envoyer mails de rappel - Bien positionné -->
+    
             <div class="mb-6">
-                <h2 class="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                    <i class="fas fa-envelope"></i>
-                    Communication
-                </h2>
+               
                 <form id="mailForm" method="POST" action="{{ route('students.mail.sendAll') }}">
                     @csrf
                     <button type="submit" 
                         class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition duration-200 font-medium flex items-center gap-2">
                         <i class="fas fa-paper-plane"></i>
-                        Envoyer mails de rappel à tous
+                        Envoyer un message de rappel
                     </button>
                     <p>:pour non payement de contribution au parents</p>
                 </form>
             </div>
-
             <!-- Filtres de recherche -->
             <div class="mb-4">
                 <h2 class="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
@@ -172,7 +168,8 @@
                                     <td class="px-3 py-3 whitespace-nowrap text-gray-900">{{ \Illuminate\Support\Str::limit($student->entity->name ?? '-', 8) }}</td>
                                     <td class="px-3 py-3 whitespace-nowrap text-gray-900">{{ \Illuminate\Support\Str::limit($student->classe->name ?? '-', 8) }}</td>
                                     <td class="px-3 py-3 whitespace-nowrap text-gray-900">
-                                        <div class="font-medium">{{ $student->school_fees_paid ?? '-' }} FCFA</div>
+                                        <div class="font-medium">{{ number_format($student->total_paid, 2) }} FCFA</div>
+                                        
                                         <a href="{{ route('students.payments.index', $student->id) }}" 
                                             class="text-blue-600 hover:text-blue-800 text-xs flex items-center gap-1 mt-1">
                                             <i class="fas fa-list"></i>

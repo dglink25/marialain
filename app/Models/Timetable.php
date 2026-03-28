@@ -20,13 +20,11 @@ class Timetable extends Model{
         return $this->belongsTo(Classe::class, 'class_id');
     }
 
-    public function teacher()
-    {
+    public function teacher(){
         return $this->belongsTo(User::class, 'teacher_id');
     }
 
-    public function subject()
-    {
+    public function subject() {
         return $this->belongsTo(Subject::class, 'subject_id');
     }
 

@@ -37,13 +37,20 @@ class SubjectController extends Controller{
         $activeYear = AcademicYear::where('active', true)->firstOrFail();
         Subject::create([
             'name'             => $request->name,
+            'coefficient'      => 1,
             'academic_year_id' => $activeYear->id,
         ]);
         
         return back()->with('success','Matière ajoutée.');
     }
     public function teachers($subjectId){
+        $subject = Subject::with(['teachers' => function($query) {
+            $query->distinct(); // Éviter les doublons
+        }])->findOrFail($subjectId);
+
+        // Alternative: Récupérer les enseignants distincts
         $subject = Subject::with('teachers')->findOrFail($subjectId);
+        $subject->teachers = $subject->teachers->unique('id'); // Supprimer les doublons
 
         return view('censeur.subjects.teachers', compact('subject'));
     }

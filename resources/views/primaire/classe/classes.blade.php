@@ -1,57 +1,63 @@
 @extends('layouts.app')
+
 @section('content')
-<div>
-@if(session('error'))
-        <div class="bg-red-100 text-red-700 p-3 rounded mb-4">{{ session('error') }}</div>
-    @endif
-    <!-- When there is no desire, all things are at peace. - Laozi -->
-    <div class="container mx-auto py-6">
-        <h1 class="text-2xl font-bold mb-6">Annéee académique : {{ $annee_academique -> name}} </h1> 
-        <div class="haut" style="display: flex; justify-content: space-between; align-items: center;">
-        <h1 class="text-1xl font-bold mb-6">Liste des classes du Primaire</h1>
+<div class="container mx-auto ">
+    <!--  Message d’erreur -->
+    @if(session('error'))
+        <div class="bg-red-100 text-red-700 border border-red-300 p-3 rounded-lg mb-6">
+            {{ session('error') }}
         </div>
-        
-        <table class="min-w-full bg-white shadow-md rounded-lg overflow-hidden" style="margin-top: 30px ;">
-    <thead class="bg-orange-100 " >
-        <tr>
-            <th class="px-4 py-2 text-left">N°</th>
-            <th class="px-4 py-2 text-left">Classe</th>
-            <th class="px-4 py-2 text-left">Enseignant</th>
-            <th class="px-4 py-2 text-left">Emploie du temps</th>
+    @endif
 
-            <th class="px-4 py-2 text-left">Visiter</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach($classes as $index => $class)
-            <tr class="border-b">
-                <td class="px-4 py-2">{{ $index + 1 }}</td>
-                <td class="px-4 py-2 font-semibold text-gray-800">{{ $class->name }}</td>
-                <td class="px-4 py-2">{{ $class->teacher?->name ?? 'Non assigné' }}</td>
+    <!--  Titre principal -->
+    <div class=" flex-col md:flex-row justify-between items-center mb-8">
+        <h1 class="text-3xl font-bold text-gray-800">
+            Année académique : <span class="text-blue-600">{{ $annee_academique->name }}</span>
+        </h1> 
+        <h2 class="text-lg font-semibold text-gray-600 mt-3 md:mt-0">
+             Liste des classes du Primaire
+        </h2>
+    </div>
 
-                <td class="px-4 py-2 flex space-x-2">
-    <!-- Consulter emploi du temps -->
-    <a href="{{ route('schedules.ind', $class->id) }}" 
-       title="Voir emploi du temps" 
-       class="text-blue-600 hover:text-blue-800">
-       Consulter
-    </a>
-</td>
-                <td class="px-4 py-2 flex space-x-2">
-                    <!-- Voir -->
-                    <a href="{{ route('primaire.classe.showclass', $class->id) }}" title="Voir" class="text-blue-600 hover:text-blue-800">
-                        <i class="fas fa-eye"></i> Voir
-                    </a>
-                
-                </td>
-                
-                
-            </tr>
-        @endforeach
-    </tbody>
-</table>
-
-        
+    <!--  Tableau -->
+    <div class="bg-white shadow-xl rounded-lg overflow-hidden border border-gray-200">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gradient-to-r from-blue-200 to-orange-100">
+                <tr>
+                    <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">N°</th>
+                    <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Classe</th>
+                    <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Enseignant</th>
+                    <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Emploi du temps</th>
+                    <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-100">
+                @foreach($classes as $index => $class)
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="px-6 py-4 text-gray-600">{{ $index + 1 }}</td>
+                        <td class="px-6 py-4 font-bold text-gray-800">{{ $class->name }}</td>
+                        <td class="px-6 py-4">
+                            <span class="px-2 py-1 rounded-md text-sm 
+                                {{ $class->teacher ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500' }}">
+                                {{ $class->teacher?->name ?? 'Non assigné' }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <a href="{{ route('schedules.ind', $class->id) }}" 
+                               class="text-blue-600 hover:text-blue-800 font-medium transition">
+                                Consulter
+                            </a>
+                        </td>
+                        <td class="px-6 py-4">
+                            <a href="{{ route('primaire.classe.showclass', $class->id) }}" 
+                               class="inline-flex items-center text-sm text-indigo-600 hover:text-indigo-800 font-medium transition">
+                                <i class="fas fa-eye mr-2"></i> Voir
+                            </a>
+                        </td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
 </div>
-
 @endsection

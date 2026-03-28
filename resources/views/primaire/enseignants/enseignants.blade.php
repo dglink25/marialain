@@ -2,69 +2,56 @@
 
 @section('content')
 <div class="container mx-auto py-6">
-     <h1 class="text-2xl font-bold mb-6">Annéee académique : {{ $annee_academique -> name}} </h1> 
-    <div class="haut" style="display: flex; justify-content: space-between; align-items: center;">   
-    <h1 class="text-1xl font-bold mb-6">
-        Liste des enseignants
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-gray-800 mb-4 md:mb-0">
+            Année académique : {{ $annee_academique->name }}
+        </h1>
+        <div class="flex space-x-3">
+            <a href="{{ route('primaire.enseignants.inviter') }}"
+               class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded shadow transition">
+               Inviter
+            </a>
+            <a href="{{ route('primaire.enseignants.pdf') }}"
+               class="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded shadow transition">
+               Télécharger
+            </a>
+        </div>
+    </div>
 
-    </h1>
-    <div class="" style="display: flex;">
-         <a href=" {{  route('primaire.enseignants.inviter') }}"
-                           class="bg-blue-600 text-white px-4 py-1 rounded text-center hover:bg-blue-700" style="margin: 10px">
-                            Inviter
-                        </a>
-         <a href="{{ route('primaire.enseignants.pdf') }}"
-                           class="bg-green-600 text-white px-4 py-1 rounded text-center hover:bg-blue-700" style="margin: 10px">
-                            Télécharger
-                        </a>
-                       
-    </div>
-   
-    </div>
-    </div>
-    
-    
-    <div class="bg-white shadow-md rounded-lg p-6 overflow-x-auto">
+    <!-- Liste des enseignants -->
+    <div class="bg-white shadow-lg rounded-lg p-6 overflow-x-auto">
+        <h2 class="text-xl font-bold text-gray-700 mb-4">Liste des enseignants du primaire</h2>
+
         @if($teachers->count() > 0)
-            <table class="min-w-full border border-gray-300 text-sm">
-                <thead class="bg-gray-100">
-                    <tr>
-                        <th class="border px-4 py-2">N°</th>
-                        <th class="border px-4 py-2 text-left">Nom</th>
-                        <th class="border px-4 py-2 text-left">Email</th>
-                        <th class="border px-4 py-2 text-left">Classe assignée</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($teachers as $teacher)
-                        <tr class="hover:bg-gray-50">
-                            <td class="border px-4 py-2 text-center">
-                                {{ $loop->iteration }}
-                            </td>
-                            <td class="border px-4 py-2 font-semibold text-gray-700">
-                                {{ $teacher->name }}
-                            </td>
-                            <td class="border px-4 py-2 text-gray-600">
-                                {{ $teacher->email ?? 'Non disponible' }}
-                            </td>
-                            <td class="border px-4 py-2 text-gray-600">
-                                {{ $teacher->classePrimaire?->name ?? 'Non assignée' }}
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
+        <table class="min-w-full border border-gray-200 text-sm divide-y divide-gray-200">
+            <thead class="bg-gray-100">
+                <tr>
+                    <th class="px-4 py-2 text-center font-medium text-gray-700">N°</th>
+                    <th class="px-4 py-2 text-left font-medium text-gray-700">   Nom</th>
+                    <th class="px-4 py-2 text-left font-medium text-gray-700">Sexe</th>
+                    <th class="px-4 py-2 text-left font-medium text-gray-700">Classe assignée</th>
+                    <th class="px-4 py-2 text-left font-medium text-gray-700">Contact</th>
+                    <th class="px-4 py-2 text-left font-medium text-gray-700">Email</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                @foreach($teachers as $teacher)
+                <tr class="hover:bg-gray-50 transition">
+                    <td class="px-4 py-2 text-center">{{ $loop->iteration }}</td>
+                    <td class="px-4 py-2 font-semibold text-gray-800"><a href="{{ route('primaire.enseignants.show', $teacher->id) }} " class="text-blue-600 hover:underline">{{ $teacher->name }}</a></td>
+                    <td class="px-4 py-2 text-gray-700">{{ $teacher->gender ?? "-" }}</td>
+                    <td class="px-4 py-2 text-gray-700">{{ $teacher->classePrimaire?->name ?? 'Non assignée' }}</td>
+                    <td class="px-4 py-2 text-gray-700">{{ $teacher->phone ?? "-" }}</td>
+                    <td class="px-4 py-2 text-gray-700">{{ $teacher->email ?? 'Non disponible' }}</td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
         @else
-            <p class="text-gray-500">Aucun enseignant trouvé.</p>
+        <p class="text-gray-500 mt-4">Aucun enseignant trouvé pour le primaire cette année académique.</p>
         @endif
     </div>
 
-    <div class="mt-4">
-        <a href="{{ route('censeur.classes.index') }}" 
-           class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700">
-           Retour
-        </a>
-    </div>
 </div>
-
 @endsection

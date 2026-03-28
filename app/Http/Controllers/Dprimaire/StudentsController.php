@@ -18,6 +18,9 @@ class StudentsController extends Controller
     public function index(Request $request)
 {
     $annee_academique = AcademicYear::where('active', 1)->first();
+    if(!$annee_academique){
+        return back()->with('error', 'Aucune année académique active trouvée.');
+    }
 
     // On démarre la requête
     $query = Student::whereHas('classe', function ($q) {
@@ -56,9 +59,11 @@ class StudentsController extends Controller
     $students = $query->with('classe')->get();
 
     // Pour le menu déroulant des classes
-    $classes = Classe::whereHas('entity', function($q){
-        $q->where('name', ['primaire'] );
-    })->get();
+            $classes = Classe::where('academic_year_id', $annee_academique->id)
+                ->whereHas('entity', function ($query) {
+                    $query->whereIn('name', ['primaire', 'maternelle']);
+                })
+                ->get();
 
     return view('primaire.ecoliers.liste', compact('students', 'annee_academique', 'classes'));
 }

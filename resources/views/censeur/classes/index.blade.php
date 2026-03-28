@@ -5,7 +5,21 @@
     $pageTitle = 'Classes ';
 @endphp
 
+     @if ($errors->any())
+    <div class="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-lg mb-6">
+      <ul class="list-disc pl-5 space-y-1">
+        @foreach ($errors->all() as $error)
+          <li>{{ $error }}</li>
+        @endforeach
+      </ul>
+    </div>
+  @endif
 
+  @if (session('error'))
+    <div class="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-lg mb-6">
+      {{ session('error') }}
+    </div>
+  @endif
     @if(isset($error))
         <div class="p-4 mb-6 text-sm text-red-700 bg-red-100 border border-red-300 rounded-lg">
             {{ $error }}
@@ -21,7 +35,7 @@
                 <!-- En-tête avec icône -->
                 <div class="flex items-center gap-4 mb-4">
                     <div class="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-lg">
-                        {{ strtoupper(substr($class->name, 0, 2)) }}
+                        {{ preg_match('/\d+/', $class->name, $m) ? $m[0] : strtoupper(substr($class->name, 0, 2)) }}
                     </div>
                     <h3 class="text-xl font-semibold text-gray-800">{{ $class->name }}</h3>
                 </div>

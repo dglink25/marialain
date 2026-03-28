@@ -6,7 +6,8 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration {
     public function up(): void
-    {
+{
+    if (!Schema::hasTable('students')) {
         Schema::create('students', function (Blueprint $table) {
             $table->id();
             $table->string('first_name');
@@ -15,16 +16,17 @@ return new class extends Migration {
             $table->integer('age')->nullable();
             $table->foreignId('entity_id')->constrained('entities')->onDelete('cascade');
             $table->foreignId('class_id')->constrained('classes')->onDelete('cascade');
-            $table->string('vaccination_card')->nullable(); // PDF
-            $table->string('birth_certificate'); // PDF
-            $table->string('previous_report_card')->nullable(); // PDF
-            $table->string('diploma_certificate')->nullable(); // PDF
+            $table->string('vaccination_card')->nullable();
+            $table->string('birth_certificate');
+            $table->string('previous_report_card')->nullable();
+            $table->string('diploma_certificate')->nullable();
             $table->string('parent_full_name');
             $table->string('parent_email');
             $table->integer('school_fees');
             $table->timestamps();
         });
     }
+}
 
     public function down(): void
     {

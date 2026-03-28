@@ -40,15 +40,15 @@ class StudentMailController extends Controller{
             }
 
             try {
-                \Mail::to($student->parent_email)->send(
+                /*Mail::to($student->parent_email)->send(
                     new \App\Mail\ParentNotificationMail(
                         $student,
                         "Notification de scolarité en retard",
                         "Cher parent, votre enfant {$student->full_name} n’a pas encore soldé la scolarité. Merci de régulariser au plus vite."
                     )
-                );
+                );*/
             } catch (\Exception $e) {
-                \Log::error("Erreur envoi mail à {$student->parent_email}: ".$e->getMessage());
+                //Log::error("Erreur envoi mail à {$student->parent_email}: ".$e->getMessage());
                 $missingEmails[] = $student;
             }
         }

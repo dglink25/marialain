@@ -24,18 +24,31 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(LoginRequest $request): RedirectResponse
     {
-        $request->authenticate();
-
-        $request->session()->regenerate();
-
-        return redirect()->intended(route('admin.accueil'));
+        try {
+            $request->authenticate();
+            
+            $request->session()->regenerate();
+            
+            return redirect()->intended(route('admin.accueil'));
+            
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Pour les erreurs de validation (mauvais identifiants)
+            return back()
+                ->withErrors(['email' => 'Les identifiants fournis ne correspondent pas à nos enregistrements.'])
+                ->withInput($request->only('email', 'remember'));
+        } 
+        catch (\Exception $e) {
+            // Pour toutes les autres erreurs
+            return back()
+                ->withErrors(['auth' => 'Identifiants incorrects'])
+                ->withInput($request->only('email', 'remember'));
+        }
     }
 
     /**
      * Destroy an authenticated session.
      */
-    public function destroy(Request $request): RedirectResponse
-    {
+    public function destroy(Request $request): RedirectResponse {
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();
