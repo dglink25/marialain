@@ -24,6 +24,7 @@ use Carbon\Carbon;
 use App\Models\NoteEditPermission;
 use Illuminate\Support\Facades\Log;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;    
+use App\Exports\NotesSubjectExport;
 
 
     class NoteController extends Controller{
@@ -1501,6 +1502,7 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 
         public function exportNotesPDF($classId, $trimestre, $subjectId){
+
             // 1 Récupération de l'année académique active
             $activeYear = AcademicYear::where('active', true)->first();
             if (!$activeYear) {
@@ -1636,6 +1638,31 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
             $filename = 'Notes_' . $classe->name . '_' . $subject->name . '_T' . $trimestre . '.pdf';
 
             return $pdf->download($filename);
+        }
+
+
+
+        public function exportSubjectExcel(int $classId, int $trimestre, int $subjectId) {
+            try {
+                // ── Données de base ────────────────────────────────────────────────────
+                $activeYear = AcademicYear::where('active', true)->firstOrFail();
+                $classe     = Classe::findOrFail($classId);
+                $subject    = Subject::findOrFail($subjectId);
+
+                // ── Nom du fichier ─────────────────────────────────────────────────────
+                $nomClasse   = str_replace([' ', '/'], '_', $classe->name);
+                $nomMatiere  = str_replace([' ', '/'], '_', $subject->name);
+                $fileName    = "Notes_{$nomMatiere}_{$nomClasse}_T{$trimestre}.xlsx";
+
+                // ── Génération et téléchargement ───────────────────────────────────────
+                return Excel::download(
+                    new NotesSubjectExport($classe, $subject, $trimestre, $activeYear),
+                    $fileName
+                );
+
+            } catch (\Exception $e) {
+                return back()->with('error', 'Impossible de générer le fichier Excel : ' . $e->getMessage());
+            }
         }
 
         public function telechargerPDF($classId, $trimestre){
