@@ -12,7 +12,6 @@
         Modifier Notes {{ $subject->name }} - {{ ucfirst($type) }} {{ $num }} - Classe {{ $classe->name }} / Trimestre {{ $trimestre }}
     </h1>
 
-    <!-- Messages d'alerte -->
     <div class="px-8 pt-6">
         @if ($errors->any())
         <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-lg">
@@ -23,13 +22,10 @@
                 <h3 class="text-red-800 font-semibold">Veuillez corriger les erreurs suivantes :</h3>
             </div>
             <ul class="mt-2 text-red-700 list-disc list-inside text-sm space-y-1">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
+                @foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach
             </ul>
         </div>
         @endif
-
         @if (session('error'))
         <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-lg flex items-center">
             <svg class="w-5 h-5 text-red-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -38,7 +34,6 @@
             <span class="text-red-800">{{ session('error') }}</span>
         </div>
         @endif
-
         @if (session('success'))
         <div class="bg-green-50 border-l-4 border-green-500 p-4 mb-6 rounded-lg flex items-center">
             <svg class="w-5 h-5 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -49,7 +44,7 @@
         @endif
     </div>
 
-    {{-- Formulaire principal de modification --}}
+    {{-- Formulaire principal --}}
     <form id="updateNotesForm"
           method="POST"
           action="{{ route('teacher.classes.notes.update', [
@@ -92,26 +87,21 @@
         </table>
 
         <div class="flex items-center space-x-3 mt-2">
-
-            {{-- Bouton Soumettre — déclenche le modal de sécurité --}}
             <button type="button"
-                    onclick="openSubmitSecurityModal('updateNotesForm', 'update')"
+                    onclick="smOpen('updateNotesForm', 'update')"
                     class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
                 Soumettre les modifications
             </button>
-
-            {{-- Bouton Supprimer — déclenche le modal de confirmation sécurisé --}}
             <button type="button"
-                    onclick="openSubmitSecurityModal('deleteNotesForm', 'delete')"
+                    onclick="smOpen('deleteNotesForm', 'delete')"
                     class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">
                 Supprimer toutes les notes
             </button>
-
             <a href="{{ route('teacher.classes.notes.read', [
-                    'class'   => $classe->id,
-                    'subject' => $subject->id,
-                    'type'    => $type,
-                    'num'     => $num,
+                    'class'     => $classe->id,
+                    'subject'   => $subject->id,
+                    'type'      => $type,
+                    'num'       => $num,
                     'trimestre' => $trimestre,
                 ]) }}"
                class="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition font-medium">
@@ -131,246 +121,302 @@
 
 </div>
 
+{{-- ══════════════════════════════════════════════
+     MODAL DE SÉCURITÉ — soumission & suppression
+     Thème blanc/bleu + variante rouge pour delete
+══════════════════════════════════════════════ --}}
+<style>
+    #smOverlay {
+        display: none;
+        position: fixed; inset: 0; z-index: 9999;
+        background: rgba(30, 64, 120, 0.45);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+    }
+    #smBox {
+        position: relative;
+        width: 100%; max-width: 480px;
+        background: #ffffff;
+        border-radius: 24px;
+        box-shadow:
+            0 0 0 1px rgba(59,130,246,0.12),
+            0 8px 16px rgba(59,130,246,0.08),
+            0 32px 64px rgba(30,64,120,0.18);
+        overflow: hidden;
+        opacity: 0;
+        transform: scale(0.93) translateY(10px);
+        transition: box-shadow .3s;
+    }
+    #smBox.is-delete {
+        box-shadow:
+            0 0 0 1px rgba(239,68,68,0.12),
+            0 8px 16px rgba(239,68,68,0.08),
+            0 32px 64px rgba(120,30,30,0.18);
+    }
+    .sm-top-bar {
+        height: 5px;
+        background: linear-gradient(90deg, #2563eb, #3b82f6, #60a5fa, #3b82f6, #2563eb);
+        background-size: 200% auto;
+        animation: smBarFlow 3s linear infinite;
+        transition: background .3s;
+    }
+    .sm-top-bar.red {
+        background: linear-gradient(90deg, #dc2626, #ef4444, #f87171, #ef4444, #dc2626);
+        background-size: 200% auto;
+    }
+    @keyframes smBarFlow {
+        0%   { background-position: 0% center; }
+        100% { background-position: 200% center; }
+    }
+    .sm-body { padding: 2rem 2rem 1.75rem; }
+    .sm-icon-wrap {
+        width: 72px; height: 72px;
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 1.25rem;
+        transition: background .3s, border-color .3s, box-shadow .3s;
+        animation: smIconPulse 2.8s ease-in-out infinite;
+    }
+    .sm-icon-wrap.blue {
+        background: linear-gradient(135deg, #eff6ff, #dbeafe);
+        border: 2px solid #93c5fd;
+        box-shadow: 0 0 0 6px #eff6ff;
+    }
+    .sm-icon-wrap.red {
+        background: linear-gradient(135deg, #fff5f5, #fee2e2);
+        border: 2px solid #fca5a5;
+        box-shadow: 0 0 0 6px #fff5f5;
+    }
+    @keyframes smIconPulse {
+        0%,100% { box-shadow: 0 0 0 6px var(--pulse-start, #eff6ff); }
+        50%     { box-shadow: 0 0 0 10px var(--pulse-end,  #dbeafe); }
+    }
+    .sm-title {
+        font-size: 1.2rem; font-weight: 700;
+        text-align: center; margin: 0 0 0.25rem;
+        letter-spacing: -0.01em;
+        transition: color .3s;
+    }
+    .sm-title.blue   { color: #1e40af; }
+    .sm-title.red    { color: #991b1b; }
+    .sm-divider {
+        width: 40px; height: 3px;
+        border-radius: 2px; margin: 0 auto 1.1rem;
+        transition: background .3s;
+    }
+    .sm-divider.blue { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+    .sm-divider.red  { background: linear-gradient(90deg, #ef4444, #f87171); }
+    .sm-intro {
+        border-radius: 12px; padding: 0.9rem 1.1rem;
+        margin-bottom: 1.1rem; font-size: 0.875rem;
+        line-height: 1.7; text-align: center;
+        transition: background .3s, border-color .3s, color .3s;
+    }
+    .sm-intro.blue { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e3a8a; }
+    .sm-intro.red  { background: #fff5f5; border: 1px solid #fecaca; color: #7f1d1d; }
+    .sm-intro strong { font-weight: 700; }
+    .sm-intro.blue strong { color: #1d4ed8; }
+    .sm-intro.red  strong { color: #dc2626; }
+    .sm-measures { margin-bottom: 1.2rem; }
+    .sm-row {
+        display: flex; align-items: flex-start;
+        gap: 0.75rem; padding: 0.65rem 0;
+        border-bottom: 1px solid #f0f4ff;
+    }
+    .sm-row:last-child { border-bottom: none; }
+    .sm-row-icon {
+        min-width: 32px; height: 32px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        flex-shrink: 0; margin-top: 1px;
+    }
+    .sm-row-icon.blue   { background: #dbeafe; border: 1.5px solid #93c5fd; }
+    .sm-row-icon.sky    { background: #e0f2fe; border: 1.5px solid #7dd3fc; }
+    .sm-row-icon.indigo { background: #e0e7ff; border: 1.5px solid #a5b4fc; }
+    .sm-row p { font-size: 0.845rem; color: #374151; line-height: 1.65; margin: 0; }
+    .sm-row p strong { color: #1d4ed8; font-weight: 600; }
+    .sm-footnote {
+        font-size: 0.76rem; color: #9ca3af;
+        text-align: center; font-style: italic;
+        line-height: 1.6; margin-bottom: 1.4rem;
+    }
+    .sm-btn-confirm {
+        width: 100%; padding: 0.85rem 1.5rem;
+        background-size: 200% auto;
+        color: #ffffff; font-weight: 700; font-size: 0.92rem;
+        letter-spacing: 0.04em; border: none;
+        border-radius: 12px; cursor: pointer;
+        transition: background-position .4s, box-shadow .3s, transform .15s;
+        margin-bottom: 0.6rem;
+    }
+    .sm-btn-confirm.blue {
+        background: linear-gradient(135deg, #1d4ed8, #2563eb, #3b82f6);
+        box-shadow: 0 4px 18px rgba(37,99,235,0.35);
+    }
+    .sm-btn-confirm.blue:hover  { background-position: right center; box-shadow: 0 6px 28px rgba(37,99,235,0.5); }
+    .sm-btn-confirm.red {
+        background: linear-gradient(135deg, #b91c1c, #dc2626, #ef4444);
+        box-shadow: 0 4px 18px rgba(220,38,38,0.35);
+    }
+    .sm-btn-confirm.red:hover   { background-position: right center; box-shadow: 0 6px 28px rgba(220,38,38,0.5); }
+    .sm-btn-confirm:active      { transform: scale(0.97); }
+    .sm-btn-cancel {
+        background: none; border: 1px solid #dbeafe;
+        color: #3b82f6; font-size: 0.845rem; font-weight: 500;
+        width: 100%; padding: 0.7rem; border-radius: 10px;
+        cursor: pointer; transition: background .2s, color .2s, border-color .2s;
+    }
+    .sm-btn-cancel:hover { background: #eff6ff; border-color: #93c5fd; color: #1d4ed8; }
+    .sm-bottom-bar { height: 3px; background: linear-gradient(90deg, #dbeafe, #93c5fd, #dbeafe); transition: background .3s; }
+    .sm-bottom-bar.red { background: linear-gradient(90deg, #fecaca, #fca5a5, #fecaca); }
+    @keyframes smIn  { from { opacity:0; transform:scale(0.91) translateY(14px); } to { opacity:1; transform:scale(1) translateY(0); } }
+    @keyframes smOut { from { opacity:1; transform:scale(1) translateY(0); } to { opacity:0; transform:scale(0.91) translateY(14px); } }
+</style>
 
-{{-- ═══════════════════════════════════════════════
-     MODAL DE SÉCURITÉ (soumission & suppression)
-═══════════════════════════════════════════════ --}}
-<div id="securityModal"
-     style="display:none; position:fixed; inset:0; z-index:9999;
-            background:rgba(15,23,42,0.80);
-            backdrop-filter:blur(7px);
-            -webkit-backdrop-filter:blur(7px);
-            align-items:center; justify-content:center; padding:1rem;">
+<div id="smOverlay">
+    <div id="smBox">
+        <div class="sm-top-bar" id="smTopBar"></div>
+        <div class="sm-body">
 
-    <div id="securityModalBox"
-         style="
-            position:relative;
-            width:100%; max-width:500px;
-            background:linear-gradient(160deg,#0f172a 0%,#1e293b 55%,#0f172a 100%);
-            border:1px solid rgba(251,191,36,0.22);
-            border-radius:20px;
-            box-shadow:0 0 0 1px rgba(251,191,36,0.07),
-                       0 30px 70px rgba(0,0,0,0.65),
-                       0 0 90px rgba(251,191,36,0.05);
-            overflow:hidden;
-            opacity:0;
-            transform:scale(0.92);
-         ">
-
-        <div style="height:3px;background:linear-gradient(90deg,transparent,#f59e0b,#fbbf24,#f59e0b,transparent);"></div>
-
-        <div style="display:flex;flex-direction:column;align-items:center;padding:2rem 2rem 1.5rem;">
-
-            {{-- Icône — change selon le contexte (bouclier ou danger) --}}
-            <div id="modalIconWrapper" style="
-                width:76px;height:76px;
-                background:linear-gradient(135deg,rgba(251,191,36,0.14),rgba(245,158,11,0.04));
-                border:1.5px solid rgba(251,191,36,0.38);
-                border-radius:50%;
-                display:flex;align-items:center;justify-content:center;
-                margin-bottom:1.25rem;
-                animation:pulseShield 2.6s ease-in-out infinite;
-                box-shadow:0 0 32px rgba(251,191,36,0.14);
-                transition:all .3s ease;
-            ">
-                <svg id="modalIcon" width="36" height="36" viewBox="0 0 24 24" fill="none"
-                     stroke="#fbbf24" stroke-width="1.6"
+            <div class="sm-icon-wrap blue" id="smIconWrap">
+                <svg id="smIcon" width="34" height="34" viewBox="0 0 24 24" fill="none"
+                     stroke="#2563eb" stroke-width="1.7"
                      stroke-linecap="round" stroke-linejoin="round">
                     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                    <path d="M9 12l2 2 4-4" stroke-width="1.9"/>
+                    <path d="M9 12l2 2 4-4" stroke-width="2"/>
                 </svg>
             </div>
 
-            {{-- Titre dynamique --}}
-            <h2 id="modalTitle" style="
-                font-family:Georgia,'Times New Roman',serif;
-                font-size:1.3rem;font-weight:700;
-                color:#fbbf24;letter-spacing:0.03em;
-                text-align:center;margin:0 0 0.3rem;
-                text-shadow:0 0 22px rgba(251,191,36,0.28);
-            ">Zone Sécurisée — Saisie de Notes</h2>
+            <h2 class="sm-title blue" id="smTitle">Zone Sécurisée — Saisie de Notes</h2>
+            <div class="sm-divider blue" id="smDivider"></div>
 
-            <div style="width:44px;height:2px;background:linear-gradient(90deg,transparent,#f59e0b,transparent);margin-bottom:1.2rem;"></div>
-
-            {{-- Message dynamique --}}
-            <div style="
-                background:rgba(251,191,36,0.05);
-                border:1px solid rgba(251,191,36,0.12);
-                border-radius:12px;padding:1rem 1.2rem;
-                margin-bottom:1.2rem;width:100%;
-            ">
-                <p id="modalIntro" style="color:#e2e8f0;font-size:0.9rem;line-height:1.75;text-align:center;margin:0;">
-                    Vous êtes sur le point de soumettre une opération
-                    <span style="color:#fbbf24;font-weight:600;">hautement confidentielle</span>.
-                </p>
+            <div class="sm-intro blue" id="smIntro">
+                Vous êtes sur le point de soumettre une opération
+                <strong>hautement confidentielle</strong>.
+                Veuillez lire ces mesures avant de confirmer.
             </div>
 
-            {{-- Liste des mesures --}}
-            <div style="width:100%;margin-bottom:1.3rem;">
-
-                <div style="display:flex;align-items:flex-start;gap:0.75rem;padding:0.7rem 0;border-bottom:1px solid rgba(255,255,255,0.05);">
-                    <div style="min-width:30px;height:30px;background:rgba(99,102,241,0.13);border:1px solid rgba(99,102,241,0.32);border-radius:50%;display:flex;align-items:center;justify-content:center;margin-top:1px;flex-shrink:0;">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <div class="sm-measures">
+                <div class="sm-row">
+                    <div class="sm-row-icon blue">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                             stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
                         </svg>
                     </div>
-                    <p style="color:#cbd5e1;font-size:0.875rem;line-height:1.65;margin:0;">
-                        Toutes vos <span style="color:#a5b4fc;font-weight:600;">actions sont enregistrées en votre nom</span> et horodatées avec précision dans notre système.
-                    </p>
+                    <p>Toutes vos actions sont <strong>enregistrées en votre nom</strong> et horodatées avec précision.</p>
                 </div>
-
-                <div style="display:flex;align-items:flex-start;gap:0.75rem;padding:0.7rem 0;border-bottom:1px solid rgba(255,255,255,0.05);">
-                    <div style="min-width:30px;height:30px;background:rgba(16,185,129,0.11);border:1px solid rgba(16,185,129,0.3);border-radius:50%;display:flex;align-items:center;justify-content:center;margin-top:1px;flex-shrink:0;">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/>
+                <div class="sm-row">
+                    <div class="sm-row-icon sky">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                             stroke="#0284c7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+                            <line x1="12" y1="18" x2="12.01" y2="18"/>
                         </svg>
                     </div>
-                    <p style="color:#cbd5e1;font-size:0.875rem;line-height:1.65;margin:0;">
-                        L'<span style="color:#6ee7b7;font-weight:600;">identifiant unique de votre appareil</span> est collecté à des fins de traçabilité et d'audit.
-                    </p>
+                    <p>L'<strong>identifiant de votre appareil</strong> est collecté à des fins de traçabilité et d'audit.</p>
                 </div>
-
-                <div style="display:flex;align-items:flex-start;gap:0.75rem;padding:0.7rem 0;">
-                    <div style="min-width:30px;height:30px;background:rgba(239,68,68,0.11);border:1px solid rgba(239,68,68,0.3);border-radius:50%;display:flex;align-items:center;justify-content:center;margin-top:1px;flex-shrink:0;">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
+                <div class="sm-row">
+                    <div class="sm-row-icon indigo">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                             stroke="#4f46e5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="2" y1="12" x2="22" y2="12"/>
                             <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
                         </svg>
                     </div>
-                    <p style="color:#cbd5e1;font-size:0.875rem;line-height:1.65;margin:0;">
-                        Votre <span style="color:#fca5a5;font-weight:600;">localisation géographique</span> est enregistrée pour garantir la sécurité et la confidentialité du système.
-                    </p>
+                    <p>Votre <strong>localisation géographique</strong> est enregistrée pour garantir la sécurité du système.</p>
                 </div>
-
             </div>
 
-            <p style="color:#475569;font-size:0.78rem;text-align:center;line-height:1.65;margin-bottom:1.5rem;font-style:italic;">
-                Ces mesures sont appliquées conformément à la politique de sécurité et de confidentialité de l'établissement.
-            </p>
+            <p class="sm-footnote">Ces mesures s'appliquent conformément à la politique de sécurité et de confidentialité de l'établissement.</p>
 
-            {{-- Bouton confirmer (libellé dynamique) --}}
-            <button
-                id="confirmBtn"
-                onclick="confirmSubmit()"
-                style="
-                    width:100%;padding:0.9rem 1.5rem;
-                    background:linear-gradient(135deg,#d97706,#f59e0b,#d97706);
-                    background-size:200% auto;
-                    color:#0f172a;font-weight:700;font-size:0.95rem;
-                    letter-spacing:0.05em;text-transform:uppercase;
-                    border:none;border-radius:10px;cursor:pointer;
-                    box-shadow:0 4px 22px rgba(245,158,11,0.38);
-                    transition:background-position .4s ease, box-shadow .3s ease, transform .15s ease;
-                    margin-bottom:0.65rem;
-                "
-                onmouseover="this.style.backgroundPosition='right center';this.style.boxShadow='0 6px 32px rgba(245,158,11,0.58)';"
-                onmouseout="this.style.backgroundPosition='left center';this.style.boxShadow='0 4px 22px rgba(245,158,11,0.38)';"
-                onmousedown="this.style.transform='scale(0.97)';"
-                onmouseup="this.style.transform='scale(1)';">
+            <button class="sm-btn-confirm blue" id="smConfirmBtn" onclick="smConfirm()">
                 ✓ &nbsp; D'accord, j'ai compris — Confirmer
             </button>
-
-            <button
-                onclick="closeSecurityModal()"
-                style="background:none;border:none;color:#475569;font-size:0.82rem;cursor:pointer;padding:0.35rem 0.5rem;margin-bottom:0.5rem;text-decoration:underline;text-underline-offset:3px;transition:color .2s;"
-                onmouseover="this.style.color='#94a3b8';"
-                onmouseout="this.style.color='#475569';">
-                Annuler
-            </button>
+            <button class="sm-btn-cancel" onclick="smClose()">Annuler</button>
 
         </div>
-
-        <div style="height:2px;background:linear-gradient(90deg,transparent,rgba(251,191,36,0.35),transparent);"></div>
+        <div class="sm-bottom-bar" id="smBottomBar"></div>
     </div>
 </div>
 
-<style>
-    @keyframes pulseShield {
-        0%,100% { box-shadow: 0 0 32px rgba(251,191,36,0.14); }
-        50%      { box-shadow: 0 0 52px rgba(251,191,36,0.32); }
-    }
-    @keyframes modalIn {
-        from { opacity:0; transform:scale(0.90) translateY(12px); }
-        to   { opacity:1; transform:scale(1)    translateY(0);    }
-    }
-    @keyframes modalOut {
-        from { opacity:1; transform:scale(1)    translateY(0);    }
-        to   { opacity:0; transform:scale(0.90) translateY(12px); }
-    }
-</style>
-
 <script>
-    let _targetFormId = null;
+    let _smFormId = null;
 
-    function openSubmitSecurityModal(formId, action) {
-        _targetFormId = formId;
+    function smOpen(formId, action) {
+        _smFormId = formId;
 
-        const title    = document.getElementById('modalTitle');
-        const intro    = document.getElementById('modalIntro');
-        const confirmBtn = document.getElementById('confirmBtn');
-        const iconWrap = document.getElementById('modalIconWrapper');
+        const box       = document.getElementById('smBox');
+        const topBar    = document.getElementById('smTopBar');
+        const bottomBar = document.getElementById('smBottomBar');
+        const iconWrap  = document.getElementById('smIconWrap');
+        const icon      = document.getElementById('smIcon');
+        const title     = document.getElementById('smTitle');
+        const divider   = document.getElementById('smDivider');
+        const intro     = document.getElementById('smIntro');
+        const confirmBtn= document.getElementById('smConfirmBtn');
 
         if (action === 'delete') {
-            // Thème rouge pour la suppression
+            box.classList.add('is-delete');
+            topBar.classList.add('red');
+            bottomBar.classList.add('red');
+            iconWrap.className = 'sm-icon-wrap red';
+            icon.setAttribute('stroke', '#dc2626');
+            // Icône triangle danger
+            icon.innerHTML = '<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>';
+            title.className = 'sm-title red';
             title.textContent = 'Attention — Suppression Définitive';
-            title.style.color = '#f87171';
-            title.style.textShadow = '0 0 22px rgba(248,113,113,0.28)';
-            iconWrap.style.borderColor = 'rgba(239,68,68,0.45)';
-            iconWrap.style.background  = 'linear-gradient(135deg,rgba(239,68,68,0.14),rgba(220,38,38,0.04))';
-            iconWrap.style.boxShadow   = '0 0 32px rgba(239,68,68,0.2)';
-            document.getElementById('modalIcon').setAttribute('stroke', '#f87171');
-            intro.innerHTML = 'Vous êtes sur le point de <span style="color:#f87171;font-weight:600;">supprimer définitivement toutes les notes</span> de cette évaluation. Cette action est <span style="color:#f87171;font-weight:600;">irréversible</span>.';
-            confirmBtn.style.background = 'linear-gradient(135deg,#b91c1c,#ef4444,#b91c1c)';
-            confirmBtn.style.boxShadow  = '0 4px 22px rgba(239,68,68,0.38)';
-            confirmBtn.textContent      = '✓  D\'accord, j\'ai compris — Supprimer';
+            divider.className = 'sm-divider red';
+            intro.className = 'sm-intro red';
+            intro.innerHTML = 'Vous êtes sur le point de <strong>supprimer définitivement toutes les notes</strong> de cette évaluation. Cette action est <strong>irréversible</strong>.';
+            confirmBtn.className = 'sm-btn-confirm red';
+            confirmBtn.innerHTML = '✓ &nbsp; D\'accord, j\'ai compris — Supprimer';
         } else {
-            // Thème doré pour la modification
+            box.classList.remove('is-delete');
+            topBar.classList.remove('red');
+            bottomBar.classList.remove('red');
+            iconWrap.className = 'sm-icon-wrap blue';
+            icon.setAttribute('stroke', '#2563eb');
+            icon.innerHTML = '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4" stroke-width="2"/>';
+            title.className = 'sm-title blue';
             title.textContent = 'Zone Sécurisée — Saisie de Notes';
-            title.style.color = '#fbbf24';
-            title.style.textShadow = '0 0 22px rgba(251,191,36,0.28)';
-            iconWrap.style.borderColor = 'rgba(251,191,36,0.38)';
-            iconWrap.style.background  = 'linear-gradient(135deg,rgba(251,191,36,0.14),rgba(245,158,11,0.04))';
-            iconWrap.style.boxShadow   = '0 0 32px rgba(251,191,36,0.14)';
-            document.getElementById('modalIcon').setAttribute('stroke', '#fbbf24');
-            intro.innerHTML = 'Vous êtes sur le point de <span style="color:#fbbf24;font-weight:600;">soumettre des modifications de notes</span>, une opération hautement confidentielle.';
-            confirmBtn.style.background = 'linear-gradient(135deg,#d97706,#f59e0b,#d97706)';
-            confirmBtn.style.boxShadow  = '0 4px 22px rgba(245,158,11,0.38)';
-            confirmBtn.textContent      = '✓  D\'accord, j\'ai compris — Confirmer';
+            divider.className = 'sm-divider blue';
+            intro.className = 'sm-intro blue';
+            intro.innerHTML = 'Vous êtes sur le point de <strong>soumettre des modifications de notes</strong>, une opération hautement confidentielle.';
+            confirmBtn.className = 'sm-btn-confirm blue';
+            confirmBtn.innerHTML = '✓ &nbsp; D\'accord, j\'ai compris — Confirmer';
         }
 
-        const overlay = document.getElementById('securityModal');
-        const box     = document.getElementById('securityModalBox');
-
+        const overlay = document.getElementById('smOverlay');
         overlay.style.display = 'flex';
         box.style.animation = 'none';
         void box.offsetHeight;
-        box.style.animation = 'modalIn 0.38s cubic-bezier(0.34,1.56,0.64,1) forwards';
+        box.style.animation = 'smIn 0.36s cubic-bezier(0.34,1.56,0.64,1) forwards';
         document.body.style.overflow = 'hidden';
     }
 
-    function closeSecurityModal() {
-        const overlay = document.getElementById('securityModal');
-        const box     = document.getElementById('securityModalBox');
-        box.style.animation = 'modalOut 0.25s ease forwards';
+    function smClose() {
+        const box = document.getElementById('smBox');
+        box.style.animation = 'smOut 0.24s ease forwards';
         setTimeout(function() {
-            overlay.style.display = 'none';
+            document.getElementById('smOverlay').style.display = 'none';
             document.body.style.overflow = '';
-            _targetFormId = null;
-        }, 260);
+            _smFormId = null;
+        }, 240);
     }
 
-    function confirmSubmit() {
-        if (_targetFormId) {
-            document.getElementById(_targetFormId).submit();
-        }
+    function smConfirm() {
+        if (_smFormId) document.getElementById(_smFormId).submit();
     }
 
-    document.getElementById('securityModal').addEventListener('click', function(e) {
-        if (e.target === this) closeSecurityModal();
+    document.getElementById('smOverlay').addEventListener('click', function(e) {
+        if (e.target === this) smClose();
     });
-
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') closeSecurityModal();
+        if (e.key === 'Escape') smClose();
     });
 </script>
 
