@@ -111,7 +111,7 @@ use App\Exports\NotesSubjectExport;
                         $interroNotes = $subjectGrades->where('type', 'interrogation')
                             ->sortBy('sequence')
                             ->pluck('value')
-                            ->filter()
+                            ->filter(fn($v) => $v !== null) 
                             ->values()
                             ->toArray();
                         
@@ -233,7 +233,7 @@ use App\Exports\NotesSubjectExport;
                     $interroNotes = $subjectGrades->where('type', 'interrogation')
                         ->sortBy('sequence')
                         ->pluck('value')
-                        ->filter()
+                        ->filter(fn($v) => $v !== null)
                         ->values()
                         ->toArray();
 
@@ -413,7 +413,7 @@ use App\Exports\NotesSubjectExport;
                         // Calcul des notes
                         $interroNotes = $subjectGrades->where('type', 'interrogation')
                             ->pluck('value')
-                            ->filter()
+                            ->filter(fn($v) => $v !== null)
                             ->values()
                             ->toArray();
                         
@@ -605,7 +605,7 @@ use App\Exports\NotesSubjectExport;
                         $interros = $studentGrades->where('type', 'interrogation')
                             ->sortBy('sequence')
                             ->pluck('value')
-                            ->filter()
+                            ->filter(fn($v) => $v !== null) 
                             ->values()
                             ->toArray();
 
@@ -1736,7 +1736,7 @@ use App\Exports\NotesSubjectExport;
                         $interros = $studentGrades->where('type', 'interrogation')
                                                 ->sortBy('sequence')
                                                 ->pluck('value')
-                                                ->filter()
+                                                ->filter(fn($v) => $v !== null) 
                                                 ->values()
                                                 ->toArray();
 
@@ -2086,7 +2086,7 @@ use App\Exports\NotesSubjectExport;
                     $interroNotes = $subjectGrades->where('type', 'interrogation')
                         ->sortBy('sequence')
                         ->pluck('value')
-                        ->filter()
+                        ->filter(fn($v) => $v !== null) 
                         ->values()
                         ->toArray();
                     
@@ -2190,7 +2190,7 @@ use App\Exports\NotesSubjectExport;
                     $interroNotes = $subjectGrades->where('type', 'interrogation')
                         ->sortBy('sequence')
                         ->pluck('value')
-                        ->filter()
+                        ->filter(fn($v) => $v !== null)
                         ->values()
                         ->toArray();
                     
@@ -2370,7 +2370,7 @@ use App\Exports\NotesSubjectExport;
                         // Calcul des notes
                         $interroNotes = $subjectGrades->where('type', 'interrogation')
                             ->pluck('value')
-                            ->filter()
+                            ->filter(fn($v) => $v !== null)
                             ->values()
                             ->toArray();
                         
