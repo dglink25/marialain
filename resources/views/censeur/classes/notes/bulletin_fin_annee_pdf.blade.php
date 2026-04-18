@@ -141,7 +141,7 @@
         <div class="student-box">
             Nom : <strong>{{ strtoupper($d['student']->last_name) }}</strong> &nbsp;&nbsp;
             Prénoms : <strong>{{ $d['student']->first_name }}</strong><br>
-            N° Matricule : {{ $d['student']->registration_number ?? '—' }} &nbsp;&nbsp;
+            N° Matricule : {{ $d['student']->num_educ ?? '—' }} &nbsp;&nbsp;
             Sexe : {{ $d['student']->gender == 'M' ? 'Masculin' : 'Féminin' }}
         </div>
         <div class="qr-box">
