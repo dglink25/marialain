@@ -701,3 +701,7 @@ Route::put('/students/{student}/update-registration-type', [StudentPaymentContro
 
 Route::get('/parent/child/{student}/payments', [ParentDashboardController::class, 'payments'])
     ->name('parent.child.payments');
+
+
+Route::middleware(['auth'])->get('/censeur/classes/{classId}/point-annee', [App\Http\Controllers\Censeur\NoteController::class, 'pointAnnee'])->name('censeur.classes.point-annee');
+Route::middleware(['auth'])->get('/censeur/classes/{classId}/students/{studentId}/bulletin/{trimestre}/modal', [App\Http\Controllers\Censeur\NoteController::class, 'bulletinModal'])->name('censeur.classes.notes.bulletin.modal');
