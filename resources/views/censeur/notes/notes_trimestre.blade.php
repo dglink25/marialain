@@ -130,13 +130,24 @@
                 <i class="fas fa-arrow-left mr-2"></i> Retour
             </button>
 
-            <div class="flex gap-3">
+            <div class="flex flex-wrap gap-3">
+
+                {{-- ✅ NOUVEAU : Export Excel --}}
+                <a href="{{ route('censeur.notes.export.excel', [
+                        'classId'   => $classe->id,
+                        'trimestre' => $trimestre,
+                        'subjectId' => $subjectId
+                    ]) }}"
+                   class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 shadow-sm inline-flex items-center">
+                    <i class="fas fa-file-excel mr-2"></i> Télécharger Excel
+                </a>
+
                 <a href="{{ route('censeur.notes.export.pdf', [
                         'classId'   => $classe->id,
                         'trimestre' => $trimestre,
                         'subjectId' => $subjectId
                     ]) }}"
-                   class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 shadow-sm">
+                   class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 shadow-sm inline-flex items-center">
                     <i class="fas fa-file-pdf mr-2"></i> Télécharger le PDF
                 </a>
 
@@ -144,9 +155,10 @@
                         $classe->id,
                         $trimestre
                     ]) }}"
-                   class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shadow-sm">
-                    <i class="fas fa-list mr-2"></i> Voir toutes les matières
+                   class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shadow-sm inline-flex items-center">
+                    <i class="fas fa-list mr-2"></i> Retour aux matières
                 </a>
+
             </div>
         </div>
 

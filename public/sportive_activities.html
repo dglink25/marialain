@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Circulaire Sportive — Complexe Scolaire Marie-Alain</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --blue-900: #0a1f44;
+    --blue-800: #0d2a5c;
+    --blue-700: #113a7a;
+    --blue-600: #1a4fa0;
+    --blue-500: #2563c0;
+    --blue-200: #bfd4f0;
+    --blue-100: #dce8f8;
+    --blue-50:  #f0f5fc;
+    --white: #ffffff;
+    --off-white: #f8fafd;
+    --border: #c8d9f0;
+    --text-main: #0a1f44;
+    --text-secondary: #3a5a8a;
+    --text-light: #6b8ab5;
+  }
+
+  body {
+    font-family: 'Montserrat', sans-serif;
+    background: var(--blue-50);
+    color: var(--text-main);
+    min-height: 100vh;
+    padding: 40px 16px 80px;
+  }
+
+  .page-shell { max-width: 860px; margin: 0 auto; }
+
+  .ui-label {
+    text-align: center;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--text-light);
+    margin-bottom: 8px;
+  }
+
+  .edit-hint {
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-light);
+    margin-bottom: 20px;
+  }
+
+  /* DOCUMENT CARD */
+  .document {
+    background: var(--white);
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 32px rgba(10,31,68,.10), 0 1px 4px rgba(10,31,68,.06);
+  }
+
+  .doc-top-bar {
+    height: 5px;
+    background: var(--blue-900);
+    display: block;
+  }
+
+  .doc-inner { padding: 40px 48px 44px; }
+
+  @media (max-width: 600px) { .doc-inner { padding: 24px 18px 28px; } }
+
+  /* LETTERHEAD */
+  .letterhead {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--blue-200);
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+
+  .logo-wrap img { width: 80px; height: 80px; object-fit: contain; display: block; }
+
+  .school-meta { flex: 1; min-width: 180px; }
+
+  .school-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 700;
+    font-size: 20px;
+    color: var(--blue-900);
+    line-height: 1.15;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .school-name span { color: var(--blue-600); }
+
+  .school-tagline {
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--blue-500);
+    margin: 5px 0 8px;
+  }
+
+  .school-addr { font-size: 11px; color: var(--text-light); line-height: 1.65; }
+
+  .year-badge {
+    text-align: right;
+    font-size: 11px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+  }
+
+  .year-badge strong { display: block; font-size: 13px; font-weight: 600; color: var(--blue-900); }
+
+  /* TITLE BLOCK */
+  .doc-title-block {
+    background: var(--blue-900);
+    padding: 18px 28px 20px;
+    margin-bottom: 28px;
+  }
+
+  .doc-title-block h2 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--white);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-align: center;
+  }
+
+  .doc-title-block p {
+    text-align: center;
+    font-size: 10px;
+    font-weight: 400;
+    letter-spacing: 1px;
+    color: var(--blue-200);
+    margin-top: 6px;
+    text-transform: uppercase;
+  }
+
+  /* SECTION */
+  .section { margin-bottom: 26px; }
+
+  .section-label {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--blue-600);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .section-label::after { content: ''; flex: 1; height: 1px; background: var(--blue-200); }
+
+  /* EDITABLE TEXT */
+  textarea.editable-text {
+    width: 100%;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 15px;
+    line-height: 1.8;
+    color: var(--text-main);
+    background: transparent;
+    border: none;
+    border-bottom: 1px dashed var(--blue-200);
+    outline: none;
+    resize: vertical;
+    padding: 6px 0;
+    transition: border-color .2s, background .2s;
+  }
+
+  textarea.editable-text:focus {
+    background: var(--blue-50);
+    border-bottom-color: var(--blue-500);
+    padding: 6px 10px;
+  }
+
+  /* HIGHLIGHT BOX */
+  .highlight-box {
+    border-left: 3px solid var(--blue-600);
+    background: var(--blue-50);
+    padding: 14px 16px;
+  }
+
+  /* DISCIPLINES */
+  .disciplines-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  @media (max-width: 480px) { .disciplines-grid { grid-template-columns: 1fr; } }
+
+  .discipline-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border: 1px solid var(--blue-200);
+    background: var(--off-white);
+  }
+
+  .discipline-dot { width: 7px; height: 7px; background: var(--blue-600); border-radius: 50%; flex-shrink: 0; }
+
+  .discipline-input {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--blue-900);
+    border: none;
+    background: transparent;
+    outline: none;
+    width: 100%;
+  }
+
+  /* CALENDAR */
+  .calendar-section { margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--blue-200); }
+
+  .calendar-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--blue-900);
+    text-align: center;
+    margin-bottom: 16px;
+  }
+
+  .table-wrap { overflow-x: auto; }
+
+  .cal-table { width: 100%; border-collapse: collapse; font-size: 11.5px; min-width: 500px; }
+
+  .cal-table th {
+    background: var(--blue-900);
+    color: var(--blue-200);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 8.5px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 9px 6px;
+    text-align: center;
+    border: 1px solid var(--blue-800);
+  }
+
+  .cal-table td {
+    padding: 0;
+    border: 1px solid var(--blue-200);
+    vertical-align: top;
+    background: var(--white);
+  }
+
+  .cal-table td textarea {
+    width: 100%;
+    min-height: 62px;
+    padding: 7px;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--text-main);
+    background: transparent;
+    border: none;
+    outline: none;
+    resize: none;
+    text-align: center;
+    transition: background .2s;
+    display: block;
+  }
+
+  .cal-table td textarea:focus { background: var(--blue-50); }
+
+  .activity-type {
+    font-size: 8px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: var(--white);
+    background: var(--blue-600);
+    text-transform: uppercase;
+    padding: 3px 6px;
+    text-align: center;
+    display: block;
+  }
+
+  .cal-note { margin-top: 10px; text-align: center; }
+
+  .cal-note input {
+    width: 100%;
+    text-align: center;
+    border: none;
+    border-bottom: 1px dashed var(--blue-200);
+    background: transparent;
+    outline: none;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 12.5px;
+    font-style: italic;
+    color: var(--text-secondary);
+    padding: 4px 0;
+  }
+
+  /* FOOTER */
+  .doc-footer {
+    margin-top: 36px;
+    padding-top: 20px;
+    border-top: 1px solid var(--blue-200);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 24px;
+  }
+
+  .footer-note { flex: 1; }
+
+  .footer-note textarea {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 13px;
+    font-style: italic;
+    color: var(--text-secondary);
+    background: transparent;
+    border: none;
+    border-bottom: 1px dashed var(--blue-200);
+    outline: none;
+    resize: none;
+    width: 100%;
+    line-height: 1.6;
+  }
+
+  .signature-block { text-align: center; min-width: 160px; }
+
+  .signature-line { height: 1px; background: var(--blue-900); margin-bottom: 5px; }
+
+  .signature-title {
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--blue-900);
+  }
+
+  /* ACTION BAR */
+  .action-bar { display: flex; justify-content: center; margin-top: 32px; }
+
+  .btn-pdf {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 40px;
+    background: var(--blue-900);
+    color: var(--white);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    border: none;
+    cursor: pointer;
+    transition: background .2s, transform .1s;
+  }
+
+  .btn-pdf:hover { background: var(--blue-700); }
+  .btn-pdf:active { transform: scale(.98); }
+  .btn-pdf:disabled { opacity: .55; cursor: not-allowed; }
+</style>
+</head>
+<body>
+
+<div class="page-shell">
+
+  <p class="ui-label">Complexe Scolaire Marie-Alain &mdash; Éditeur de circulaire</p>
+  <p class="edit-hint">Cliquez sur n'importe quel champ pour le modifier avant téléchargement.</p>
+
+  <div class="document">
+    <div class="doc-top-bar"></div>
+    <div class="doc-inner">
+
+        <!-- LETTERHEAD -->
+    <div class="letterhead">
+    <div class="logo-wrap">
+        <img id="logoImg" src="logo.png" alt="Logo">
+    </div>
+    <div class="school-meta">
+        <div class="school-name">Complexe Scolaire <span>Marie-Alain</span></div>
+        <div class="school-tagline">Discipline &middot; Créativité &middot; Excellence</div>
+        <div class="school-addr">
+        Calavi Agori Aitchedji Derrière Séminaire Brésilac<br>
+        Abomey-Calavi, Bénin
+        </div>
+    </div>
+    <div class="year-badge">
+        Année Scolaire<br>
+        <strong>2025&ndash;2026</strong>
+    </div>
+    </div>
+
+      <!-- TITLE -->
+      <div class="doc-title-block">
+        <h2>Avis aux Parents d'Élèves</h2>
+        <p>Classes sportives &mdash; Circulaire officielle</p>
+      </div>
+
+      <!-- INTRO -->
+      <div class="section">
+        <div class="section-label">Message de la Direction</div>
+        <div class="highlight-box">
+          <textarea class="editable-text" rows="6" id="introText">Chers parents, chers élèves,
+
+Dans le cadre de la promotion des activités sportives et du développement des aptitudes physiques et des talents des apprenants, l'Administration du Complexe Scolaire a le plaisir de vous informer de la mise en place de classes sportives au sein de l'établissement.</textarea>
+        </div>
+      </div>
+
+      <!-- DISCIPLINES -->
+      <div class="section">
+        <div class="section-label">Disciplines disponibles</div>
+        <div class="disciplines-grid" id="disciplinesGrid">
+          <div class="discipline-item"><div class="discipline-dot"></div><input type="text" class="discipline-input" value="Football"></div>
+          <div class="discipline-item"><div class="discipline-dot"></div><input type="text" class="discipline-input" value="Basketball"></div>
+          <div class="discipline-item"><div class="discipline-dot"></div><input type="text" class="discipline-input" value="Handball"></div>
+          <div class="discipline-item"><div class="discipline-dot"></div><input type="text" class="discipline-input" value="Tennis de table"></div>
+        </div>
+      </div>
+
+      <!-- MODALITES -->
+      <div class="section">
+        <div class="section-label">Modalités de participation</div>
+        <textarea class="editable-text" rows="7" id="conditionsText">Les séances se dérouleront à raison de deux (02) séances par semaine.
+
+La participation financière est fixée à 2 500 F CFA pour les mois d'Avril, Mai et Juin 2026.
+
+Afin de garantir des conditions optimales de pratique, d'importants équipements sportifs ont été acquis et les apprenants seront encadrés par des professionnels qualifiés dans chaque discipline.
+
+Les inscriptions sont ouvertes et se poursuivent au Secrétariat du Complexe.</textarea>
+      </div>
+
+      <!-- CALENDAR -->
+      <div class="calendar-section">
+        <div class="calendar-title">Calendrier Hebdomadaire des Activités</div>
+        <div class="table-wrap">
+          <table class="cal-table" id="calendarTable">
+            <thead>
+              <tr>
+                <th>Lundi</th>
+                <th>Mardi</th>
+                <th>Mercredi</th>
+                <th>Jeudi</th>
+                <th>Vendredi</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="activity-type">Primaire / Collège</span><textarea>Judo
+15h – 16h</textarea></td>
+                <td><span class="activity-type">Maternelle</span><textarea>Judo
+13h30 – 14h30</textarea></td>
+                <td><span class="activity-type">Primaire / Collège</span><textarea>Atelier Peinture
+13h30 – 14h30</textarea></td>
+                <td><span class="activity-type">Maternelle</span><textarea>Atelier Peinture
+13h30 – 14h30</textarea></td>
+                <td><span class="activity-type">Maternelle</span><textarea>Roller
+13h30 – 14h30</textarea></td>
+              </tr>
+              <tr>
+                <td><textarea placeholder="—"></textarea></td>
+                <td><textarea placeholder="—"></textarea></td>
+                <td><span class="activity-type">Primaire</span><textarea>Judo
+13h30 – 14h30</textarea></td>
+                <td><textarea placeholder="—"></textarea></td>
+                <td><textarea placeholder="—"></textarea></td>
+              </tr>
+              <tr>
+                <td><textarea placeholder="—"></textarea></td>
+                <td><textarea placeholder="—"></textarea></td>
+                <td><span class="activity-type">Primaire / Collège</span><textarea>Roller
+14h30 – 16h</textarea></td>
+                <td><textarea placeholder="—"></textarea></td>
+                <td><textarea placeholder="—"></textarea></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="cal-note">
+          <input type="text" id="startDate" value="Démarrage effectif des activités : Mercredi 1er Avril 2026">
+        </div>
+      </div>
+
+      <!-- FOOTER -->
+      <div class="doc-footer">
+        <div class="footer-note">
+          <textarea rows="3">La Direction invite tous les élèves intéressés à se rapprocher de l'administration pour les modalités d'inscription.</textarea>
+        </div>
+        <div class="signature-block">
+          <div class="signature-line"></div>
+          <div class="signature-title">La Direction</div>
+        </div>
+      </div>
+
+    </div><!-- /doc-inner -->
+  </div><!-- /document -->
+
+  <div class="action-bar">
+    <button class="btn-pdf" onclick="generatePDF()">Télécharger le PDF</button>
+  </div>
+
+</div><!-- /page-shell -->
+
+<script>
+const { jsPDF } = window.jspdf;
+
+function generatePDF() {
+  const btn = document.querySelector('.btn-pdf');
+  btn.textContent = 'Génération en cours…';
+  btn.disabled = true;
+
+  setTimeout(() => {
+    try {
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const pW = 210, pH = 297;
+      const ml = 18, mr = 18, mt = 14;
+      let y = mt;
+
+      const B900 = [10, 31, 68];
+      const B600 = [26, 79, 160];
+      const B200 = [191, 212, 240];
+      const B50  = [240, 245, 252];
+      const WHITE = [255, 255, 255];
+      const DARK  = [10, 31, 68];
+      const LIGHT = [107, 138, 181];
+
+      // Top bar
+      doc.setFillColor(...B900);
+      doc.rect(0, 0, pW, 4, 'F');
+      y = 10;
+
+      // School name
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(14);
+      doc.setTextColor(...B900);
+      doc.text('COMPLEXE SCOLAIRE MARIE-ALAIN', ml + 28, y + 7);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7.5);
+      doc.setTextColor(...B600);
+      doc.text('Discipline  ·  Créativité  ·  Excellence', ml + 28, y + 13);
+
+      doc.setFontSize(7.5);
+      doc.setTextColor(...LIGHT);
+      doc.text('Calavi Agori Aitchedji Derrière Séminaire Brésilac — Abomey-Calavi, Bénin', ml + 28, y + 19);
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      doc.setTextColor(...B900);
+      doc.text('Année Scolaire 2025–2026', pW - mr, y + 7, { align: 'right' });
+
+      y += 30;
+      doc.setDrawColor(...B200);
+      doc.setLineWidth(0.5);
+      doc.line(ml, y, pW - mr, y);
+      y += 8;
+
+      // Title block
+      doc.setFillColor(...B900);
+      doc.rect(ml, y, pW - ml - mr, 20, 'F');
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(13);
+      doc.setTextColor(...WHITE);
+      doc.text('AVIS AUX PARENTS D\'ÉLÈVES', pW / 2, y + 8.5, { align: 'center' });
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor(...B200);
+      doc.text('Classes sportives  —  Circulaire officielle', pW / 2, y + 15.5, { align: 'center' });
+      y += 27;
+
+      // Section helper
+      function sectionLabel(txt, yPos) {
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(7.5);
+        doc.setTextColor(...B600);
+        doc.text(txt, ml, yPos);
+        doc.setDrawColor(...B200);
+        doc.setLineWidth(0.3);
+        const tw = doc.getTextWidth(txt);
+        doc.line(ml + tw + 3, yPos - 1.5, pW - mr, yPos - 1.5);
+      }
+
+      // INTRO
+      sectionLabel('MESSAGE DE LA DIRECTION', y);
+      y += 5;
+      const intro = document.getElementById('introText').value;
+      doc.setFillColor(...B50);
+      doc.setDrawColor(...B600);
+      doc.setLineWidth(0.5);
+      doc.rect(ml, y, 2.5, 1, 'F'); // placeholder for left bar
+      doc.setFillColor(...B50);
+      const introLines = doc.splitTextToSize(intro, pW - ml - mr - 12);
+      const introH = introLines.length * 5.5 + 8;
+      doc.rect(ml, y, pW - ml - mr, introH, 'F');
+      doc.setFillColor(...B600);
+      doc.rect(ml, y, 2.5, introH, 'F');
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      doc.setTextColor(...DARK);
+      doc.text(introLines, ml + 6, y + 5.5);
+      y += introH + 8;
+
+      // DISCIPLINES
+      sectionLabel('DISCIPLINES DISPONIBLES', y);
+      y += 5;
+      const discs = Array.from(document.querySelectorAll('.discipline-input')).map(d => d.value).filter(Boolean);
+      const colW = (pW - ml - mr) / 2;
+      discs.forEach((d, i) => {
+        const col = i % 2, row = Math.floor(i / 2);
+        const x = ml + col * colW;
+        const ry = y + row * 10;
+        doc.setFillColor(...B50);
+        doc.setDrawColor(...B200);
+        doc.setLineWidth(0.2);
+        doc.rect(x, ry, colW - 4, 8, 'FD');
+        doc.setFillColor(...B600);
+        doc.circle(x + 5, ry + 4, 1.5, 'F');
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(10);
+        doc.setTextColor(...DARK);
+        doc.text(d, x + 10, ry + 5.2);
+      });
+      y += Math.ceil(discs.length / 2) * 10 + 8;
+
+      // CONDITIONS
+      sectionLabel('MODALITÉS DE PARTICIPATION', y);
+      y += 5;
+      const cond = document.getElementById('conditionsText').value;
+      const condLines = doc.splitTextToSize(cond, pW - ml - mr);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      doc.setTextColor(...DARK);
+      doc.text(condLines, ml, y + 4);
+      y += condLines.length * 5.2 + 12;
+
+      // PAGE 2
+      doc.addPage();
+      doc.setFillColor(...B900);
+      doc.rect(0, 0, pW, 4, 'F');
+      y = 14;
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(12);
+      doc.setTextColor(...B900);
+      doc.text('CALENDRIER HEBDOMADAIRE DES ACTIVITÉS', pW / 2, y, { align: 'center' });
+      y += 4;
+      doc.setDrawColor(...B200);
+      doc.setLineWidth(0.5);
+      doc.line(ml, y, pW - mr, y);
+      y += 8;
+
+      const days = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi'];
+      const cW = (pW - ml - mr) / 5;
+      const hH = 9, rH = 24;
+
+      doc.setFillColor(...B900);
+      doc.rect(ml, y, pW - ml - mr, hH, 'F');
+      days.forEach((d, i) => {
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8);
+        doc.setTextColor(...B200);
+        doc.text(d.toUpperCase(), ml + i * cW + cW / 2, y + 6, { align: 'center' });
+      });
+      y += hH;
+
+      const rows = document.querySelectorAll('#calendarTable tbody tr');
+      rows.forEach((row, ri) => {
+        const cells = row.querySelectorAll('td');
+        const ry = y + ri * rH;
+        cells.forEach((cell, ci) => {
+          const cx = ml + ci * cW;
+          const typeEl = cell.querySelector('.activity-type');
+          const taEl = cell.querySelector('textarea');
+          const typeText = typeEl ? typeEl.textContent.trim() : '';
+          const bodyText = taEl ? taEl.value.trim() : '';
+
+          doc.setFillColor(ri % 2 === 0 ? 250 : 246, ri % 2 === 0 ? 248 : 244, ri % 2 === 0 ? 252 : 248);
+          doc.setDrawColor(...B200);
+          doc.setLineWidth(0.2);
+          doc.rect(cx, ry, cW, rH, 'FD');
+
+          if (typeText) {
+            doc.setFillColor(...B600);
+            doc.rect(cx, ry, cW, 5.5, 'F');
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(5.5);
+            doc.setTextColor(...WHITE);
+            doc.text(typeText, cx + cW / 2, ry + 3.8, { align: 'center' });
+            if (bodyText) {
+              doc.setFont('helvetica', 'normal');
+              doc.setFontSize(8.5);
+              doc.setTextColor(...DARK);
+              const bLines = doc.splitTextToSize(bodyText, cW - 4);
+              doc.text(bLines, cx + cW / 2, ry + 11, { align: 'center' });
+            }
+          } else if (bodyText) {
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(8.5);
+            doc.setTextColor(...DARK);
+            const bLines = doc.splitTextToSize(bodyText, cW - 4);
+            doc.text(bLines, cx + cW / 2, ry + rH / 2, { align: 'center' });
+          } else {
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(13);
+            doc.setTextColor(...LIGHT);
+            doc.text('—', cx + cW / 2, ry + rH / 2 + 1, { align: 'center' });
+          }
+        });
+        y = y; // keep reference
+      });
+
+      y += rows.length * rH + 8;
+
+      const startDate = document.getElementById('startDate').value;
+      doc.setFont('helvetica', 'italic');
+      doc.setFontSize(9);
+      doc.setTextColor(...LIGHT);
+      doc.text(startDate, pW / 2, y, { align: 'center' });
+      y += 16;
+
+      // Footer
+      const footerTA = document.querySelector('.doc-footer textarea');
+      const footerText = footerTA ? footerTA.value : '';
+      const footerLines = doc.splitTextToSize(footerText, pW - ml - mr - 55);
+      doc.setFont('helvetica', 'italic');
+      doc.setFontSize(9.5);
+      doc.setTextColor(...LIGHT);
+      doc.text(footerLines, ml, y);
+
+      doc.setDrawColor(...DARK);
+      doc.setLineWidth(0.4);
+      doc.line(pW - mr - 48, y, pW - mr, y);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8);
+      doc.setTextColor(...B900);
+      doc.text('LA DIRECTION', pW - mr - 24, y + 5, { align: 'center' });
+
+      // Bottom bars both pages
+      [1, 2].forEach(pg => {
+        doc.setPage(pg);
+        doc.setFillColor(...B900);
+        doc.rect(0, pH - 5, pW, 5, 'F');
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(6.5);
+        doc.setTextColor(180, 195, 220);
+        doc.text(`Page ${pg} / 2   —   Complexe Scolaire Marie-Alain   —   Année Scolaire 2025-2026`, pW / 2, pH - 1.6, { align: 'center' });
+      });
+
+      doc.save('Circulaire_Sportive_Marie-Alain.pdf');
+
+    } catch(e) {
+      console.error(e);
+      alert('Erreur : ' + e.message);
+    }
+
+    btn.textContent = 'Télécharger le PDF';
+    btn.disabled = false;
+  }, 100);
+}
+</script>
+</body>
+</html>
