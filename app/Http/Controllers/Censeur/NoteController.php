@@ -2842,7 +2842,6 @@ use App\Exports\NotesSubjectExport;
         ];
     }
 
-
     public function pointAnnee(int $classId) {
         $activeYear = AcademicYear::where('active', true)->firstOrFail();
         $classe = Classe::with(['students' => function ($q) use ($activeYear) {
@@ -2980,7 +2979,6 @@ use App\Exports\NotesSubjectExport;
         ));
     }
 
-
     public function bulletinModal(int $classId, int $studentId, int $trimestre) {
         try {
             $activeYear = AcademicYear::where('active', true)->firstOrFail();
@@ -2993,8 +2991,355 @@ use App\Exports\NotesSubjectExport;
             return response()->json(['error' => $e->getMessage()], 500);
         }
 
+    }
+
+    private function getBulletinFinAnneeData(int $studentId, int $classId, $activeYear, $subjects): array
+    {
+        $student = Student::findOrFail($studentId);
+        $classe  = Classe::with(['students' => function ($q) use ($activeYear) {
+            $q->where('is_validated', 1)
+              ->where('academic_year_id', $activeYear->id)
+              ->orderBy('last_name')->orderBy('first_name');
+        }])->findOrFail($classId);
+
+        // ── Calcul des moyennes par trimestre pour TOUS les élèves ──────────────
+        $moyennesParTrimestreTousEleves = [];
+        foreach ([1, 2, 3] as $t) {
+            foreach ($classe->students as $st) {
+                $moy = $this->calculerMoyenneEleve($st->id, $classId, $t, $activeYear, $subjects);
+                if ($moy !== null) {
+                    $moyennesParTrimestreTousEleves[$t][$st->id] = $moy;
+                }
+            }
+        }
+
+        // ── Rangs par trimestre ─────────────────────────────────────────────────
+        $rangsParTrimestre = [];
+        foreach ([1, 2, 3] as $t) {
+            if (!empty($moyennesParTrimestreTousEleves[$t])) {
+                $sorted = $moyennesParTrimestreTousEleves[$t];
+                arsort($sorted);
+                $rang = 1; $prev = null; $sameCount = 1;
+                foreach ($sorted as $stId => $moy) {
+                    if ($prev !== null && $moy == $prev) { $sameCount++; }
+                    else { $rang += ($sameCount - 1); $sameCount = 1; }
+                    $rangsParTrimestre[$t][$stId] = $rang . 'e/' . count($sorted);
+                    $prev = $moy;
+                    $rang++;
+                }
+            }
+        }
+
+        // ── Moyennes annuelles pour TOUS les élèves ─────────────────────────────
+        $moyennesAnnuelles = [];
+        foreach ($classe->students as $st) {
+            $moys = array_filter(
+                array_map(fn($t) => $moyennesParTrimestreTousEleves[$t][$st->id] ?? null, [1, 2, 3]),
+                fn($v) => $v !== null
+            );
+            if (!empty($moys)) {
+                $moyennesAnnuelles[$st->id] = round(array_sum($moys) / count($moys), 2);
+            }
+        }
+
+        // ── Rangs annuels ───────────────────────────────────────────────────────
+        $rangsAnnuels = [];
+        if (!empty($moyennesAnnuelles)) {
+            $sorted = $moyennesAnnuelles;
+            arsort($sorted);
+            $rang = 1; $prev = null; $sameCount = 1;
+            foreach ($sorted as $stId => $moy) {
+                if ($prev !== null && $moy == $prev) { $sameCount++; }
+                else { $rang += ($sameCount - 1); $sameCount = 1; }
+                $rangsAnnuels[$stId] = $rang . 'e/' . count($sorted);
+                $prev = $moy;
+                $rang++;
+            }
+        }
+
+        // ── Données spécifiques à l'élève courant ───────────────────────────────
+        $moyT1  = $moyennesParTrimestreTousEleves[1][$studentId] ?? null;
+        $moyT2  = $moyennesParTrimestreTousEleves[2][$studentId] ?? null;
+        $moyT3  = $moyennesParTrimestreTousEleves[3][$studentId] ?? null;
+        $moyAnn = $moyennesAnnuelles[$studentId] ?? null;
+
+        $rangT1  = $rangsParTrimestre[1][$studentId] ?? '-';
+        $rangT2  = $rangsParTrimestre[2][$studentId] ?? '-';
+        $rangT3  = $rangsParTrimestre[3][$studentId] ?? '-';
+        $rangAnn = $rangsAnnuels[$studentId] ?? '-';
+
+        // ── Bulletin T3 : moyennes par matière ──────────────────────────────────
+        // Pré-calcul des moyennes par matière T3 pour tous les élèves (pour les rangs)
+        $allStudentsMoyennesParMatiereT3 = [];
+        foreach ($classe->students as $st) {
+            $stGrades = Grade::where('student_id', $st->id)
+                ->where('class_id', $classId)
+                ->where('academic_year_id', $activeYear->id)
+                ->where('trimestre', 3)
+                ->get();
+
+            foreach ($subjects as $subject) {
+                $subjectGrades = $stGrades->where('subject_id', $subject->id);
+                $interroNotes = $subjectGrades->where('type', 'interrogation')
+                    ->pluck('value')->filter(fn($v) => $v !== null)->values()->toArray();
+                $devoir1 = $subjectGrades->where('type', 'devoir')->where('sequence', 1)->first()->value ?? null;
+                $devoir2 = $subjectGrades->where('type', 'devoir')->where('sequence', 2)->first()->value ?? null;
+                $moyenneInterro = !empty($interroNotes) ? array_sum($interroNotes) / count($interroNotes) : null;
+                $notesPourMoyenne = array_filter([$moyenneInterro, $devoir1, $devoir2], fn($v) => $v !== null);
+                if (!empty($notesPourMoyenne)) {
+                    $allStudentsMoyennesParMatiereT3[$subject->id][$st->id] =
+                        array_sum($notesPourMoyenne) / count($notesPourMoyenne);
+                }
+            }
+
+            // Conduite T3
+            $conduct = Conduct::where('student_id', $st->id)
+                ->where('trimestre', 3)->where('academic_year_id', $activeYear->id)->first();
+            $punishments = Punishment::where('student_id', $st->id)
+                ->where('academic_year_id', $activeYear->id)->get();
+            $conduiteSur20 = max(0, ($conduct ? $conduct->grade : 0) - ($punishments->sum('hours') / 2));
+            $allStudentsMoyennesParMatiereT3['CONDUITE'][$st->id] = $conduiteSur20;
+        }
+
+        // Rangs par matière T3
+        $rangsParMatiereT3 = [];
+        foreach ($allStudentsMoyennesParMatiereT3 as $subjectId => $moyennes) {
+            arsort($moyennes);
+            $rang = 1; $prev = null; $sameCount = 1;
+            foreach ($moyennes as $stId => $value) {
+                if ($prev !== null && $value == $prev) { $sameCount++; }
+                else { $rang += ($sameCount - 1); $sameCount = 1; }
+                $rangsParMatiereT3[$subjectId][$stId] = $rang . 'e';
+                $prev = $value;
+                $rang++;
+            }
+        }
+
+        // ── Notes T3 de l'élève courant ─────────────────────────────────────────
+        $gradesT3 = Grade::where('student_id', $studentId)
+            ->where('class_id', $classId)
+            ->where('academic_year_id', $activeYear->id)
+            ->where('trimestre', 3)
+            ->get();
+
+        $conductT3 = Conduct::where('student_id', $studentId)
+            ->where('trimestre', 3)->where('academic_year_id', $activeYear->id)->first();
+        $punishments = Punishment::where('student_id', $studentId)
+            ->where('academic_year_id', $activeYear->id)->get();
+        $conduiteSur20 = round(max(0, ($conductT3 ? $conductT3->grade : 0) - ($punishments->sum('hours') / 2)), 2);
+
+        $matieresLitteraires   = ['COMMUNICATION ECRITE','LECTURE','ANGLAIS','HISTOIRE-GEOGRAPHIE','FRANÇAIS','PHILOSOPHIE','ESPAGNOL','HGGSP'];
+        $matieresScientifiques = ['MATHEMATIQUES','PHYSIQUE CHIMIE ET TECHNOLOGIE (PCT)','SCIENCE DE LA VIE ET DE LA TERRE (SVT)','ENSEIGNEMENTS SCIENTIFIQUES'];
+        $Autrematiere          = ['EDUCATION PHYSIQUE ET SPORTIVE (EPS)','CONDUITE'];
+
+        $bulletin        = [];
+        $totalMoyCoeff   = 0;
+        $totalCoeff      = 0;
+        $moyennesLitt    = []; $moyennesSci = []; $moyennesAutres = [];
+
+        foreach ($subjects as $subject) {
+            $coefRecord = $subject->classTeacherSubjects->first();
+            $coef       = $coefRecord->coefficient ?? 1;
+
+            $subjectGrades = $gradesT3->where('subject_id', $subject->id);
+            $interroNotes  = $subjectGrades->where('type', 'interrogation')
+                ->sortBy('sequence')->pluck('value')
+                ->filter(fn($v) => $v !== null)->values()->toArray();
+
+            $devoir1 = $subjectGrades->where('type', 'devoir')->where('sequence', 1)->first()->value ?? null;
+            $devoir2 = $subjectGrades->where('type', 'devoir')->where('sequence', 2)->first()->value ?? null;
+
+            $moyenneInterro  = !empty($interroNotes) ? round(array_sum($interroNotes) / count($interroNotes), 2) : null;
+            $notesPourMoyenne = array_filter([$moyenneInterro, $devoir1, $devoir2], fn($v) => $v !== null);
+            $moyenneMatiere  = !empty($notesPourMoyenne) ? round(array_sum($notesPourMoyenne) / count($notesPourMoyenne), 2) : null;
+
+            $moyCoeff    = null;
+            $appreciation = '-';
+
+            if ($moyenneMatiere !== null) {
+                $moyCoeff = round($moyenneMatiere * $coef, 2);
+                $totalMoyCoeff += $moyCoeff;
+                $totalCoeff    += $coef;
+
+                if ($moyenneMatiere > 16)      $appreciation = 'Très Bien';
+                elseif ($moyenneMatiere >= 14) $appreciation = 'Bien';
+                elseif ($moyenneMatiere >= 12) $appreciation = 'Assez Bien';
+                elseif ($moyenneMatiere >= 10) $appreciation = 'Passable';
+                elseif ($moyenneMatiere >= 8)  $appreciation = 'Insuffisant';
+                elseif ($moyenneMatiere >= 6)  $appreciation = 'Faible';
+                elseif ($moyenneMatiere >= 4)  $appreciation = 'Médiocre';
+                else $appreciation = 'Très Faible';
+
+                $nom = strtoupper($subject->name);
+                if (in_array($nom, $matieresLitteraires))        $moyennesLitt[]    = $moyenneMatiere;
+                elseif (in_array($nom, $matieresScientifiques))  $moyennesSci[]     = $moyenneMatiere;
+                elseif (in_array($nom, $Autrematiere))           $moyennesAutres[]  = $moyenneMatiere;
+            }
+
+            $bulletin[] = [
+                'subject'        => strtoupper($subject->name),
+                'coef'           => $coef,
+                'moyenneInterro' => $moyenneInterro !== null ? number_format($moyenneInterro, 2, ',', '') : '-',
+                'devoirs'        => [
+                    1 => $devoir1 !== null ? number_format($devoir1, 2, ',', '') : '-',
+                    2 => $devoir2 !== null ? number_format($devoir2, 2, ',', '') : '-',
+                ],
+                'moyenne'        => $moyenneMatiere !== null ? number_format($moyenneMatiere, 2, ',', '') : '-',
+                'moyCoeff'       => $moyCoeff !== null ? number_format($moyCoeff, 2, ',', '') : '-',
+                'rang'           => $rangsParMatiereT3[$subject->id][$studentId] ?? '-',
+                'appreciation'   => $appreciation,
+            ];
+        }
+
+        // Conduite T3
+        $conduiteApp = '-';
+        if ($conduiteSur20 >= 14) $conduiteApp = 'Très Bien';
+        elseif ($conduiteSur20 >= 12) $conduiteApp = 'Bien';
+        elseif ($conduiteSur20 >= 10) $conduiteApp = 'Passable';
+        elseif ($conduiteSur20 >= 8)  $conduiteApp = 'Insuffisante';
+        elseif ($conduiteSur20 >= 6)  $conduiteApp = 'Faible';
+        elseif ($conduiteSur20 >= 4)  $conduiteApp = 'Médiocre';
+        elseif ($conduiteSur20 > 0)   $conduiteApp = 'Très Faible';
+
+        if ($conduiteSur20 > 0) {
+            $totalCoeff    += 1;
+            $totalMoyCoeff += $conduiteSur20;
+            $moyennesAutres[] = $conduiteSur20;
+        }
+
+        $bulletin[] = [
+            'subject'        => 'CONDUITE',
+            'coef'           => 1,
+            'moyenneInterro' => '-',
+            'devoirs'        => [1 => '-', 2 => number_format($conduiteSur20, 2, ',', '')],
+            'moyenne'        => $conduiteSur20 > 0 ? number_format($conduiteSur20, 2, ',', '') : '-',
+            'moyCoeff'       => $conduiteSur20 > 0 ? number_format($conduiteSur20, 2, ',', '') : '-',
+            'rang'           => $rangsParMatiereT3['CONDUITE'][$studentId] ?? '-',
+            'appreciation'   => $conduiteApp,
+        ];
+
+        // Moyennes par domaine (T3)
+        $moyLitt  = !empty($moyennesLitt) ? round(array_sum($moyennesLitt) / count($moyennesLitt), 2) : 0;
+        $moySci   = !empty($moyennesSci)  ? round(array_sum($moyennesSci) / count($moyennesSci), 2) : 0;
+        $moyAutre = !empty($moyennesAutres) ? round(array_sum($moyennesAutres) / count($moyennesAutres), 2) : 0;
+
+        // Moyennes T3 de la classe (pour stats)
+        $moyT3Classe = [];
+        foreach ($classe->students as $st) {
+            if (isset($moyennesParTrimestreTousEleves[3][$st->id])) {
+                $moyT3Classe[$st->id] = $moyennesParTrimestreTousEleves[3][$st->id];
+            }
+        }
+        $plusForteT3  = !empty($moyT3Classe) ? max($moyT3Classe) : 0;
+        $plusFaibleT3 = !empty($moyT3Classe) ? min($moyT3Classe) : 0;
+        $moyClasseT3  = !empty($moyT3Classe) ? round(array_sum($moyT3Classe) / count($moyT3Classe), 2) : 0;
+
+        // Décision du conseil (basée sur moyenne annuelle)
+        $felicitation = $encouragement = $tableauHonneur = $avertissement = false;
+        if ($moyAnn !== null && $conduiteSur20 > 0) {
+            if ($moyAnn >= 16 && $conduiteSur20 >= 14)                           $felicitation = true;
+            elseif ($moyAnn >= 14 && $moyAnn < 16 && $conduiteSur20 >= 12)      $encouragement = true;
+            elseif ($moyAnn >= 12 && $moyAnn < 14 && $conduiteSur20 >= 10)      $tableauHonneur = true;
+            elseif ($conduiteSur20 < 10 || $moyAnn < 10)                         $avertissement = true;
+        }
+
+        $fmt = fn($v) => ($v === null || $v === 0) ? '0,00' : number_format($v, 2, ',', '');
+
+        return [
+            'student'              => $student,
+            'classe'               => $classe,
+            'activeYear'           => $activeYear,
+            'bulletin'             => $bulletin,
+            'totalCoeff'           => $totalCoeff,
+            'totalMoyCoeff'        => $fmt($totalMoyCoeff),
+            'moyenneLitteraire'    => $fmt($moyLitt),
+            'moyenneScientifique'  => $fmt($moySci),
+            'moyenneAutres'        => $fmt($moyAutre),
+            // Moyennes trimestrielles
+            'moyT1'                => $fmt($moyT1),
+            'moyT2'                => $fmt($moyT2),
+            'moyT3'                => $fmt($moyT3),
+            'moyAnnuelle'          => $fmt($moyAnn),
+            'rangT1'               => $rangT1,
+            'rangT2'               => $rangT2,
+            'rangT3'               => $rangT3,
+            'rangAnnuel'           => $rangAnn,
+            // Stats classe T3
+            'plusForte'            => $fmt($plusForteT3),
+            'plusFaible'           => $fmt($plusFaibleT3),
+            'moyClasse'            => $fmt($moyClasseT3),
+            // Décision conseil
+            'felicitation'         => $felicitation,
+            'encouragement'        => $encouragement,
+            'tableauHonneur'       => $tableauHonneur,
+            'avertissement'        => $avertissement,
+            // Appréciation générale (basée sur moyenne annuelle)
+            'appreciationGenerale' => $moyAnn === null ? '-' : (
+                $moyAnn > 16 ? 'Très Bien' : ($moyAnn >= 14 ? 'Bien' : ($moyAnn >= 12 ? 'Assez Bien' :
+                ($moyAnn >= 10 ? 'Passable' : ($moyAnn >= 8 ? 'Insuffisant' : ($moyAnn >= 6 ? 'Faible' :
+                ($moyAnn >= 4 ? 'Médiocre' : 'Très Faible'))))))
+            ),
+        ];
+    }
+
+    /**
+     * Télécharge le bulletin de fin d'année d'UN élève
+     */
+    public function downloadBulletinFinAnneePdf(int $classId, int $studentId)
+    {
+        try {
+            $activeYear = AcademicYear::where('active', true)->firstOrFail();
+            $subjects   = Subject::whereHas('classTeacherSubjects', function ($q) use ($classId, $activeYear) {
+                $q->where('class_id', $classId)->where('academic_year_id', $activeYear->id);
+            })->with(['classTeacherSubjects' => function ($q) use ($classId, $activeYear) {
+                $q->where('class_id', $classId)->where('academic_year_id', $activeYear->id);
+            }])->orderBy('name')->get();
+
+            $data = $this->getBulletinFinAnneeData($studentId, $classId, $activeYear, $subjects);
+
+            $pdf = Pdf::loadView('censeur.classes.notes.bulletin_fin_annee_pdf', ['data' => $data])
+                      ->setPaper('a4', 'portrait');
+
+            $nom = $data['student']->last_name . '_' . $data['student']->first_name;
+            return $pdf->download("Bulletin_FinAnnee_{$nom}.pdf");
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Impossible de générer le bulletin : ' . $e->getMessage());
+        }
+    }
 
 
+    public function downloadAllBulletinsFinAnneePdf(int $classId) {
+        try {
+            $activeYear = AcademicYear::where('active', true)->firstOrFail();
+
+            $classe = Classe::with(['students' => function ($q) use ($activeYear) {
+                $q->where('is_validated', 1)
+                  ->where('academic_year_id', $activeYear->id)
+                  ->orderBy('last_name')->orderBy('first_name');
+            }])->findOrFail($classId);
+
+            $subjects = Subject::whereHas('classTeacherSubjects', function ($q) use ($classId, $activeYear) {
+                $q->where('class_id', $classId)->where('academic_year_id', $activeYear->id);
+            })->with(['classTeacherSubjects' => function ($q) use ($classId, $activeYear) {
+                $q->where('class_id', $classId)->where('academic_year_id', $activeYear->id);
+            }])->orderBy('name')->get();
+
+            $allBulletins = [];
+            foreach ($classe->students as $student) {
+                $allBulletins[] = $this->getBulletinFinAnneeData($student->id, $classId, $activeYear, $subjects);
+            }
+
+            $pdf = Pdf::loadView('censeur.classes.notes.all_bulletins_fin_annee_pdf', [
+                'allBulletins' => $allBulletins,
+            ])->setPaper('a4', 'portrait');
+
+            $nomClasse = str_replace([' ', '/'], '_', $classe->name);
+            return $pdf->download("Bulletins_FinAnnee_{$nomClasse}.pdf");
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Impossible de générer les bulletins : ' . $e->getMessage());
+        }
     }
 
 }

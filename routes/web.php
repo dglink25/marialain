@@ -705,3 +705,12 @@ Route::get('/parent/child/{student}/payments', [ParentDashboardController::class
 
 Route::middleware(['auth'])->get('/censeur/classes/{classId}/point-annee', [App\Http\Controllers\Censeur\NoteController::class, 'pointAnnee'])->name('censeur.classes.point-annee');
 Route::middleware(['auth'])->get('/censeur/classes/{classId}/students/{studentId}/bulletin/{trimestre}/modal', [App\Http\Controllers\Censeur\NoteController::class, 'bulletinModal'])->name('censeur.classes.notes.bulletin.modal');
+
+
+Route::middleware(['auth'])->get('/censeur/classes/{classId}/bulletin-fin-annee/all-pdf', 
+    [App\Http\Controllers\Censeur\NoteController::class, 'downloadAllBulletinsFinAnneePdf'])
+    ->name('censeur.classes.bulletin.fin-annee.all-pdf');
+
+Route::middleware(['auth'])->get('/censeur/classes/{classId}/students/{studentId}/bulletin-fin-annee/pdf', 
+    [App\Http\Controllers\Censeur\NoteController::class, 'downloadBulletinFinAnneePdf'])
+    ->name('censeur.classes.bulletin.fin-annee.student-pdf');

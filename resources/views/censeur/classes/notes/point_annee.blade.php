@@ -12,9 +12,15 @@
         <div class="mb-8">
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                    <h1 class="text-3xl font-bold text-gray-900">Point de l'Année Académique {{ $activeYear->name }} de la classe de {{ $classe->name }}</h1>   
+                    <h1 class="text-3xl font-bold text-gray-900">Point de l'Année Académique {{ $activeYear->name }} de la classe de {{ $classe->name }}</h1>
                 </div>
                 <div class="flex flex-wrap gap-3">
+                    {{-- Bouton Télécharger tous les bulletins fin d'année --}}
+                    <a href="{{ route('censeur.classes.bulletin.fin-annee.all-pdf', $classe->id) }}"
+                       class="inline-flex items-center px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl shadow-md hover:from-emerald-700 hover:to-teal-700 transition-all duration-200 hover:shadow-lg">
+                        <i class="fas fa-file-archive mr-2"></i>
+                        Bulletins Fin d'Année (PDF)
+                    </a>
                     <a href="{{ url()->previous() }}"
                        class="inline-flex items-center px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200">
                         <i class="fas fa-arrow-left mr-2"></i> Retour
@@ -52,6 +58,8 @@
                         <th colspan="3" class="px-3 py-2 text-center font-semibold border-r border-gray-700 bg-purple-800">Trimestre 3</th>
                         {{-- Fin d'année --}}
                         <th colspan="3" class="px-3 py-2 text-center font-semibold bg-gray-700">Fin d'Année</th>
+                        {{-- Actions --}}
+                        <th rowspan="2" class="px-3 py-3 text-center font-semibold bg-emerald-800 border-l border-gray-700 min-w-[130px]">Bulletin</th>
                     </tr>
                     <tr class="text-xs">
                         {{-- T1 --}}
@@ -98,8 +106,7 @@
                             {{ $fmtMoy($row['moy_t1']) }}
                         </td>
                         <td class="px-3 py-2.5 text-center border-r border-gray-100 text-gray-500 text-xs">
-                            <button
-                                onclick="ouvrirBulletin({{ $row['student']->id }}, 1)"
+                            <button onclick="ouvrirBulletin({{ $row['student']->id }}, 1)"
                                 class="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 hover:underline text-xs font-medium">
                                 {{ $row['rang_t1'] }}
                                 <i class="fas fa-eye text-xs"></i>
@@ -115,8 +122,7 @@
                             {{ $fmtMoy($row['moy_t2']) }}
                         </td>
                         <td class="px-3 py-2.5 text-center border-r border-gray-100 text-gray-500 text-xs">
-                            <button
-                                onclick="ouvrirBulletin({{ $row['student']->id }}, 2)"
+                            <button onclick="ouvrirBulletin({{ $row['student']->id }}, 2)"
                                 class="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 hover:underline text-xs font-medium">
                                 {{ $row['rang_t2'] }}
                                 <i class="fas fa-eye text-xs"></i>
@@ -132,8 +138,7 @@
                             {{ $fmtMoy($row['moy_t3']) }}
                         </td>
                         <td class="px-3 py-2.5 text-center border-r border-gray-100 text-gray-500 text-xs">
-                            <button
-                                onclick="ouvrirBulletin({{ $row['student']->id }}, 3)"
+                            <button onclick="ouvrirBulletin({{ $row['student']->id }}, 3)"
                                 class="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 hover:underline text-xs font-medium">
                                 {{ $row['rang_t3'] }}
                                 <i class="fas fa-eye text-xs"></i>
@@ -148,7 +153,7 @@
                         <td class="px-3 py-2.5 text-center border-r border-gray-100 font-medium text-gray-700 text-xs">
                             {{ $row['rang_annuel'] }}
                         </td>
-                        <td class="px-3 py-2.5 text-center">
+                        <td class="px-3 py-2.5 text-center border-r border-gray-100">
                             @if($row['statut'] === 'Passé')
                                 <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800 border border-green-300">
                                     <i class="fas fa-check-circle mr-1"></i> Passé
@@ -160,6 +165,17 @@
                             @else
                                 <span class="text-gray-400 text-xs">—</span>
                             @endif
+                        </td>
+
+                        {{-- Bulletin fin d'année --}}
+                        <td class="px-3 py-2.5 text-center border-l border-gray-200 bg-emerald-50">
+                            <a href="{{ route('censeur.classes.bulletin.fin-annee.student-pdf', [$classe->id, $row['student']->id]) }}"
+                               target="_blank"
+                               title="Bulletin fin d'année de {{ $row['student']->last_name }}"
+                               class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white text-xs font-semibold rounded-lg hover:bg-emerald-700 transition-colors duration-150 shadow-sm">
+                                <i class="fas fa-file-pdf text-xs"></i>
+                                Fin d'Année
+                            </a>
                         </td>
                     </tr>
                     @endforeach
@@ -202,14 +218,11 @@
 </div>
 
 
+{{-- Modal bulletin trimestriel --}}
 <div id="bulletinModal" class="fixed inset-0 z-50 hidden overflow-y-auto" role="dialog" aria-modal="true">
-    {{-- Overlay --}}
     <div id="bulletinOverlay" class="fixed inset-0 bg-blue-600 bg-opacity-60 transition-opacity" onclick="fermerBulletin()"></div>
-
-    {{-- Conteneur --}}
     <div class="relative min-h-screen flex items-start justify-center p-4 pt-8">
         <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-5xl z-10">
-            {{-- Header modal --}}
             <div class="flex items-center justify-between px-6 py-4 bg-blue-400 rounded-t-2xl">
                 <div class="flex items-center gap-3">
                     <div class="w-9 h-9 bg-white/10 rounded-full flex items-center justify-center">
@@ -220,31 +233,22 @@
                         <p class="text-gray-300 text-xs mt-0.5" id="bulletinModalSubtitle">Chargement...</p>
                     </div>
                 </div>
-                <div class="flex items-center gap-2">
-                    <button onclick="fermerBulletin()"
-                        class="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
+                <button onclick="fermerBulletin()"
+                    class="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
-
-            {{-- Loader --}}
             <div id="bulletinLoader" class="flex items-center justify-center py-20">
                 <div class="text-center">
                     <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
                     <p class="text-gray-500 text-sm">Chargement du bulletin...</p>
                 </div>
             </div>
-
-            {{-- Contenu du bulletin --}}
-            <div id="bulletinContent" class="hidden p-6 overflow-x-auto">
-                {{-- Injecté via JS --}}
-            </div>
+            <div id="bulletinContent" class="hidden p-6 overflow-x-auto"></div>
         </div>
     </div>
 </div>
 
-{{-- Style impression --}}
 <style>
 @media print {
     body > *:not(#printArea) { display: none !important; }
@@ -252,16 +256,15 @@
     .no-print { display: none !important; }
 }
 </style>
-
 <div id="printArea" style="display:none;"></div>
 
 <script>
     const CLASSE_ID = {{ $classe->id }};
 
     function ouvrirBulletin(studentId, trimestre) {
-        const modal = document.getElementById('bulletinModal');
-        const loader = document.getElementById('bulletinLoader');
-        const content = document.getElementById('bulletinContent');
+        const modal    = document.getElementById('bulletinModal');
+        const loader   = document.getElementById('bulletinLoader');
+        const content  = document.getElementById('bulletinContent');
         const subtitle = document.getElementById('bulletinModalSubtitle');
 
         modal.classList.remove('hidden');
@@ -274,16 +277,14 @@
         })
         .then(r => r.json())
         .then(data => {
-            if (data.error) {
-                content.innerHTML = `<div class="text-center py-10 text-red-600"><i class="fas fa-exclamation-triangle text-3xl mb-3"></i><p>${data.error}</p></div>`;
-            } else {
-                content.innerHTML = data.html;
-            }
+            content.innerHTML = data.error
+                ? `<div class="text-center py-10 text-red-600"><i class="fas fa-exclamation-triangle text-3xl mb-3"></i><p>${data.error}</p></div>`
+                : data.html;
             loader.classList.add('hidden');
             content.classList.remove('hidden');
             subtitle.textContent = 'Trimestre ' + trimestre;
         })
-        .catch(err => {
+        .catch(() => {
             content.innerHTML = `<div class="text-center py-10 text-red-600"><i class="fas fa-exclamation-triangle text-3xl mb-3"></i><p>Erreur lors du chargement.</p></div>`;
             loader.classList.add('hidden');
             content.classList.remove('hidden');
@@ -295,17 +296,6 @@
         document.getElementById('bulletinContent').innerHTML = '';
     }
 
-    function imprimerBulletin() {
-        const contenu = document.getElementById('bulletinContent').innerHTML;
-        const printArea = document.getElementById('printArea');
-        printArea.innerHTML = contenu;
-        printArea.style.display = 'block';
-        window.print();
-        printArea.style.display = 'none';
-        printArea.innerHTML = '';
-    }
-
-    // Fermer sur Escape
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') fermerBulletin();
     });
