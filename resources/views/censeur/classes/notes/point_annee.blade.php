@@ -201,16 +201,16 @@
     </div>
 </div>
 
-{{-- ==================== MODAL BULLETIN ==================== --}}
+
 <div id="bulletinModal" class="fixed inset-0 z-50 hidden overflow-y-auto" role="dialog" aria-modal="true">
     {{-- Overlay --}}
-    <div id="bulletinOverlay" class="fixed inset-0 bg-black bg-opacity-60 transition-opacity" onclick="fermerBulletin()"></div>
+    <div id="bulletinOverlay" class="fixed inset-0 bg-blue-600 bg-opacity-60 transition-opacity" onclick="fermerBulletin()"></div>
 
     {{-- Conteneur --}}
     <div class="relative min-h-screen flex items-start justify-center p-4 pt-8">
         <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-5xl z-10">
             {{-- Header modal --}}
-            <div class="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-gray-800 to-gray-900 rounded-t-2xl">
+            <div class="flex items-center justify-between px-6 py-4 bg-blue-400 rounded-t-2xl">
                 <div class="flex items-center gap-3">
                     <div class="w-9 h-9 bg-white/10 rounded-full flex items-center justify-center">
                         <i class="fas fa-file-alt text-white"></i>
