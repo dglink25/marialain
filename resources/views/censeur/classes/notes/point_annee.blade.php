@@ -177,11 +177,11 @@
         <div class="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div class="bg-green-50 rounded-xl border border-green-200 p-4 text-center">
                 <div class="text-3xl font-bold text-green-700">{{ $nbPasses }}</div>
-                <div class="text-sm text-green-600 mt-1">Élèves Passés</div>
+                <div class="text-sm text-green-600 mt-1">Élèves Passent en classe supérieure</div>
             </div>
             <div class="bg-red-50 rounded-xl border border-red-200 p-4 text-center">
                 <div class="text-3xl font-bold text-red-700">{{ $nbRedoubles }}</div>
-                <div class="text-sm text-red-600 mt-1">Élèves Redoublants</div>
+                <div class="text-sm text-red-600 mt-1">Élèves Redoublent</div>
             </div>
             <div class="bg-blue-50 rounded-xl border border-blue-200 p-4 text-center">
                 <div class="text-3xl font-bold text-blue-700">{{ $tauxReussite }}%</div>
