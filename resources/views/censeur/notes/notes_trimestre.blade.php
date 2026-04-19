@@ -132,7 +132,7 @@
 
             <div class="flex flex-wrap gap-3">
 
-                {{-- ✅ NOUVEAU : Export Excel --}}
+                {{-- NOUVEAU : Export Excel --}}
                 <a href="{{ route('censeur.notes.export.excel', [
                         'classId'   => $classe->id,
                         'trimestre' => $trimestre,

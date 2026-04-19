@@ -526,8 +526,8 @@ use App\Exports\NotesSubjectExport;
                 return $pdf->download("Bulletin_{$student->last_name}_{$student->first_name}_T{$trimestre}.pdf");
 
             } catch (\Exception $e) {
-                //\Log::error('Erreur PDF Bulletin: ' . $e->getMessage());
-            // \Log::error($e->getTraceAsString());
+                // Log::error('Erreur PDF Bulletin: ' . $e->getMessage());
+                // Log::error($e->getTraceAsString());
                 return back()->with('error', 'Impossible de générer le PDF du bulletin: ' . $e->getMessage());
             }
         }
@@ -729,13 +729,43 @@ use App\Exports\NotesSubjectExport;
             }
         }
         
-        public function trimestres($id){
+
+        public function trimestres($id)  {
+            $activeYear = AcademicYear::where('active', true)->first();
+
             $classe = Classe::findOrFail($id);
-            $coef = ClassTeacherSubject::where('class_id', $id)->first();
-            $matieres = $classe->matieres;
+
             $trimestres = [1, 2, 3];
 
-            return view('censeur.classes.notes.trimestres', compact('classe', 'trimestres', 'matieres', 'coef'));
+            // Récupération des matières via ClassTeacherSubject (avec le nom et le coeff)
+            // Utiliser with('subject') pour avoir le nom de la matière
+            $matieresPivot = ClassTeacherSubject::with('subject')
+                ->where('class_id', $id)
+                ->when($activeYear, fn($q) => $q->where('academic_year_id', $activeYear->id))
+                ->get();
+
+            // On mappe pour exposer les champs utiles dans la vue
+            $matieres = $matieresPivot->map(function ($item) {
+                $subject = $item->subject;
+                if (!$subject) return null;
+
+                // On enrichit l'objet subject avec les infos du pivot
+                $subject->coefficient  = $item->coefficient ?? 1;
+                // subject_id : l'ID réel de la matière (utile dans le select de la vue)
+                $subject->subject_id   = $subject->id;
+
+                return $subject;
+            })->filter()->values(); // supprime les null et réindexe
+
+            $coef = $matieresPivot->first();
+
+            return view('censeur.classes.notes.trimestres', compact(
+                'classe',
+                'trimestres',
+                'matieres',
+                'coef',
+                'activeYear'
+            ));
         }
 
         // Gérer les permissions de saisie des notes pour une classe
@@ -2993,8 +3023,7 @@ use App\Exports\NotesSubjectExport;
 
     }
 
-    private function getBulletinFinAnneeData(int $studentId, int $classId, $activeYear, $subjects): array
-    {
+    private function getBulletinFinAnneeData(int $studentId, int $classId, $activeYear, $subjects): array {
         $student = Student::findOrFail($studentId);
         $classe  = Classe::with(['students' => function ($q) use ($activeYear) {
             $q->where('is_validated', 1)
@@ -3282,11 +3311,7 @@ use App\Exports\NotesSubjectExport;
         ];
     }
 
-    /**
-     * Télécharge le bulletin de fin d'année d'UN élève
-     */
-    public function downloadBulletinFinAnneePdf(int $classId, int $studentId)
-    {
+    public function downloadBulletinFinAnneePdf(int $classId, int $studentId) {
         try {
             $activeYear = AcademicYear::where('active', true)->firstOrFail();
             $subjects   = Subject::whereHas('classTeacherSubjects', function ($q) use ($classId, $activeYear) {
@@ -3307,7 +3332,6 @@ use App\Exports\NotesSubjectExport;
             return back()->with('error', 'Impossible de générer le bulletin : ' . $e->getMessage());
         }
     }
-
 
     public function downloadAllBulletinsFinAnneePdf(int $classId) {
         try {
@@ -3339,6 +3363,88 @@ use App\Exports\NotesSubjectExport;
 
         } catch (\Exception $e) {
             return back()->with('error', 'Impossible de générer les bulletins : ' . $e->getMessage());
+        }
+    }
+
+    public function exportListeElevesPDF(int $classId, int $trimestre, int $subjectId) {
+        try {
+            // 1) Année académique active
+            $activeYear = AcademicYear::where('active', true)->firstOrFail();
+
+            // 2) Classe avec élèves validés, triés alphabétiquement
+            $classe = Classe::with(['students' => function ($q) use ($activeYear) {
+                $q->where('is_validated', 1)
+                  ->where('academic_year_id', $activeYear->id)
+                  ->orderBy('last_name')
+                  ->orderBy('first_name');
+            }])->findOrFail($classId);
+
+            // 3) Matière (pivot pour le coefficient)
+            $subjectPivot = ClassTeacherSubject::where('subject_id', $subjectId)
+                ->where('class_id', $classId)
+                ->where('academic_year_id', $activeYear->id)
+                ->first();
+
+            if (!$subjectPivot) {
+                // Fallback sans filtre année
+                $subjectPivot = ClassTeacherSubject::where('subject_id', $subjectId)
+                    ->where('class_id', $classId)
+                    ->first();
+            }
+
+            if (!$subjectPivot) {
+                return back()->with('error', 'Matière non associée à cette classe.');
+            }
+
+            $subject = Subject::findOrFail($subjectId);
+
+            // 4) Construction des données par élève
+            $listeEleves = [];
+
+            foreach ($classe->students as $student) {
+                $grades = Grade::where('student_id', $student->id)
+                    ->where('subject_id', $subjectId)
+                    ->where('academic_year_id', $activeYear->id)
+                    ->where('trimestre', $trimestre)
+                    ->get();
+
+                // Initialisation
+                $interros = [1 => null, 2 => null, 3 => null, 4 => null, 5 => null];
+                $devoirs   = [1 => null, 2 => null];
+
+                foreach ($grades as $grade) {
+                    if ($grade->type === 'interrogation' && isset($interros[$grade->sequence])) {
+                        $interros[$grade->sequence] = $grade->value;
+                    } elseif ($grade->type === 'devoir' && isset($devoirs[$grade->sequence])) {
+                        $devoirs[$grade->sequence] = $grade->value;
+                    }
+                }
+
+                $listeEleves[] = [
+                    'student'   => $student,
+                    'interros'  => $interros,
+                    'devoirs'   => $devoirs,
+                ];
+            }
+
+            // 5) Génération PDF
+            $pdf = Pdf::loadView('censeur.notes.pdf.liste_eleves_pdf', [
+                'classe'       => $classe,
+                'subject'      => $subject,
+                'subjectPivot' => $subjectPivot,
+                'trimestre'    => $trimestre,
+                'activeYear'   => $activeYear,
+                'listeEleves'  => $listeEleves,
+                'dateDownload' => now()->locale('fr')->isoFormat('D MMMM YYYY'),
+            ])->setPaper('a4', 'landscape');
+
+            $nomClasse  = str_replace([' ', '/'], '_', $classe->name);
+            $nomMatiere = str_replace([' ', '/'], '_', $subject->name);
+
+            return $pdf->download("Liste_Eleves_{$nomClasse}_{$nomMatiere}_T{$trimestre}.pdf");
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Impossible de générer la liste : ' . $e->getMessage());
         }
     }
 
