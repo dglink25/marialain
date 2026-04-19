@@ -39,7 +39,7 @@ class NoteController extends Controller{
         foreach ($classe->students as $student) {
             $student->gradesFiltered = $student->grades()
                 ->where('academic_year_id', $activeYear->id)
-                ->where('subject_id', $subjectId) // 🔹 filtrer par matière
+                ->where('subject_id', $subjectId) 
                 ->where('trimestre', $trimestre)
                 ->get();
         }

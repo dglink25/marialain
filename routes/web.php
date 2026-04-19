@@ -58,7 +58,7 @@ use App\Http\Controllers\Censeur\CenseurExamController;
 use App\Http\Controllers\Teacher\TeacherExamController;
 use App\Http\Controllers\ParentAuthController;
 use App\Http\Controllers\ParentDashboardController;
-use App\Http\Controllers\Parent\ChildController;
+use App\Http\Controllers\Teacher\PdfUploadNotesController;
 
 // Pour tester la page 400
 Route::get('/400', function () {
@@ -472,6 +472,16 @@ Route::middleware(['auth'])->prefix('teacher')->name('teacher.')->group(function
         'classes/{class}/subjects/{subject}/notes/{type}/{num}/{trimestre}',
         [NoteController::class, 'update']
     )->name('classes.notes.update');
+
+    Route::post(
+        'classes/{classId}/subjects/{subjectId}/notes/{trimestre}/upload-pdf',
+        [\App\Http\Controllers\Teacher\PdfUploadNotesController::class, 'upload']
+    )->name('classes.notes.upload-pdf');
+    
+    Route::post(
+        'classes/{classId}/subjects/{subjectId}/notes/{trimestre}/save-pdf-notes',
+        [\App\Http\Controllers\Teacher\PdfUploadNotesController::class, 'save']
+    )->name('classes.notes.save-pdf-notes');
 
 
 
