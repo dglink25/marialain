@@ -289,93 +289,89 @@
                         </div>
                     </form>
 
-                    {{-- ══ Résultat de l'analyse (affiché si session présente) ══════════ --}}
+                    {{-- ── Résultat de l'analyse (affiché si session présente) ── --}}
                     @if($showModal)
                         @php
-                            $result    = $uploadResult;
-                            $conform   = $result['conformite'];
-                            $globalOk  = $result['global_ok'];
-                            $rows      = $result['rows'];
-                            $isScanned = $result['is_scanned'] ?? false;
+                            $result   = $uploadResult;
+                            $conform  = $result['conformite'];
+                            $globalOk = $result['global_ok'];
+                            $rows     = $result['rows'];
 
+                            // Construire le JSON pour la sauvegarde
                             $notesForSave = [];
                             foreach ($rows as $row) {
                                 for ($i = 1; $i <= 5; $i++) {
                                     $cell = $row['interros'][$i];
-                                    if ($cell['value'] !== null && $cell['status'] === 'ok')
-                                        $notesForSave[] = ['student_id'=>$row['student']->id,'type'=>'interrogation','sequence'=>$i,'value'=>$cell['value']];
+                                    if ($cell['value'] !== null && $cell['status'] === 'ok') {
+                                        $notesForSave[] = [
+                                            'student_id' => $row['student']->id,
+                                            'type'       => 'interrogation',
+                                            'sequence'   => $i,
+                                            'value'      => $cell['value'],
+                                        ];
+                                    }
                                 }
                                 for ($i = 1; $i <= 2; $i++) {
                                     $cell = $row['devoirs'][$i];
-                                    if ($cell['value'] !== null && $cell['status'] === 'ok')
-                                        $notesForSave[] = ['student_id'=>$row['student']->id,'type'=>'devoir','sequence'=>$i,'value'=>$cell['value']];
+                                    if ($cell['value'] !== null && $cell['status'] === 'ok') {
+                                        $notesForSave[] = [
+                                            'student_id' => $row['student']->id,
+                                            'type'       => 'devoir',
+                                            'sequence'   => $i,
+                                            'value'      => $cell['value'],
+                                        ];
+                                    }
                                 }
                             }
 
-                            $conflictCount  = 0; $noPdfDataCount = 0;
-                            $nameMismatch   = 0; $emptyNoteCount = 0;
+                            // Compteurs erreurs
+                            $conflictCount   = 0;
+                            $noPdfDataCount  = 0;
+                            $nameMismatch    = 0;
                             foreach ($rows as $row) {
                                 if (!$row['found_pdf']) { $noPdfDataCount++; continue; }
                                 if (!$row['name_match']) $nameMismatch++;
                                 foreach (array_merge($row['interros'], $row['devoirs']) as $cell) {
                                     if ($cell['status'] === 'conflict') $conflictCount++;
-                                    if ($cell['status'] === 'empty')    $emptyNoteCount++;
                                 }
                             }
-                            $hasErrors = $conflictCount > 0 || $noPdfDataCount > 0
-                                      || $nameMismatch > 0 || !$conform['is_conforming'];
-                            $canSave   = ($globalOk || $isScanned) && $conflictCount === 0;
+                            $hasErrors = $conflictCount > 0 || $noPdfDataCount > 0 || $nameMismatch > 0 || !$conform['is_conforming'];
                         @endphp
 
-                        <div id="analysisResult" style="border-top:1px solid #e2e8f0;padding-top:1.25rem;margin-top:.25rem;">
+                        <div id="analysisResult" style="border-top:1px solid #e2e8f0; padding-top:1.25rem; margin-top:.25rem;">
 
-                            {{-- ── Bandeau PDF scanné ─────────────────────────────────────────── --}}
-                            @if($isScanned)
-                                <div class="mb-4 bg-amber-50 border border-amber-300 rounded-xl p-3 flex gap-3 items-start">
-                                    <svg class="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
-                                    </svg>
-                                    <div>
-                                        <p class="text-sm font-semibold text-amber-800">PDF scanné détecté — saisie semi-automatique</p>
-                                        <p class="text-xs text-amber-700 mt-0.5">
-                                            Les matricules et noms ont été lus automatiquement. Les notes manuscrites ne peuvent pas être lues par OCR avec fiabilité.
-                                            <strong>Saisissez les notes manuellemement</strong> dans les champs ci-dessous en vous aidant des images de chaque cellule.
-                                        </p>
-                                    </div>
-                                </div>
-                            @endif
-
-                            {{-- ── En-tête résultat ──────────────────────────────────────────── --}}
+                            {{-- En-tête résultat --}}
                             <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
                                 <h3 class="text-base font-bold text-gray-900 flex items-center gap-2">
                                     <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                                     </svg>
                                     Résultat de l'analyse
                                 </h3>
-                                @if($globalOk && !$isScanned)
+                                @if($globalOk)
                                     <span class="inline-flex items-center px-3 py-1 bg-green-100 text-green-800 text-sm font-semibold rounded-full border border-green-300">
-                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                        </svg>
                                         Tout est valide
-                                    </span>
-                                @elseif($isScanned)
-                                    <span class="inline-flex items-center px-3 py-1 bg-amber-100 text-amber-800 text-sm font-semibold rounded-full border border-amber-300">
-                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 112.828 2.828L11.828 15.828a4 4 0 01-1.414.828l-3 1 1-3a4 4 0 01.828-1.414z"/></svg>
-                                        Saisie manuelle requise
                                     </span>
                                 @else
                                     <span class="inline-flex items-center px-3 py-1 bg-red-100 text-red-800 text-sm font-semibold rounded-full border border-red-300">
-                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
                                         Des problèmes détectés
                                     </span>
                                 @endif
                             </div>
 
-                            {{-- ── Conformité liste ──────────────────────────────────────────── --}}
+                            {{-- Conformité liste --}}
                             <div class="bg-white rounded-xl border p-4 mb-4 shadow-sm">
                                 <h4 class="font-semibold text-gray-800 mb-3 text-sm flex items-center gap-2">
                                     <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                              d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"/>
                                     </svg>
                                     Conformité de la liste des élèves
                                 </h4>
@@ -389,44 +385,62 @@
                                         <div class="text-xs text-purple-600 mt-0.5">Élèves dans le PDF</div>
                                     </div>
                                     <div class="{{ empty($conform['missing_in_pdf']) ? 'bg-green-50' : 'bg-red-50' }} rounded-lg p-3 text-center">
-                                        <div class="text-xl font-bold {{ empty($conform['missing_in_pdf']) ? 'text-green-700' : 'text-red-700' }}">{{ count($conform['missing_in_pdf']) }}</div>
+                                        <div class="text-xl font-bold {{ empty($conform['missing_in_pdf']) ? 'text-green-700' : 'text-red-700' }}">
+                                            {{ count($conform['missing_in_pdf']) }}
+                                        </div>
                                         <div class="text-xs {{ empty($conform['missing_in_pdf']) ? 'text-green-600' : 'text-red-600' }} mt-0.5">Absents dans PDF</div>
                                     </div>
                                     <div class="{{ empty($conform['unknown_in_db']) ? 'bg-green-50' : 'bg-orange-50' }} rounded-lg p-3 text-center">
-                                        <div class="text-xl font-bold {{ empty($conform['unknown_in_db']) ? 'text-green-700' : 'text-orange-700' }}">{{ count($conform['unknown_in_db']) }}</div>
+                                        <div class="text-xl font-bold {{ empty($conform['unknown_in_db']) ? 'text-green-700' : 'text-orange-700' }}">
+                                            {{ count($conform['unknown_in_db']) }}
+                                        </div>
                                         <div class="text-xs {{ empty($conform['unknown_in_db']) ? 'text-green-600' : 'text-orange-600' }} mt-0.5">Inconnus en base</div>
                                     </div>
                                 </div>
+
                                 @if(!empty($conform['missing_in_pdf']))
                                     <div class="bg-red-50 border border-red-200 rounded-lg p-3 mb-2">
-                                        <p class="text-xs font-semibold text-red-700 mb-1">Matricules en base absents du PDF :</p>
+                                        <p class="text-xs font-semibold text-red-700 mb-1">
+                                            Matricules en base absents du PDF (num_educ) :
+                                        </p>
                                         <p class="text-xs text-red-600 font-mono break-all">{{ implode(', ', $conform['missing_in_pdf']) }}</p>
                                     </div>
                                 @endif
                                 @if(!empty($conform['unknown_in_db']))
                                     <div class="bg-orange-50 border border-orange-200 rounded-lg p-3 mb-2">
-                                        <p class="text-xs font-semibold text-orange-700 mb-1">Matricules PDF non trouvés dans cette classe/année :</p>
+                                        <p class="text-xs font-semibold text-orange-700 mb-1">
+                                            Matricules dans le PDF non trouvés dans cette classe/année :
+                                        </p>
                                         <p class="text-xs text-orange-600 font-mono break-all">{{ implode(', ', $conform['unknown_in_db']) }}</p>
                                     </div>
                                 @endif
                                 @if($conform['is_conforming'])
                                     <div class="bg-green-50 border border-green-200 rounded-lg p-3 flex items-center gap-2">
-                                        <svg class="w-4 h-4 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                                        <span class="text-xs text-green-700 font-medium">Liste conforme — tous les élèves correspondent à la classe et à l'année académique.</span>
+                                        <svg class="w-4 h-4 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                        </svg>
+                                        <span class="text-xs text-green-700 font-medium">Liste conforme — tous les élèves correspondent à cette classe et cette année académique.</span>
                                     </div>
                                 @endif
                             </div>
 
-                            {{-- ── Légende ───────────────────────────────────────────────────── --}}
+                            {{-- Légende --}}
                             <div class="flex flex-wrap gap-3 mb-3 text-xs">
-                                <span class="flex items-center gap-1"><span class="inline-block w-4 h-4 rounded bg-green-100 border border-green-400"></span>Note lue</span>
-                                <span class="flex items-center gap-1"><span class="inline-block w-4 h-4 rounded bg-sky-100 border border-sky-400"></span>Saisie manuelle</span>
-                                <span class="flex items-center gap-1"><span class="inline-block w-4 h-4 rounded bg-gray-100 border border-gray-300"></span>Vide</span>
-                                <span class="flex items-center gap-1"><span class="inline-block w-4 h-4 rounded bg-red-200 border border-red-500"></span>Conflit (note existante)</span>
-                                <span class="flex items-center gap-1"><span class="inline-block w-4 h-4 rounded bg-yellow-100 border border-yellow-400"></span>Élève absent du PDF</span>
+                                <span class="flex items-center gap-1">
+                                    <span class="inline-block w-4 h-4 rounded bg-green-100 border border-green-400"></span>Note valide
+                                </span>
+                                <span class="flex items-center gap-1">
+                                    <span class="inline-block w-4 h-4 rounded bg-gray-100 border border-gray-300"></span>Vide
+                                </span>
+                                <span class="flex items-center gap-1">
+                                    <span class="inline-block w-4 h-4 rounded bg-red-200 border border-red-500"></span>Conflit (note existante)
+                                </span>
+                                <span class="flex items-center gap-1">
+                                    <span class="inline-block w-4 h-4 rounded bg-yellow-100 border border-yellow-400"></span>Élève absent du PDF
+                                </span>
                             </div>
 
-                            {{-- ── Tableau des notes ─────────────────────────────────────────── --}}
+                            {{-- Tableau des notes --}}
                             <div class="overflow-x-auto rounded-xl border shadow-sm">
                                 <table class="min-w-full text-xs" style="border-collapse:collapse;">
                                     <thead>
@@ -439,120 +453,93 @@
                                             <th colspan="2" class="px-2 py-1 border text-center font-semibold text-green-700 bg-green-50">Devoirs</th>
                                         </tr>
                                         <tr class="bg-gray-50">
-                                            @for($i=1;$i<=5;$i++)<th class="px-2 py-1 border text-center font-semibold text-blue-600 bg-blue-50">I{{ $i }}</th>@endfor
-                                            @for($i=1;$i<=2;$i++)<th class="px-2 py-1 border text-center font-semibold text-green-600 bg-green-50">D{{ $i }}</th>@endfor
+                                            @for($i=1;$i<=5;$i++)
+                                                <th class="px-2 py-1 border text-center font-semibold text-blue-600 bg-blue-50">I{{ $i }}</th>
+                                            @endfor
+                                            @for($i=1;$i<=2;$i++)
+                                                <th class="px-2 py-1 border text-center font-semibold text-green-600 bg-green-50">D{{ $i }}</th>
+                                            @endfor
                                         </tr>
                                     </thead>
                                     <tbody>
                                         @foreach($rows as $rowIdx => $row)
                                             @php
-                                                $rowBg  = !$row['found_pdf'] ? 'bg-yellow-50' : ($rowIdx % 2 === 0 ? 'bg-white' : 'bg-gray-50');
-                                                $nameBg = (!$row['name_match'] && $row['found_pdf']) ? 'bg-red-50' : '';
-                                                $sid    = $row['student']->id;
+                                                $rowBg  = ! $row['found_pdf'] ? 'bg-yellow-50' : ($rowIdx % 2 === 0 ? 'bg-white' : 'bg-gray-50');
+                                                $nameBg = (! $row['name_match'] && $row['found_pdf']) ? 'bg-red-50' : '';
                                             @endphp
                                             <tr class="{{ $rowBg }} hover:bg-blue-50 transition">
 
-                                                <td class="px-3 py-2 border font-mono text-gray-700 whitespace-nowrap text-xs">{{ $row['student']->num_educ ?? '—' }}</td>
-
-                                                <td class="px-3 py-2 border font-semibold text-gray-800 whitespace-nowrap {{ $nameBg }}">{{ strtoupper($row['student']->last_name) }}</td>
-
-                                                <td class="px-3 py-2 border whitespace-nowrap {{ !$row['name_match'] && $row['found_pdf'] ? 'text-red-700 font-bold bg-red-50' : 'text-gray-600' }}">
-                                                    @if(!$row['found_pdf'])<span class="text-yellow-600 font-semibold">Non trouvé</span>
-                                                    @elseif($row['pdf_nom'])
-                                                        {{ strtoupper($row['pdf_nom']) }}
-                                                        @if(!$row['name_match'])<span class="ml-1 text-xs text-red-600">⚠ Divergence</span>@endif
-                                                    @else<span class="text-gray-400">—</span>@endif
+                                                {{-- Matricule (num_educ) --}}
+                                                <td class="px-3 py-2 border font-mono text-gray-700 whitespace-nowrap text-xs">
+                                                    {{ $row['student']->num_educ ?? '—' }}
                                                 </td>
 
-                                                <td class="px-3 py-2 border text-gray-600">{{ $row['pdf_prenom'] ?? ucfirst($row['student']->first_name) }}</td>
+                                                {{-- Nom BDD --}}
+                                                <td class="px-3 py-2 border font-semibold text-gray-800 whitespace-nowrap {{ $nameBg }}">
+                                                    {{ strtoupper($row['student']->last_name) }}
+                                                </td>
 
-                                                {{-- ── Interrogations ─────────────────────────── --}}
+                                                {{-- Nom PDF --}}
+                                                <td class="px-3 py-2 border whitespace-nowrap {{ !$row['name_match'] && $row['found_pdf'] ? 'text-red-700 font-bold bg-red-50' : 'text-gray-600' }}">
+                                                    @if(!$row['found_pdf'])
+                                                        <span class="text-yellow-600 font-semibold">Non trouvé</span>
+                                                    @elseif($row['pdf_nom'])
+                                                        {{ strtoupper($row['pdf_nom']) }}
+                                                        @if(!$row['name_match'])
+                                                            <span class="ml-1 text-xs text-red-600">⚠ Divergence</span>
+                                                        @endif
+                                                    @else
+                                                        <span class="text-gray-400">—</span>
+                                                    @endif
+                                                </td>
+
+                                                {{-- Prénoms PDF --}}
+                                                <td class="px-3 py-2 border text-gray-600">
+                                                    {{ $row['pdf_prenom'] ?? ucfirst($row['student']->first_name) }}
+                                                </td>
+
+                                                {{-- Interrogations --}}
                                                 @for($i = 1; $i <= 5; $i++)
-                                                    @php
-                                                        $cell    = $row['interros'][$i];
-                                                        $hasImg  = $isScanned && !empty($cell['img']);
-                                                        $inputId = "note_{$sid}_interrogation_{$i}";
-                                                        $tdClass = match($cell['status']) {
-                                                            'ok'          => 'bg-green-50 border-green-300',
-                                                            'conflict'    => 'bg-red-100 border-red-400',
-                                                            'no_pdf_data' => 'bg-yellow-50 border-yellow-300',
-                                                            default       => $hasImg ? 'bg-sky-50 border-sky-300' : 'bg-gray-50 border-gray-200',
-                                                        };
-                                                    @endphp
-                                                    <td class="px-1 py-1 border text-center {{ $tdClass }}" style="min-width:60px;">
+                                                    @php $cell = $row['interros'][$i]; @endphp
+                                                    <td class="px-2 py-2 border text-center font-semibold {{ 
+                                                        $cell['status'] === 'ok'          ? 'bg-green-50 text-green-800 border-green-300' :
+                                                        ($cell['status'] === 'conflict'   ? 'bg-red-100 text-red-800 border-red-400 ring-2 ring-red-400 ring-inset' :
+                                                        ($cell['status'] === 'no_pdf_data'? 'bg-yellow-50 text-yellow-600 border-yellow-300' :
+                                                        'bg-gray-50 text-gray-400 border-gray-200')) }}">
                                                         @if($cell['status'] === 'conflict')
-                                                            <span class="text-red-800 font-semibold text-xs" title="Note existante : {{ $cell['existing'] }}">
-                                                                {{ $cell['value'] !== null ? number_format($cell['value'],2,',','') : '—' }}
-                                                                <br><span class="text-red-500 font-normal">ex:{{ $cell['existing'] }}</span>
+                                                            <span title="Note existante : {{ $cell['existing'] }}">
+                                                                {{ $cell['value'] !== null ? number_format($cell['value'], 2, ',', '') : '—' }}
+                                                                <br><span class="text-xs font-normal text-red-600">Existe: {{ $cell['existing'] }}</span>
                                                             </span>
                                                         @elseif($cell['status'] === 'ok')
-                                                            <span class="text-green-800 font-semibold text-xs">{{ number_format($cell['value'],2,',','') }}</span>
+                                                            {{ number_format($cell['value'], 2, ',', '') }}
                                                         @elseif($cell['status'] === 'no_pdf_data')
-                                                            <span class="text-yellow-500 text-xs">—</span>
-                                                        @elseif($hasImg)
-                                                            {{-- PDF scanné : afficher l'image + champ de saisie --}}
-                                                            <div class="flex flex-col items-center gap-1">
-                                                                <img src="data:image/png;base64,{{ $cell['img'] }}"
-                                                                     alt="I{{ $i }}"
-                                                                     class="rounded border border-sky-200 cursor-pointer"
-                                                                     style="max-width:56px;max-height:28px;object-fit:contain;"
-                                                                     onclick="zoomCell(this)"
-                                                                     title="Cliquer pour agrandir">
-                                                                <input type="number"
-                                                                       id="{{ $inputId }}"
-                                                                       min="0" max="20" step="0.5"
-                                                                       placeholder="—"
-                                                                       class="w-14 text-center text-xs border border-sky-300 rounded px-1 py-0.5 bg-white focus:ring-2 focus:ring-sky-400 focus:outline-none"
-                                                                       oninput="onNoteInput(this,'{{ $sid }}','interrogation','{{ $i }}')"
-                                                                       onchange="onNoteInput(this,'{{ $sid }}','interrogation','{{ $i }}')">
-                                                            </div>
+                                                            <span class="text-yellow-500">—</span>
                                                         @else
-                                                            <span class="text-gray-400 text-xs">—</span>
+                                                            <span class="text-gray-400">—</span>
                                                         @endif
                                                     </td>
                                                 @endfor
 
-                                                {{-- ── Devoirs ────────────────────────────────── --}}
+                                                {{-- Devoirs --}}
                                                 @for($i = 1; $i <= 2; $i++)
-                                                    @php
-                                                        $cell    = $row['devoirs'][$i];
-                                                        $hasImg  = $isScanned && !empty($cell['img']);
-                                                        $inputId = "note_{$sid}_devoir_{$i}";
-                                                        $tdClass = match($cell['status']) {
-                                                            'ok'          => 'bg-green-50 border-green-300',
-                                                            'conflict'    => 'bg-red-100 border-red-400',
-                                                            'no_pdf_data' => 'bg-yellow-50 border-yellow-300',
-                                                            default       => $hasImg ? 'bg-sky-50 border-sky-300' : 'bg-gray-50 border-gray-200',
-                                                        };
-                                                    @endphp
-                                                    <td class="px-1 py-1 border text-center {{ $tdClass }}" style="min-width:60px;">
+                                                    @php $cell = $row['devoirs'][$i]; @endphp
+                                                    <td class="px-2 py-2 border text-center font-semibold {{ 
+                                                        $cell['status'] === 'ok'          ? 'bg-green-50 text-green-800 border-green-300' :
+                                                        ($cell['status'] === 'conflict'   ? 'bg-red-100 text-red-800 border-red-400 ring-2 ring-red-400 ring-inset' :
+                                                        ($cell['status'] === 'no_pdf_data'? 'bg-yellow-50 text-yellow-600 border-yellow-300' :
+                                                        'bg-gray-50 text-gray-400 border-gray-200')) }}">
                                                         @if($cell['status'] === 'conflict')
-                                                            <span class="text-red-800 font-semibold text-xs" title="Note existante : {{ $cell['existing'] }}">
-                                                                {{ $cell['value'] !== null ? number_format($cell['value'],2,',','') : '—' }}
-                                                                <br><span class="text-red-500 font-normal">ex:{{ $cell['existing'] }}</span>
+                                                            <span title="Note existante : {{ $cell['existing'] }}">
+                                                                {{ $cell['value'] !== null ? number_format($cell['value'], 2, ',', '') : '—' }}
+                                                                <br><span class="text-xs font-normal text-red-600">Existe: {{ $cell['existing'] }}</span>
                                                             </span>
                                                         @elseif($cell['status'] === 'ok')
-                                                            <span class="text-green-800 font-semibold text-xs">{{ number_format($cell['value'],2,',','') }}</span>
+                                                            {{ number_format($cell['value'], 2, ',', '') }}
                                                         @elseif($cell['status'] === 'no_pdf_data')
-                                                            <span class="text-yellow-500 text-xs">—</span>
-                                                        @elseif($hasImg)
-                                                            <div class="flex flex-col items-center gap-1">
-                                                                <img src="data:image/png;base64,{{ $cell['img'] }}"
-                                                                     alt="D{{ $i }}"
-                                                                     class="rounded border border-sky-200 cursor-pointer"
-                                                                     style="max-width:56px;max-height:28px;object-fit:contain;"
-                                                                     onclick="zoomCell(this)"
-                                                                     title="Cliquer pour agrandir">
-                                                                <input type="number"
-                                                                       id="{{ $inputId }}"
-                                                                       min="0" max="20" step="0.5"
-                                                                       placeholder="—"
-                                                                       class="w-14 text-center text-xs border border-sky-300 rounded px-1 py-0.5 bg-white focus:ring-2 focus:ring-sky-400 focus:outline-none"
-                                                                       oninput="onNoteInput(this,'{{ $sid }}','devoir','{{ $i }}')"
-                                                                       onchange="onNoteInput(this,'{{ $sid }}','devoir','{{ $i }}')">
-                                                            </div>
+                                                            <span class="text-yellow-500">—</span>
                                                         @else
-                                                            <span class="text-gray-400 text-xs">—</span>
+                                                            <span class="text-gray-400">—</span>
                                                         @endif
                                                     </td>
                                                 @endfor
@@ -562,59 +549,69 @@
                                 </table>
                             </div>
 
-                            {{-- ── Récapitulatif erreurs ─────────────────────────────────────── --}}
-                            @if($hasErrors && !$isScanned)
+                            {{-- Récapitulatif des erreurs --}}
+                            @if($hasErrors)
                                 <div class="mt-4 bg-red-50 border border-red-200 rounded-xl p-4">
                                     <h4 class="font-bold text-red-800 mb-2 flex items-center gap-2 text-sm">
-                                        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
                                         Récapitulatif des erreurs
                                     </h4>
                                     <ul class="space-y-1 text-xs text-red-700 list-disc list-inside">
-                                        @if($conflictCount > 0)<li><strong>{{ $conflictCount }}</strong> case(s) en conflit — une note existe déjà en base.</li>@endif
-                                        @if($noPdfDataCount > 0)<li><strong>{{ $noPdfDataCount }}</strong> élève(s) non trouvé(s) dans le PDF.</li>@endif
-                                        @if($nameMismatch > 0)<li><strong>{{ $nameMismatch }}</strong> nom(s) divergent entre la base et le PDF.</li>@endif
-                                        @if(!$conform['is_conforming'])<li>La liste du PDF ne correspond pas à la liste officielle de la classe.</li>@endif
+                                        @if($conflictCount > 0)
+                                            <li><strong>{{ $conflictCount }}</strong> case(s) en conflit — une note existe déjà en base.</li>
+                                        @endif
+                                        @if($noPdfDataCount > 0)
+                                            <li><strong>{{ $noPdfDataCount }}</strong> élève(s) de la classe non trouvé(s) dans le PDF.</li>
+                                        @endif
+                                        @if($nameMismatch > 0)
+                                            <li><strong>{{ $nameMismatch }}</strong> nom(s) divergent entre la base et le PDF.</li>
+                                        @endif
+                                        @if(!$conform['is_conforming'])
+                                            <li>La liste du PDF ne correspond pas à la liste officielle de la classe.</li>
+                                        @endif
                                     </ul>
                                 </div>
                             @endif
-                            @if($conflictCount > 0)
-                                <div class="mt-3 bg-red-50 border border-red-200 rounded-xl p-3 text-xs text-red-700">
-                                    <strong>{{ $conflictCount }} conflit(s) détecté(s)</strong> — des notes existent déjà en base pour ces cellules. Résolvez-les avant de sauvegarder.
-                                </div>
-                            @endif
 
-                            {{-- ── Boutons d'action ──────────────────────────────────────────── --}}
+                            {{-- Boutons d'action --}}
                             <div class="mt-5 flex flex-wrap gap-3 items-center">
-
-                                <button type="button" onclick="resetUpload()"
+                                {{-- Nouveau fichier --}}
+                                <button type="button"
+                                        onclick="resetUpload()"
                                         class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition shadow-sm">
-                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                    </svg>
                                     Nouveau fichier
                                 </button>
 
-                                @if($conflictCount === 0)
-                                    {{-- Formulaire unique (notes auto + saisies manuelles) --}}
+                                {{-- Sauvegarder (uniquement si tout est OK) --}}
+                                @if($globalOk && count($notesForSave) > 0)
                                     <form method="POST"
                                           action="{{ route('teacher.classes.notes.save-pdf-notes', [$classe->id, $subject->id, $trimestre]) }}"
                                           id="saveForm">
                                         @csrf
-                                        {{-- Notes lues automatiquement --}}
-                                        <input type="hidden" id="notesJsonInput" name="notes_json" value="{{ json_encode($notesForSave) }}">
-                                        <button type="button" onclick="confirmSave()"
-                                                id="savePdfBtn"
+                                        <input type="hidden" name="notes_json" value="{{ json_encode($notesForSave) }}">
+                                        <button type="button"
+                                                onclick="confirmSave()"
                                                 class="inline-flex items-center px-6 py-2.5 bg-green-600 text-white text-sm font-bold rounded-lg hover:bg-green-700 transition shadow-md active:scale-95">
-                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
-                                            @if($isScanned)
-                                                Sauvegarder les notes saisies
-                                            @else
-                                                Sauvegarder et télécharger le PDF
-                                            @endif
+                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                      d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
+                                            </svg>
+                                            Sauvegarder et télécharger le PDF
                                         </button>
                                     </form>
+                                @elseif($globalOk && count($notesForSave) === 0)
+                                    <span class="text-sm text-gray-500 italic">Aucune note à sauvegarder (toutes les cases sont vides).</span>
                                 @else
                                     <span class="inline-flex items-center px-4 py-2 bg-gray-200 text-gray-500 text-sm font-medium rounded-lg cursor-not-allowed">
-                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-                                        Résolvez les conflits d'abord
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                                        </svg>
+                                        Sauvegarder (corrigez les erreurs d'abord)
                                     </span>
                                 @endif
                             </div>
@@ -797,105 +794,6 @@
         </div>
 
         <script>
-        // ── Notes manuelles (PDF scanné) ──────────────────────────────────────
-        // Stocke les notes saisies manuellement par l'enseignant
-        const _manualNotes = {};  // key: "studentId_type_seq" → {student_id, type, sequence, value}
-
-        function onNoteInput(input, studentId, type, sequence) {
-            const raw = input.value.trim();
-            const key = `${studentId}_${type}_${sequence}`;
-
-            if (raw === '' || raw === null) {
-                delete _manualNotes[key];
-            } else {
-                const val = parseFloat(raw.replace(',', '.'));
-                if (!isNaN(val) && val >= 0 && val <= 20) {
-                    input.classList.remove('border-red-400');
-                    input.classList.add('border-sky-300');
-                    _manualNotes[key] = {
-                        student_id: parseInt(studentId),
-                        type:       type,
-                        sequence:   parseInt(sequence),
-                        value:      val
-                    };
-                } else {
-                    input.classList.add('border-red-400');
-                    input.classList.remove('border-sky-300');
-                    delete _manualNotes[key];
-                }
-            }
-            _updateSaveButton();
-        }
-
-        function _updateSaveButton() {
-            // Fusionne les notes auto (JSON initial) + les notes manuelles
-            const btn       = document.getElementById('savePdfBtn');
-            const jsonInput = document.getElementById('notesJsonInput');
-            if (!jsonInput) return;
-
-            let base = [];
-            try { base = JSON.parse(jsonInput.dataset.base || jsonInput.value) || []; }
-            catch(e) { base = []; }
-
-            // Stocker la base initiale une seule fois
-            if (!jsonInput.dataset.base) {
-                jsonInput.dataset.base = jsonInput.value;
-            }
-
-            // Fusionner : les notes manuelles écrasent les auto pour la même clé
-            const merged = {};
-            base.forEach(n => {
-                merged[`${n.student_id}_${n.type}_${n.sequence}`] = n;
-            });
-            Object.values(_manualNotes).forEach(n => {
-                merged[`${n.student_id}_${n.type}_${n.sequence}`] = n;
-            });
-
-            const finalNotes = Object.values(merged);
-            jsonInput.value  = JSON.stringify(finalNotes);
-
-            // Mettre à jour le libellé du bouton
-            const manualCount = Object.keys(_manualNotes).length;
-            if (btn) {
-                const total = finalNotes.length;
-                btn.querySelector('span') && (btn.querySelector('span').textContent = null);
-                btn.childNodes.forEach(n => { if (n.nodeType === 3) n.textContent = ''; });
-                // Remplacer juste le texte (après le SVG)
-                const svgEl = btn.querySelector('svg');
-                if (svgEl && svgEl.nextSibling) {
-                    svgEl.nextSibling.textContent = ` Sauvegarder (${total} note${total>1?'s':''})`;
-                }
-            }
-        }
-
-        // ── Zoom image de cellule ─────────────────────────────────────────────
-        function zoomCell(imgEl) {
-            let overlay = document.getElementById('cellZoomOverlay');
-            if (!overlay) {
-                overlay = document.createElement('div');
-                overlay.id = 'cellZoomOverlay';
-                Object.assign(overlay.style, {
-                    position:'fixed', inset:'0', zIndex:'99999',
-                    background:'rgba(0,0,0,0.7)', display:'flex',
-                    alignItems:'center', justifyContent:'center',
-                    cursor:'zoom-out'
-                });
-                overlay.addEventListener('click', () => overlay.style.display='none');
-                document.body.appendChild(overlay);
-            }
-            overlay.innerHTML = `<img src="${imgEl.src}"
-                style="max-width:90vw;max-height:80vh;border-radius:12px;
-                       border:3px solid #e0f2fe;box-shadow:0 8px 40px rgba(0,0,0,0.5);">`;
-            overlay.style.display = 'flex';
-        }
-
-        document.addEventListener('keydown', e => {
-            if (e.key === 'Escape') {
-                const oz = document.getElementById('cellZoomOverlay');
-                if (oz) oz.style.display = 'none';
-            }
-        });
-
         // ── Modal sécurité (navigation) ────────────────────────────────────────
         let _smUrl = null;
         function openSecurityModal(url) {
