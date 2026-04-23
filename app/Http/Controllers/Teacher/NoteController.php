@@ -381,7 +381,7 @@ class NoteController extends Controller{
             }   
             
             $gradesData[$student->id] = $studentGrades;
-            dd($gradesData);
+
         }
 
         return view('teacher.notes.class_notes', compact('classe', 'gradesData', 'activeYear', 'trimestre'));
@@ -526,4 +526,3 @@ class NoteController extends Controller{
         // ⚡ calculer moyenne trimestrielle et sauvegarder
     }
 }
-
