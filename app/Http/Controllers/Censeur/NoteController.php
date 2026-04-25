@@ -28,7 +28,7 @@ use App\Exports\NotesSubjectExport;
 
 
     class NoteController extends Controller{
-        // Liste toutes les classes du secondaire
+
         public function index(){
             $classes = Classe::where('entity_id', 3)->get();
 
@@ -3445,6 +3445,128 @@ use App\Exports\NotesSubjectExport;
 
         } catch (\Exception $e) {
             return back()->with('error', 'Impossible de générer la liste : ' . $e->getMessage());
+        }
+    }
+
+    public function exportListeRecursivePDF(int $trimestre) {
+        try {
+            // 1) Année académique active
+            $activeYear = AcademicYear::where('active', true)->firstOrFail();
+
+            // 2) Récupérer toutes les affectations enseignant-matière-classe pour cette année
+            //    On charge : teacher (User), subject, classe
+            $assignments = ClassTeacherSubject::with(['teacher', 'subject', 'classe'])
+                ->where('academic_year_id', $activeYear->id)
+                ->whereNotNull('teacher_id')
+                ->get();
+
+            // 3) Pour chaque affectation, vérifier si l'enseignant a saisi
+            //    au moins 2 interrogations ET 2 devoirs dans cette classe/matière/trimestre
+            //    On regroupe par enseignant pour le tableau final.
+            //
+            //    Structure résultat :
+            //    [
+            //      teacher_id => [
+            //        'teacher'     => User,
+            //        'manquants'   => [
+            //          [ 'classe' => Classe, 'subject' => Subject, 'details' => string ]
+            //        ]
+            //      ]
+            //    ]
+
+            $enseignantsManquants = [];
+
+            foreach ($assignments as $assignment) {
+                // Sécurité : si le pivot n'a pas de teacher ou de classe, on saute
+                if (! $assignment->teacher || ! $assignment->classe || ! $assignment->subject) {
+                    continue;
+                }
+
+                $teacherId  = $assignment->teacher_id;
+                $classId    = $assignment->class_id;
+                $subjectId  = $assignment->subject_id;
+
+                // Compter les interrogations saisies pour ce trimestre
+                $nbInterros = Grade::where('academic_year_id', $activeYear->id)
+                    ->where('class_id', $classId)
+                    ->where('subject_id', $subjectId)
+                    ->where('trimestre', $trimestre)
+                    ->where('type', 'interrogation')
+                    ->distinct('sequence')   // on compte le nombre de séquences distinctes saisies
+                    ->count('sequence');
+
+                // Compter les devoirs saisis pour ce trimestre
+                $nbDevoirs = Grade::where('academic_year_id', $activeYear->id)
+                    ->where('class_id', $classId)
+                    ->where('subject_id', $subjectId)
+                    ->where('trimestre', $trimestre)
+                    ->where('type', 'devoir')
+                    ->distinct('sequence')
+                    ->count('sequence');
+
+                // Si l'enseignant a au moins 2 interros ET 2 devoirs → tout bon, on saute
+                if ($nbInterros >= 2 && $nbDevoirs >= 2) {
+                    continue;
+                }
+
+                // Construire le détail des notes manquantes
+                $details = [];
+
+                if ($nbInterros === 0 && $nbDevoirs === 0) {
+                    $details[] = 'Aucune note saisie';
+                } else {
+                    if ($nbInterros < 2) {
+                        $manqInterros = 2 - $nbInterros;
+                        $details[] = $manqInterros . ' interrogation' . ($manqInterros > 1 ? 's' : '') . ' manquante' . ($manqInterros > 1 ? 's' : '');
+                    }
+                    if ($nbDevoirs < 2) {
+                        $manqDevoirs = 2 - $nbDevoirs;
+                        $details[] = $manqDevoirs . ' devoir' . ($manqDevoirs > 1 ? 's' : '') . ' manquant' . ($manqDevoirs > 1 ? 's' : '');
+                    }
+                }
+
+                $detailStr = implode(', ', $details);
+
+                // Initialiser l'entrée pour cet enseignant si elle n'existe pas encore
+                if (! isset($enseignantsManquants[$teacherId])) {
+                    $enseignantsManquants[$teacherId] = [
+                        'teacher'   => $assignment->teacher,
+                        'manquants' => [],
+                    ];
+                }
+
+                // Ajouter ce manquant
+                $enseignantsManquants[$teacherId]['manquants'][] = [
+                    'classe'   => $assignment->classe,
+                    'subject'  => $assignment->subject,
+                    'details'  => $detailStr,
+                ];
+            }
+
+            // 4) Trier par nom d'enseignant
+            uasort($enseignantsManquants, function ($a, $b) {
+                return strcmp(
+                    strtolower($a['teacher']->name ?? ''),
+                    strtolower($b['teacher']->name ?? '')
+                );
+            });
+
+            // Réindexer pour avoir un tableau propre (liste ordonnée)
+            $listeFinale = array_values($enseignantsManquants);
+
+            // 5) Génération du PDF
+            $pdf = Pdf::loadView('censeur.notes.pdf.liste_recursive_pdf', [
+                'listeFinale'  => $listeFinale,
+                'trimestre'    => $trimestre,
+                'activeYear'   => $activeYear,
+                'dateDownload' => now()->locale('fr')->isoFormat('D MMMM YYYY'),
+            ])->setPaper('a4', 'portrait');
+
+            return $pdf->download("Liste_Recursive_Notes_Manquantes_T{$trimestre}.pdf");
+
+        } catch (\Exception $e) {
+            Log::error('exportListeRecursivePDF error: ' . $e->getMessage());
+            return back()->with('error', 'Impossible de générer la liste récursive : ' . $e->getMessage());
         }
     }
 

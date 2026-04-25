@@ -729,3 +729,11 @@ Route::middleware(['auth'])->get(
     '/censeur/classes/{classId}/trimestres/{trimestre}/subjects/{subjectId}/liste-eleves/pdf',
     [App\Http\Controllers\Censeur\NoteController::class, 'exportListeElevesPDF']
 )->name('censeur.notes.export.liste-eleves.pdf');
+
+
+
+// Liste récursive des enseignants avec notes manquantes (PDF)
+Route::middleware(['auth'])->get(
+    '/censeur/liste-recursive/trimestre/{trimestre}/pdf',
+    [App\Http\Controllers\Censeur\NoteController::class, 'exportListeRecursivePDF']
+)->name('censeur.liste.recursive.pdf');
