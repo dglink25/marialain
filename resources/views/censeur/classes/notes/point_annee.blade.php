@@ -2,6 +2,8 @@
 
 @php
     $pageTitle = "Point Année - " . $classe->name;
+    // IDs autorisés : Directeur Fondateur & Secrétaire Comptable
+    $isAuthorized = in_array(auth()->id(), [6, 7]);
 @endphp
 
 @section('content')
@@ -15,6 +17,7 @@
                     <h1 class="text-3xl font-bold text-gray-900">Point de l'Année Académique {{ $activeYear->name }} — {{ $classe->name }}</h1>
                 </div>
                 <div class="flex flex-wrap gap-3">
+
                     {{-- Bouton Délibérer --}}
                     <button id="btnDeliberer"
                             onclick="ouvrirModalDeliberation()"
@@ -26,12 +29,23 @@
                         Délibérer
                     </button>
 
-                    {{-- Bouton Bulletins fin d'année --}}
-                    <a href="{{ route('censeur.classes.bulletin.fin-annee.all-pdf', $classe->id) }}"
-                       class="inline-flex items-center px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl shadow-md hover:from-emerald-700 hover:to-teal-700 transition-all duration-200 hover:shadow-lg">
-                        <i class="fas fa-file-archive mr-2"></i>
-                        Bulletins Fin d'Année (PDF)
-                    </a>
+                    {{-- ================================================================
+                         Bouton Bulletins Fin d'Année (PDF) — RÉSERVÉ Directeur & Secrétaire
+                    ================================================================ --}}
+                    @if($isAuthorized)
+                        <a href="{{ route('censeur.classes.bulletin.fin-annee.all-pdf', $classe->id) }}"
+                           class="inline-flex items-center px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl shadow-md hover:from-emerald-700 hover:to-teal-700 transition-all duration-200 hover:shadow-lg">
+                            <i class="fas fa-file-archive mr-2"></i>
+                            Bulletins Fin d'Année (PDF)
+                        </a>
+                    @else
+                        <button onclick="ouvrirModalAccesRefuse()"
+                                class="inline-flex items-center px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl shadow-md hover:from-emerald-700 hover:to-teal-700 transition-all duration-200 hover:shadow-lg opacity-75 cursor-not-allowed relative">
+                            <i class="fas fa-lock mr-2 text-xs"></i>
+                            <i class="fas fa-file-archive mr-2"></i>
+                            Bulletins Fin d'Année (PDF)
+                        </button>
+                    @endif
 
                     <a href="{{ url()->previous() }}"
                        class="inline-flex items-center px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200">
@@ -122,12 +136,24 @@
                                 <span class="text-gray-400 text-xs">—</span>
                             @endif
                         </td>
+
+                        {{-- ============================================================
+                             Colonne PDF Fin d'Année — RÉSERVÉE Directeur & Secrétaire
+                        ============================================================ --}}
                         <td class="px-3 py-2.5 text-center border-l border-gray-200 bg-emerald-50">
-                            <a href="{{ route('censeur.classes.bulletin.fin-annee.student-pdf', [$classe->id, $row['student']->id]) }}"
-                               target="_blank"
-                               class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white text-xs font-semibold rounded-lg hover:bg-emerald-700 transition-colors duration-150 shadow-sm">
-                                <i class="fas fa-file-pdf text-xs"></i> Fin d'Année
-                            </a>
+                            @if($isAuthorized)
+                                <a href="{{ route('censeur.classes.bulletin.fin-annee.student-pdf', [$classe->id, $row['student']->id]) }}"
+                                   target="_blank"
+                                   class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white text-xs font-semibold rounded-lg hover:bg-emerald-700 transition-colors duration-150 shadow-sm">
+                                    <i class="fas fa-file-pdf text-xs"></i> Fin d'Année
+                                </a>
+                            @else
+                                <button onclick="ouvrirModalAccesRefuse()"
+                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-400 text-white text-xs font-semibold rounded-lg cursor-not-allowed shadow-sm"
+                                        title="Réservé au Directeur Fondateur & Secrétaire Comptable">
+                                    <i class="fas fa-lock text-xs"></i> Fin d'Année
+                                </button>
+                            @endif
                         </td>
                     </tr>
                     @endforeach
@@ -176,10 +202,8 @@
     <div class="fixed inset-0 bg-black/60 backdrop-blur-sm" onclick="fermerModalAccesRefuse()"></div>
     <div class="fixed inset-0 flex items-center justify-center p-4">
         <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-modalIn">
-            {{-- Bande rouge en haut --}}
             <div class="h-2 bg-gradient-to-r from-red-500 to-rose-600"></div>
             <div class="p-8">
-                {{-- Icône --}}
                 <div class="flex justify-center mb-5">
                     <div class="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center ring-8 ring-red-50">
                         <svg class="w-10 h-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -236,7 +260,7 @@
                         </div>
                         <div>
                             <h2 class="text-xl font-bold text-white">Délibération</h2>
-                            <p class="text-indigo-200 text-sm">{{ $classe->name }}</p>
+                            <p class="text-indigo-200 text-sm">{{ $classe->name }} — Année active : {{ $activeYear->name }}</p>
                         </div>
                     </div>
                     <button onclick="fermerModalDeliberation()" class="text-white/70 hover:text-white transition-colors">
@@ -289,61 +313,78 @@
                         </div>
                     </div>
 
-                    {{-- Année cible --}}
+                    {{-- ────────────────────────────────────────────────────────────
+                         Année académique INACTIVE de destination
+                         (les élèves seront inscrits dans cette année future)
+                    ──────────────────────────────────────────────────────────── --}}
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">
                             <i class="fas fa-calendar-alt text-indigo-500 mr-1"></i>
                             Année académique de destination *
                         </label>
+                        <p class="text-xs text-gray-500 mb-2">
+                            <i class="fas fa-info-circle mr-1 text-gray-400"></i>
+                            Sélectionnez l'année <strong>inactive</strong> vers laquelle les élèves seront transférés (ex : prochaine année scolaire).
+                        </p>
                         <select id="selectTargetYear"
                                 class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700 bg-white transition-all">
-                            <option value="">-- Sélectionnez l'année --</option>
+                            <option value="">-- Sélectionnez l'année inactive --</option>
                         </select>
-                        <div id="yearWarning" class="hidden mt-2 text-xs text-amber-600 flex items-center gap-1">
-                            <i class="fas fa-exclamation-triangle"></i>
-                            <span id="yearWarningText"></span>
-                        </div>
                         <p id="yearMissingMsg" class="hidden mt-2 text-xs text-red-600 flex items-center gap-1">
                             <i class="fas fa-info-circle"></i>
                             Aucune année inactive disponible. Contactez le fondateur pour créer l'année de passage manquante.
                         </p>
                     </div>
 
-                    {{-- Classe cible --}}
+                    {{-- ────────────────────────────────────────────────────────────
+                         Classe cible parmi les classes de l'ANNÉE ACTIVE
+                         (c'est dans cette classe que les élèves admis seront placés,
+                          et c'est son emploi du temps qui sera copié si activé)
+                    ──────────────────────────────────────────────────────────── --}}
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">
                             <i class="fas fa-school text-indigo-500 mr-1"></i>
                             Classe de destination (pour les admis) *
                         </label>
+                        <p class="text-xs text-gray-500 mb-2">
+                            <i class="fas fa-info-circle mr-1 text-gray-400"></i>
+                            Choisissez la classe <strong>de l'année active ({{ $activeYear->name }})</strong> dans laquelle les élèves admis passeront. Son emploi du temps et ses relations enseignant-matière seront copiés vers la nouvelle année.
+                        </p>
                         <select id="selectTargetClass"
                                 class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700 bg-white transition-all">
                             <option value="">-- Sélectionnez la classe --</option>
                         </select>
+                        <p id="classMissingMsg" class="hidden mt-2 text-xs text-red-600 flex items-center gap-1">
+                            <i class="fas fa-info-circle"></i>
+                            Aucune classe disponible pour l'année active.
+                        </p>
                         <p class="text-xs text-gray-500 mt-1">
-                            <i class="fas fa-info-circle mr-1 text-gray-400"></i>
+                            <i class="fas fa-redo mr-1 text-gray-400"></i>
                             Les redoublants resteront dans la classe <strong>{{ $classe->name }}</strong> pour l'année choisie.
                         </p>
                     </div>
 
                     {{-- Option emploi du temps --}}
-                    <div class="bg-gray-50 border border-gray-200 rounded-xl p-4">
+                    <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-4">
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-sm font-semibold text-gray-700">
                                     <i class="fas fa-calendar-week text-indigo-500 mr-1"></i>
-                                    Conserver l'emploi du temps
+                                    Copier l'emploi du temps
                                 </p>
-                                <p class="text-xs text-gray-500 mt-0.5">Copier l'emploi du temps actuel vers la nouvelle classe</p>
+                                <p class="text-xs text-gray-500 mt-0.5">
+                                    Copier l'emploi du temps de la <strong>classe de destination (année active)</strong> vers la nouvelle année inactive, avec toutes les relations enseignant-classe-matière.
+                                </p>
                             </div>
                             {{-- Toggle switch --}}
-                            <label class="relative inline-flex items-center cursor-pointer">
+                            <label class="relative inline-flex items-center cursor-pointer ml-4 flex-shrink-0">
                                 <input type="checkbox" id="keepTimetable" class="sr-only peer">
                                 <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
                             </label>
                         </div>
-                        <div id="keepTimetableInfo" class="hidden mt-2 text-xs text-indigo-600 bg-indigo-50 rounded-lg px-3 py-2">
-                            <i class="fas fa-check-circle mr-1"></i>
-                            L'emploi du temps sera copié vers la classe de destination.
+                        <div id="keepTimetableInfo" class="hidden mt-3 text-xs text-indigo-700 bg-white border border-indigo-200 rounded-lg px-3 py-2">
+                            <i class="fas fa-check-circle mr-1 text-indigo-500"></i>
+                            L'emploi du temps de la classe sélectionnée sera copié pour la nouvelle année, avec toutes les affectations enseignant-matière.
                         </div>
                     </div>
 
@@ -507,7 +548,7 @@
 </div>
 
 
-{{-- Modal bulletin trimestriel (identique à l'original) --}}
+{{-- Modal bulletin trimestriel --}}
 <div id="bulletinModal" class="fixed inset-0 z-50 hidden overflow-y-auto" role="dialog" aria-modal="true">
     <div id="bulletinOverlay" class="fixed inset-0 bg-blue-600 bg-opacity-60 transition-opacity" onclick="fermerBulletin()"></div>
     <div class="relative min-h-screen flex items-start justify-center p-4 pt-8">
@@ -571,7 +612,12 @@ function fermerModalDeliberation()  { hideModal('modalDeliberation'); }
 function fermerModalConfirmation()  { hideModal('modalConfirmation'); }
 function fermerModalAnnulation()    { hideModal('modalAnnulation'); }
 
-// ── Ouvrir le modal principal ────────────────────────────────────────
+// ── Ouvrir modal accès refusé (depuis les boutons PDF) ───────────────
+function ouvrirModalAccesRefuse() {
+    showModal('modalAccesRefuse');
+}
+
+// ── Ouvrir le modal principal délibération ───────────────────────────
 function ouvrirModalDeliberation() {
     if (!AUTHORIZED_IDS.includes(USER_ID)) {
         showModal('modalAccesRefuse');
@@ -587,23 +633,22 @@ function ouvrirModalDeliberation() {
         .then(data => {
             deliberationData = data;
             remplirFormulaire(data);
-
             document.getElementById('deliLoadingState').classList.add('hidden');
             document.getElementById('deliFormState').classList.remove('hidden');
         })
         .catch(err => {
             console.error(err);
             document.getElementById('deliLoadingState').innerHTML =
-                '<p class="text-red-500 text-sm">Erreur lors du chargement. Rechargez la page.</p>';
+                '<p class="text-red-500 text-sm p-4">Erreur lors du chargement. Rechargez la page.</p>';
         });
 }
 
 // ── Remplir le formulaire ────────────────────────────────────────────
 function remplirFormulaire(data) {
-    // Remplir les années
-    const selYear = document.getElementById('selectTargetYear');
-    selYear.innerHTML = '<option value="">-- Sélectionnez l\'année --</option>';
+    // ── Années INACTIVES (destination des élèves)
+    const selYear       = document.getElementById('selectTargetYear');
     const yearMissingMsg = document.getElementById('yearMissingMsg');
+    selYear.innerHTML   = '<option value="">-- Sélectionnez l\'année inactive --</option>';
 
     if (!data.inactive_years || data.inactive_years.length === 0) {
         selYear.disabled = true;
@@ -619,10 +664,17 @@ function remplirFormulaire(data) {
         });
     }
 
-    // Remplir les classes
-    const selClass = document.getElementById('selectTargetClass');
-    selClass.innerHTML = '<option value="">-- Sélectionnez la classe --</option>';
-    if (data.target_classes) {
+    // ── Classes de l'ANNÉE ACTIVE (où les élèves vont passer)
+    const selClass       = document.getElementById('selectTargetClass');
+    const classMissingMsg = document.getElementById('classMissingMsg');
+    selClass.innerHTML   = '<option value="">-- Sélectionnez la classe --</option>';
+
+    if (!data.target_classes || data.target_classes.length === 0) {
+        selClass.disabled = true;
+        classMissingMsg.classList.remove('hidden');
+    } else {
+        selClass.disabled = false;
+        classMissingMsg.classList.add('hidden');
         data.target_classes.forEach(c => {
             const opt = document.createElement('option');
             opt.value = c.id;
@@ -631,7 +683,7 @@ function remplirFormulaire(data) {
         });
     }
 
-    // Délibération existante ?
+    // ── Délibération existante ?
     existingDeliberation = data.existing_deliberation;
     const alertDiv = document.getElementById('deliExistingAlert');
     const deliForm = document.getElementById('deliForm');
@@ -640,7 +692,6 @@ function remplirFormulaire(data) {
         alertDiv.classList.remove('hidden');
         document.getElementById('deliExistingInfo').textContent =
             `Délibération du ${existingDeliberation.deliberated_at} — ${existingDeliberation.passed_count} admis, ${existingDeliberation.repeated_count} redoublants.`;
-        // Désactiver le formulaire
         deliForm.querySelectorAll('select, input, button').forEach(el => el.disabled = true);
         document.getElementById('btnSoumettreDeli').classList.add('opacity-50', 'cursor-not-allowed');
     } else {
@@ -652,12 +703,7 @@ function remplirFormulaire(data) {
 
 // ── Toggle emploi du temps ───────────────────────────────────────────
 document.getElementById('keepTimetable')?.addEventListener('change', function() {
-    const info = document.getElementById('keepTimetableInfo');
-    if (this.checked) {
-        info.classList.remove('hidden');
-    } else {
-        info.classList.add('hidden');
-    }
+    document.getElementById('keepTimetableInfo').classList.toggle('hidden', !this.checked);
 });
 
 // ── Demander confirmation avant délibération ─────────────────────────
@@ -665,21 +711,19 @@ function demanderConfirmation() {
     const yearId  = document.getElementById('selectTargetYear').value;
     const classId = document.getElementById('selectTargetClass').value;
 
-    if (!yearId) { alert('Veuillez sélectionner une année académique de destination.'); return; }
+    if (!yearId)  { alert('Veuillez sélectionner une année académique de destination.'); return; }
     if (!classId) { alert('Veuillez sélectionner une classe de destination.'); return; }
 
-    const yearName  = document.getElementById('selectTargetYear').options[
-        document.getElementById('selectTargetYear').selectedIndex].text;
-    const className = document.getElementById('selectTargetClass').options[
-        document.getElementById('selectTargetClass').selectedIndex].text;
+    const yearName  = document.getElementById('selectTargetYear').options[document.getElementById('selectTargetYear').selectedIndex].text;
+    const className = document.getElementById('selectTargetClass').options[document.getElementById('selectTargetClass').selectedIndex].text;
     const keepTt    = document.getElementById('keepTimetable').checked;
 
     document.getElementById('confirmSummary').innerHTML = `
         <div class="space-y-1.5">
             <div class="flex justify-between"><span class="font-medium">Classe source :</span><span>{{ $classe->name }}</span></div>
-            <div class="flex justify-between"><span class="font-medium">Classe destination :</span><span>${className}</span></div>
-            <div class="flex justify-between"><span class="font-medium">Année destination :</span><span>${yearName}</span></div>
-            <div class="flex justify-between"><span class="font-medium">Emploi du temps :</span><span>${keepTt ? 'Copié ✓' : 'Non copié'}</span></div>
+            <div class="flex justify-between"><span class="font-medium">Classe destination (active) :</span><span>${className}</span></div>
+            <div class="flex justify-between"><span class="font-medium">Année inactive destination :</span><span>${yearName}</span></div>
+            <div class="flex justify-between"><span class="font-medium">Emploi du temps :</span><span>${keepTt ? 'Copié depuis ' + className + ' ✓' : 'Non copié'}</span></div>
             <hr class="border-indigo-200 my-2">
             <div class="flex justify-between font-bold text-green-700"><span>Admis :</span><span>{{ $nbPasses ?? 0 }}</span></div>
             <div class="flex justify-between font-bold text-red-700"><span>Redoublants :</span><span>{{ $nbRedoubles ?? 0 }}</span></div>
@@ -692,10 +736,10 @@ function demanderConfirmation() {
 
 // ── Exécuter la délibération ─────────────────────────────────────────
 function executerDeliberation() {
-    const yearId     = document.getElementById('selectTargetYear').value;
-    const classId    = document.getElementById('selectTargetClass').value;
-    const keepTt     = document.getElementById('keepTimetable').checked;
-    const btn        = document.getElementById('btnConfirmerDeli');
+    const yearId  = document.getElementById('selectTargetYear').value;
+    const classId = document.getElementById('selectTargetClass').value;
+    const keepTt  = document.getElementById('keepTimetable').checked;
+    const btn     = document.getElementById('btnConfirmerDeli');
 
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Délibération en cours...';
@@ -744,13 +788,10 @@ function executerDeliberation() {
     });
 }
 
-// ── Demander annulation ──────────────────────────────────────────────
-function demanderAnnulation() {
-    showModal('modalAnnulation');
-}
-function fermerModalAnnulation() { hideModal('modalAnnulation'); }
+// ── Demander / Exécuter l'annulation ────────────────────────────────
+function demanderAnnulation()   { showModal('modalAnnulation'); }
+function fermerModalAnnulation(){ hideModal('modalAnnulation'); }
 
-// ── Exécuter l'annulation ────────────────────────────────────────────
 function executerAnnulation() {
     if (!existingDeliberation) return;
 
@@ -758,9 +799,7 @@ function executerAnnulation() {
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Annulation...';
 
-    const url = `${URL_CANCEL_BASE}/${existingDeliberation.id}/cancel`;
-
-    fetch(url, {
+    fetch(`${URL_CANCEL_BASE}/${existingDeliberation.id}/cancel`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -791,7 +830,7 @@ function executerAnnulation() {
     });
 }
 
-// ── Bulletin trimestriel (identique à l'original) ────────────────────
+// ── Bulletin trimestriel ────────────────────────────────────────────
 function ouvrirBulletin(studentId, trimestre) {
     const modal    = document.getElementById('bulletinModal');
     const loader   = document.getElementById('bulletinLoader');
@@ -816,7 +855,7 @@ function ouvrirBulletin(studentId, trimestre) {
         subtitle.textContent = 'Trimestre ' + trimestre;
     })
     .catch(() => {
-        content.innerHTML = `<div class="text-center py-10 text-red-600"><i class="fas fa-exclamation-triangle text-3xl mb-3"></i><p>Erreur lors du chargement.</p></div>`;
+        content.innerHTML = `<div class="text-center py-10 text-red-600"><i class="fas fa-exclamation-triangle text-3xl mb-3 block"></i><p>Erreur lors du chargement.</p></div>`;
         loader.classList.add('hidden');
         content.classList.remove('hidden');
     });

@@ -18,13 +18,16 @@ use App\Models\Subject;
 use App\Models\Timetable;
 use App\Models\ClassTeacherSubject;
 
-class DeliberationController extends Controller{
-    private function hasAccess(): bool {
-        $id = auth()->id();
-        return in_array($id, [6, 7]);
+class DeliberationController extends Controller
+{
+    private function hasAccess(): bool
+    {
+        return in_array(auth()->id(), [6, 7]);
     }
 
-    private function calculateAnnualAverage(int $studentId, int $classId, $activeYear, $subjects): ?float {
+    // ─── Calcul de la moyenne annuelle d'un élève ────────────────────
+    private function calculateAnnualAverage(int $studentId, int $classId, $activeYear, $subjects): ?float
+    {
         $trimMoyennes = [];
 
         for ($t = 1; $t <= 3; $t++) {
@@ -83,29 +86,40 @@ class DeliberationController extends Controller{
         return round(array_sum($trimMoyennes) / count($trimMoyennes), 2);
     }
 
-    // ─── Données pour le modal : années inactives + classes cible ────
-    public function getModalData(int $classId) {
+    // ─── Données pour le modal ───────────────────────────────────────
+    /**
+     * Retourne :
+     *  - inactive_years  : années académiques INACTIVES (destination des élèves)
+     *  - target_classes  : classes de l'ANNÉE ACTIVE (classe dans laquelle les admis passent,
+     *                      et dont l'emploi du temps sera copié)
+     *  - existing_deliberation : délibération déjà effectuée pour cette classe/année active
+     */
+    public function getModalData(int $classId)
+    {
         if (!$this->hasAccess()) {
             return response()->json(['error' => 'Accès refusé'], 403);
         }
 
         $activeYear = AcademicYear::where('active', true)->first();
 
-        // Années inactives (futurs, pour accueillir les élèves)
+        // ── Années INACTIVES : ce sont les années "futures" ou archivées
+        //    vers lesquelles les élèves seront transférés.
+        //    On exclut l'année active courante.
         $inactiveYears = AcademicYear::where('active', false)
-            ->where('id', '!=', ($activeYear->id ?? 0))
             ->orderByDesc('id')
             ->get()
             ->map(fn($y) => ['id' => $y->id, 'name' => $y->name]);
 
-        // Classes de l'entité 3 (secondaire) - exclure la classe source
+        // ── Classes de l'ANNÉE ACTIVE (entity_id = 3 : secondaire)
+        //    On exclut la classe source pour ne pas proposer de passer dans la même classe.
         $targetClasses = Classe::where('entity_id', 3)
+            ->where('academic_year_id', $activeYear->id)   // ← UNIQUEMENT classes de l'année ACTIVE
             ->where('id', '!=', $classId)
             ->orderBy('name')
             ->get()
-            ->map(fn($c) => ['id' => $c->id, 'name' => $c->name, 'academic_year_id' => $c->academic_year_id]);
+            ->map(fn($c) => ['id' => $c->id, 'name' => $c->name]);
 
-        // Vérifier si une délibération existe déjà pour cette classe/année
+        // ── Délibération déjà existante pour cette classe/année active
         $existingDeliberation = null;
         if ($activeYear) {
             $existingDeliberation = Deliberation::where('source_class_id', $classId)
@@ -127,9 +141,17 @@ class DeliberationController extends Controller{
     }
 
     // ─── Délibérer ───────────────────────────────────────────────────
-    public function deliberate(Request $request, int $classId)  {
+    /**
+     * - target_academic_year_id : année INACTIVE vers laquelle les élèves sont transférés
+     * - target_class_id         : classe de l'ANNÉE ACTIVE dans laquelle les admis passent
+     *                             (son emploi du temps sera copié si keep_timetable = true)
+     */
+    public function deliberate(Request $request, int $classId)
+    {
         if (!$this->hasAccess()) {
-            return response()->json(['error' => 'Accès refusé. Seuls le Directeur Fondateur et la Secrétaire peuvent délibérer.'], 403);
+            return response()->json([
+                'error' => 'Accès refusé. Seuls le Directeur Fondateur et la Secrétaire peuvent délibérer.'
+            ], 403);
         }
 
         $request->validate([
@@ -138,27 +160,38 @@ class DeliberationController extends Controller{
             'keep_timetable'          => 'boolean',
         ]);
 
-        $activeYear   = AcademicYear::where('active', true)->firstOrFail();
-        $targetYear   = AcademicYear::findOrFail($request->target_academic_year_id);
-        $sourceClass  = Classe::findOrFail($classId);
-        $targetClass  = Classe::findOrFail($request->target_class_id);
+        $activeYear  = AcademicYear::where('active', true)->firstOrFail();
+        $targetYear  = AcademicYear::findOrFail($request->target_academic_year_id);
+        $sourceClass = Classe::findOrFail($classId);
+        $targetClass = Classe::findOrFail($request->target_class_id);
 
-        // Vérifier que l'année cible est bien inactive
+        // L'année de destination DOIT être inactive
         if ($targetYear->active) {
-            return response()->json(['error' => "L'année académique cible doit être inactive."], 422);
+            return response()->json([
+                'error' => "L'année académique de destination doit être inactive (future ou archivée)."
+            ], 422);
         }
 
-        // Vérifier qu'une délibération n'existe pas déjà
+        // La classe cible DOIT appartenir à l'année active
+        if ((int) $targetClass->academic_year_id !== (int) $activeYear->id) {
+            return response()->json([
+                'error' => "La classe de destination doit appartenir à l'année académique active ({$activeYear->name})."
+            ], 422);
+        }
+
+        // Pas de double délibération
         $existing = Deliberation::where('source_class_id', $classId)
             ->where('source_academic_year_id', $activeYear->id)
             ->where('is_cancelled', false)
             ->first();
 
         if ($existing) {
-            return response()->json(['error' => 'Une délibération a déjà été effectuée pour cette classe et cette année.'], 422);
+            return response()->json([
+                'error' => 'Une délibération a déjà été effectuée pour cette classe et cette année.'
+            ], 422);
         }
 
-        // Récupérer les élèves validés
+        // Élèves validés de la classe source
         $students = Student::where('class_id', $classId)
             ->where('academic_year_id', $activeYear->id)
             ->where('is_validated', 1)
@@ -168,7 +201,7 @@ class DeliberationController extends Controller{
             return response()->json(['error' => 'Aucun élève validé dans cette classe.'], 422);
         }
 
-        // Récupérer les matières pour calcul des moyennes
+        // Matières pour le calcul des moyennes
         $subjects = Subject::whereHas('classTeacherSubjects', function ($q) use ($classId, $activeYear) {
             $q->where('class_id', $classId)->where('academic_year_id', $activeYear->id);
         })->with(['classTeacherSubjects' => function ($q) use ($classId, $activeYear) {
@@ -177,23 +210,21 @@ class DeliberationController extends Controller{
 
         DB::beginTransaction();
         try {
-            // Créer l'enregistrement de délibération
             $deliberation = Deliberation::create([
-                'source_class_id'        => $classId,
-                'source_academic_year_id'=> $activeYear->id,
-                'target_class_id'        => $request->target_class_id,
-                'target_academic_year_id'=> $request->target_academic_year_id,
-                'deliberated_by'         => auth()->id(),
-                'keep_timetable'         => $request->boolean('keep_timetable'),
-                'deliberated_at'         => now(),
-                'is_cancelled'           => false,
+                'source_class_id'         => $classId,
+                'source_academic_year_id' => $activeYear->id,
+                'target_class_id'         => $request->target_class_id,
+                'target_academic_year_id' => $request->target_academic_year_id,
+                'deliberated_by'          => auth()->id(),
+                'keep_timetable'          => $request->boolean('keep_timetable'),
+                'deliberated_at'          => now(),
+                'is_cancelled'            => false,
             ]);
 
             $passedCount   = 0;
             $repeatedCount = 0;
 
             foreach ($students as $student) {
-                // Calculer la moyenne annuelle
                 $annualAverage = $this->calculateAnnualAverage(
                     $student->id,
                     $classId,
@@ -203,70 +234,71 @@ class DeliberationController extends Controller{
 
                 $isPassed = $annualAverage !== null && $annualAverage >= 10;
 
-                // Snapshot avant modification
-                $oldClassId      = $student->class_id;
-                $oldYearId       = $student->academic_year_id;
-                $oldRegType      = $student->registration_type;
+                $oldClassId = $student->class_id;
+                $oldYearId  = $student->academic_year_id;
+                $oldRegType = $student->registration_type;
 
                 if ($isPassed) {
-                    // Élève passe → nouvelle classe, nouvelle année, statut "new" (re_registration)
-                    $newClassId  = $request->target_class_id;
-                    $newYearId   = $request->target_academic_year_id;
-                    $newRegType  = 're_registration';
+                    // Admis → nouvelle classe (cible), nouvelle année (inactive)
+                    $newClassId = $request->target_class_id;
+                    $newYearId  = $request->target_academic_year_id;
+                    $newRegType = 're_registration';
                     $passedCount++;
                 } else {
-                    // Élève redouble → même classe, nouvelle année, statut "re_registration" (redoublant)
-                    $newClassId  = $classId;
-                    $newYearId   = $request->target_academic_year_id;
-                    $newRegType  = 're_registration';
+                    // Redoublant → même classe source, nouvelle année (inactive)
+                    $newClassId = $classId;
+                    $newYearId  = $request->target_academic_year_id;
+                    $newRegType = 're_registration';
                     $repeatedCount++;
                 }
 
-                // Enregistrer le mouvement
                 DeliberationStudent::create([
-                    'deliberation_id'     => $deliberation->id,
-                    'student_id'          => $student->id,
-                    'old_class_id'        => $oldClassId,
-                    'old_academic_year_id'=> $oldYearId,
-                    'old_registration_type'=> $oldRegType,
-                    'new_class_id'        => $newClassId,
-                    'new_academic_year_id'=> $newYearId,
-                    'new_registration_type'=> $newRegType,
-                    'status'              => $isPassed ? 'passed' : 'repeated',
-                    'annual_average'      => $annualAverage,
+                    'deliberation_id'       => $deliberation->id,
+                    'student_id'            => $student->id,
+                    'old_class_id'          => $oldClassId,
+                    'old_academic_year_id'  => $oldYearId,
+                    'old_registration_type' => $oldRegType,
+                    'new_class_id'          => $newClassId,
+                    'new_academic_year_id'  => $newYearId,
+                    'new_registration_type' => $newRegType,
+                    'status'                => $isPassed ? 'passed' : 'repeated',
+                    'annual_average'        => $annualAverage,
                 ]);
 
-                // Mettre à jour l'élève
                 $student->update([
-                    'class_id'            => $newClassId,
-                    'academic_year_id'    => $newYearId,
-                    'registration_type'   => $newRegType,
-                    'is_validated'        => false, // À revalider pour la nouvelle année
-                    'amount_paid'         => 0,
-                    'school_fees_paid'    => 0,
-                    'total_fees'          => null,
+                    'class_id'          => $newClassId,
+                    'academic_year_id'  => $newYearId,
+                    'registration_type' => $newRegType,
+                    'is_validated'      => false,
+                    'amount_paid'       => 0,
+                    'school_fees_paid'  => 0,
+                    'total_fees'        => null,
                 ]);
             }
 
-            // Mettre à jour les compteurs
             $deliberation->update([
                 'passed_count'   => $passedCount,
                 'repeated_count' => $repeatedCount,
             ]);
 
-            // Copier l'emploi du temps si demandé
+            // ── Copier l'emploi du temps depuis la classe CIBLE (année active)
+            //    vers la même classe cible pour l'année INACTIVE choisie.
             if ($request->boolean('keep_timetable')) {
-                $this->copyTimetable($classId, $request->target_class_id, $request->target_academic_year_id, $activeYear->id);
+                $this->copyTimetableFromActiveTarget(
+                    $request->target_class_id,         // classe cible (année active)
+                    $activeYear->id,                    // année active (source des timetables)
+                    $request->target_academic_year_id   // année inactive (destination des timetables)
+                );
             }
 
             DB::commit();
 
             return response()->json([
-                'success'        => true,
-                'message'        => "Délibération effectuée avec succès !",
-                'passed_count'   => $passedCount,
-                'repeated_count' => $repeatedCount,
-                'deliberation_id'=> $deliberation->id,
+                'success'         => true,
+                'message'         => 'Délibération effectuée avec succès !',
+                'passed_count'    => $passedCount,
+                'repeated_count'  => $repeatedCount,
+                'deliberation_id' => $deliberation->id,
             ]);
 
         } catch (\Throwable $e) {
@@ -280,7 +312,8 @@ class DeliberationController extends Controller{
     }
 
     // ─── Annuler une délibération ────────────────────────────────────
-    public function cancel(Request $request, int $deliberationId) {
+    public function cancel(Request $request, int $deliberationId)
+    {
         if (!$this->hasAccess()) {
             return response()->json(['error' => 'Accès refusé.'], 403);
         }
@@ -293,7 +326,6 @@ class DeliberationController extends Controller{
 
         DB::beginTransaction();
         try {
-            // Restaurer chaque élève à son état précédent
             foreach ($deliberation->deliberationStudents as $ds) {
                 $student = Student::find($ds->student_id);
                 if ($student) {
@@ -306,16 +338,19 @@ class DeliberationController extends Controller{
                 }
             }
 
-            // Marquer comme annulée
             $deliberation->update([
                 'is_cancelled' => true,
                 'cancelled_at' => now(),
                 'cancelled_by' => auth()->id(),
             ]);
 
-            // Supprimer le timetable copié si applicable
+            // Supprimer l'emploi du temps copié sur la classe cible / année inactive
             if ($deliberation->keep_timetable) {
                 Timetable::where('class_id', $deliberation->target_class_id)
+                    ->where('academic_year_id', $deliberation->target_academic_year_id)
+                    ->delete();
+
+                ClassTeacherSubject::where('class_id', $deliberation->target_class_id)
                     ->where('academic_year_id', $deliberation->target_academic_year_id)
                     ->delete();
             }
@@ -330,20 +365,27 @@ class DeliberationController extends Controller{
         } catch (\Throwable $e) {
             DB::rollBack();
             Log::error('Erreur annulation délibération : ' . $e->getMessage());
-            return response()->json(['error' => 'Erreur lors de l\'annulation : ' . $e->getMessage()], 500);
+            return response()->json(['error' => "Erreur lors de l'annulation : " . $e->getMessage()], 500);
         }
     }
 
-    // ─── Copier l'emploi du temps ────────────────────────────────────
-    private function copyTimetable(int $sourceClassId, int $targetClassId, int $targetYearId, int $sourceYearId): void {
-        $timetables = Timetable::where('class_id', $sourceClassId)
-            ->where('academic_year_id', $sourceYearId)
+    // ─── Copier l'emploi du temps depuis la classe cible (année active)
+    //     vers la même classe pour l'année inactive ──────────────────
+    /**
+     * @param int $targetClassId   ID de la classe de destination (appartient à l'année active)
+     * @param int $activeYearId    ID de l'année active (source des timetables à copier)
+     * @param int $inactiveYearId  ID de l'année inactive (destination des timetables copiés)
+     */
+    private function copyTimetableFromActiveTarget(int $targetClassId, int $activeYearId, int $inactiveYearId): void
+    {
+        // ── 1. Copier les créneaux horaires ─────────────────────────
+        $timetables = Timetable::where('class_id', $targetClassId)
+            ->where('academic_year_id', $activeYearId)
             ->get();
 
         foreach ($timetables as $tt) {
-            // Vérifier s'il existe déjà
             $exists = Timetable::where('class_id', $targetClassId)
-                ->where('academic_year_id', $targetYearId)
+                ->where('academic_year_id', $inactiveYearId)
                 ->where('day', $tt->day)
                 ->where('start_time', $tt->start_time)
                 ->exists();
@@ -356,21 +398,21 @@ class DeliberationController extends Controller{
                     'day'              => $tt->day,
                     'start_time'       => $tt->start_time,
                     'end_time'         => $tt->end_time,
-                    'academic_year_id' => $targetYearId,
+                    'academic_year_id' => $inactiveYearId,
                 ]);
             }
         }
 
-        // Copier aussi class_teacher_subject
-        $cts = ClassTeacherSubject::where('class_id', $sourceClassId)
-            ->where('academic_year_id', $sourceYearId)
+        // ── 2. Copier les relations enseignant-classe-matière ────────
+        $cts = ClassTeacherSubject::where('class_id', $targetClassId)
+            ->where('academic_year_id', $activeYearId)
             ->get();
 
         foreach ($cts as $item) {
             $exists = ClassTeacherSubject::where('class_id', $targetClassId)
                 ->where('teacher_id', $item->teacher_id)
                 ->where('subject_id', $item->subject_id)
-                ->where('academic_year_id', $targetYearId)
+                ->where('academic_year_id', $inactiveYearId)
                 ->exists();
 
             if (!$exists) {
@@ -378,7 +420,7 @@ class DeliberationController extends Controller{
                     'class_id'         => $targetClassId,
                     'teacher_id'       => $item->teacher_id,
                     'subject_id'       => $item->subject_id,
-                    'academic_year_id' => $targetYearId,
+                    'academic_year_id' => $inactiveYearId,
                     'coefficient'      => $item->coefficient,
                     'amount_brut'      => $item->amount_brut,
                 ]);
@@ -405,15 +447,15 @@ class DeliberationController extends Controller{
         }
 
         return response()->json([
-            'exists'         => true,
-            'deliberation'   => [
-                'id'              => $deliberation->id,
-                'deliberated_at'  => $deliberation->deliberated_at?->format('d/m/Y H:i'),
-                'passed_count'    => $deliberation->passed_count,
-                'repeated_count'  => $deliberation->repeated_count,
-                'target_class'    => $deliberation->targetClass->name ?? '?',
-                'target_year'     => $deliberation->targetAcademicYear->name ?? '?',
-                'deliberated_by'  => $deliberation->deliberatedBy->name ?? '?',
+            'exists' => true,
+            'deliberation' => [
+                'id'             => $deliberation->id,
+                'deliberated_at' => $deliberation->deliberated_at?->format('d/m/Y H:i'),
+                'passed_count'   => $deliberation->passed_count,
+                'repeated_count' => $deliberation->repeated_count,
+                'target_class'   => $deliberation->targetClass->name ?? '?',
+                'target_year'    => $deliberation->targetAcademicYear->name ?? '?',
+                'deliberated_by' => $deliberation->deliberatedBy->name ?? '?',
             ],
         ]);
     }
