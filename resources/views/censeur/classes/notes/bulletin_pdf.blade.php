@@ -131,7 +131,7 @@
         <div class="student-box">
             Nom : <strong>{{ $student->last_name }}</strong><br>
             Prénoms : <strong>{{ $student->first_name }}</strong><br>
-            N° Matricule : {{ $student->registration_number ?? '1000' }}<br>
+            N° Matricule : {{ $student->num_educ ?? '1000' }}<br>
             Sexe : {{ $student->gender == 'M' ? 'Masculin' : 'Féminin' }}
         </div>
         <div class="qr-box">

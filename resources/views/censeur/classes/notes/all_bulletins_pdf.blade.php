@@ -144,7 +144,7 @@
                 <div class="student-box">
                     Nom : <strong>{{ $data['student']->last_name }}</strong><br>
                     Prénoms : <strong>{{ $data['student']->first_name }}</strong><br>
-                    N° Matricule : {{ $data['student']->registration_number ?? '1000' }}<br>
+                    N° Matricule : {{ $data['student']->num_educ ?? '1000' }}<br>
                     Sexe : {{ $data['student']->gender == 'M' ? 'Masculin' : 'Féminin' }}
                 </div>
                 <div class="qr-box">
