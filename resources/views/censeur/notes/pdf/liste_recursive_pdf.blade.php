@@ -87,14 +87,6 @@
             font-size: 13px;
             color: #000;
         }
-
-        /* ══════════════════════════════════════════════════
-           TABLEAU PRINCIPAL
-           Structure à 2 niveaux de rowspan :
-             - Colonnes 1 (N°) et 2 (Nom) : rowspan = total de lignes de l'enseignant
-             - Colonne 3 (Classe)          : rowspan = nb de matières pour cette classe
-             - Colonnes 4 (Matière) et 5 (Notes) : 1 ligne par matière
-           ══════════════════════════════════════════════════ */
         table.main-table {
             border-collapse: collapse;
             width: 100%;
@@ -173,7 +165,7 @@
         .badge-aucune {
             display: inline-block;
             font-weight: bold;
-            font-size: 10px;
+            font-size: 11px;
             text-transform: uppercase;
             letter-spacing: 0.3px;
             color: #000;
@@ -182,11 +174,9 @@
             border-radius: 2px;
         }
         .badge-partiel {
-            font-size: 10px;
+            font-size: 11px;
             color: #000;
         }
-
-        /* ── Signature ───────────────────────────────────── */
         .signature {
             margin-top: 35px;
             text-align: right;
@@ -369,7 +359,7 @@
                         {{-- ── Colonne 5 : Notes manquantes ── --}}
                         <td class="col-manque" style="padding-left:5px;">
                             @if($isAucune)
-                                <span class="badge-aucune"> Aucune note saisie</span>
+                                <span class="badge-aucune">&#9888; Aucune note saisie</span>
                             @else
                                 <span class="badge-partiel">{{ $matiere['details'] }}</span>
                             @endif
