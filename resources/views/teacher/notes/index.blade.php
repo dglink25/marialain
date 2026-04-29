@@ -203,40 +203,45 @@
              style="display:none; position:fixed; inset:0; z-index:9000;
                     background:rgba(15,23,42,0.55); backdrop-filter:blur(6px);
                     -webkit-backdrop-filter:blur(6px);
-                    align-items:flex-start; justify-content:center; padding:1.5rem; overflow-y:auto;">
+                    align-items:flex-start; justify-content:center;
+                    padding: clamp(0.5rem, 3vw, 1.5rem);
+                    overflow-y:auto; -webkit-overflow-scrolling:touch;">
 
             <div id="uploadModalBox"
-                 style="background:#fff; border-radius:20px; width:100%; max-width:900px;
+                 style="background:#fff; border-radius:16px; width:100%; max-width:900px;
                         box-shadow:0 24px 80px rgba(0,0,0,0.22);
                         overflow:hidden; opacity:0; transform:scale(0.94) translateY(12px);
-                        margin:auto; position:relative;">
+                        margin:auto; position:relative;
+                        max-height:calc(100dvh - clamp(1rem, 6vw, 3rem));
+                        display:flex; flex-direction:column;">
 
                 {{-- Barre colorée en haut --}}
                 <div style="height:5px; background:linear-gradient(90deg,#0ea5e9,#3b82f6,#6366f1,#3b82f6,#0ea5e9);
                             background-size:200% auto; animation:barFlow 3s linear infinite;"></div>
 
                 {{-- En-tête modal --}}
-                <div style="display:flex; align-items:center; justify-content:space-between;
-                            padding:1.25rem 1.5rem; border-bottom:1px solid #e2e8f0;">
-                    <div style="display:flex; align-items:center; gap:.75rem;">
-                        <div style="width:40px;height:40px;background:#e0f2fe;border-radius:50%;
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:.75rem;
+                            padding:1rem clamp(.75rem,4vw,1.5rem); border-bottom:1px solid #e2e8f0;
+                            flex-shrink:0; flex-wrap:wrap;">
+                    <div style="display:flex; align-items:center; gap:.75rem; min-width:0; flex:1;">
+                        <div style="width:36px;height:36px;min-width:36px;background:#e0f2fe;border-radius:50%;
                                     display:flex;align-items:center;justify-content:center;">
-                            <svg width="20" height="20" fill="none" stroke="#0284c7" stroke-width="2"
+                            <svg width="18" height="18" fill="none" stroke="#0284c7" stroke-width="2"
                                  stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
                                 <path d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
                             </svg>
                         </div>
-                        <div>
-                            <h2 style="font-size:1.05rem;font-weight:700;color:#0f172a;margin:0;">
+                        <div style="min-width:0;">
+                            <h2 style="font-size:clamp(.9rem,2.5vw,1.05rem);font-weight:700;color:#0f172a;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
                                 Téléverser une fiche de notes (PDF)
                             </h2>
-                            <p style="font-size:.8rem;color:#64748b;margin:0;">
-                                Matière : <strong>{{ $subject->name }}</strong> — Classe : <strong>{{ $classe->name }}</strong> — Trimestre {{ $trimestre }}
+                            <p style="font-size:.75rem;color:#64748b;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                                Matière : <strong>{{ $subject->name }}</strong> — Classe : <strong>{{ $classe->name }}</strong> — Trim. {{ $trimestre }}
                             </p>
                         </div>
                     </div>
                     <button onclick="closeUploadModal()"
-                            style="width:34px;height:34px;border:none;background:#f1f5f9;border-radius:50%;
+                            style="width:34px;height:34px;min-width:34px;border:none;background:#f1f5f9;border-radius:50%;
                                    cursor:pointer;display:flex;align-items:center;justify-content:center;
                                    color:#64748b;font-size:1.1rem;line-height:1;transition:background .2s;"
                             onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">
@@ -245,7 +250,7 @@
                 </div>
 
                 {{-- Corps du modal --}}
-                <div style="padding:1.5rem;">
+                <div style="padding:clamp(.75rem,4vw,1.5rem); overflow-y:auto; flex:1; -webkit-overflow-scrolling:touch;">
 
                     {{-- Zone de sélection de fichier --}}
                     <form method="POST"
@@ -630,10 +635,12 @@
         <div id="saveConfirmOverlay"
              style="display:none; position:fixed; inset:0; z-index:10000;
                     background:rgba(0,0,0,0.5); backdrop-filter:blur(4px);
-                    align-items:center; justify-content:center; padding:1rem;">
+                    align-items:center; justify-content:center;
+                    padding:clamp(.75rem,4vw,1.5rem); overflow-y:auto;">
             <div id="saveConfirmBox"
-                 style="background:#fff; border-radius:20px; padding:2rem; max-width:420px; width:100%;
-                        box-shadow:0 20px 60px rgba(0,0,0,0.2);">
+                 style="background:#fff; border-radius:16px;
+                        padding:clamp(1.25rem,5vw,2rem); max-width:420px; width:100%;
+                        box-shadow:0 20px 60px rgba(0,0,0,0.2); margin:auto;">
                 <div style="text-align:center; margin-bottom:1.5rem;">
                     <div style="width:64px;height:64px;background:#f0fdf4;border:2px solid #86efac;border-radius:50%;
                                 display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;">
@@ -675,21 +682,23 @@
                 display:none; position:fixed; inset:0; z-index:9999;
                 background:rgba(30,64,120,0.45); backdrop-filter:blur(8px);
                 -webkit-backdrop-filter:blur(8px);
-                align-items:center; justify-content:center; padding:1rem;
+                align-items:center; justify-content:center;
+                padding:clamp(.5rem,3vw,1rem); overflow-y:auto;
             }
             #smBox {
                 position:relative; width:100%; max-width:480px; background:#ffffff;
-                border-radius:24px;
+                border-radius:20px;
                 box-shadow:0 0 0 1px rgba(59,130,246,.12),0 8px 16px rgba(59,130,246,.08),0 32px 64px rgba(30,64,120,.18);
                 overflow:hidden; opacity:0; transform:scale(0.93) translateY(10px);
+                max-height:calc(100dvh - 2rem); display:flex; flex-direction:column;
             }
             .sm-top-bar {
                 height:5px;
                 background:linear-gradient(90deg,#2563eb,#3b82f6,#60a5fa,#3b82f6,#2563eb);
-                background-size:200% auto; animation:smBarFlow 3s linear infinite;
+                background-size:200% auto; animation:smBarFlow 3s linear infinite; flex-shrink:0;
             }
             @keyframes smBarFlow { 0%{background-position:0% center}100%{background-position:200% center} }
-            .sm-body { padding:2rem 2rem 1.75rem; }
+            .sm-body { padding:clamp(1.25rem,5vw,2rem) clamp(1rem,5vw,2rem) clamp(1.25rem,4vw,1.75rem); overflow-y:auto; flex:1; -webkit-overflow-scrolling:touch; }
             .sm-icon-wrap {
                 width:72px;height:72px;
                 background:linear-gradient(135deg,#eff6ff,#dbeafe);
@@ -700,7 +709,7 @@
                 animation:smIconPulse 2.8s ease-in-out infinite;
             }
             @keyframes smIconPulse { 0%,100%{box-shadow:0 0 0 6px #eff6ff}50%{box-shadow:0 0 0 10px #dbeafe} }
-            .sm-title { font-size:1.2rem;font-weight:700;color:#1e40af;text-align:center;margin:0 0 .25rem;letter-spacing:-.01em; }
+            .sm-title { font-size:clamp(1rem,3vw,1.2rem);font-weight:700;color:#1e40af;text-align:center;margin:0 0 .25rem;letter-spacing:-.01em; }
             .sm-divider { width:40px;height:3px;background:linear-gradient(90deg,#3b82f6,#60a5fa);border-radius:2px;margin:0 auto 1.1rem; }
             .sm-intro { background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:.9rem 1.1rem;
                         margin-bottom:1.1rem;font-size:.875rem;color:#1e3a8a;line-height:1.7;text-align:center; }
@@ -732,7 +741,7 @@
                 border-radius:10px;cursor:pointer;transition:background .2s,color .2s,border-color .2s;
             }
             .sm-btn-cancel:hover { background:#eff6ff;border-color:#93c5fd;color:#1d4ed8; }
-            .sm-bottom-bar { height:3px;background:linear-gradient(90deg,#dbeafe,#93c5fd,#dbeafe); }
+            .sm-bottom-bar { height:3px;background:linear-gradient(90deg,#dbeafe,#93c5fd,#dbeafe);flex-shrink:0; }
             @keyframes smIn  { from{opacity:0;transform:scale(.91) translateY(14px)} to{opacity:1;transform:scale(1) translateY(0)} }
             @keyframes smOut { from{opacity:1;transform:scale(1) translateY(0)} to{opacity:0;transform:scale(.91) translateY(14px)} }
             @keyframes modalIn  { from{opacity:0;transform:scale(.94) translateY(12px)} to{opacity:1;transform:scale(1) translateY(0)} }
