@@ -763,3 +763,8 @@ Route::middleware(['auth'])->prefix('censeur')->name('censeur.')->group(function
     )->name('deliberation.cancel');
 
 });
+
+
+Route::get('/admin/students/emmagement/pdf', [StudentController::class, 'exportEmmagementPdf'])
+    ->name('admin.students.emmagement.pdf')
+    ->middleware('auth');

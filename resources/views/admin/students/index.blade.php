@@ -51,6 +51,7 @@
                     <p>:pour non payement de contribution au parents</p>
                 </form>
             </div>
+
             <!-- Filtres de recherche -->
             <div class="mb-4">
                 <h2 class="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
@@ -97,13 +98,14 @@
                 </form>
             </div>
 
-            <!-- Export PDF -->
+            <!-- Export PDF + Émargement -->
             <div>
                 <h2 class="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
                     <i class="fas fa-file-export"></i>
                     Export des données
                 </h2>
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
+                    <!-- Export liste classique -->
                     <form method="GET" action="{{ route('admin.students.export.pdf') }}" class="flex gap-2">
                         <select name="class_id" class="border border-gray-300 rounded-lg p-2 text-sm focus:outline-none focus:border-blue-500 flex-1">
                             <option value="">Toutes les classes</option>
@@ -117,11 +119,19 @@
                         </button>
                     </form>
 
+                    <!-- Export ZIP toutes les classes -->
                     <a href="{{ route('admin.students.export.all.pdf') }}" 
                        class="bg-red-700 text-white px-3 py-2 rounded-lg hover:bg-red-800 transition duration-200 text-sm font-medium whitespace-nowrap flex items-center gap-2 justify-center">
                        <i class="fas fa-file-archive"></i>
                        Toutes les classes (ZIP)
                     </a>
+
+                    <!-- ✅ NOUVEAU : Bouton Liste d'émargement -->
+                    <button type="button" onclick="openEmmagementModal()"
+                        class="bg-purple-600 text-white px-3 py-2 rounded-lg hover:bg-purple-700 transition duration-200 text-sm font-medium whitespace-nowrap flex items-center gap-2 justify-center">
+                        <i class="fas fa-clipboard-list"></i>
+                        Liste d'émargement (Bulletins)
+                    </button>
                 </div>
             </div>
         </div>
@@ -138,12 +148,12 @@
                                 <th class="px-3 py-3 text-left font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">Nom</th>
                                 <th class="px-3 py-3 text-left font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">Prénoms</th>
                                 <th class="px-3 py-3 text-left font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">Sexe</th>
-                                <th class="px-3 py-3 text-left font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">Niveau</th>
+                                <th class="px-3 py-3 text-left font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">Entité</th>
                                 <th class="px-3 py-3 text-left font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">Classe</th>
-                                <th class="px-3 py-3 text-left font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">Total payé</th>
+                                <th class="px-3 py-3 text-left font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">Total Payé</th>
                                 <th class="px-3 py-3 text-left font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">Reste</th>
                                 <th class="px-3 py-3 text-left font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">Naissance</th>
-                                <th class="px-3 py-3 text-left font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">Parents</th>
+                                <th class="px-3 py-3 text-left font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">Parent</th>
                                 <th class="px-3 py-3 text-left font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">Inscription</th>
                                 <th class="px-3 py-3 text-left font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">Actions</th>
                             </tr>
@@ -155,7 +165,6 @@
                                     <td class="px-3 py-3 whitespace-nowrap text-gray-900">{{ $student->num_educ ?? '-' }}</td>
                                     <td class="px-3 py-3 whitespace-nowrap font-medium text-blue-600">
                                         <a href="{{ route('admin.students.show', $student->id) }}" class="hover:underline flex items-center gap-1">
-                                            
                                             {{ \Illuminate\Support\Str::limit($student->last_name, 12) }}
                                         </a>
                                     </td>
@@ -169,7 +178,6 @@
                                     <td class="px-3 py-3 whitespace-nowrap text-gray-900">{{ \Illuminate\Support\Str::limit($student->classe->name ?? '-', 8) }}</td>
                                     <td class="px-3 py-3 whitespace-nowrap text-gray-900">
                                         <div class="font-medium">{{ number_format($student->total_paid, 2) }} FCFA</div>
-                                        
                                         <a href="{{ route('students.payments.index', $student->id) }}" 
                                             class="text-blue-600 hover:text-blue-800 text-xs flex items-center gap-1 mt-1">
                                             <i class="fas fa-list"></i>
@@ -219,7 +227,7 @@
                 </div>
             </div>
 
-            <!-- Bouton Retour -->
+            <!-- Bouton Retour + Pagination -->
             <div class="mt-6 flex justify-between items-center">
                 <button onclick="window.history.back()" 
                         class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition duration-200 font-medium flex items-center gap-2">
@@ -227,7 +235,6 @@
                     Retour
                 </button>
                 
-                <!-- Pagination -->
                 <div class="flex-1 flex justify-center">
                     {{ $students->links() }}
                 </div>
@@ -246,40 +253,123 @@
     @endif
 </div>
 
+<!-- =============================================
+     MODAL : Liste d'émargement des bulletins
+     ============================================= -->
+<div id="emmagementModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black bg-opacity-50">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 p-6">
+        <div class="flex justify-between items-center mb-5">
+            <div class="flex items-center gap-2">
+                <div class="bg-purple-100 p-2 rounded-lg">
+                    <i class="fas fa-clipboard-list text-purple-600 text-lg"></i>
+                </div>
+                <h3 class="text-lg font-bold text-gray-800">Liste d'émargement – Retrait de Bulletin</h3>
+            </div>
+            <button onclick="closeEmmagementModal()" class="text-gray-400 hover:text-gray-600 transition">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+
+        <p class="text-sm text-gray-500 mb-5">
+            Sélectionnez la classe et le trimestre pour télécharger la liste d'émargement au format PDF.
+        </p>
+
+        <form method="GET" action="{{ route('admin.students.emmagement.pdf') }}" id="emmagementForm">
+            <!-- Classe -->
+            <div class="mb-4">
+                <label for="emm_class_id" class="block text-sm font-semibold text-gray-700 mb-1">
+                    <i class="fas fa-school text-purple-500 mr-1"></i> Classe
+                </label>
+                <select name="class_id" id="emm_class_id" required
+                    class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500">
+                    <option value="">-- Sélectionner une classe --</option>
+                    @foreach($classes as $classe)
+                        <option value="{{ $classe->id }}">{{ $classe->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <!-- Trimestre -->
+            <div class="mb-6">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                    <i class="fas fa-calendar-alt text-purple-500 mr-1"></i> Trimestre
+                </label>
+                <div class="flex gap-3">
+                    @foreach([1 => '1er Trimestre', 2 => '2ème Trimestre', 3 => '3ème Trimestre'] as $num => $label)
+                    <label class="flex-1 cursor-pointer">
+                        <input type="radio" name="trimestre" value="{{ $num }}" class="sr-only peer" {{ $num === 1 ? 'required' : '' }}>
+                        <div class="text-center border-2 border-gray-200 rounded-lg py-2.5 px-2 text-sm font-medium text-gray-600
+                                    peer-checked:border-purple-600 peer-checked:bg-purple-50 peer-checked:text-purple-700
+                                    hover:border-purple-300 transition duration-150">
+                            T{{ $num }}
+                            <div class="text-xs font-normal mt-0.5">{{ $label }}</div>
+                        </div>
+                    </label>
+                    @endforeach
+                </div>
+            </div>
+
+            <div class="flex gap-3">
+                <button type="button" onclick="closeEmmagementModal()"
+                    class="flex-1 bg-gray-100 text-gray-700 px-4 py-2.5 rounded-lg hover:bg-gray-200 transition font-medium text-sm">
+                    Annuler
+                </button>
+                <button type="submit"
+                    class="flex-1 bg-purple-600 text-white px-4 py-2.5 rounded-lg hover:bg-purple-700 transition font-medium text-sm flex items-center justify-center gap-2">
+                    <i class="fas fa-file-pdf"></i>
+                    Télécharger le PDF
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <style>
     .overflow-x-auto {
         -webkit-overflow-scrolling: touch;
         scrollbar-width: thin;
     }
-    
-    .overflow-x-auto::-webkit-scrollbar {
-        height: 6px;
-    }
-    
-    .overflow-x-auto::-webkit-scrollbar-track {
-        background: #f1f1f1;
-        border-radius: 3px;
-    }
-    
-    .overflow-x-auto::-webkit-scrollbar-thumb {
-        background: #c1c1c1;
-        border-radius: 3px;
-    }
+    .overflow-x-auto::-webkit-scrollbar { height: 6px; }
+    .overflow-x-auto::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 3px; }
+    .overflow-x-auto::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 3px; }
     
     @media (max-width: 768px) {
-        table {
-            min-width: 1000px;
-        }
-        
-        th, td {
-            padding: 0.5rem 0.25rem;
-            font-size: 0.75rem;
-        }
-        
-        .flex.justify-between {
-            flex-direction: column;
-            gap: 1rem;
-        }
+        table { min-width: 1000px; }
+        th, td { padding: 0.5rem 0.25rem; font-size: 0.75rem; }
+        .flex.justify-between { flex-direction: column; gap: 1rem; }
     }
 </style>
+
+<script>
+    function openEmmagementModal() {
+        document.getElementById('emmagementModal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeEmmagementModal() {
+        document.getElementById('emmagementModal').classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+
+    // Fermer le modal si on clique dehors
+    document.getElementById('emmagementModal').addEventListener('click', function(e) {
+        if (e.target === this) closeEmmagementModal();
+    });
+
+    // Validation avant soumission
+    document.getElementById('emmagementForm').addEventListener('submit', function(e) {
+        const classe = document.getElementById('emm_class_id').value;
+        const trimestre = document.querySelector('input[name="trimestre"]:checked');
+        if (!classe) {
+            e.preventDefault();
+            alert('Veuillez sélectionner une classe.');
+            return;
+        }
+        if (!trimestre) {
+            e.preventDefault();
+            alert('Veuillez sélectionner un trimestre.');
+            return;
+        }
+    });
+</script>
 @endsection

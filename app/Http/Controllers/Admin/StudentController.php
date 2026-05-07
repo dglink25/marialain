@@ -459,5 +459,47 @@ class StudentController extends Controller{
         }
     }
 
+    public function exportEmmagementPdf(Request $request) {
+        // 1. Vérifier l'année académique active
+        $activeYear = AcademicYear::where('active', true)->first();
+        if (!$activeYear) {
+            return back()->with('error', 'Aucune année académique active trouvée.');
+        }
+    
+        // 2. Valider les paramètres
+        $request->validate([
+            'class_id'  => 'required|exists:classes,id',
+            'trimestre' => 'required|in:1,2,3',
+        ]);
+    
+        // 3. Récupérer la classe
+        $classe = \App\Models\Classe::findOrFail($request->class_id);
+    
+        // 4. Récupérer les élèves validés de cette classe, triés alphabétiquement
+        $students = Student::with(['entity', 'classe'])
+            ->where('is_validated', 1)
+            ->where('academic_year_id', $activeYear->id)
+            ->where('class_id', $request->class_id)
+            ->orderBy('last_name')
+            ->orderBy('first_name')
+            ->get();
+    
+        // 5. Générer le PDF
+        $pdf = Pdf::loadView('admin.students.emmagement_pdf', [
+            'students'     => $students,
+            'className'    => $classe->name,
+            'trimestre'    => $request->trimestre,
+            'academicYear' => $activeYear->name ?? $activeYear->year ?? '',
+        ])->setPaper('a4', 'landscape');
+    
+        // 6. Nom du fichier
+        $fileName = 'emmagement_bulletin_'
+            . str_replace(' ', '_', $classe->name)
+            . '_T' . $request->trimestre
+            . '.pdf';
+    
+        return $pdf->download($fileName);
+    }
+
 
 }
