@@ -3,76 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\ParentUser;
+use App\Services\WhatsAppService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 
 class ParentPhoneVerificationController extends Controller{
-   
-    
-    private function formatForWhatsApp(string $phone): string {
-        
-        $local = substr($phone, 2); 
-        return '+229' . $local;    
-    }
-
-    private function generateOtp(): string
-    {
+    private function generateOtp(): string {
         return str_pad((string) random_int(10000, 99999), 5, '0', STR_PAD_LEFT);
-    }
-
-   
-    private function sendWhatsApp(string $to, string $message): bool {
-        if (! config('whatsapp.enabled')) {
-            Log::info('[WhatsApp] Désactivé — message non envoyé', ['to' => $to]);
-            return true;
-        }
-
-        // Construction de l'URL complète avec log pour faciliter le debug
-        $baseUrl  = rtrim(config('whatsapp.gateway_url'), '/');
-        $sendPath = config('whatsapp.send_path', '/api/send-message');
-        $fullUrl  = $baseUrl . $sendPath;
-
-        Log::info('[WhatsApp] Tentative d\'envoi', [
-            'url' => $fullUrl,
-            'to'  => $to,
-        ]);
-
-        try {
-            $response = Http::timeout(15)
-                ->withHeaders([
-                    'x-api-secret' => config('whatsapp.api_secret'),
-                    'Content-Type'  => 'application/json',
-                ])
-                ->post($fullUrl, [
-                    'sender'  => config('whatsapp.sender'), // non utilisé par Baileys mais conservé
-                    'phone'   => $to,      
-                    'message' => $message,
-                ]);
-
-            if ($response->successful()) {
-                Log::info('[WhatsApp] Envoi réussi', ['to' => $to, 'status' => $response->status()]);
-                return true;
-            }
-
-            Log::warning('[WhatsApp] Échec envoi', [
-                'url'    => $fullUrl,
-                'to'     => $to,
-                'status' => $response->status(),
-                'body'   => $response->body(),
-            ]);
-            return false;
-
-        } catch (\Throwable $e) {
-            Log::error('[WhatsApp] Exception', [
-                'url'     => $fullUrl,
-                'message' => $e->getMessage(),
-                'trace'   => $e->getTraceAsString(),
-            ]);
-            return false;
-        }
     }
 
     public function sendOtp(Request $request) {
@@ -80,17 +18,13 @@ class ParentPhoneVerificationController extends Controller{
         $parent = Auth::guard('parent')->user();
 
         if (! $parent) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Session expirée. Veuillez vous reconnecter.',
-            ], 401);
+            return response()->json(['success' => false, 'message' => 'Session expirée.'], 401);
         }
 
-        // ── Respect du délai de 60 secondes entre deux envois ──
+        // ── Respect du délai de 60 secondes ──
         if ($parent->phone_otp_sent_at) {
-            $secondsElapsed  = now()->diffInSeconds($parent->phone_otp_sent_at, false);
-            // diffInSeconds retourne une valeur NÉGATIVE si otp_sent_at est dans le passé
-            $waitRemaining = 60 + $secondsElapsed; // si elapsed = -45, wait = 15s
+            $secondsElapsed = now()->diffInSeconds($parent->phone_otp_sent_at, false);
+            $waitRemaining  = 60 + $secondsElapsed;
             if ($waitRemaining > 0) {
                 return response()->json([
                     'success'      => false,
@@ -100,7 +34,6 @@ class ParentPhoneVerificationController extends Controller{
             }
         }
 
-        // ── Génération et sauvegarde de l'OTP ──
         $otp = $this->generateOtp();
 
         $parent->update([
@@ -109,25 +42,22 @@ class ParentPhoneVerificationController extends Controller{
             'phone_otp_sent_at'    => now(),
         ]);
 
-        // ── Formatage du numéro et envoi ──
-        $whatsappNumber = $this->formatForWhatsApp($parent->phone);
+        $whatsappNumber = WhatsAppService::formatNumber($parent->phone);
         $parentName     = explode(' ', trim($parent->full_name))[0];
 
-        $message = "Bonjour {$parentName} \n\n"
-                 . "Votre code de vérification *CPEG MARIE-ALAIN* est :\n\n"
+        $message = "Bonjour {$parentName}\n\n"
+                 . "Votre code de vérification CPEG MARIE-ALAIN est :\n\n"
                  . "*{$otp}*\n\n"
                  . "Ce code est valable *5 minutes*.\n"
                  . "Ne le partagez avec personne.";
 
-        $sent = $this->sendWhatsApp($whatsappNumber, $message);
+        $sent = WhatsAppService::send($whatsappNumber, $message);
 
         if (! $sent) {
-            // Annuler l'OTP_sent_at pour ne pas bloquer la re-tentative
             $parent->update(['phone_otp_sent_at' => null]);
-
             return response()->json([
                 'success' => false,
-                'message' => "Impossible d'envoyer le message WhatsApp. Vérifiez votre connexion ou réessayez dans un moment.",
+                'message' => "Impossible d'envoyer le message WhatsApp. Réessayez dans un moment.",
             ], 500);
         }
 
@@ -151,13 +81,9 @@ class ParentPhoneVerificationController extends Controller{
         $parent = Auth::guard('parent')->user();
 
         if (! $parent) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Session expirée. Veuillez vous reconnecter.',
-            ], 401);
+            return response()->json(['success' => false, 'message' => 'Session expirée.'], 401);
         }
 
-        // ── Vérification expiration ──
         if (! $parent->phone_otp_expires_at || now()->isAfter($parent->phone_otp_expires_at)) {
             return response()->json([
                 'success' => false,
@@ -166,7 +92,6 @@ class ParentPhoneVerificationController extends Controller{
             ], 422);
         }
 
-        // ── Vérification du code ──
         if ($request->otp !== $parent->phone_otp) {
             return response()->json([
                 'success' => false,
@@ -174,7 +99,6 @@ class ParentPhoneVerificationController extends Controller{
             ], 422);
         }
 
-        // ── Marquer le téléphone comme vérifié ──
         $parent->update([
             'is_verifie_phone'     => true,
             'verifie_phone_at'     => now(),
@@ -202,37 +126,30 @@ class ParentPhoneVerificationController extends Controller{
         $parent = Auth::guard('parent')->user();
 
         if (! $parent) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Session expirée. Veuillez vous reconnecter.',
-            ], 401);
+            return response()->json(['success' => false, 'message' => 'Session expirée.'], 401);
         }
 
         if (! $parent->is_verifie_phone) {
             return response()->json([
                 'success' => false,
-                'message' => 'Vous devez d\'abord vérifier votre numéro de téléphone.',
+                'message' => "Vous devez d'abord vérifier votre numéro de téléphone.",
             ], 403);
         }
 
         $newPassword = $request->password;
 
-        $parent->update([
-            'password' => Hash::make($newPassword),
-        ]);
+        $parent->update(['password' => Hash::make($newPassword)]);
 
-        // ── Notification WhatsApp de confirmation ──
-        $whatsappNumber = $this->formatForWhatsApp($parent->phone);
+        $whatsappNumber = WhatsAppService::formatNumber($parent->phone);
         $parentName     = explode(' ', trim($parent->full_name))[0];
 
-        $message = "Mot de passe mis à jour avec succès !\n\n"
+        $message = "Mot de passe mis à jour !\n\n"
                  . "Bonjour {$parentName},\n"
                  . "Votre nouveau mot de passe pour votre espace parent CPEG MARIE-ALAIN est :\n\n"
                  . "*{$newPassword}*\n\n"
-                 . "Conservez-le précieusement et ne le partagez avec personne.\n"
-                 . "Vous pouvez désormais vous connecter avec ce mot de passe.";
+                 . "Conservez-le précieusement et ne le partagez avec personne.";
 
-        $this->sendWhatsApp($whatsappNumber, $message);
+        WhatsAppService::send($whatsappNumber, $message);
 
         return response()->json([
             'success'      => true,
