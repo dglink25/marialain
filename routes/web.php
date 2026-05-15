@@ -60,6 +60,8 @@ use App\Http\Controllers\ParentAuthController;
 use App\Http\Controllers\ParentDashboardController;
 use App\Http\Controllers\Teacher\PdfUploadNotesController;
 
+use App\Http\Controllers\ParentPhoneVerificationController;
+
 // Pour tester la page 400
 Route::get('/400', function () {
     abort(400);
@@ -692,6 +694,12 @@ Route::prefix('parent')->name('parent.')->middleware('auth:parent')->group(funct
     Route::get('/children/{student}/payments', [ParentDashboardController::class, 'payments'])->name('child.payments');
     Route::get('/child/{student}/timetable', [ParentDashboardController::class, 'timetable'])->name('child.timetable');
     Route::get('/contact', [ParentDashboardController::class, 'contact'])->name('contact');
+
+    Route::prefix('phone')->name('phone.')->group(function () {
+        Route::post('/send-otp',       [ParentPhoneVerificationController::class, 'sendOtp'])      ->name('send-otp');
+        Route::post('/verify-otp',     [ParentPhoneVerificationController::class, 'verifyOtp'])    ->name('verify-otp');
+        Route::post('/change-password',[ParentPhoneVerificationController::class, 'changePassword'])->name('change-password');
+    });
 });
 
 Route::get('/api/classes/{id}/fees', function($id) {

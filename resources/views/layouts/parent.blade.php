@@ -1035,5 +1035,7 @@
     </script>
     
     @stack('scripts')
+
+    @include('parent.parent-phone-verify-modal')
 </body>
 </html>
