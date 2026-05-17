@@ -388,12 +388,44 @@ Route::prefix('students')->name('students.')->group(function () {
 });
 
 
+// ── Archives – utilisateurs authentifiés (admin / censeur / enseignant) ─────
 Route::middleware(['auth'])->group(function () {
-    Route::get('/archives', [ArchiveController::class, 'index'])->name('archives.index');
-    Route::get('/archives/{id}', [ArchiveController::class, 'show'])->name('archives.show');
-    Route::get('/{year}/classes/{class}', [ArchiveController::class, 'classStudents'])->name('archives.classes.students');
-    Route::get('/{year}/{class}/timetables', [ArchiveController::class, 'classTimetables'])
+    Route::get('/archives', [\App\Http\Controllers\ArchiveController::class, 'index'])
+        ->name('archives.index');
+
+    Route::get('/archives/{id}', [\App\Http\Controllers\ArchiveController::class, 'show'])
+        ->name('archives.show');
+
+    Route::get('/archives/{yearId}/classes/{classId}/eleves',
+        [\App\Http\Controllers\ArchiveController::class, 'classStudents'])
+        ->name('archives.classes.students');
+
+    Route::get('/archives/{yearId}/classes/{classId}/emploi-du-temps',
+        [\App\Http\Controllers\ArchiveController::class, 'classTimetables'])
         ->name('archives.class_timetables');
+
+    Route::get('/archives/{yearId}/classes/{classId}/notes',
+        [\App\Http\Controllers\ArchiveController::class, 'classNotes'])
+        ->name('archives.class_notes');
+
+    Route::get('/archives/{yearId}/classes/{classId}/paiements',
+        [\App\Http\Controllers\ArchiveController::class, 'classPaymentStats'])
+        ->name('archives.class_payment_stats');
+});
+
+// ── Archives – parents (guard parent) ───────────────────────────────────────
+Route::middleware(['auth:parent'])->prefix('parent/archives')->name('archives.parent.')->group(function () {
+    Route::get('/',
+        [\App\Http\Controllers\ArchiveController::class, 'parentIndex'])
+        ->name('index');
+
+    Route::get('/{yearId}',
+        [\App\Http\Controllers\ArchiveController::class, 'parentShow'])
+        ->name('show');
+
+    Route::get('/{yearId}/enfant/{studentId}',
+        [\App\Http\Controllers\ArchiveController::class, 'parentChildDetails'])
+        ->name('child');
 });
 
 

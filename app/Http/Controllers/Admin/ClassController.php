@@ -43,12 +43,12 @@ class ClassController extends Controller
                 $query->where('entity_id', $request->entity_id);
             }
 
-            $classes = $query->paginate(10)->withQueryString();
+            $classes = $query->paginate(20)->withQueryString();
 
             return view('admin.classes.index', compact('classes', 'entities', 'years', 'activeYear'));
 
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', '❌ Erreur inattendue : '.$e->getMessage());
+            return redirect()->back()->with('error', 'Erreur inattendue : '.$e->getMessage());
         }
     }
 
