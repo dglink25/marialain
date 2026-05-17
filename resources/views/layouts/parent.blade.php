@@ -637,6 +637,15 @@
                             <span>Tableau de bord</span>
                         </a>
                     </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('archives.parent.index') ? 'active' : '' }}" 
+                           href="{{ route('archives.parent.index') }}"
+                           aria-current="{{ request()->routeIs('archives.parent.index') ? 'page' : false }}">
+                            <i class="fas fa-archive"></i>
+                            <span>Mes Archives</span>
+                        </a>
+                    </li>
                     
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" role="button" 
