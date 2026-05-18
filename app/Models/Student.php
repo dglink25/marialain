@@ -119,5 +119,36 @@ class Student extends Model{
         return $this->belongsTo(Classe::class);
     }
 
+
+    
+    public function academicRecords()
+    {
+        return $this->hasMany(StudentAcademicRecord::class);
+    }
+ 
+ 
+    public function currentAcademicRecord()
+    {
+        return $this->hasOne(StudentAcademicRecord::class)
+            ->where('academic_year_id', fn() =>
+                AcademicYear::where('active', true)->value('id')
+            );
+    }
+ 
+    /**
+     * Historique des délibérations (en tant qu'élève source).
+     */
+    public function deliberationRecords()
+    {
+        return $this->hasMany(DeliberationStudent::class);
+    }
+ 
+
+    public function getRecordForYear(int $yearId): ?StudentAcademicRecord
+    {
+        return $this->academicRecords()->where('academic_year_id', $yearId)->first();
+    }
+
+
     
 }

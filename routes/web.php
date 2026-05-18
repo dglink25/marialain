@@ -781,27 +781,22 @@ Route::middleware(['auth'])->get(
 
 
 Route::middleware(['auth'])->prefix('censeur')->name('censeur.')->group(function () {
-
-    // Données pour le modal de délibération (JSON)
+ 
     Route::get('/classes/{classId}/deliberation/modal-data',
-        [\App\Http\Controllers\Censeur\DeliberationController::class, 'getModalData']
-    )->name('deliberation.modal-data');
-
-    // Vérifier si une délibération existe déjà
+        [\App\Http\Controllers\Censeur\DeliberationController::class, 'getModalData'])
+        ->name('deliberation.modal-data');
+ 
     Route::get('/classes/{classId}/deliberation/check',
-        [\App\Http\Controllers\Censeur\DeliberationController::class, 'checkExisting']
-    )->name('deliberation.check');
-
-    // Effectuer la délibération
+        [\App\Http\Controllers\Censeur\DeliberationController::class, 'checkExisting'])
+        ->name('deliberation.check');
+ 
     Route::post('/classes/{classId}/deliberation',
-        [\App\Http\Controllers\Censeur\DeliberationController::class, 'deliberate']
-    )->name('deliberation.store');
-
-    // Annuler une délibération
+        [\App\Http\Controllers\Censeur\DeliberationController::class, 'deliberate'])
+        ->name('deliberation.store');
+ 
     Route::post('/deliberation/{deliberationId}/cancel',
-        [\App\Http\Controllers\Censeur\DeliberationController::class, 'cancel']
-    )->name('deliberation.cancel');
-
+        [\App\Http\Controllers\Censeur\DeliberationController::class, 'cancel'])
+        ->name('deliberation.cancel');
 });
 
 

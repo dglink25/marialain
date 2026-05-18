@@ -4,15 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-/**
- * Table student_academic_records
- *
- * Snapshot IMMUABLE de l'état d'un élève pour une année académique donnée.
- * - Créé au moment de la délibération (ou du seeder de correction).
- * - Jamais modifié après création.
- * - Permet de retrouver un élève dans les archives d'une année même si
- *   son academic_year_id courant a changé (passage en classe supérieure).
- */
+
 return new class extends Migration
 {
     public function up(): void
