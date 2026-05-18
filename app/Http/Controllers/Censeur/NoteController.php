@@ -30,7 +30,9 @@ use App\Exports\NotesSubjectExport;
     class NoteController extends Controller{
 
         public function index(){
-            $classes = Classe::where('entity_id', 3)->get();
+            $activeYear = AcademicYear::where('active', true)->firstOrFail();
+
+            $classes = Classe::where('entity_id', 3)->where('academic_year_id', $activeYear->id)->get();
 
             return view('censeur.classes.notes.index', compact('classes'));
         }

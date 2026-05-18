@@ -64,47 +64,63 @@
                             </span>
                         </div>
 
-                        {{-- Infos de base ----------------------------------------}}
+                        {{-- Effectif via records archivés -------------------------}}
                         <p class="text-sm text-gray-600 mb-1">
                             <i class="fas fa-users text-gray-400 w-4 mr-1"></i>
-                            Effectif : <span class="font-semibold">{{ $class->studentsCount }}</span> élève(s)
+                            Effectif archivé : <span class="font-semibold">{{ $class->studentsCount }}</span> élève(s)
                         </p>
+
+                        {{-- Stats résultats (admis / redoublants) ----------------}}
+                        @php
+                            $admis = \App\Models\StudentAcademicRecord::where('academic_year_id', $year->id)
+                                ->where('class_id', $class->id)
+                                ->where('statut_deliberation', 'passed')
+                                ->count();
+
+                            $redoub = \App\Models\StudentAcademicRecord::where('academic_year_id', $year->id)
+                                ->where('class_id', $class->id)
+                                ->where('statut_deliberation', 'repeated')
+                                ->count();
+                        @endphp
+                        @if($admis + $redoub > 0)
+                            <div class="flex gap-3 text-xs mt-1 mb-2">
+                                <span class="text-green-700 font-semibold">✓ {{ $admis }} admis</span>
+                                <span class="text-red-600 font-semibold">↻ {{ $redoub }} redoublant(s)</span>
+                            </div>
+                        @endif
 
                         {{-- Stats paiement par classe (admin/sec) ----------------}}
                         @if($canViewPayments)
                             @php
-                                $ps = \App\Models\Student::where('class_id', $class->id)
-                                    ->where('academic_year_id', $year->id)
-                                    ->with('payments')
-                                    ->get();
-                                $pTotal = $ps->sum('total_fees');
-                                $pPaid  = $ps->flatMap->payments->where('academic_year_id', $year->id)->sum('amount');
-                                $pRate  = $pTotal > 0 ? round(($pPaid / $pTotal) * 100) : 0;
+                                $records = \App\Models\StudentAcademicRecord::where('academic_year_id', $year->id)->where('class_id', $class->id)->get();
+                                $pTotal  = $records->sum('total_fees');
+                                $pPaid   = $records->sum('amount_paid');
+                                $pRate   = $pTotal > 0 ? round(($pPaid / $pTotal) * 100) : 0;
                             @endphp
-                            <div class="mt-2 mb-3">
-                                <div class="flex justify-between text-xs text-gray-500 mb-1">
-                                    <span>Paiements</span>
-                                    <span class="font-semibold {{ $pRate >= 80 ? 'text-green-600' : ($pRate >= 50 ? 'text-yellow-600' : 'text-red-600') }}">{{ $pRate }}%</span>
+                            @if($pTotal > 0)
+                                <div class="mt-2 mb-3">
+                                    <div class="flex justify-between text-xs text-gray-500 mb-1">
+                                        <span>Paiements</span>
+                                        <span class="font-semibold {{ $pRate >= 80 ? 'text-green-600' : ($pRate >= 50 ? 'text-yellow-600' : 'text-red-600') }}">{{ $pRate }}%</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-1.5">
+                                        <div class="h-1.5 rounded-full {{ $pRate >= 80 ? 'bg-green-500' : ($pRate >= 50 ? 'bg-yellow-500' : 'bg-red-500') }}"
+                                             style="width: {{ $pRate }}%"></div>
+                                    </div>
+                                    <div class="text-xs text-gray-400 mt-1">
+                                        {{ number_format($pPaid, 0, ',', ' ') }} / {{ number_format($pTotal, 0, ',', ' ') }} FCFA
+                                    </div>
                                 </div>
-                                <div class="w-full bg-gray-200 rounded-full h-1.5">
-                                    <div class="h-1.5 rounded-full {{ $pRate >= 80 ? 'bg-green-500' : ($pRate >= 50 ? 'bg-yellow-500' : 'bg-red-500') }}"
-                                         style="width: {{ $pRate }}%"></div>
-                                </div>
-                                <div class="text-xs text-gray-400 mt-1">
-                                    {{ number_format($pPaid, 0, ',', ' ') }} / {{ number_format($pTotal, 0, ',', ' ') }} FCFA
-                                </div>
-                            </div>
+                            @endif
                         @endif
 
                         {{-- Boutons d'action ------------------------------------}}
                         <div class="mt-auto flex flex-wrap gap-2">
-                            {{-- Élèves --}}
                             <a href="{{ route('archives.classes.students', [$year->id, $class->id]) }}"
                                class="flex-1 text-center px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium">
                                 <i class="fas fa-users mr-1"></i> Élèves
                             </a>
 
-                            {{-- Emploi du temps --}}
                             @if($canViewTimetable)
                                 <a href="{{ route('archives.class_timetables', [$year->id, $class->id]) }}"
                                    class="flex-1 text-center px-3 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition text-sm font-medium">
@@ -112,7 +128,6 @@
                                 </a>
                             @endif
 
-                            {{-- Notes --}}
                             @if($canViewNotes)
                                 <a href="{{ route('archives.class_notes', [$year->id, $class->id]) }}"
                                    class="flex-1 text-center px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm font-medium">
@@ -120,7 +135,6 @@
                                 </a>
                             @endif
 
-                            {{-- Stats paiement (admin/sec) --}}
                             @if($canViewPayments)
                                 <a href="{{ route('archives.class_payment_stats', [$year->id, $class->id]) }}"
                                    class="flex-1 text-center px-3 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition text-sm font-medium">

@@ -1,104 +1,145 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="bg-white p-6 rounded shadow">
-    <h1 class="text-2xl font-bold mb-6">
-        Élèves de la classe {{ $class->name }} ({{ $year->name }})
-    </h1>
+@php $pageTitle = 'Élèves archivés – ' . $class->name . ' (' . $year->name . ')'; @endphp
 
-    @if($students->isEmpty())
-        <p class="text-gray-600">Aucun élève trouvé dans cette classe.</p>
-    @else
-        <div class="overflow-x-auto">
-    <table class="min-w-max w-full bg-white border rounded-lg shadow-sm">
-        <thead class="bg-gray-100 text-xs md:text-sm font-semibold text-left">
-            <tr>
-                <th class="border px-4 py-2" rowspan="2">N°</th>
-                <th class="border px-4 py-2" rowspan="2">N° Éduc Master</th>
-                <th class="border px-4 py-2" rowspan="2">Nom</th>
-                <th class="border px-4 py-2" rowspan="2">Prénoms</th>
-                <th class="border px-4 py-2" rowspan="2">Sexe</th>
-                <th class="border px-4 py-2" rowspan="2">Niveau</th>
-                <th class="border px-4 py-2" rowspan="2">Classe</th>
-                <th class="border px-4 py-2 text-center" colspan="2">Frais de Scolarité</th>
-                <th class="border px-4 py-2" rowspan="2">Date de naissance</th>
-                <th class="border px-4 py-2" rowspan="2">Parents/Tuteurs</th>
-                <th class="border px-4 py-2" rowspan="2">Date d'inscription</th>
-                <th class="border px-4 py-2" rowspan="2">Actions</th>
-            </tr>
-            <tr>
-                <th class="border px-4 py-2 text-left">Total payé</th>
-                <th class="border px-4 py-2 text-left">Reste à payer</th>
-            </tr>
-        </thead>
+<div class="bg-white p-6 rounded-xl shadow">
 
-        <tbody class="text-xs md:text-sm">
-            @forelse($students as $student)
-                <tr class="border-b hover:bg-gray-50">
-                    <td class="border px-4 py-2">{{ $loop->iteration }}</td>
-                    <td class="border px-4 py-2">{{ $student->num_educ ?? '- -' }}</td>
-                    <td class="border px-4 py-2">
-                        <a href="{{ route('admin.students.show', $student->id) }}" 
-                           class="text-blue-600 hover:underline">
-                           {{ $student->last_name }}
-                        </a>
-                    </td>
-                    <td class="border px-4 py-2">
-                        <a href="{{ route('admin.students.show', $student->id) }}" 
-                           class="text-blue-600 hover:underline">
-                           {{ $student->first_name }}
-                        </a>
-                    </td>
-                    <td class="border px-4 py-2">{{ $student->gender ?? '- -' }}</td>
-                    <td class="border px-4 py-2">{{ $student->entity->name ?? '-' }}</td>
-                    <td class="border px-4 py-2">{{ $student->classe->name ?? '-' }}</td>
-                    
-                    <td class="border px-4 py-2">
-                        <span class="font-semibold">{{ $student->school_fees_paid ?? 0 }} FCFA</span>
-                        <br>
-                        @if(auth()->id() == 8)
-                            <a href="{{ route('students.payments.index', $student->id) }}" 
-                            class="mt-1 inline-block bg-blue-600 text-white px-2 py-1 rounded text-xs hover:bg-blue-700">
-                            Détails
-                            </a>
-                        @endif
-                    </td>
-                    <td class="border px-4 py-2">
-                        {{ number_format($student->remaining_fees, 0, ',', ' ') }} FCFA
-                    </td>
-                    
-                    <td class="border px-4 py-2">{{ $student->birth_date }}</td>
-                    <td class="border px-4 py-2">
-                        {{ $student->parent_full_name ?? ' - - ' }} 
-                        <br> 
-                        <span class="text-gray-500">{{ $student->parent_phone ?? ' - - ' }}</span>
-                    </td>
-                    <td class="border px-4 py-2">{{ $student->created_at->format('d/m/Y') }}</td>
-                    <td class="border px-4 py-2">
-                        <a href="{{ route('admin.students.show', $student->id) }}" 
-                           class="text-blue-600 hover:underline">Voir profil</a>
-                    </td>
-                </tr>
-            @empty
-                <tr>
-                    <td colspan="12" class="text-center py-4 text-gray-500">Aucun étudiant inscrit.</td>
-                </tr>
-            @endforelse
-        </tbody>
-    </table>
-</div>
-
-<div class="mt-4">
-    {{ $students->links() }}
-</div>
-
-    @endif
-
-    <div class="mt-6">
-        <a href="{{ route('archives.show', $year->id) }}" 
-           class="inline-block px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700">
-           Retour aux classes
+    {{-- En-tête ----------------------------------------------------------------}}
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-800">
+                {{ $class->name }}
+                <span class="text-sm font-normal text-gray-500 ml-2">{{ $year->name }}</span>
+            </h1>
+            <p class="text-sm text-gray-500 mt-1">
+                {{ $records->total() }} élève(s) archivé(s)
+                @if($class->entity)
+                    · {{ ucfirst($class->entity->name) }}
+                @endif
+            </p>
+        </div>
+        <a href="{{ route('archives.show', $year->id) }}"
+           class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm">
+            <i class="fas fa-arrow-left"></i> Retour aux classes
         </a>
     </div>
+
+    {{-- Statistiques de paiement (admin/sec) --}}
+    @if($canViewPayments && $classPaymentStats)
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-blue-50 border border-blue-200 rounded-xl p-3 text-center">
+                <div class="text-xl font-bold text-blue-700">{{ $classPaymentStats['total_students'] }}</div>
+                <div class="text-xs text-blue-600">Élèves</div>
+            </div>
+            <div class="bg-green-50 border border-green-200 rounded-xl p-3 text-center">
+                <div class="text-sm font-bold text-green-700">{{ number_format($classPaymentStats['total_paid'], 0, ',', ' ') }}</div>
+                <div class="text-xs text-green-600">FCFA payés</div>
+            </div>
+            <div class="bg-red-50 border border-red-200 rounded-xl p-3 text-center">
+                <div class="text-sm font-bold text-red-700">{{ number_format($classPaymentStats['total_remaining'], 0, ',', ' ') }}</div>
+                <div class="text-xs text-red-600">FCFA restants</div>
+            </div>
+            <div class="bg-purple-50 border border-purple-200 rounded-xl p-3 text-center">
+                <div class="text-xl font-bold text-purple-700">{{ $classPaymentStats['rate'] }}%</div>
+                <div class="text-xs text-purple-600">Recouvrement</div>
+            </div>
+        </div>
+    @endif
+
+    @if($records->isEmpty())
+        <div class="text-center py-16 text-gray-400">
+            <i class="fas fa-users text-5xl mb-4 block"></i>
+            <p>Aucun élève archivé pour cette classe et cette année.</p>
+        </div>
+    @else
+        <div class="overflow-x-auto border rounded-xl shadow-sm">
+            <table class="min-w-max w-full text-sm">
+                <thead class="bg-gray-800 text-white text-xs">
+                    <tr>
+                        <th class="border border-gray-600 px-3 py-3 text-left">N°</th>
+                        <th class="border border-gray-600 px-3 py-3 text-left">N° Éduc</th>
+                        <th class="border border-gray-600 px-3 py-3 text-left">Nom & Prénoms</th>
+                        <th class="border border-gray-600 px-3 py-3 text-center">Sexe</th>
+                        <th class="border border-gray-600 px-3 py-3 text-center">Moy. Ann.</th>
+                        <th class="border border-gray-600 px-3 py-3 text-center">Rang</th>
+                        <th class="border border-gray-600 px-3 py-3 text-center">Statut</th>
+                        @if($canViewPayments)
+                            <th class="border border-gray-600 px-3 py-3 text-right">Total dû</th>
+                            <th class="border border-gray-600 px-3 py-3 text-right">Payé</th>
+                            <th class="border border-gray-600 px-3 py-3 text-right">Reste</th>
+                        @endif
+                        <th class="border border-gray-600 px-3 py-3 text-left">Parent/Tuteur</th>
+                        <th class="border border-gray-600 px-3 py-3 text-center">Date naiss.</th>
+                        <th class="border border-gray-600 px-3 py-3 text-left">Classe suivante</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($records as $i => $record)
+                        @php
+                            $moy    = $record->moy_annuelle;
+                            $bgRow  = $i % 2 == 0 ? 'bg-white' : 'bg-gray-50';
+                            $moyColor = $moy === null ? 'text-gray-400' : ($moy >= 10 ? 'text-green-700 font-bold' : 'text-red-600 font-bold');
+                        @endphp
+                        <tr class="{{ $bgRow }} hover:bg-blue-50 transition">
+                            <td class="border px-3 py-2 text-gray-500">{{ $records->firstItem() + $i }}</td>
+                            <td class="border px-3 py-2 text-gray-600">{{ $record->num_educ ?? '--' }}</td>
+                            <td class="border px-3 py-2 font-medium text-gray-800">
+                                {{ $record->last_name }} {{ $record->first_name }}
+                            </td>
+                            <td class="border px-3 py-2 text-center">{{ $record->gender ?? '--' }}</td>
+                            <td class="border px-3 py-2 text-center {{ $moyColor }}">
+                                {{ $moy !== null ? number_format($moy, 2, ',', '') : '–' }}
+                            </td>
+                            <td class="border px-3 py-2 text-center text-gray-500 text-xs">
+                                {{ $record->rang_annuel ? $record->rang_annuel . 'ᵉ' : '–' }}
+                            </td>
+                            <td class="border px-3 py-2 text-center">
+                                @if($record->statut_deliberation === 'passed')
+                                    <span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full font-medium">✓ Admis</span>
+                                @elseif($record->statut_deliberation === 'repeated')
+                                    <span class="bg-red-100 text-red-700 text-xs px-2 py-1 rounded-full font-medium">↻ Redouble</span>
+                                @else
+                                    <span class="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full">En cours</span>
+                                @endif
+                            </td>
+                            @if($canViewPayments)
+                                <td class="border px-3 py-2 text-right text-gray-700">
+                                    {{ number_format($record->total_fees ?? 0, 0, ',', ' ') }}
+                                </td>
+                                <td class="border px-3 py-2 text-right text-green-700 font-medium">
+                                    {{ number_format($record->amount_paid ?? 0, 0, ',', ' ') }}
+                                </td>
+                                <td class="border px-3 py-2 text-right {{ $record->remaining_fees > 0 ? 'text-red-600 font-semibold' : 'text-gray-400' }}">
+                                    {{ number_format($record->remaining_fees, 0, ',', ' ') }}
+                                </td>
+                            @endif
+                            <td class="border px-3 py-2 text-gray-600 text-xs">
+                                {{ $record->parent_full_name ?? '--' }}
+                                @if($record->parent_phone)
+                                    <br><span class="text-gray-400">{{ $record->parent_phone }}</span>
+                                @endif
+                            </td>
+                            <td class="border px-3 py-2 text-center text-gray-600 text-xs">
+                                {{ $record->birth_date ? $record->birth_date->format('d/m/Y') : '--' }}
+                            </td>
+                            <td class="border px-3 py-2 text-xs text-gray-500">
+                                @if($record->nextClass && $record->nextAcademicYear)
+                                    <span class="text-blue-600 font-medium">{{ $record->nextClass->name }}</span>
+                                    <span class="text-gray-400">({{ $record->nextAcademicYear->name }})</span>
+                                @else
+                                    –
+                                @endif
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mt-4">
+            {{ $records->links() }}
+        </div>
+    @endif
 </div>
 @endsection

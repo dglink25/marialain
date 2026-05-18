@@ -38,36 +38,38 @@
         </div>
     </div>
 
-    {{-- Tableau détaillé par élève --}}
+    {{-- Tableau détaillé par record archivé --}}
     <div class="overflow-x-auto border rounded-xl shadow-sm">
         <table class="min-w-full text-sm">
             <thead class="bg-gray-100 text-xs font-semibold text-gray-700">
                 <tr>
                     <th class="border px-4 py-3 text-left">N°</th>
                     <th class="border px-4 py-3 text-left">Élève</th>
-                    <th class="border px-4 py-3 text-left">Type</th>
+                    <th class="border px-4 py-3 text-left">Type inscription</th>
                     <th class="border px-4 py-3 text-right">Total dû</th>
                     <th class="border px-4 py-3 text-right">Payé</th>
                     <th class="border px-4 py-3 text-right">Reste</th>
-                    <th class="border px-4 py-3 text-center">Statut</th>
+                    <th class="border px-4 py-3 text-center">Moy. Ann.</th>
+                    <th class="border px-4 py-3 text-center">Statut paiement</th>
                 </tr>
             </thead>
             <tbody>
-                @forelse($students as $idx => $student)
+                @forelse($records as $idx => $record)
                     @php
-                        $paid      = $student->payments->where('academic_year_id', $year->id)->sum('amount');
-                        $totalFees = $student->total_fees ?? 0;
-                        $remaining = max(0, $totalFees - $paid);
-                        $rate      = $totalFees > 0 ? round($paid / $totalFees * 100) : 0;
-                        $bgRow     = $idx % 2 == 0 ? 'bg-white' : 'bg-gray-50';
+                        $totalFees  = $record->total_fees ?? 0;
+                        $paid       = $record->amount_paid ?? 0;
+                        $remaining  = max(0, $totalFees - $paid);
+                        $rate       = $totalFees > 0 ? round($paid / $totalFees * 100) : 0;
+                        $bgRow      = $idx % 2 == 0 ? 'bg-white' : 'bg-gray-50';
+                        $moy        = $record->moy_annuelle;
                     @endphp
                     <tr class="{{ $bgRow }} hover:bg-blue-50 transition">
                         <td class="border px-4 py-2 text-gray-500">{{ $idx + 1 }}</td>
                         <td class="border px-4 py-2 font-medium text-gray-800">
-                            {{ $student->last_name }} {{ $student->first_name }}
+                            {{ $record->last_name }} {{ $record->first_name }}
                         </td>
                         <td class="border px-4 py-2 text-gray-600 text-xs">
-                            {{ $student->registration_type == 'new' ? 'Nouvelle inscription' : 'Réinscription' }}
+                            {{ $record->registration_type == 'new' ? 'Nouvelle inscription' : 'Réinscription' }}
                         </td>
                         <td class="border px-4 py-2 text-right font-medium">
                             {{ number_format($totalFees, 0, ',', ' ') }}
@@ -78,25 +80,22 @@
                         <td class="border px-4 py-2 text-right {{ $remaining > 0 ? 'text-red-600 font-semibold' : 'text-gray-400' }}">
                             {{ number_format($remaining, 0, ',', ' ') }}
                         </td>
+                        <td class="border px-4 py-2 text-center font-semibold {{ $moy !== null && $moy >= 10 ? 'text-green-700' : 'text-red-600' }}">
+                            {{ $moy !== null ? number_format($moy, 2, ',', '') : '–' }}
+                        </td>
                         <td class="border px-4 py-2 text-center">
                             @if($rate >= 100)
-                                <span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full font-medium">
-                                    ✓ Soldé
-                                </span>
+                                <span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full font-medium">✓ Soldé</span>
                             @elseif($rate >= 50)
-                                <span class="bg-yellow-100 text-yellow-700 text-xs px-2 py-1 rounded-full font-medium">
-                                    {{ $rate }}% payé
-                                </span>
+                                <span class="bg-yellow-100 text-yellow-700 text-xs px-2 py-1 rounded-full font-medium">{{ $rate }}% payé</span>
                             @else
-                                <span class="bg-red-100 text-red-700 text-xs px-2 py-1 rounded-full font-medium">
-                                    {{ $rate }}% payé
-                                </span>
+                                <span class="bg-red-100 text-red-700 text-xs px-2 py-1 rounded-full font-medium">{{ $rate }}% payé</span>
                             @endif
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="text-center py-8 text-gray-400">Aucun élève trouvé.</td>
+                        <td colspan="8" class="text-center py-8 text-gray-400">Aucun enregistrement archivé.</td>
                     </tr>
                 @endforelse
             </tbody>
@@ -106,6 +105,7 @@
                     <td class="border px-4 py-3 text-right">{{ number_format($stats['total_fees'], 0, ',', ' ') }}</td>
                     <td class="border px-4 py-3 text-right text-green-700">{{ number_format($stats['total_paid'], 0, ',', ' ') }}</td>
                     <td class="border px-4 py-3 text-right text-red-600">{{ number_format($stats['total_remaining'], 0, ',', ' ') }}</td>
+                    <td class="border px-4 py-3"></td>
                     <td class="border px-4 py-3 text-center">{{ $stats['rate'] }}%</td>
                 </tr>
             </tfoot>
