@@ -487,16 +487,16 @@ class ArchiveController extends Controller
         ));
     }
 
+
+
     public function studentNotesJson($yearId, $classId, $studentId)
     {
         $year    = AcademicYear::findOrFail($yearId);
         $class   = Classe::with('entity')->findOrFail($classId);
         $user    = auth()->user();
 
-        // Vérification accès
         $this->authorizeAccess($user, $class, $year);
 
-        // Vérifier que l'élève appartient bien à cette classe/année via le record
         $record = StudentAcademicRecord::where('student_id', $studentId)
             ->where('academic_year_id', $year->id)
             ->where('class_id', $classId)
@@ -504,21 +504,21 @@ class ArchiveController extends Controller
 
         $student = Student::findOrFail($studentId);
 
-        // Matières
+        // ── Matières ──────────────────────────────────────────────────────
         $subjects = Subject::whereHas('classTeacherSubjects', function ($q) use ($classId, $year) {
             $q->where('class_id', $classId)->where('academic_year_id', $year->id);
         })->with(['classTeacherSubjects' => function ($q) use ($classId, $year) {
             $q->where('class_id', $classId)->where('academic_year_id', $year->id);
         }])->orderBy('name')->get();
 
-        // Toutes les notes de l'élève
+        // ── Notes de l'élève ──────────────────────────────────────────────
         $allGrades = Grade::where('student_id', $studentId)
             ->where('academic_year_id', $year->id)
-            ->whereIn('class_id', [$classId]) // sécurité
+            ->whereIn('class_id', [$classId])
             ->get()
             ->groupBy(['trimestre', 'subject_id']);
 
-        // Conduites et punitions
+        // ── Conduites et punitions ─────────────────────────────────────────
         $conducts = Conduct::where('student_id', $studentId)
             ->where('academic_year_id', $year->id)
             ->get()->keyBy('trimestre');
@@ -527,7 +527,7 @@ class ArchiveController extends Controller
             ->where('academic_year_id', $year->id)
             ->sum('hours');
 
-        // Calculer les rangs par trimestre pour cet élève (on a besoin de tous les élèves)
+        // ── Tous les élèves de la classe pour calculer les rangs ───────────
         $allStudentIds = StudentAcademicRecord::where('academic_year_id', $year->id)
             ->where('class_id', $classId)
             ->pluck('student_id');
@@ -547,35 +547,49 @@ class ArchiveController extends Controller
             ->groupBy('student_id')
             ->pluck('total_hours', 'student_id');
 
-        // Calcul des moyennes générales par trimestre pour tous les élèves (pour le rang)
+        // ── Helper : calcul moyenne matière (logique exacte NoteController) ─
+        // interrosKeyed = tableau {1..5 => valeur|null}
+        // Retourne [moyInterro, moy]
+        $calcMoyMatiere = function (array $interrosKeyed, $d1, $d2): array {
+            $vals = array_values(array_filter($interrosKeyed, fn($v) => $v !== null));
+            $mi   = !empty($vals) ? round(array_sum($vals) / count($vals), 2) : null;
+            $notes = array_filter([$mi, $d1, $d2], fn($v) => $v !== null);
+            $moy  = !empty($notes) ? round(array_sum($notes) / count($notes), 2) : null;
+            return [$mi, $moy];
+        };
+
+        // ── Moyennes par trimestre pour TOUS les élèves (pour les rangs) ───
         $moyParTrimestre = [];
-        foreach ([1,2,3] as $t) {
+        foreach ([1, 2, 3] as $t) {
             foreach ($allStudentIds as $sid) {
                 $cGrade   = $allConduitsClass[$sid][$t][0]->grade ?? 0;
                 $punH     = $allPunitionsClass[$sid] ?? 0;
                 $conduite = max(0, $cGrade - ($punH / 2));
                 $tp = 0; $tc = 0;
+
                 foreach ($subjects as $subject) {
                     $coef = $subject->classTeacherSubjects->first()->coefficient ?? 1;
                     $sg   = $allGradesClass[$sid][$t][$subject->id] ?? collect();
-                    $interros = $sg->where('type','interrogation')->pluck('value')->filter()->values()->toArray();
-                    $d1 = $sg->where('type','devoir')->where('sequence',1)->first()->value ?? null;
-                    $d2 = $sg->where('type','devoir')->where('sequence',2)->first()->value ?? null;
-                    $mi = !empty($interros) ? array_sum($interros)/count($interros) : null;
-                    $notes = array_filter([$mi,$d1,$d2], fn($v) => $v!==null);
-                    if (!empty($notes)) {
-                        $moy = array_sum($notes)/count($notes);
-                        $tp += $moy * $coef; $tc += $coef;
+
+                    $interrosKeyed = [];
+                    for ($i = 1; $i <= 5; $i++) {
+                        $note = $sg->where('type', 'interrogation')->where('sequence', $i)->first();
+                        $interrosKeyed[$i] = $note ? $note->value : null;
                     }
+                    $d1 = $sg->where('type', 'devoir')->where('sequence', 1)->first()->value ?? null;
+                    $d2 = $sg->where('type', 'devoir')->where('sequence', 2)->first()->value ?? null;
+
+                    [, $moy] = $calcMoyMatiere($interrosKeyed, $d1, $d2);
+                    if ($moy !== null) { $tp += $moy * $coef; $tc += $coef; }
                 }
                 if ($conduite > 0) { $tp += $conduite; $tc += 1; }
-                if ($tc > 0) $moyParTrimestre[$t][$sid] = round($tp/$tc, 2);
+                if ($tc > 0) $moyParTrimestre[$t][$sid] = round($tp / $tc, 2);
             }
         }
 
-        // Rangs
+        // ── Rangs par trimestre ────────────────────────────────────────────
         $rangs = [];
-        foreach ([1,2,3] as $t) {
+        foreach ([1, 2, 3] as $t) {
             $sorted = $moyParTrimestre[$t] ?? [];
             arsort($sorted);
             $rang = 1;
@@ -584,9 +598,9 @@ class ArchiveController extends Controller
             }
         }
 
-        // Construire les données de bulletin par trimestre
+        // ── Bulletin par trimestre pour l'élève courant ────────────────────
         $trimestresData = [];
-        foreach ([1,2,3] as $t) {
+        foreach ([1, 2, 3] as $t) {
             $cGrade   = $conducts[$t]->grade ?? 0;
             $conduite = max(0, $cGrade - ($punishHours / 2));
 
@@ -597,23 +611,24 @@ class ArchiveController extends Controller
                 $coef = $subject->classTeacherSubjects->first()->coefficient ?? 1;
                 $sg   = $allGrades[$t][$subject->id] ?? collect();
 
-                $interros = $sg->where('type','interrogation')->sortBy('sequence')
-                    ->pluck('value')->filter()->values()->toArray();
-                $d1 = $sg->where('type','devoir')->where('sequence',1)->first()->value ?? null;
-                $d2 = $sg->where('type','devoir')->where('sequence',2)->first()->value ?? null;
-
-                $mi = !empty($interros) ? round(array_sum($interros)/count($interros),2) : null;
-                $notes = array_filter([$mi,$d1,$d2], fn($v) => $v!==null);
-                $moy = !empty($notes) ? round(array_sum($notes)/count($notes),2) : null;
-
-                if ($moy !== null) {
-                    $tp += $moy * $coef; $tc += $coef;
+                // ── 5 interrogations avec séquence exacte ──────────────────
+                $interrosKeyed = [];
+                for ($i = 1; $i <= 5; $i++) {
+                    $note = $sg->where('type', 'interrogation')->where('sequence', $i)->first();
+                    $interrosKeyed[$i] = $note ? $note->value : null;
                 }
+
+                $d1 = $sg->where('type', 'devoir')->where('sequence', 1)->first()->value ?? null;
+                $d2 = $sg->where('type', 'devoir')->where('sequence', 2)->first()->value ?? null;
+
+                [$mi, $moy] = $calcMoyMatiere($interrosKeyed, $d1, $d2);
+
+                if ($moy !== null) { $tp += $moy * $coef; $tc += $coef; }
 
                 $rows[] = [
                     'subject'      => $subject->name,
                     'coef'         => $coef,
-                    'interros'     => $interros,
+                    'interros'     => $interrosKeyed,   // {1..5 => val|null}
                     'devoir1'      => $d1,
                     'devoir2'      => $d2,
                     'moyInterro'   => $mi,
@@ -623,7 +638,7 @@ class ArchiveController extends Controller
             }
 
             if ($conduite > 0) { $tp += $conduite; $tc += 1; }
-            $moyGen = $tc > 0 ? round($tp/$tc, 2) : null;
+            $moyGen = $tc > 0 ? round($tp / $tc, 2) : null;
 
             $trimestresData[$t] = [
                 'bulletin'        => $rows,
@@ -635,45 +650,161 @@ class ArchiveController extends Controller
             ];
         }
 
-        // Moyenne annuelle
+        // ── Moyenne annuelle ───────────────────────────────────────────────
         $moyAnn = $record->moy_annuelle;
         if ($moyAnn === null) {
             $moys = array_filter(array_column($trimestresData, 'moyenneGenerale'), fn($v) => $v !== null);
-            $moyAnn = !empty($moys) ? round(array_sum($moys)/count($moys), 2) : null;
+            $moyAnn = !empty($moys) ? round(array_sum($moys) / count($moys), 2) : null;
         }
 
-        // Rang annuel
+        // ── Rang annuel ────────────────────────────────────────────────────
         $allMoyAnn = [];
         foreach ($allStudentIds as $sid) {
             $ms = [];
-            foreach ([1,2,3] as $t) {
+            foreach ([1, 2, 3] as $t) {
                 if (isset($moyParTrimestre[$t][$sid])) $ms[] = $moyParTrimestre[$t][$sid];
             }
-            if (!empty($ms)) $allMoyAnn[$sid] = round(array_sum($ms)/count($ms),2);
+            if (!empty($ms)) $allMoyAnn[$sid] = round(array_sum($ms) / count($ms), 2);
         }
         arsort($allMoyAnn);
-        $rangAnn = 1;
-        $rangAnnMap = [];
+        $rangAnn = 1; $rangAnnMap = [];
         foreach ($allMoyAnn as $sid => $m) { $rangAnnMap[$sid] = $rangAnn++; }
 
         return response()->json([
-            'student'      => [
-                'id'         => $student->id,
-                'nom'        => $student->last_name,
-                'prenom'     => $student->first_name,
-                'num_educ'   => $student->num_educ,
-                'gender'     => $student->gender,
+            'student'  => [
+                'id'       => $student->id,
+                'nom'      => $student->last_name,
+                'prenom'   => $student->first_name,
+                'num_educ' => $student->num_educ,
+                'gender'   => $student->gender,
             ],
-            'record'       => [
-                'statut'     => $record->statut_deliberation,
-                'moy_annuelle'=> $moyAnn,
-                'rang_annuel' => $rangAnnMap[$studentId] ?? '-',
-                'total_eleves'=> count($allStudentIds),
+            'record'   => [
+                'statut'       => $record->statut_deliberation,
+                'moy_annuelle' => $moyAnn,
+                'rang_annuel'  => $rangAnnMap[$studentId] ?? '-',
+                'total_eleves' => count($allStudentIds),
             ],
-            'year'         => ['id' => $year->id, 'name' => $year->name],
-            'class'        => ['id' => $class->id, 'name' => $class->name],
+            'year'     => ['id' => $year->id, 'name' => $year->name],
+            'class'    => ['id' => $class->id, 'name' => $class->name],
             'trimestres'   => $trimestresData,
             'moy_annuelle' => $moyAnn,
+        ]);
+    }
+
+    public function classNotesParMatiereJson($yearId, $classId) {
+        $year  = AcademicYear::findOrFail($yearId);
+        $class = Classe::with('entity')->findOrFail($classId);
+        $user  = auth()->user();
+        $this->authorizeAccess($user, $class, $year);
+
+        $subjects = Subject::whereHas('classTeacherSubjects', function ($q) use ($classId, $year) {
+            $q->where('class_id', $classId)->where('academic_year_id', $year->id);
+        })->with(['classTeacherSubjects' => function ($q) use ($classId, $year) {
+            $q->where('class_id', $classId)->where('academic_year_id', $year->id);
+        }])->orderBy('name')->get();
+
+        $records = StudentAcademicRecord::where('class_id', $classId)
+            ->where('academic_year_id', $year->id)
+            ->orderBy('last_name')->orderBy('first_name')
+            ->get();
+
+        $studentIds = $records->pluck('student_id');
+
+        $students = Student::whereIn('id', $studentIds)
+            ->orderBy('last_name')->orderBy('first_name')
+            ->get()->keyBy('id');
+
+        $trimestres = [1, 2, 3];
+        $result     = [];
+
+        foreach ($subjects as $subject) {
+            $coef = $subject->classTeacherSubjects->first()->coefficient ?? 1;
+            $subjectData = [
+                'id'     => $subject->id,
+                'name'   => $subject->name,
+                'coef'   => $coef,
+                'eleves' => [],
+            ];
+
+            $allGrades = Grade::where('class_id', $classId)
+                ->where('academic_year_id', $year->id)
+                ->where('subject_id', $subject->id)
+                ->whereIn('student_id', $studentIds)
+                ->get()
+                ->groupBy(['student_id', 'trimestre']);
+
+            $moyennesParTrimestre = [];
+
+            foreach ($records as $record) {
+                $sid     = $record->student_id;
+                $student = $students[$sid] ?? null;
+                if (!$student) continue;
+
+                $eleveData = [
+                    'id'         => $sid,
+                    'nom'        => $student->last_name,
+                    'prenom'     => $student->first_name,
+                    'trimestres' => [],
+                ];
+
+                foreach ($trimestres as $t) {
+                    $sg = $allGrades[$sid][$t] ?? collect();
+
+                    // ── 5 interrogations avec séquence exacte ──────────────
+                    $interrosKeyed = [];
+                    for ($i = 1; $i <= 5; $i++) {
+                        $note = $sg->where('type', 'interrogation')->where('sequence', $i)->first();
+                        $interrosKeyed[$i] = $note ? $note->value : null;
+                    }
+
+                    $d1 = $sg->where('type', 'devoir')->where('sequence', 1)->first()->value ?? null;
+                    $d2 = $sg->where('type', 'devoir')->where('sequence', 2)->first()->value ?? null;
+
+                    // Moyenne interros (valeurs non nulles)
+                    $vals = array_values(array_filter($interrosKeyed, fn($v) => $v !== null));
+                    $mi   = !empty($vals) ? round(array_sum($vals) / count($vals), 2) : null;
+
+                    // Moyenne matière = moy(moyInterro, d1, d2) — valeurs présentes
+                    $notes = array_filter([$mi, $d1, $d2], fn($v) => $v !== null);
+                    $moy   = !empty($notes) ? round(array_sum($notes) / count($notes), 2) : null;
+
+                    if ($moy !== null) {
+                        $moyennesParTrimestre[$t][$sid] = $moy;
+                    }
+
+                    $eleveData['trimestres'][$t] = [
+                        'interros'   => $interrosKeyed,  // {1..5 => val|null}
+                        'devoir1'    => $d1,
+                        'devoir2'    => $d2,
+                        'moyInterro' => $mi,
+                        'moyenne'    => $moy,
+                    ];
+                }
+
+                $subjectData['eleves'][] = $eleveData;
+            }
+
+            // ── Rangs par trimestre ──────────────────────────────────────
+            foreach ($trimestres as $t) {
+                $sorted = $moyennesParTrimestre[$t] ?? [];
+                arsort($sorted);
+                $rang = 1; $rangs = [];
+                foreach ($sorted as $sid => $m) { $rangs[$sid] = $rang++; }
+
+                foreach ($subjectData['eleves'] as &$el) {
+                    $el['trimestres'][$t]['rang'] = $rangs[$el['id']] ?? null;
+                }
+                unset($el);
+            }
+
+            $result[] = $subjectData;
+        }
+
+        return response()->json([
+            'year'     => ['id' => $year->id, 'name' => $year->name],
+            'class'    => ['id' => $class->id, 'name' => $class->name],
+            'total'    => $records->count(),
+            'subjects' => $result,
         ]);
     }
 
@@ -1116,120 +1247,11 @@ class ArchiveController extends Controller
         $nomClasse = str_replace([' ', '/'], '_', $class->name);
         return $pdf->download("Bulletins_Archive_{$nomClasse}_T{$trimestre}_{$year->name}.pdf");
     }
-
-
-    public function classNotesParMatiereJson($yearId, $classId)
-    {
-        $year  = AcademicYear::findOrFail($yearId);
-        $class = Classe::with('entity')->findOrFail($classId);
-        $user  = auth()->user();
-        $this->authorizeAccess($user, $class, $year);
-
-        $subjects = Subject::whereHas('classTeacherSubjects', function ($q) use ($classId, $year) {
-            $q->where('class_id', $classId)->where('academic_year_id', $year->id);
-        })->with(['classTeacherSubjects' => function ($q) use ($classId, $year) {
-            $q->where('class_id', $classId)->where('academic_year_id', $year->id);
-        }])->orderBy('name')->get();
-
-        $records = StudentAcademicRecord::where('class_id', $classId)
-            ->where('academic_year_id', $year->id)
-            ->orderBy('last_name')->orderBy('first_name')
-            ->get();
-
-        $studentIds = $records->pluck('student_id');
-
-        $students = Student::whereIn('id', $studentIds)
-            ->orderBy('last_name')->orderBy('first_name')
-            ->get()->keyBy('id');
-
-        $trimestres = [1, 2, 3];
-        $result = [];
-
-        foreach ($subjects as $subject) {
-            $coef = $subject->classTeacherSubjects->first()->coefficient ?? 1;
-            $subjectData = [
-                'id'   => $subject->id,
-                'name' => $subject->name,
-                'coef' => $coef,
-                'eleves' => [],
-            ];
-
-            $allGrades = Grade::where('class_id', $classId)
-                ->where('academic_year_id', $year->id)
-                ->where('subject_id', $subject->id)
-                ->whereIn('student_id', $studentIds)
-                ->get()
-                ->groupBy(['student_id', 'trimestre']);
-
-            $moyennesParTrimestre = []; // pour rangs
-
-            foreach ($records as $record) {
-                $sid = $record->student_id;
-                $student = $students[$sid] ?? null;
-                if (!$student) continue;
-
-                $eleveData = [
-                    'id'      => $sid,
-                    'nom'     => $student->last_name,
-                    'prenom'  => $student->first_name,
-                    'trimestres' => [],
-                ];
-
-                foreach ($trimestres as $t) {
-                    $sg = $allGrades[$sid][$t] ?? collect();
-                    $interros = $sg->where('type', 'interrogation')->pluck('value')->filter()->values()->toArray();
-                    $d1 = $sg->where('type', 'devoir')->where('sequence', 1)->first()->value ?? null;
-                    $d2 = $sg->where('type', 'devoir')->where('sequence', 2)->first()->value ?? null;
-                    $mi = !empty($interros) ? round(array_sum($interros) / count($interros), 2) : null;
-                    $notes = array_filter([$mi, $d1, $d2], fn($v) => $v !== null);
-                    $moy = !empty($notes) ? round(array_sum($notes) / count($notes), 2) : null;
-
-                    if ($moy !== null) {
-                        $moyennesParTrimestre[$t][$sid] = $moy;
-                    }
-
-                    $eleveData['trimestres'][$t] = [
-                        'interros' => $interros,
-                        'devoir1'  => $d1,
-                        'devoir2'  => $d2,
-                        'moyInterro' => $mi,
-                        'moyenne'  => $moy,
-                    ];
-                }
-
-                $subjectData['eleves'][] = $eleveData;
-            }
-
-            // Rangs par trimestre
-            foreach ($trimestres as $t) {
-                $sorted = $moyennesParTrimestre[$t] ?? [];
-                arsort($sorted);
-                $rang = 1;
-                $rangs = [];
-                foreach ($sorted as $sid => $m) { $rangs[$sid] = $rang++; }
-
-                foreach ($subjectData['eleves'] as &$el) {
-                    $el['trimestres'][$t]['rang'] = $rangs[$el['id']] ?? null;
-                }
-                unset($el);
-            }
-
-            $result[] = $subjectData;
-        }
-
-        return response()->json([
-            'year'     => ['id' => $year->id, 'name' => $year->name],
-            'class'    => ['id' => $class->id, 'name' => $class->name],
-            'total'    => $records->count(),
-            'subjects' => $result,
-        ]);
-    }
     
-    public function classNotesParMatierePdf($yearId, $classId, $subjectId, $trimestre)
-    {
-        $year    = AcademicYear::findOrFail($yearId);
-        $class   = Classe::with('entity')->findOrFail($classId);
-        $user    = auth()->user();
+    public function classNotesParMatierePdf($yearId, $classId, $subjectId, $trimestre){
+        $year = AcademicYear::findOrFail($yearId);
+        $class = Classe::with('entity')->findOrFail($classId);
+        $user = auth()->user();
         $this->authorizeAccess($user, $class, $year);
 
         $subject = Subject::whereHas('classTeacherSubjects', function ($q) use ($classId, $year) {
@@ -1246,7 +1268,7 @@ class ArchiveController extends Controller
             ->get();
 
         $studentIds = $records->pluck('student_id');
-        $students   = Student::whereIn('id', $studentIds)
+        $students = Student::whereIn('id', $studentIds)
             ->orderBy('last_name')->orderBy('first_name')
             ->get()->keyBy('id');
 
@@ -1261,25 +1283,42 @@ class ArchiveController extends Controller
         $moyennes = [];
 
         foreach ($records as $record) {
-            $sid     = $record->student_id;
+            $sid = $record->student_id;
             $student = $students[$sid] ?? null;
             if (!$student) continue;
 
             $sg = $allGrades[$sid] ?? collect();
 
             if ($trimestre == 0) {
-                // Toutes les trimestres
+                // Tous les trimestres
                 $moyTri = [];
-                foreach ([1,2,3] as $t) {
+                foreach ([1, 2, 3] as $t) {
                     $sgT = $sg->where('trimestre', $t);
-                    $interros = $sgT->where('type', 'interrogation')->pluck('value')->filter()->values()->toArray();
-                    $d1 = $sgT->where('type', 'devoir')->where('sequence', 1)->first()->value ?? null;
-                    $d2 = $sgT->where('type', 'devoir')->where('sequence', 2)->first()->value ?? null;
+                    $interros = $sgT->where('type', 'interrogation')
+                        ->sortBy('sequence')
+                        ->pluck('value')
+                        ->filter()
+                        ->values()
+                        ->toArray();
+                    
+                    $d1 = $sgT->where('type', 'devoir')->where('sequence', 1)->first();
+                    $d2 = $sgT->where('type', 'devoir')->where('sequence', 2)->first();
+                    
+                    $devoir1 = $d1 ? $d1->value : null;
+                    $devoir2 = $d2 ? $d2->value : null;
+                    
                     $mi = !empty($interros) ? round(array_sum($interros) / count($interros), 2) : null;
-                    $notes = array_filter([$mi, $d1, $d2], fn($v) => $v !== null);
+                    $notes = array_filter([$mi, $devoir1, $devoir2], function($v) {
+                        return $v !== null && $v !== '';
+                    });
+                    
                     $moyTri[$t] = !empty($notes) ? round(array_sum($notes) / count($notes), 2) : null;
                 }
-                $moysValid = array_filter($moyTri, fn($v) => $v !== null);
+                
+                $moysValid = array_filter($moyTri, function($v) {
+                    return $v !== null;
+                });
+                
                 $moyAnn = !empty($moysValid) ? round(array_sum($moysValid) / count($moysValid), 2) : null;
 
                 $rows[] = [
@@ -1289,47 +1328,82 @@ class ArchiveController extends Controller
                     'moy_t3'  => $moyTri[3],
                     'moy_ann' => $moyAnn,
                 ];
-                if ($moyAnn !== null) $moyennes[$sid] = $moyAnn;
+                
+                if ($moyAnn !== null) {
+                    $moyennes[$sid] = $moyAnn;
+                }
             } else {
+                // Trimestre spécifique
                 $sgT = $sg->where('trimestre', $trimestre);
-                $interros = $sgT->where('type', 'interrogation')->sortBy('sequence')->pluck('value')->filter()->values()->toArray();
-                $d1 = $sgT->where('type', 'devoir')->where('sequence', 1)->first()->value ?? null;
-                $d2 = $sgT->where('type', 'devoir')->where('sequence', 2)->first()->value ?? null;
-                $mi = !empty($interros) ? round(array_sum($interros) / count($interros), 2) : null;
-                $notes = array_filter([$mi, $d1, $d2], fn($v) => $v !== null);
-                $moy   = !empty($notes) ? round(array_sum($notes) / count($notes), 2) : null;
+                
+                $interros = $sgT->where('type', 'interrogation')
+                    ->sortBy('sequence')
+                    ->pluck('value')
+                    ->filter()
+                    ->values()
+                    ->toArray();
+                
+                // S'assurer qu'on a au moins 5 valeurs pour l'affichage
+                while (count($interros) < 5) {
+                    $interros[] = null;
+                }
+                
+                $d1 = $sgT->where('type', 'devoir')->where('sequence', 1)->first();
+                $d2 = $sgT->where('type', 'devoir')->where('sequence', 2)->first();
+                
+                $devoir1 = $d1 ? $d1->value : null;
+                $devoir2 = $d2 ? $d2->value : null;
+                
+                $mi = !empty(array_filter($interros)) ? round(array_sum(array_filter($interros)) / count(array_filter($interros)), 2) : null;
+                
+                $notes = array_filter([$mi, $devoir1, $devoir2], function($v) {
+                    return $v !== null && $v !== '';
+                });
+                
+                $moy = !empty($notes) ? round(array_sum($notes) / count($notes), 2) : null;
 
                 $rows[] = [
                     'student'    => $student,
                     'interros'   => $interros,
-                    'devoir1'    => $d1,
-                    'devoir2'    => $d2,
+                    'devoir1'    => $devoir1,
+                    'devoir2'    => $devoir2,
                     'moyInterro' => $mi,
                     'moyenne'    => $moy,
                 ];
-                if ($moy !== null) $moyennes[$sid] = $moy;
+                
+                if ($moy !== null) {
+                    $moyennes[$sid] = $moy;
+                }
             }
         }
 
-        // Rangs
+        // Calcul des rangs
         arsort($moyennes);
-        $rang = 1; $rangs = [];
-        foreach ($moyennes as $sid => $m) { $rangs[$sid] = $rang++; }
+        $rang = 1;
+        $rangs = [];
+        foreach ($moyennes as $sid => $m) {
+            $rangs[$sid] = $rang++;
+        }
 
+        // Ajout des rangs aux lignes
         foreach ($rows as &$row) {
             $sid = $row['student']->id;
             $row['rang'] = $rangs[$sid] ?? '-';
         }
         unset($row);
 
-        // Stats
-        $allMoys  = array_values($moyennes);
-        $maxMoy   = !empty($allMoys) ? max($allMoys) : 0;
-        $minMoy   = !empty($allMoys) ? min($allMoys) : 0;
+        // Statistiques
+        $allMoys = array_values($moyennes);
+        $maxMoy = !empty($allMoys) ? max($allMoys) : 0;
+        $minMoy = !empty($allMoys) ? min($allMoys) : 0;
         $moyClass = !empty($allMoys) ? round(array_sum($allMoys) / count($allMoys), 2) : 0;
-        $admis    = count(array_filter($allMoys, fn($m) => $m >= 10));
+        $admis = count(array_filter($allMoys, function($m) {
+            return $m >= 10;
+        }));
 
-        $fmt = fn($v) => $v !== null ? number_format($v, 2, ',', '') : '-';
+        $fmt = function($v) {
+            return $v !== null && $v !== '' ? number_format((float)$v, 2, ',', ' ') : '-';
+        };
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('archives.class_notes_matiere_pdf', [
             'year'      => $year,
@@ -1347,10 +1421,10 @@ class ArchiveController extends Controller
         ])->setPaper('a4', 'landscape');
 
         $nomMat = str_replace([' ', '/'], '_', $subject->name);
-        $tri    = $trimestre == 0 ? 'Annuel' : "T{$trimestre}";
+        $tri = $trimestre == 0 ? 'Annuel' : "T{$trimestre}";
+        
         return $pdf->download("Notes_{$nomMat}_{$class->name}_{$tri}_{$year->name}.pdf");
     }
-
 
     private function isAdminOrSecretary($user): bool {
         return in_array($user->id, [1, 8])
