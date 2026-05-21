@@ -678,8 +678,7 @@ class ArchiveController extends Controller
     }
 
 
-    public function studentBulletinPdf($yearId, $classId, $studentId, $trimestre)
-    {
+    public function studentBulletinPdf($yearId, $classId, $studentId, $trimestre) {
         $year    = AcademicYear::findOrFail($yearId);
         $class   = Classe::with('entity')->findOrFail($classId);
         $user    = auth()->user();
@@ -901,8 +900,7 @@ class ArchiveController extends Controller
     }
 
 
-    public function classBulletinsPdf($yearId, $classId, $trimestre)
-    {
+    public function classBulletinsPdf($yearId, $classId, $trimestre) {
         $year   = AcademicYear::findOrFail($yearId);
         $class  = Classe::with('entity')->findOrFail($classId);
         $user   = auth()->user();

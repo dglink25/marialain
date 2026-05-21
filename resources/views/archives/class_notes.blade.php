@@ -811,7 +811,7 @@ let pendingDownload = null; // Stocke les infos du téléchargement en attente
 const ROUTES   = {
     studentNotes : (sid)       => `/archives/${YEAR_ID}/classes/${CLASS_ID}/eleves/${sid}/notes`,
     bulletinPdf  : (sid, t)    => `/archives/${YEAR_ID}/classes/${CLASS_ID}/eleves/${sid}/bulletin/${t}/pdf`,
-    classBulletinsAll : (t)    => `/archives/${YEAR_ID}/classes/${CLASS_ID}/bulletins/all/${t}/pdf`,
+    classBulletinsAll : (t)    => `/archives/${YEAR_ID}/classes/${CLASS_ID}/bulletin/${t}/all-pdf`,
 };
 
 let currentData      = null;
