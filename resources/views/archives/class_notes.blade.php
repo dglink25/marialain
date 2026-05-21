@@ -460,8 +460,8 @@
             </div>
         </div>
         <div class="flex flex-wrap gap-2">
+            
             {{-- Télécharger tous les bulletins --}}
-            @{{-- Télécharger tous les bulletins --}}
             @if($canDownloadBulletins)
             <div class="relative" id="bulk-download-wrapper">
                 <button onclick="toggleBulkMenu()" class="arc-btn arc-btn-success">
@@ -480,6 +480,15 @@
                 </div>
             </div>
             @endif
+
+            {{-- Notes par matière --}}
+            <button onclick="openMatiereModal()"
+                    class="arc-btn"
+                    style="background:#7c3aed;color:#fff">
+                <i class="fas fa-table"></i>
+                <span class="hidden sm:inline">Notes par matière</span>
+            </button>
+
             <a href="{{ route('archives.show', $year->id) }}"
                class="arc-btn arc-btn-outline">
                 <i class="fas fa-arrow-left"></i>
@@ -729,6 +738,62 @@
             <div class="trim-selector" id="downloadLinks"></div>
         </div>
 
+    </div>
+</div>
+
+
+<div class="arc-modal-overlay" id="matiereModal" onclick="closeMatiereOnOverlay(event)">
+    <div class="arc-modal" id="matiereModalBox" style="max-width:1100px">
+
+        <div class="arc-modal-header" style="background:linear-gradient(135deg,#7c3aed,#6d28d9)">
+            <div>
+                <h3><i class="fas fa-table mr-2"></i>Notes par matière</h3>
+                <p style="font-size:.82rem;opacity:.8;margin:.15rem 0 0">
+                    {{ $class->name }} · {{ $year->name }}
+                </p>
+            </div>
+            <button class="arc-modal-close" onclick="closeMatiereModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        {{-- Sélecteur de matière --}}
+        <div style="padding:.75rem 1.5rem;background:#faf5ff;border-bottom:1px solid #e9d5ff;display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
+            <label style="font-size:.85rem;font-weight:700;color:#6d28d9">
+                <i class="fas fa-book mr-1"></i> Matière :
+            </label>
+            <select id="matiereSelect"
+                    onchange="changeMatiereView()"
+                    style="padding:.45rem .9rem;border-radius:8px;border:1.5px solid #c4b5fd;font-size:.85rem;font-weight:600;color:#4c1d95;background:#fff;min-width:220px">
+                <option value="">— Choisir une matière —</option>
+            </select>
+
+            <label style="font-size:.85rem;font-weight:700;color:#6d28d9">
+                <i class="fas fa-calendar mr-1"></i> Trimestre :
+            </label>
+            <div style="display:flex;gap:.4rem" id="matiereTriSelector">
+                @foreach(['Annuel' => 0, 'T1' => 1, 'T2' => 2, 'T3' => 3] as $label => $val)
+                <button onclick="setMatiereTrimestre({{ $val }})"
+                        id="matTri-{{ $val }}"
+                        class="arc-btn arc-btn-outline"
+                        style="padding:.35rem .75rem;font-size:.78rem;{{ $val === 0 ? 'background:#7c3aed;color:#fff;border-color:#7c3aed' : '' }}">
+                    {{ $label }}
+                </button>
+                @endforeach
+            </div>
+
+            <div style="margin-left:auto;display:flex;gap:.5rem;flex-wrap:wrap" id="matierePdfButtons">
+                {{-- Rempli dynamiquement --}}
+            </div>
+        </div>
+
+        <div class="arc-modal-body" id="matiereModalBody">
+            <div class="arc-spinner" id="matiereSpinner">
+                <div class="arc-spinner-icon" style="border-top-color:#7c3aed"></div>
+                <span>Chargement des données…</span>
+            </div>
+            <div id="matiereContent" style="display:none"></div>
+        </div>
     </div>
 </div>
 
@@ -1156,6 +1221,292 @@ document.addEventListener('keydown', e => {
 document.querySelectorAll('.arc-tab-btn').forEach((btn, i) => {
     const tabs = ['annuel','t1','t2','t3'];
     btn.setAttribute('onclick', `switchTab('${tabs[i]}')`);
+});
+
+
+
+/* ─── MODAL PAR MATIÈRE ──────────────────────────────────────────── */
+const MATIERE_ROUTES = {
+    json : () => `/archives/${YEAR_ID}/classes/${CLASS_ID}/notes-matiere/json`,
+    pdf  : (sid, t) => `/archives/${YEAR_ID}/classes/${CLASS_ID}/notes-matiere/${sid}/trimestre/${t}/pdf`,
+};
+
+let matiereData         = null;
+let currentMatiereIdx   = null;  // index dans subjects[]
+let currentMatiereTri   = 0;     // 0 = annuel
+
+function openMatiereModal() {
+    document.getElementById('matiereModal').classList.add('active');
+    document.body.style.overflow = 'hidden';
+
+    if (matiereData) {
+        populateMatiereSelect();
+        renderMatiereTable();
+        return;
+    }
+
+    document.getElementById('matiereSpinner').style.display = 'flex';
+    document.getElementById('matiereContent').style.display  = 'none';
+
+    fetch(MATIERE_ROUTES.json())
+        .then(r => { if (!r.ok) throw new Error('Erreur réseau'); return r.json(); })
+        .then(data => {
+            matiereData = data;
+            populateMatiereSelect();
+            renderMatiereTable();
+        })
+        .catch(err => {
+            document.getElementById('matiereSpinner').innerHTML =
+                `<div style="text-align:center;color:#dc2626">
+                    <i class="fas fa-exclamation-circle fa-2x mb-3"></i>
+                    <p>${err.message}</p>
+                 </div>`;
+        });
+}
+
+function closeMatiereModal() {
+    document.getElementById('matiereModal').classList.remove('active');
+    document.body.style.overflow = '';
+}
+
+function closeMatiereOnOverlay(e) {
+    if (e.target === document.getElementById('matiereModal')) closeMatiereModal();
+}
+
+function populateMatiereSelect() {
+    const sel = document.getElementById('matiereSelect');
+    sel.innerHTML = '<option value="">— Toutes les matières —</option>';
+    (matiereData.subjects || []).forEach((s, i) => {
+        const opt = document.createElement('option');
+        opt.value = i;
+        opt.textContent = `${s.name} (coef. ${s.coef})`;
+        sel.appendChild(opt);
+    });
+    currentMatiereIdx = null;
+}
+
+function changeMatiereView() {
+    const val = document.getElementById('matiereSelect').value;
+    currentMatiereIdx = val === '' ? null : parseInt(val);
+    renderMatiereTable();
+    updateMatierePdfButtons();
+}
+
+function setMatiereTrimestre(t) {
+    currentMatiereTri = t;
+    document.querySelectorAll('[id^="matTri-"]').forEach(btn => {
+        const isActive = btn.id === `matTri-${t}`;
+        btn.style.background     = isActive ? '#7c3aed' : '#fff';
+        btn.style.color          = isActive ? '#fff' : '#475569';
+        btn.style.borderColor    = isActive ? '#7c3aed' : '#e2e8f0';
+    });
+    renderMatiereTable();
+    updateMatierePdfButtons();
+}
+
+function updateMatierePdfButtons() {
+    const wrap = document.getElementById('matierePdfButtons');
+    if (!matiereData || currentMatiereIdx === null) {
+        wrap.innerHTML = '';
+        return;
+    }
+    const subj  = matiereData.subjects[currentMatiereIdx];
+    const tLabel = currentMatiereTri === 0 ? 'Annuel' : `T${currentMatiereTri}`;
+
+    wrap.innerHTML = `
+        <a href="${MATIERE_ROUTES.pdf(subj.id, currentMatiereTri)}"
+           class="arc-btn"
+           style="background:#7c3aed;color:#fff;font-size:.8rem;padding:.4rem .9rem"
+           target="_blank">
+            <i class="fas fa-file-pdf"></i> PDF – ${subj.name} (${tLabel})
+        </a>`;
+}
+
+function renderMatiereTable() {
+    if (!matiereData) return;
+    document.getElementById('matiereSpinner').style.display = 'none';
+    document.getElementById('matiereContent').style.display = 'block';
+
+    const subjects = currentMatiereIdx !== null
+        ? [matiereData.subjects[currentMatiereIdx]]
+        : matiereData.subjects;
+
+    if (!subjects || subjects.length === 0) {
+        document.getElementById('matiereContent').innerHTML =
+            '<p style="text-align:center;color:#64748b;padding:2rem">Aucune matière disponible.</p>';
+        return;
+    }
+
+    const t = currentMatiereTri;
+    let html = '';
+
+    subjects.forEach(subject => {
+        // En-tête matière
+        html += `
+        <div style="margin-bottom:1.75rem">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem;flex-wrap:wrap;gap:.5rem">
+                <div style="display:flex;align-items:center;gap:.75rem">
+                    <div style="width:36px;height:36px;border-radius:8px;background:#f5f3ff;display:flex;align-items:center;justify-content:center">
+                        <i class="fas fa-book" style="color:#7c3aed;font-size:.9rem"></i>
+                    </div>
+                    <div>
+                        <div style="font-size:.95rem;font-weight:800;color:#1e293b">${subject.name}</div>
+                        <div style="font-size:.75rem;color:#64748b">Coefficient : ${subject.coef}</div>
+                    </div>
+                </div>
+                <a href="${MATIERE_ROUTES.pdf(subject.id, t)}"
+                   class="arc-btn"
+                   style="background:#7c3aed;color:#fff;font-size:.78rem;padding:.35rem .8rem"
+                   target="_blank">
+                    <i class="fas fa-file-pdf"></i>
+                    PDF ${t === 0 ? 'annuel' : 'T'+t}
+                </a>
+            </div>`;
+
+        // Stats rapides
+        const moyennes = subject.eleves
+            .map(e => t === 0
+                ? (() => { const ms = [1,2,3].map(x => e.trimestres[x]?.moyenne).filter(v => v!==null); return ms.length ? ms.reduce((a,b)=>a+b,0)/ms.length : null; })()
+                : e.trimestres[t]?.moyenne)
+            .filter(v => v !== null);
+        const moyClass = moyennes.length ? (moyennes.reduce((a,b)=>a+b,0)/moyennes.length).toFixed(2).replace('.',',') : '-';
+        const admis    = moyennes.filter(m => m >= 10).length;
+        const taux     = moyennes.length ? Math.round(admis/moyennes.length*100) : 0;
+
+        html += `
+            <div style="display:flex;gap:.75rem;margin-bottom:.75rem;flex-wrap:wrap">
+                ${statPill('Effectif noté', moyennes.length, '#1e40af')}
+                ${statPill('Moy. classe', moyClass, '#059669')}
+                ${statPill('Admis', admis, '#059669')}
+                ${statPill('Taux', taux+'%', taux >= 60 ? '#059669' : '#dc2626')}
+            </div>`;
+
+        // Tableau
+        if (t === 0) {
+            // Annuel
+            html += `
+            <div style="overflow-x:auto;border-radius:8px;border:1px solid #e9d5ff">
+            <table style="width:100%;border-collapse:collapse;font-size:.8rem">
+                <thead>
+                    <tr style="background:#6d28d9;color:#fff">
+                        <th style="padding:.5rem;text-align:center;border:1px solid #5b21b6;width:30px">#</th>
+                        <th style="padding:.5rem;text-align:left;border:1px solid #5b21b6;min-width:150px">Nom & Prénoms</th>
+                        <th style="padding:.5rem;text-align:center;border:1px solid #5b21b6">Moy. T1</th>
+                        <th style="padding:.5rem;text-align:center;border:1px solid #5b21b6">Moy. T2</th>
+                        <th style="padding:.5rem;text-align:center;border:1px solid #5b21b6">Moy. T3</th>
+                        <th style="padding:.5rem;text-align:center;border:1px solid #5b21b6">Moy. Ann.</th>
+                        <th style="padding:.5rem;text-align:center;border:1px solid #5b21b6">Rang</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+
+            const moyAnnEleves = subject.eleves.map(e => {
+                const ms = [1,2,3].map(x => e.trimestres[x]?.moyenne).filter(v => v!==null);
+                return { id: e.id, moy: ms.length ? ms.reduce((a,b)=>a+b,0)/ms.length : null };
+            });
+            const sorted = [...moyAnnEleves].filter(e => e.moy!==null).sort((a,b)=>b.moy-a.moy);
+            const rangs = {};
+            sorted.forEach((e,i) => rangs[e.id] = i+1);
+
+            subject.eleves.forEach((e, i) => {
+                const ms = [1,2,3].map(x => e.trimestres[x]?.moyenne).filter(v=>v!==null);
+                const moyAnn = ms.length ? ms.reduce((a,b)=>a+b,0)/ms.length : null;
+                const fmt = v => v !== null ? v.toFixed(2).replace('.',',') : '–';
+                const badge = (v) => {
+                    if (v===null) return `<span style="color:#94a3b8">–</span>`;
+                    const c = v >= 10 ? '#059669' : '#dc2626';
+                    const bg = v >= 10 ? '#d1fae5' : '#fee2e2';
+                    return `<span style="display:inline-block;padding:1px 8px;border-radius:10px;background:${bg};color:${c};font-weight:700">${fmt(v)}</span>`;
+                };
+                const rowBg = i%2===0 ? '#fff' : '#faf5ff';
+                html += `
+                    <tr style="background:${rowBg}">
+                        <td style="text-align:center;border:1px solid #e9d5ff;color:#94a3b8">${i+1}</td>
+                        <td style="text-align:left;border:1px solid #e9d5ff;padding:.4rem .6rem;font-weight:600">${e.nom} ${e.prenom}</td>
+                        <td style="text-align:center;border:1px solid #e9d5ff">${badge(e.trimestres[1]?.moyenne ?? null)}</td>
+                        <td style="text-align:center;border:1px solid #e9d5ff">${badge(e.trimestres[2]?.moyenne ?? null)}</td>
+                        <td style="text-align:center;border:1px solid #e9d5ff">${badge(e.trimestres[3]?.moyenne ?? null)}</td>
+                        <td style="text-align:center;border:1px solid #e9d5ff">${badge(moyAnn)}</td>
+                        <td style="text-align:center;border:1px solid #e9d5ff;color:#6d28d9;font-weight:700">
+                            ${rangs[e.id] ? rangs[e.id]+'ᵉ' : '–'}
+                        </td>
+                    </tr>`;
+            });
+            html += `</tbody></table></div>`;
+
+        } else {
+            // Trimestriel
+            html += `
+            <div style="overflow-x:auto;border-radius:8px;border:1px solid #e9d5ff">
+            <table style="width:100%;border-collapse:collapse;font-size:.8rem">
+                <thead>
+                    <tr style="background:#6d28d9;color:#fff">
+                        <th style="padding:.5rem;text-align:center;border:1px solid #5b21b6;width:30px">#</th>
+                        <th style="padding:.5rem;text-align:left;border:1px solid #5b21b6;min-width:150px">Nom & Prénoms</th>
+                        <th style="padding:.5rem;text-align:center;border:1px solid #5b21b6">I1</th>
+                        <th style="padding:.5rem;text-align:center;border:1px solid #5b21b6">I2</th>
+                        <th style="padding:.5rem;text-align:center;border:1px solid #5b21b6">I3</th>
+                        <th style="padding:.5rem;text-align:center;border:1px solid #5b21b6">Moy.I</th>
+                        <th style="padding:.5rem;text-align:center;border:1px solid #5b21b6">D1</th>
+                        <th style="padding:.5rem;text-align:center;border:1px solid #5b21b6">D2</th>
+                        <th style="padding:.5rem;text-align:center;border:1px solid #5b21b6">Moy./20</th>
+                        <th style="padding:.5rem;text-align:center;border:1px solid #5b21b6">Rang</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+
+            subject.eleves.forEach((e, i) => {
+                const td = e.trimestres[t] || {};
+                const fmt = v => v !== null && v !== undefined ? parseFloat(v).toFixed(2).replace('.',',') : '–';
+                const badge = (v) => {
+                    if (v===null||v===undefined) return `<span style="color:#94a3b8">–</span>`;
+                    const n = parseFloat(v);
+                    const c = n >= 10 ? '#059669' : '#dc2626';
+                    const bg = n >= 10 ? '#d1fae5' : '#fee2e2';
+                    return `<span style="display:inline-block;padding:1px 8px;border-radius:10px;background:${bg};color:${c};font-weight:700">${fmt(v)}</span>`;
+                };
+                const rowBg = i%2===0 ? '#fff' : '#faf5ff';
+                const interros = td.interros || [];
+                html += `
+                    <tr style="background:${rowBg}">
+                        <td style="text-align:center;border:1px solid #e9d5ff;color:#94a3b8">${i+1}</td>
+                        <td style="text-align:left;border:1px solid #e9d5ff;padding:.4rem .6rem;font-weight:600">${e.nom} ${e.prenom}</td>
+                        <td style="text-align:center;border:1px solid #e9d5ff">${fmt(interros[0])}</td>
+                        <td style="text-align:center;border:1px solid #e9d5ff">${fmt(interros[1])}</td>
+                        <td style="text-align:center;border:1px solid #e9d5ff">${fmt(interros[2])}</td>
+                        <td style="text-align:center;border:1px solid #e9d5ff">${fmt(td.moyInterro)}</td>
+                        <td style="text-align:center;border:1px solid #e9d5ff">${fmt(td.devoir1)}</td>
+                        <td style="text-align:center;border:1px solid #e9d5ff">${fmt(td.devoir2)}</td>
+                        <td style="text-align:center;border:1px solid #e9d5ff">${badge(td.moyenne)}</td>
+                        <td style="text-align:center;border:1px solid #e9d5ff;color:#6d28d9;font-weight:700">
+                            ${td.rang ? td.rang+'ᵉ' : '–'}
+                        </td>
+                    </tr>`;
+            });
+            html += `</tbody></table></div>`;
+        }
+
+        html += `</div>`;  // fin de .subject block
+    });
+
+    document.getElementById('matiereContent').innerHTML = html;
+}
+
+function statPill(label, val, color) {
+    return `<div style="display:inline-flex;flex-direction:column;align-items:center;padding:.4rem .8rem;
+                border-radius:8px;background:#faf5ff;border:1px solid #e9d5ff;min-width:70px">
+        <span style="font-size:1rem;font-weight:800;color:${color}">${val}</span>
+        <span style="font-size:.7rem;color:#64748b;text-transform:uppercase;letter-spacing:.04em">${label}</span>
+    </div>`;
+}
+
+// Fermer le modal matière avec ESC (déjà géré globalement, on ajoute juste le closeMatiereModal)
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+        closeModal();
+        closeSecurityModal();
+        closeMatiereModal();
+    }
 });
 </script>
 @endsection

@@ -225,6 +225,14 @@ Route::middleware('auth')->group(function () {
         [\App\Http\Controllers\ArchiveController::class, 'classBulletinsPdf'])
         ->name('archives.class.bulletins.all.pdf');
 
+    Route::get('/archives/{yearId}/classes/{classId}/notes-matiere/json',
+        [\App\Http\Controllers\ArchiveController::class, 'classNotesParMatiereJson'])
+        ->name('archives.class_notes_matiere.json');
+
+    Route::get('/archives/{yearId}/classes/{classId}/notes-matiere/{subjectId}/trimestre/{trimestre}/pdf',
+        [\App\Http\Controllers\ArchiveController::class, 'classNotesParMatierePdf'])
+        ->name('archives.class_notes_matiere.pdf');
+
 });
 
 //Dashboards Secretaraire
