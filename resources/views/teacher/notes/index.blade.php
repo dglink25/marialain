@@ -117,9 +117,6 @@
                 </div>
             @endif
 
-            {{-- ════════════════════════════════════════════════════════════
-                 SECTION TÉLÉVERSEMENT PDF — bouton ouvre un modal
-            ════════════════════════════════════════════════════════════ --}}
             <div class="bg-gradient-to-br from-sky-50 to-blue-50 border border-sky-200 rounded-2xl p-6 mb-8 shadow-sm">
                 <div class="flex items-center mb-4">
                     <div class="w-10 h-10 bg-sky-100 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
@@ -629,9 +626,7 @@
             </div>{{-- /uploadModalBox --}}
         </div>{{-- /uploadModalOverlay --}}
 
-        {{-- ════════════════════════════════════════════════════════════════════
-             MODAL CONFIRMATION SAUVEGARDE
-        ════════════════════════════════════════════════════════════════════ --}}
+
         <div id="saveConfirmOverlay"
              style="display:none; position:fixed; inset:0; z-index:10000;
                     background:rgba(0,0,0,0.5); backdrop-filter:blur(4px);

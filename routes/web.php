@@ -209,16 +209,21 @@ Route::middleware('auth')->group(function () {
     Route::post('/profil/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
     Route::post('/profil/photo', [ProfileController::class, 'updatePhoto'])->name('profile.photo');
 
-    // Dashboards par rôle
-
-    // Route::get('/dashboard/directeur', [DashboardPrimaireController::class, 'index'])->name('directeur.dashboard');
-
     Route::get('/dashboard/surveillant', [SurveillantController::class, 'surveillant'])->name('surveillant.dashboard');
     
-   // Route::get('/dashboard/surveillant', fn() => view('dashboards.surveillant', ['user' => auth()->user()]))->name('surveillant.dashboard');
-
-    
     Route::get('dashboard', [CenseurDashboardController::class, 'index'])->name('censeur.dashboard');
+
+    Route::get('/archives/{yearId}/classes/{classId}/eleves/{studentId}/notes',
+    [\App\Http\Controllers\ArchiveController::class, 'studentNotesJson'])
+    ->name('archives.student.notes.json');
+
+    Route::get('/archives/{yearId}/classes/{classId}/eleves/{studentId}/bulletin/{trimestre}/pdf',
+        [\App\Http\Controllers\ArchiveController::class, 'studentBulletinPdf'])
+        ->name('archives.student.bulletin.pdf');
+
+    Route::get('/archives/{yearId}/classes/{classId}/bulletin/{trimestre}/all-pdf',
+        [\App\Http\Controllers\ArchiveController::class, 'classBulletinsPdf'])
+        ->name('archives.class.bulletins.all.pdf');
 
 });
 
