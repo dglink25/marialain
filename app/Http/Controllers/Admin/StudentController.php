@@ -25,7 +25,6 @@ class StudentController extends Controller{
     public function checkActiveYear(){
         $activeYear = AcademicYear::where('active', 1)->first();
         if (!$activeYear) {
-            // Retourner une vue d’erreur si pas d’année active
             return view('errors.no_active_year');
         }
         return $activeYear;
