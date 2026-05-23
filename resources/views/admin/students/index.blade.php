@@ -4,11 +4,11 @@
 
 @section('content')
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-    @if(!$activeYear)
+    @if(!isset($activeYear) && !isset($selectedYearId))
         <div class="bg-white border border-gray-200 rounded-lg p-6 mb-6">
             <h1 class="text-xl font-bold text-gray-800 mb-4">Liste de tous les élèves de CPEG MARIE-ALAIN</h1>
             <div class="bg-yellow-50 border border-yellow-200 text-yellow-700 p-4 rounded-lg">
-                {{ $message }}
+                {{ $message ?? 'Aucune année académique active.' }}
             </div>
         </div>
     @else
@@ -17,9 +17,9 @@
             <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
                 <div>
                     <h1 class="text-2xl font-bold text-gray-800">Liste des élèves</h1>
-                    <p class="text-gray-600">CPEG MARIE-ALAIN - Gestion des étudiants</p>
+                    <p class="text-gray-600">CPEG MARIE-ALAIN – Gestion des étudiants</p>
                 </div>
-                <a href="{{ route('admin.students.create') }}" 
+                <a href="{{ route('admin.students.create') }}"
                    class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-200 whitespace-nowrap text-center font-medium flex items-center gap-2">
                     <i class="fas fa-user-plus"></i>
                     Nouvelle inscription
@@ -38,63 +38,128 @@
 
         <!-- Section Filtres et Export -->
         <div class="bg-white border border-gray-200 rounded-lg p-6 mb-6">
-    
+
+            <!-- Rappel de paiement -->
             <div class="mb-6">
-               
                 <form id="mailForm" method="POST" action="{{ route('students.mail.sendAll') }}">
                     @csrf
-                    <button type="submit" 
+                    <button type="submit"
                         class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition duration-200 font-medium flex items-center gap-2">
                         <i class="fas fa-paper-plane"></i>
                         Envoyer un message de rappel
                     </button>
-                    <p>:pour non payement de contribution au parents</p>
+                    <p class="text-sm text-gray-500 mt-1">Pour non-paiement de contribution aux parents</p>
                 </form>
             </div>
 
-            <!-- Filtres de recherche -->
+            <!-- ============================================================
+                 FILTRES DE RECHERCHE
+                 ============================================================ -->
             <div class="mb-4">
                 <h2 class="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
                     <i class="fas fa-filter"></i>
                     Filtres de recherche
                 </h2>
-                <form method="GET" action="{{ route('admin.students.index') }}" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
-                    <input type="text" name="search" placeholder="Rechercher un élève"
-                           value="{{ request('search') }}"
-                           class="border border-gray-300 rounded-lg p-2 text-sm focus:outline-none focus:border-blue-500">
 
-                    <select name="entity_id" class="border border-gray-300 rounded-lg p-2 text-sm focus:outline-none focus:border-blue-500">
-                        <option value="">Entité</option>
-                        @foreach($entities as $entity)
-                            <option value="{{ $entity->id }}" {{ request('entity_id') == $entity->id ? 'selected' : '' }}>
-                                {{ $entity->name }}
-                            </option>
-                        @endforeach
-                    </select>
+                <form method="GET" action="{{ route('admin.students.index') }}"
+                      id="filterForm"
+                      class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-3">
 
-                    <select name="class_id" class="border border-gray-300 rounded-lg p-2 text-sm focus:outline-none focus:border-blue-500">
-                        <option value="">Classe</option>
-                        @foreach($classes as $classe)
-                            <option value="{{ $classe->id }}" {{ request('class_id') == $classe->id ? 'selected' : '' }}>
-                                {{ $classe->name }}
-                            </option>
-                        @endforeach
-                    </select>
+                    {{-- ── 1. Année académique ─────────────────────────────── --}}
+                    <div class="lg:col-span-1">
+                        <label class="block text-xs font-medium text-gray-500 mb-1">
+                            <i class="fas fa-calendar-alt mr-1 text-indigo-500"></i>Année académique
+                        </label>
+                        <select name="academic_year_id"
+                                id="selectYear"
+                                onchange="onYearChange(this.value)"
+                                class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:outline-none focus:border-indigo-500">
+                            @foreach($academicYears as $year)
+                                <option value="{{ $year->id }}"
+                                    {{ $year->id == $selectedYearId ? 'selected' : '' }}>
+                                    {{ $year->name ?? $year->year }}
+                                    @if($year->active)
+                                        <option disabled>─── (active) ───</option>
+                                    @endif
+                                    {{-- On ajoute l'indicateur directement dans le label --}}
+                                </option>
+                            @endforeach
+                        </select>
+                        {{-- Affiche "Année active" sous le select si c'est l'année active --}}
+                        @if($activeYear && $selectedYearId == $activeYear->id)
+                            <span class="text-xs text-indigo-600 font-medium mt-0.5 block">
+                                <i class="fas fa-circle text-xs mr-1"></i>Année active
+                            </span>
+                        @endif
+                    </div>
 
-                    <input type="date" name="date" value="{{ request('date') }}" 
-                           class="border border-gray-300 rounded-lg p-2 text-sm focus:outline-none focus:border-blue-500">
+                    {{-- ── 2. Recherche nom --}}
+                    <div class="lg:col-span-1">
+                        <label class="block text-xs font-medium text-gray-500 mb-1">
+                            <i class="fas fa-search mr-1"></i>Recherche
+                        </label>
+                        <input type="text" name="search" placeholder="Nom ou prénom"
+                               value="{{ request('search') }}"
+                               class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:outline-none focus:border-blue-500">
+                    </div>
 
-                    <div class="flex gap-2">
-                        <button type="submit" class="bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 transition duration-200 text-sm font-medium whitespace-nowrap flex items-center gap-2 flex-1 justify-center">
-                            <i class="fas fa-search"></i>
-                            Filtrer
+                    {{-- ── 3. Niveau (entité) ─────────────────────────────── --}}
+                    <div class="lg:col-span-1">
+                        <label class="block text-xs font-medium text-gray-500 mb-1">
+                            <i class="fas fa-layer-group mr-1 text-teal-500"></i>Niveau
+                        </label>
+                        <select name="entity_id"
+                                id="selectEntity"
+                                class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:outline-none focus:border-teal-500">
+                            <option value="">Tous les niveaux</option>
+                            @foreach($entities as $entity)
+                                <option value="{{ $entity->id }}"
+                                    {{ request('entity_id') == $entity->id ? 'selected' : '' }}>
+                                    {{ $entity->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    {{-- ── 4. Classe ───────────────────────────────────────── --}}
+                    <div class="lg:col-span-1">
+                        <label class="block text-xs font-medium text-gray-500 mb-1">
+                            <i class="fas fa-school mr-1 text-blue-500"></i>Classe
+                        </label>
+                        <select name="class_id"
+                                id="selectClass"
+                                class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:outline-none focus:border-blue-500">
+                            <option value="">Toutes les classes</option>
+                            @foreach($classes as $classe)
+                                <option value="{{ $classe->id }}"
+                                    {{ request('class_id') == $classe->id ? 'selected' : '' }}>
+                                    {{ $classe->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    {{-- ── 5. Date ─────────────────────────────────────────── --}}
+                    <div class="lg:col-span-1">
+                        <label class="block text-xs font-medium text-gray-500 mb-1">
+                            <i class="fas fa-calendar mr-1"></i>Date inscription
+                        </label>
+                        <input type="date" name="date" value="{{ request('date') }}"
+                               class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:outline-none focus:border-blue-500">
+                    </div>
+
+                    {{-- ── 6. Boutons ───────────────────────────────────────── --}}
+                    <div class="lg:col-span-1 flex items-end gap-2">
+                        <button type="submit"
+                                class="bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 transition duration-200 text-sm font-medium flex items-center gap-1 flex-1 justify-center">
+                            <i class="fas fa-search"></i>Filtrer
                         </button>
-                        <a href="{{ route('admin.students.index') }}" 
-                           class="bg-gray-500 text-white px-3 py-2 rounded-lg hover:bg-gray-600 transition duration-200 text-sm font-medium whitespace-nowrap flex items-center gap-2 flex-1 justify-center">
-                            <i class="fas fa-redo"></i>
-                            Reset
+                        <a href="{{ route('admin.students.index') }}"
+                           class="bg-gray-500 text-white px-3 py-2 rounded-lg hover:bg-gray-600 transition duration-200 text-sm font-medium flex items-center gap-1 flex-1 justify-center">
+                            <i class="fas fa-redo"></i>Reset
                         </a>
                     </div>
+
                 </form>
             </div>
 
@@ -114,23 +179,20 @@
                             @endforeach
                         </select>
                         <button type="submit" class="bg-red-600 text-white px-3 py-2 rounded-lg hover:bg-red-700 transition duration-200 text-sm font-medium whitespace-nowrap flex items-center gap-2">
-                            <i class="fas fa-file-pdf"></i>
-                            PDF
+                            <i class="fas fa-file-pdf"></i>PDF
                         </button>
                     </form>
 
                     <!-- Export ZIP toutes les classes -->
-                    <a href="{{ route('admin.students.export.all.pdf') }}" 
+                    <a href="{{ route('admin.students.export.all.pdf') }}"
                        class="bg-red-700 text-white px-3 py-2 rounded-lg hover:bg-red-800 transition duration-200 text-sm font-medium whitespace-nowrap flex items-center gap-2 justify-center">
-                       <i class="fas fa-file-archive"></i>
-                       Toutes les classes (ZIP)
+                       <i class="fas fa-file-archive"></i>Toutes les classes (ZIP)
                     </a>
 
-                    <!-- ✅ NOUVEAU : Bouton Liste d'émargement -->
+                    <!-- Liste d'émargement -->
                     <button type="button" onclick="openEmmagementModal()"
                         class="bg-purple-600 text-white px-3 py-2 rounded-lg hover:bg-purple-700 transition duration-200 text-sm font-medium whitespace-nowrap flex items-center gap-2 justify-center">
-                        <i class="fas fa-clipboard-list"></i>
-                        Liste d'émargement (Bulletins)
+                        <i class="fas fa-clipboard-list"></i>Liste d'émargement (Bulletins)
                     </button>
                 </div>
             </div>
@@ -148,7 +210,7 @@
                                 <th class="px-3 py-3 text-left font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">Nom</th>
                                 <th class="px-3 py-3 text-left font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">Prénoms</th>
                                 <th class="px-3 py-3 text-left font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">Sexe</th>
-                                <th class="px-3 py-3 text-left font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">Entité</th>
+                                <th class="px-3 py-3 text-left font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">Niveau</th>
                                 <th class="px-3 py-3 text-left font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">Classe</th>
                                 <th class="px-3 py-3 text-left font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">Total Payé</th>
                                 <th class="px-3 py-3 text-left font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">Reste</th>
@@ -174,14 +236,13 @@
                                         </a>
                                     </td>
                                     <td class="px-3 py-3 whitespace-nowrap text-gray-900 text-center">{{ $student->gender ?? '-' }}</td>
-                                    <td class="px-3 py-3 whitespace-nowrap text-gray-900">{{ \Illuminate\Support\Str::limit($student->entity->name ?? '-', 8) }}</td>
+                                    <td class="px-3 py-3 whitespace-nowrap text-gray-900">{{ \Illuminate\Support\Str::limit($student->entity->name ?? '-', 10) }}</td>
                                     <td class="px-3 py-3 whitespace-nowrap text-gray-900">{{ \Illuminate\Support\Str::limit($student->classe->name ?? '-', 8) }}</td>
                                     <td class="px-3 py-3 whitespace-nowrap text-gray-900">
                                         <div class="font-medium">{{ number_format($student->total_paid, 2) }} FCFA</div>
-                                        <a href="{{ route('students.payments.index', $student->id) }}" 
+                                        <a href="{{ route('students.payments.index', $student->id) }}"
                                             class="text-blue-600 hover:text-blue-800 text-xs flex items-center gap-1 mt-1">
-                                            <i class="fas fa-list"></i>
-                                            Détails
+                                            <i class="fas fa-list"></i>Détails
                                         </a>
                                     </td>
                                     <td class="px-3 py-3 whitespace-nowrap text-gray-900 font-semibold">
@@ -195,20 +256,18 @@
                                     <td class="px-3 py-3 whitespace-nowrap text-gray-900">{{ $student->created_at->format('d/m/Y') }}</td>
                                     <td class="px-3 py-3 whitespace-nowrap">
                                         <div class="flex flex-col sm:flex-row gap-1">
-                                            <a href="{{ route('admin.students.edit', $student->id) }}" 
+                                            <a href="{{ route('admin.students.edit', $student->id) }}"
                                                class="bg-yellow-500 text-white px-2 py-1 rounded text-xs hover:bg-yellow-600 transition duration-200 flex items-center gap-1 justify-center">
-                                                <i class="fas fa-edit"></i>
-                                                Modif
+                                                <i class="fas fa-edit"></i>Modif
                                             </a>
-                                            <form method="POST" action="{{ route('admin.students.destroy', $student->id) }}" 
-                                                  onsubmit="return confirm('Voulez-vous vraiment supprimer cet étudiant ?')" 
+                                            <form method="POST" action="{{ route('admin.students.destroy', $student->id) }}"
+                                                  onsubmit="return confirm('Voulez-vous vraiment supprimer cet étudiant ?')"
                                                   class="inline">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" 
+                                                <button type="submit"
                                                         class="bg-red-600 text-white px-2 py-1 rounded text-xs hover:bg-red-700 transition duration-200 w-full flex items-center gap-1 justify-center">
-                                                    <i class="fas fa-trash"></i>
-                                                    Supp
+                                                    <i class="fas fa-trash"></i>Supp
                                                 </button>
                                             </form>
                                         </div>
@@ -229,12 +288,10 @@
 
             <!-- Bouton Retour + Pagination -->
             <div class="mt-6 flex justify-between items-center">
-                <button onclick="window.history.back()" 
+                <button onclick="window.history.back()"
                         class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition duration-200 font-medium flex items-center gap-2">
-                    <i class="fas fa-arrow-left"></i>
-                    Retour
+                    <i class="fas fa-arrow-left"></i>Retour
                 </button>
-                
                 <div class="flex-1 flex justify-center">
                     {{ $students->links() }}
                 </div>
@@ -245,17 +302,16 @@
                 <p class="font-semibold mb-2">Une erreur s'est produite</p>
                 <p class="mb-4">Veuillez vous connecter à nouveau pour continuer</p>
                 <a href="{{ route('login') }}" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-200 inline-flex items-center gap-2">
-                    <i class="fas fa-sign-in-alt"></i>
-                    Se connecter
+                    <i class="fas fa-sign-in-alt"></i>Se connecter
                 </a>
             </div>
-        @endif 
+        @endif
     @endif
 </div>
 
-<!-- =============================================
+{{-- =============================================
      MODAL : Liste d'émargement des bulletins
-     ============================================= -->
+     ============================================= --}}
 <div id="emmagementModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black bg-opacity-50">
     <div class="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 p-6">
         <div class="flex justify-between items-center mb-5">
@@ -275,7 +331,6 @@
         </p>
 
         <form method="GET" action="{{ route('admin.students.emmagement.pdf') }}" id="emmagementForm">
-            <!-- Classe -->
             <div class="mb-4">
                 <label for="emm_class_id" class="block text-sm font-semibold text-gray-700 mb-1">
                     <i class="fas fa-school text-purple-500 mr-1"></i> Classe
@@ -289,7 +344,6 @@
                 </select>
             </div>
 
-            <!-- Trimestre -->
             <div class="mb-6">
                 <label class="block text-sm font-semibold text-gray-700 mb-2">
                     <i class="fas fa-calendar-alt text-purple-500 mr-1"></i> Trimestre
@@ -316,8 +370,7 @@
                 </button>
                 <button type="submit"
                     class="flex-1 bg-purple-600 text-white px-4 py-2.5 rounded-lg hover:bg-purple-700 transition font-medium text-sm flex items-center justify-center gap-2">
-                    <i class="fas fa-file-pdf"></i>
-                    Télécharger le PDF
+                    <i class="fas fa-file-pdf"></i>Télécharger le PDF
                 </button>
             </div>
         </form>
@@ -332,7 +385,7 @@
     .overflow-x-auto::-webkit-scrollbar { height: 6px; }
     .overflow-x-auto::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 3px; }
     .overflow-x-auto::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 3px; }
-    
+
     @media (max-width: 768px) {
         table { min-width: 1000px; }
         th, td { padding: 0.5rem 0.25rem; font-size: 0.75rem; }
@@ -340,7 +393,54 @@
     }
 </style>
 
+{{-- =============================================
+     DONNÉES JSON pour le filtrage dynamique JS
+     Injectées depuis le contrôleur
+     ============================================= --}}
 <script>
+    // Données préparées dans le contrôleur (tableaux PHP simples)
+    // → pas de fn() ici pour éviter le ParseError Blade "Unclosed '['"
+    const allClasses  = @json($allClassesForJs);
+    const allEntities = @json($allEntitiesForJs);
+
+    const currentEntityId = {{ request('entity_id') ?? 'null' }};
+    const currentClassId  = {{ request('class_id')  ?? 'null' }};
+
+    // ─── Met à jour les selects Niveau et Classe selon l'année choisie ──────
+    function onYearChange(yearId) {
+        yearId = parseInt(yearId);
+
+        // 1. Classes disponibles pour cette année
+        const yearClasses  = allClasses[yearId] || [];
+        const classSelect  = document.getElementById('selectClass');
+        const entitySelect = document.getElementById('selectEntity');
+
+        // 2. Entités qui ont au moins une classe dans cette année
+        const entityIdsInYear = new Set(yearClasses.map(c => c.entity_id));
+        const yearEntities    = allEntities.filter(e => entityIdsInYear.has(e.id));
+
+        // ── Repeupler le select Niveau ──
+        entitySelect.innerHTML = '<option value="">Tous les niveaux</option>';
+        yearEntities.forEach(e => {
+            const opt = document.createElement('option');
+            opt.value       = e.id;
+            opt.textContent = e.name;
+            if (e.id === currentEntityId) opt.selected = true;
+            entitySelect.appendChild(opt);
+        });
+
+        // ── Repeupler le select Classe ──
+        classSelect.innerHTML = '<option value="">Toutes les classes</option>';
+        yearClasses.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value       = c.id;
+            opt.textContent = c.name;
+            if (c.id === currentClassId) opt.selected = true;
+            classSelect.appendChild(opt);
+        });
+    }
+
+    // ─── Modales ──────────────────────────────────────────────────────────────
     function openEmmagementModal() {
         document.getElementById('emmagementModal').classList.remove('hidden');
         document.body.style.overflow = 'hidden';
@@ -351,24 +451,20 @@
         document.body.style.overflow = '';
     }
 
-    // Fermer le modal si on clique dehors
     document.getElementById('emmagementModal').addEventListener('click', function(e) {
         if (e.target === this) closeEmmagementModal();
     });
 
-    // Validation avant soumission
+    // ─── Validation modal émargement ─────────────────────────────────────────
     document.getElementById('emmagementForm').addEventListener('submit', function(e) {
-        const classe = document.getElementById('emm_class_id').value;
-        const trimestre = document.querySelector('input[name="trimestre"]:checked');
-        if (!classe) {
+        if (!document.getElementById('emm_class_id').value) {
             e.preventDefault();
             alert('Veuillez sélectionner une classe.');
             return;
         }
-        if (!trimestre) {
+        if (!document.querySelector('input[name="trimestre"]:checked')) {
             e.preventDefault();
             alert('Veuillez sélectionner un trimestre.');
-            return;
         }
     });
 </script>

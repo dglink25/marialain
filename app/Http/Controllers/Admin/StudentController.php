@@ -253,57 +253,116 @@ class StudentController extends Controller{
         return view('admin.students.create', compact('entities', 'classes'));
     }
 
+
+
     public function index(Request $request){
         try {
-            // Récupérer l'année académique active
-            $activeYear = AcademicYear::where('active', true)->first();
+            // --- Années académiques disponibles pour le select ---
+            $academicYears = AcademicYear::orderByDesc('id')->get();
+            $activeYear    = AcademicYear::where('active', true)->first();
 
-            if (!$activeYear) {
+            // Année sélectionnée : paramètre GET ou année active par défaut
+            $selectedYearId = $request->filled('academic_year_id')
+                ? (int) $request->academic_year_id
+                : ($activeYear ? $activeYear->id : null);
+
+            $selectedYear = $selectedYearId
+                ? AcademicYear::find($selectedYearId)
+                : $activeYear;
+
+            // Aucune année disponible
+            if (! $selectedYear) {
                 return view('admin.students.index', [
-                    'students' => collect(),
-                    'entities' => Entity::all(),
-                    'classes'  => Classe::all(),
-                    'activeYear' => null,
-                    'message' => 'Aucune année académique active pour le moment.'
+                    'students'          => collect(),
+                    'entities'          => Entity::all(),
+                    'classes'           => collect(),
+                    'activeYear'        => null,
+                    'academicYears'     => $academicYears,
+                    'selectedYearId'    => null,
+                    'allClassesForJs'   => [],
+                    'allEntitiesForJs'  => [],
+                    'message'           => 'Aucune année académique active pour le moment.',
                 ]);
             }
 
-
-            // Construire la requête de base
+            // --- Requête de base : élèves validés de l'année sélectionnée ---
             $query = Student::with('entity', 'classe')
-                            ->where('is_validated', 1)
-                            ->where('academic_year_id', $activeYear->id);
+                ->where('is_validated', 1)
+                ->where('academic_year_id', $selectedYear->id);
 
-            // Filtres optionnels
+            // Filtre recherche nom/prénom
             if ($request->filled('search')) {
                 $search = $request->search;
                 $query->where(function ($q) use ($search) {
                     $q->where('first_name', 'like', "%{$search}%")
-                    ->orWhere('last_name', 'like', "%{$search}%");
+                    ->orWhere('last_name',  'like', "%{$search}%");
                 });
             }
 
+            // Filtre niveau (entity_id)
             if ($request->filled('entity_id')) {
                 $query->where('entity_id', $request->entity_id);
             }
 
+            // Filtre classe
             if ($request->filled('class_id')) {
                 $query->where('class_id', $request->class_id);
             }
 
+            // Filtre date d'inscription
             if ($request->filled('date')) {
                 $query->whereDate('created_at', $request->date);
             }
 
             $students = $query->paginate(10)->withQueryString();
 
-            $entities = Entity::all();
-            $classes  = Classe::all();
+            // Classes et entités filtrées par l'année sélectionnée
+            $classes  = Classe::where('academic_year_id', $selectedYear->id)->get();
+            $entities = Entity::whereHas('classes', function ($q) use ($selectedYear) {
+                $q->where('academic_year_id', $selectedYear->id);
+            })->get();
 
-            return view('admin.students.index', compact('students', 'entities', 'classes', 'activeYear'));
+            // ── Données JSON pour le filtrage dynamique JS ──────────────────────
+            // Préparées ici (tableaux PHP simples) pour éviter l'erreur Blade :
+            // "Unclosed '[' does not match ')'" causée par fn() dans @json().
+
+            // Classes groupées par academic_year_id → { "1": [{id, name, entity_id}, …], … }
+            $allClassesForJs = Classe::select('id', 'name', 'academic_year_id', 'entity_id')
+                ->get()
+                ->groupBy('academic_year_id')
+                ->map(function ($group) {
+                    return $group->map(function ($c) {
+                        return ['id' => $c->id, 'name' => $c->name, 'entity_id' => $c->entity_id];
+                    })->values()->toArray();
+                })
+                ->toArray();
+
+            // Entités avec la liste de leurs classes (id + academic_year_id uniquement)
+            $allEntitiesForJs = Entity::with(['classes' => function ($q) {
+                $q->select('id', 'academic_year_id', 'entity_id');
+            }])->get()->map(function ($e) {
+                return [
+                    'id'      => $e->id,
+                    'name'    => $e->name,
+                    'classes' => $e->classes->map(function ($c) {
+                        return ['id' => $c->id, 'academic_year_id' => $c->academic_year_id];
+                    })->values()->toArray(),
+                ];
+            })->toArray();
+
+            return view('admin.students.index', compact(
+                'students',
+                'entities',
+                'classes',
+                'activeYear',
+                'academicYears',
+                'selectedYearId',
+                'allClassesForJs',
+                'allEntitiesForJs'
+            ));
 
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', '❌ Erreur inattendue : '.$e->getMessage());
+            return redirect()->back()->with('error', 'Erreur inattendue : ' . $e->getMessage());
         }
     }
 
@@ -327,7 +386,7 @@ class StudentController extends Controller{
 
         $query = Student::with('entity', 'classe')
             ->where('is_validated', 1)
-            ->where('academic_year_id', $activeYear->id); // uniquement les validés
+            ->where('academic_year_id', $activeYear->id); 
 
         $className = 'Toutes les classes';
 
