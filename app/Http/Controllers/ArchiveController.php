@@ -16,22 +16,149 @@ use Illuminate\Http\Request;
 
 class ArchiveController extends Controller
 {
-    /* =====================================================================
-     *  INDEX – liste des années archivées
-     * ===================================================================== */
-
-    public function index()
-    {
+    
+    public function index() {
         $archives = AcademicYear::archives()->orderByDesc('id')->get();
         return view('archives.index', compact('archives'));
     }
 
-    /* =====================================================================
-     *  SHOW – classes d'une année archivée (selon le rôle)
-     * ===================================================================== */
+    public function classStudents($yearId, $classId) {
+        $year  = AcademicYear::findOrFail($yearId);
+        $class = Classe::with('entity')->findOrFail($classId);
+        $user  = auth()->user();
 
-    public function show($id)
-    {
+        $this->authorizeAccess($user, $class, $year);
+
+        // ── Récupération des records archivés ─────────────────────────────────
+        $records = StudentAcademicRecord::where('academic_year_id', $year->id)
+            ->where('class_id', $class->id)
+            ->with(['student', 'entity', 'classe'])
+            ->orderBy('last_name')
+            ->orderBy('first_name')
+            ->paginate(30);
+
+        $canViewPayments = $this->isAdminOrSecretary($user);
+
+        $classPaymentStats = null;
+        if ($canViewPayments) {
+            $classPaymentStats = $this->getClassPaymentStatsFromRecords($classId, $year);
+        }
+
+        // ── IDs des élèves de la page courante (pour limiter les requêtes) ────
+        $studentIds = $records->pluck('student_id');
+
+        // ── Matières de la classe pour cette année ────────────────────────────
+        $subjects = Subject::whereHas('classTeacherSubjects', function ($q) use ($classId, $year) {
+            $q->where('class_id', $classId)->where('academic_year_id', $year->id);
+        })->with(['classTeacherSubjects' => function ($q) use ($classId, $year) {
+            $q->where('class_id', $classId)->where('academic_year_id', $year->id);
+        }])->orderBy('name')->get();
+
+        // ── Notes, conduites, punitions ───────────────────────────────────────
+        $allGrades = Grade::where('class_id', $classId)
+            ->where('academic_year_id', $year->id)
+            ->whereIn('student_id', $studentIds)
+            ->get()
+            ->groupBy(['student_id', 'trimestre', 'subject_id']);
+
+        $conducts = Conduct::where('academic_year_id', $year->id)
+            ->whereIn('student_id', $studentIds)
+            ->get()
+            ->groupBy(['student_id', 'trimestre']);
+
+        $punishments = Punishment::where('academic_year_id', $year->id)
+            ->whereIn('student_id', $studentIds)
+            ->selectRaw('student_id, SUM(hours) as total_hours')
+            ->groupBy('student_id')
+            ->pluck('total_hours', 'student_id');
+
+        // ── Calcul des moyennes par élève et par trimestre ────────────────────
+        $trimestres    = [1, 2, 3];
+        $moyennesData  = [];   // [student_id => ['trimestres' => [...], 'moy_annuelle' => ...]]
+
+        foreach ($records as $record) {
+            $sid = $record->student_id;
+            $row = ['trimestres' => []];
+
+            foreach ($trimestres as $t) {
+                $punishH    = $punishments[$sid] ?? 0;
+                $conductGrd = $conducts[$sid][$t][0]->grade ?? 0;
+                $conduite   = max(0, $conductGrd - ($punishH / 2));
+
+                $totalPts  = 0;
+                $totalCoef = 0;
+
+                foreach ($subjects as $subject) {
+                    $coef = $subject->classTeacherSubjects->first()->coefficient ?? 1;
+                    $sg   = $allGrades[$sid][$t][$subject->id] ?? collect();
+
+                    $interros   = $sg->where('type', 'interrogation')->pluck('value')->filter()->values()->toArray();
+                    $d1         = $sg->where('type', 'devoir')->where('sequence', 1)->first()->value ?? null;
+                    $d2         = $sg->where('type', 'devoir')->where('sequence', 2)->first()->value ?? null;
+                    $moyInterro = !empty($interros) ? array_sum($interros) / count($interros) : null;
+                    $notes4Moy  = array_filter([$moyInterro, $d1, $d2], fn($v) => $v !== null);
+                    $moyMatiere = !empty($notes4Moy) ? array_sum($notes4Moy) / count($notes4Moy) : null;
+
+                    if ($moyMatiere !== null) {
+                        $totalPts  += $moyMatiere * $coef;
+                        $totalCoef += $coef;
+                    }
+                }
+
+                if ($conduite > 0) {
+                    $totalPts  += $conduite;
+                    $totalCoef += 1;
+                }
+
+                $row['trimestres'][$t] = [
+                    'moyenne'  => $totalCoef > 0 ? round($totalPts / $totalCoef, 2) : null,
+                    'conduite' => round($conduite, 2),
+                ];
+            }
+
+            // Priorité au snapshot, sinon on calcule
+            if ($record->moy_annuelle !== null) {
+                $row['moy_annuelle'] = (float) $record->moy_annuelle;
+            } else {
+                $moys = array_filter(
+                    array_column($row['trimestres'], 'moyenne'),
+                    fn($v) => $v !== null
+                );
+                $row['moy_annuelle'] = !empty($moys)
+                    ? round(array_sum($moys) / count($moys), 2)
+                    : null;
+            }
+
+            $moyennesData[$sid] = $row;
+        }
+
+        // ── Rang annuel sur la page courante ──────────────────────────────────
+        $moyAnn = array_filter(
+            array_map(fn($sid) => ['id' => $sid, 'moy' => $moyennesData[$sid]['moy_annuelle'] ?? null], $studentIds->toArray()),
+            fn($r) => $r['moy'] !== null
+        );
+        usort($moyAnn, fn($a, $b) => $b['moy'] <=> $a['moy']);
+
+        $rangAnnMap = [];
+        $rang = 1;
+        foreach ($moyAnn as $idx => $item) {
+            if ($idx > 0 && $item['moy'] == $moyAnn[$idx - 1]['moy']) {
+                $rangAnnMap[$item['id']] = $rangAnnMap[$moyAnn[$idx - 1]['id']];
+            } else {
+                $rangAnnMap[$item['id']] = $rang;
+            }
+            $rang++;
+        }
+
+        return view('archives.class_students', compact(
+            'year', 'class', 'records',
+            'canViewPayments', 'classPaymentStats',
+            'moyennesData', 'rangAnnMap', 'trimestres'
+        ));
+    }
+
+
+    public function show($id) {
         $user = auth()->user();
         $year = AcademicYear::findOrFail($id);
 
@@ -90,37 +217,7 @@ class ArchiveController extends Controller
         ));
     }
 
-    public function classStudents($yearId, $classId)
-    {
-        $year  = AcademicYear::findOrFail($yearId);
-        $class = Classe::with('entity')->findOrFail($classId);
-        $user  = auth()->user();
-
-        $this->authorizeAccess($user, $class, $year);
-
-        // Récupérer les records archivés pour cette classe + année
-        $records = StudentAcademicRecord::where('academic_year_id', $year->id)
-            ->where('class_id', $class->id)
-            ->with(['student', 'entity', 'classe'])
-            ->orderBy('last_name')
-            ->orderBy('first_name')
-            ->paginate(30);
-
-        $canViewPayments = $this->isAdminOrSecretary($user);
-
-        $classPaymentStats = null;
-        if ($canViewPayments) {
-            $classPaymentStats = $this->getClassPaymentStatsFromRecords($classId, $year);
-        }
-
-        return view('archives.class_students', compact(
-            'year', 'class', 'records',
-            'canViewPayments', 'classPaymentStats'
-        ));
-    }
-
-    public function classTimetables($yearId, $classId)
-    {
+    public function classTimetables($yearId, $classId) {
         $user  = auth()->user();
         $year  = AcademicYear::findOrFail($yearId);
         $class = Classe::findOrFail($classId);
@@ -143,8 +240,7 @@ class ArchiveController extends Controller
         return view('archives.class_timetables', compact('year', 'class', 'timetables', 'hours', 'days'));
     }
 
-    public function classNotes($yearId, $classId)
-    {
+    public function classNotes($yearId, $classId) {
         $user  = auth()->user();
         $year  = AcademicYear::findOrFail($yearId);
         $class = Classe::with('entity')->findOrFail($classId);
@@ -303,8 +399,7 @@ class ArchiveController extends Controller
         ));
     }
 
-    public function classPaymentStats($yearId, $classId)
-    {
+    public function classPaymentStats($yearId, $classId) {
         $user  = auth()->user();
         $year  = AcademicYear::findOrFail($yearId);
         $class = Classe::findOrFail($classId);
@@ -324,8 +419,7 @@ class ArchiveController extends Controller
     }
 
 
-    public function parentIndex()
-    {
+    public function parentIndex() {
         $parent   = auth('parent')->user();
         $archives = AcademicYear::archives()->orderByDesc('id')->get();
 
@@ -339,8 +433,7 @@ class ArchiveController extends Controller
         return view('archives.parent.index', compact('archives'));
     }
 
-    public function parentShow($yearId)
-    {
+    public function parentShow($yearId)  {
         $parent = auth('parent')->user();
         $year   = AcademicYear::findOrFail($yearId);
 
@@ -363,8 +456,7 @@ class ArchiveController extends Controller
         return view('archives.parent.show', compact('year', 'records'));
     }
 
-    public function parentChildDetails($yearId, $studentId)
-    {
+    public function parentChildDetails($yearId, $studentId) {
         $parent  = auth('parent')->user();
         $year    = AcademicYear::findOrFail($yearId);
         $student = Student::findOrFail($studentId);
@@ -487,10 +579,7 @@ class ArchiveController extends Controller
         ));
     }
 
-
-
-    public function studentNotesJson($yearId, $classId, $studentId)
-    {
+    public function studentNotesJson($yearId, $classId, $studentId) {
         $year    = AcademicYear::findOrFail($yearId);
         $class   = Classe::with('entity')->findOrFail($classId);
         $user    = auth()->user();
@@ -1433,14 +1522,12 @@ class ArchiveController extends Controller
 
 
 
-    private function isCenseur($user): bool
-    {
+    private function isCenseur($user): bool {
         return $user->id == 6
             || optional($user->role)->name === 'censeur';
     }
 
-    private function authorizeAccess($user, $class, $year): void
-    {
+    private function authorizeAccess($user, $class, $year): void {
         if ($this->isAdminOrSecretary($user)) return;
         if ($user->id == 5 && in_array($class->entity_id, [1, 2])) return;
         if ($this->isCenseur($user) && $class->entity_id == 3) return;
@@ -1453,8 +1540,7 @@ class ArchiveController extends Controller
         if (!$isTeacherOfClass) abort(403);
     }
 
-    private function getYearPaymentStats(AcademicYear $year): array
-    {
+    private function getYearPaymentStats(AcademicYear $year): array {
         $records  = StudentAcademicRecord::where('academic_year_id', $year->id)->get();
         $total    = $records->sum('total_fees');
         $paid     = $records->sum('amount_paid');
@@ -1469,8 +1555,7 @@ class ArchiveController extends Controller
         ];
     }
 
-    private function getClassPaymentStatsFromRecords(int $classId, AcademicYear $year): array
-    {
+    private function getClassPaymentStatsFromRecords(int $classId, AcademicYear $year): array  {
         $records = StudentAcademicRecord::where('class_id', $classId)
             ->where('academic_year_id', $year->id)
             ->get();
@@ -1488,8 +1573,7 @@ class ArchiveController extends Controller
         ];
     }
 
-    private function getAppreciation(?float $moy): string
-    {
+    private function getAppreciation(?float $moy): string {
         if ($moy === null) return '-';
         return match (true) {
             $moy > 16  => 'Très Bien',

@@ -25,7 +25,7 @@
         </a>
     </div>
 
-    {{-- Statistiques de paiement (admin/sec) --}}
+    {{-- Statistiques de paiement (admin/sec) ----------------------------------}}
     @if($canViewPayments && $classPaymentStats)
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <div class="bg-blue-50 border border-blue-200 rounded-xl p-3 text-center">
@@ -61,6 +61,9 @@
                         <th class="border border-gray-600 px-3 py-3 text-left">N° Éduc</th>
                         <th class="border border-gray-600 px-3 py-3 text-left">Nom & Prénoms</th>
                         <th class="border border-gray-600 px-3 py-3 text-center">Sexe</th>
+                        <th class="border border-gray-600 px-3 py-3 text-center">T1</th>
+                        <th class="border border-gray-600 px-3 py-3 text-center">T2</th>
+                        <th class="border border-gray-600 px-3 py-3 text-center">T3</th>
                         <th class="border border-gray-600 px-3 py-3 text-center">Moy. Ann.</th>
                         <th class="border border-gray-600 px-3 py-3 text-center">Rang</th>
                         <th class="border border-gray-600 px-3 py-3 text-center">Statut</th>
@@ -77,9 +80,15 @@
                 <tbody>
                     @foreach($records as $i => $record)
                         @php
-                            $moy    = $record->moy_annuelle;
-                            $bgRow  = $i % 2 == 0 ? 'bg-white' : 'bg-gray-50';
-                            $moyColor = $moy === null ? 'text-gray-400' : ($moy >= 10 ? 'text-green-700 font-bold' : 'text-red-600 font-bold');
+                            $sid      = $record->student_id;
+                            $data     = $moyennesData[$sid] ?? null;
+                            $moyAnn   = $data['moy_annuelle'] ?? null;
+                            $rang     = $rangAnnMap[$sid] ?? null;
+                            $bgRow    = $i % 2 == 0 ? 'bg-white' : 'bg-gray-50';
+
+                            $moyColor = fn($m) => $m === null
+                                ? 'text-gray-400'
+                                : ($m >= 10 ? 'text-green-700 font-semibold' : 'text-red-600 font-semibold');
                         @endphp
                         <tr class="{{ $bgRow }} hover:bg-blue-50 transition">
                             <td class="border px-3 py-2 text-gray-500">{{ $records->firstItem() + $i }}</td>
@@ -87,13 +96,27 @@
                             <td class="border px-3 py-2 font-medium text-gray-800">
                                 {{ $record->last_name }} {{ $record->first_name }}
                             </td>
-                            <td class="border px-3 py-2 text-center">{{ $record->gender ?? '--' }}</td>
-                            <td class="border px-3 py-2 text-center {{ $moyColor }}">
-                                {{ $moy !== null ? number_format($moy, 2, ',', '') : '–' }}
+                            <td class="border px-3 py-2 text-center text-gray-600">{{ $record->gender ?? '--' }}</td>
+
+                            {{-- Moyennes T1 / T2 / T3 calculées --}}
+                            @foreach($trimestres as $t)
+                                @php $mT = $data['trimestres'][$t]['moyenne'] ?? null; @endphp
+                                <td class="border px-3 py-2 text-center {{ $moyColor($mT) }}">
+                                    {{ $mT !== null ? number_format($mT, 2, ',', '') : '–' }}
+                                </td>
+                            @endforeach
+
+                            {{-- Moyenne annuelle --}}
+                            <td class="border px-3 py-2 text-center {{ $moyColor($moyAnn) }}">
+                                {{ $moyAnn !== null ? number_format($moyAnn, 2, ',', '') : '–' }}
                             </td>
+
+                            {{-- Rang annuel --}}
                             <td class="border px-3 py-2 text-center text-gray-500 text-xs">
-                                {{ $record->rang_annuel ? $record->rang_annuel . 'ᵉ' : '–' }}
+                                {{ $rang ? $rang . 'ᵉ' : '–' }}
                             </td>
+
+                            {{-- Statut délibération --}}
                             <td class="border px-3 py-2 text-center">
                                 @if($record->statut_deliberation === 'passed')
                                     <span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full font-medium">✓ Admis</span>
@@ -103,6 +126,8 @@
                                     <span class="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full">En cours</span>
                                 @endif
                             </td>
+
+                            {{-- Paiements --}}
                             @if($canViewPayments)
                                 <td class="border px-3 py-2 text-right text-gray-700">
                                     {{ number_format($record->total_fees ?? 0, 0, ',', ' ') }}
@@ -114,6 +139,7 @@
                                     {{ number_format($record->remaining_fees, 0, ',', ' ') }}
                                 </td>
                             @endif
+
                             <td class="border px-3 py-2 text-gray-600 text-xs">
                                 {{ $record->parent_full_name ?? '--' }}
                                 @if($record->parent_phone)

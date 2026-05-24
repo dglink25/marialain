@@ -6,55 +6,12 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
-/**
- * ╔══════════════════════════════════════════════════════════════════════════╗
- * ║                      GradesFromXlsSeeder v2                            ║
- * ╠══════════════════════════════════════════════════════════════════════════╣
- * ║  Importe les notes depuis des fichiers XLS vers les tables `grades`    ║
- * ║  et `conducts`. Scan récursif du dossier database/seeders/data/.        ║
- * ╠══════════════════════════════════════════════════════════════════════════╣
- * ║  STRUCTURE DU DOSSIER ATTENDUE                                          ║
- * ║  database/seeders/data/                                                  ║
- * ║    notes_2024-2025_5ème/                                                 ║
- * ║      Anglais_T1.XLS                                                      ║
- * ║      Conduite_T2.XLS   ...                                               ║
- * ║    notes_2024-2025_6ème/ ...                                             ║
- * ╠══════════════════════════════════════════════════════════════════════════╣
- * ║  STRUCTURE DU FICHIER XLS (colonnes 0-based)                            ║
- * ║  Métadonnées :                                                           ║
- * ║    L3  col21 → Année scolaire  ex: "2024-2025"                          ║
- * ║    L5  col21 → Classe          ex: "5ème"                               ║
- * ║    L7  col21 → Trimestre       ex: 1                                    ║
- * ║    L9  col6  → Matière         ex: "ANGLAIS"                            ║
- * ║    L11 col6  → Coefficient     ex: 1                                    ║
- * ║  Notes (à partir de L12) :                                              ║
- * ║    col0  → N° (vide = ligne continuation du nom précédent)             ║
- * ║    col2  → Nom et Prénoms                                               ║
- * ║    col7  → Interro 1   col8  → Interro 2   col10 → Interro 3          ║
- * ║    col11 → Interro 4   col12 → Interro 5                               ║
- * ║    col18 → Devoir 1                                                      ║
- * ║    col21 → Devoir 2 (réel si moy_recalc_sans_D2 ≠ col27)              ║
- * ║    col27 → Moyenne calculée (IGNORÉE)                                   ║
- * ╠══════════════════════════════════════════════════════════════════════════╣
- * ║  CAS SPÉCIAUX GÉRÉS                                                     ║
- * ║  • Noms sur 2 lignes : col0 vide + col2 non vide → continuation         ║
- * ║  • CONDUITE → table `conducts`, pas `grades`                            ║
- * ║  • D2 ambigu : recalcul sans D2 pour valider si note réelle             ║
- * ║  • Matching élève 4 passes (exact → last+fn1 → last → partiel)         ║
- * ║  • Idempotent : INSERT / UPDATE (loggé) / SKIP                          ║
- * ║  • Rapport CSV dans storage/logs/grades_import_YYYY-MM-DD_HHmmss.csv   ║
- * ╠══════════════════════════════════════════════════════════════════════════╣
- * ║  DÉPENDANCE                                                              ║
- * ║    composer require phpoffice/phpspreadsheet                             ║
- * ║  USAGE                                                                   ║
- * ║    php artisan db:seed --class=GradesFromXlsSeeder                      ║
- * ╚══════════════════════════════════════════════════════════════════════════╝
- */
+
 class GradesFromXlsSeeder extends Seeder
 {
     // ── Configuration ────────────────────────────────────────────────────────
     private const DATA_DIR       = 'database/seeders/data';
-    private const FIRST_DATA_ROW = 12;   // 0-based
+    private const FIRST_DATA_ROW = 12;
 
     // Colonnes métadonnées [row, col] (0-based)
     private const M_YEAR    = [3,  21];
@@ -64,16 +21,16 @@ class GradesFromXlsSeeder extends Seeder
     private const M_COEF    = [11, 6];
 
     // Colonnes données (0-based)
-    private const C_NUM = 0;
+    private const C_NUM  = 0;
     private const C_NAME = 2;
-    private const C_I1  = 7;
-    private const C_I2  = 8;
-    private const C_I3  = 10;
-    private const C_I4  = 11;
-    private const C_I5  = 12;
-    private const C_D1  = 18;
-    private const C_D2  = 21;
-    private const C_MOY = 27;
+    private const C_I1   = 7;
+    private const C_I2   = 8;
+    private const C_I3   = 10;
+    private const C_I4   = 11;
+    private const C_I5   = 12;
+    private const C_D1   = 18;
+    private const C_D2   = 21;
+    private const C_MOY  = 27;
 
     private const INTERRO_COLS = [
         1 => self::C_I1,
@@ -83,23 +40,21 @@ class GradesFromXlsSeeder extends Seeder
         5 => self::C_I5,
     ];
 
-    // Tolérance pour la détection du D2 ambigu
     private const D2_TOLERANCE = 0.01;
 
     // ── État global ───────────────────────────────────────────────────────────
-    private int   $gInserted   = 0;
-    private int   $gUpdated    = 0;
-    private int   $gSkipped    = 0;
-    private int   $gErrors     = 0;
-    private array $gUnmatched  = [];
-    private array $gDone       = [];
-    private array $gFailed     = [];
-
-    /** Lignes pour le rapport CSV */
-    private array $csvRows = [];
-
-    /** Heure de début (pour le nom du fichier CSV) */
+    private int   $gInserted  = 0;
+    private int   $gUpdated   = 0;
+    private int   $gSkipped   = 0;
+    private int   $gErrors    = 0;
+    private array $gUnmatched = [];
+    private array $gDone      = [];
+    private array $gFailed    = [];
+    private array $csvRows    = [];
     private string $startedAt;
+
+    /** Collection des matières BD – mise à jour dynamiquement si création auto */
+    private \Illuminate\Support\Collection $allSubjects;
 
     // ─────────────────────────────────────────────────────────────────────────
     //  POINT D'ENTRÉE
@@ -107,22 +62,20 @@ class GradesFromXlsSeeder extends Seeder
     public function run(): void
     {
         $this->startedAt = now()->format('Y-m-d_His');
-
-        $this->banner('GradesFromXlsSeeder v2 – Import des notes');
+        $this->banner('GradesFromXlsSeeder v3 – Import des notes');
 
         $dataDir = base_path(self::DATA_DIR);
 
         if (!is_dir($dataDir)) {
             $this->command->error("Dossier introuvable : {$dataDir}");
-            $this->command->line("  → Créez-le puis déposez vos sous-dossiers de fichiers XLS.");
+            $this->command->line('  → Créez-le et déposez-y vos sous-dossiers de fichiers XLS.');
             return;
         }
 
-        // Scan récursif
         $files = $this->scanFiles($dataDir);
 
         if (empty($files)) {
-            $this->command->warn("Aucun fichier XLS/xlsx trouvé dans : {$dataDir}");
+            $this->command->warn("Aucun fichier XLS/xlsx dans : {$dataDir}");
             return;
         }
 
@@ -130,26 +83,21 @@ class GradesFromXlsSeeder extends Seeder
         $this->command->line('  📄 <info>' . count($files) . ' fichier(s) trouvé(s)</info>');
         $this->command->line('');
 
-        // Charger référentiels une seule fois
-        $allYears    = DB::table('academic_years')->get()->keyBy('name');
-        $allSubjects = DB::table('subjects')->get();
+        // Charger les référentiels une seule fois
+        $allYears          = DB::table('academic_years')->get()->keyBy('name');
+        $this->allSubjects = DB::table('subjects')->get();
 
         $this->command->line(
-            '  Référentiels BD : <info>'
-            . $allYears->count() . ' années</info>, '
-            . '<info>' . $allSubjects->count() . ' matières</info>'
+            '  Référentiels BD : <info>' . $allYears->count()
+            . ' années</info>, <info>' . $this->allSubjects->count() . ' matières</info>'
         );
         $this->command->line('');
 
-        // Traiter chaque fichier
         foreach ($files as $file) {
-            $this->processFile($file, $allYears, $allSubjects);
+            $this->processFile($file, $allYears);
         }
 
-        // Écrire le rapport CSV
         $this->writeCsvReport();
-
-        // Afficher le résumé
         $this->printSummary();
     }
 
@@ -158,8 +106,7 @@ class GradesFromXlsSeeder extends Seeder
     // ─────────────────────────────────────────────────────────────────────────
     private function processFile(
         string $path,
-        \Illuminate\Support\Collection $allYears,
-        \Illuminate\Support\Collection $allSubjects
+        \Illuminate\Support\Collection $allYears
     ): void {
         $relPath = $this->relPath($path);
         $fname   = basename($path);
@@ -167,7 +114,6 @@ class GradesFromXlsSeeder extends Seeder
         $this->command->line("  ┌─ 📄 <comment>{$relPath}</comment>");
 
         try {
-            // 1. Lecture du fichier
             $rows = $this->readXls($path);
 
             if (count($rows) < self::FIRST_DATA_ROW + 1) {
@@ -175,39 +121,52 @@ class GradesFromXlsSeeder extends Seeder
                 return;
             }
 
-            // 2. Extraction des métadonnées
             $meta = $this->extractMeta($rows, $fname);
             if ($meta === null) {
-                $this->failed[] = ['file' => $relPath, 'reason' => 'Métadonnées invalides'];
+                $this->gFailed[] = ['file' => $relPath, 'reason' => 'Métadonnées invalides'];
                 return;
             }
 
             $this->command->line("  │  <fg=cyan>Année</>     : {$meta['year_name']}");
-            $this->command->line("  │  <fg=cyan>Classe</>    : {$meta['class_name']}");
+            $this->command->line("  │  <fg=cyan>Classe(s)</> : {$meta['class_name']}");
             $this->command->line("  │  <fg=cyan>Trimestre</> : {$meta['trimestre']}");
             $this->command->line("  │  <fg=cyan>Matière</>   : {$meta['subject_name']} (coef {$meta['coef']})");
 
-            // 3. Résolution des entités BD
+            // ── Résolution de l'année ─────────────────────────────────────────
             $year = $allYears->get($meta['year_name']);
             if (!$year) {
                 $this->fail($fname, $relPath, "Année « {$meta['year_name']} » introuvable en BD");
                 return;
             }
 
-            $class = DB::table('classes')
-                ->where('academic_year_id', $year->id)
-                ->where('name', $meta['class_name'])
-                ->first();
+            $classes = $this->resolveClasses($meta['class_name'], $year->id);
 
-            if (!$class) {
-                $this->fail(
-                    $fname, $relPath,
-                    "Classe « {$meta['class_name']} » introuvable pour {$meta['year_name']}"
+            if (empty($classes)) {
+                // Classe introuvable : la créer automatiquement en BD
+                $newClass = $this->createMissingClass($meta['class_name'], $year->id);
+                if ($newClass === null) {
+                    $this->fail(
+                        $fname, $relPath,
+                        "Classe « {$meta['class_name']} » introuvable et impossible à créer"
+                    );
+                    return;
+                }
+                $this->command->line(
+                    "  │  <fg=cyan>➕ Classe créée</> : <comment>{$newClass->name}</comment>"
+                    . " (id={$newClass->id} entity_id={$newClass->entity_id})"
                 );
-                return;
+                $classes = [$newClass];
             }
 
-            $subject = $this->resolveSubject($allSubjects, $meta['subject_name']);
+            if (count($classes) > 1) {
+                $names = implode(', ', array_map(fn($c) => $c->name, $classes));
+                $this->command->line("  │  <fg=yellow>⚡ Multi-classe</> : {$names}");
+            }
+
+            // ── Résolution de la matière ──────────────────────────────────────
+            $subject    = $this->resolveSubject($meta['subject_name']);
+            $isConduite = (strtoupper(trim($meta['subject_name'])) === 'CONDUITE');
+
             if (!$subject) {
                 $this->fail(
                     $fname, $relPath,
@@ -216,55 +175,67 @@ class GradesFromXlsSeeder extends Seeder
                 return;
             }
 
-            $isConduite = (strtoupper(trim($meta['subject_name'])) === 'CONDUITE');
-
-            // 4. Synchroniser le coefficient (seulement pour les vraies matières)
-            if (!$isConduite) {
-                $this->syncCoefficient($class->id, $subject->id, $year->id, $meta['coef']);
-            }
-
-            // 5. Construire l'index des élèves de la classe
-            $index = $this->buildStudentIndex($class->id, $year->id);
-
-            if (empty($index)) {
-                $this->fail(
-                    $fname, $relPath,
-                    "Aucun élève dans student_academic_records pour cette classe/année"
-                );
-                return;
-            }
-
-            $uniqueStudents = count(array_unique(array_map(fn($s) => $s->id, $index)));
-            $this->command->line("  │  Élèves BD   : <info>{$uniqueStudents}</info>");
-
-            // 6. Fusionner les noms sur plusieurs lignes
+            // ── Fusion des noms multilignes (une seule fois) ──────────────────
             $mergedRows = $this->mergeMultilineNames($rows);
 
-            // 7. Import des notes ou conduites
-            if ($isConduite) {
-                $stats = $this->importConduites(
-                    $mergedRows, $index,
-                    $class->id, $year->id, $meta['trimestre'],
-                    $relPath
-                );
-            } else {
-                $stats = $this->importGrades(
-                    $mergedRows, $index,
-                    $class->id, $subject->id, $year->id, $meta['trimestre'],
-                    $relPath
-                );
+            // ── Import dans chaque classe résolue ─────────────────────────────
+            $totalStats = ['inserted' => 0, 'updated' => 0, 'skipped' => 0, 'unmatched' => 0];
+
+            foreach ($classes as $class) {
+                if (!$isConduite) {
+                    $this->syncCoefficient($class->id, $subject->id, $year->id, $meta['coef']);
+                }
+
+                $index = $this->buildStudentIndex($class->id, $year->id);
+
+                if (empty($index)) {
+                    $this->command->line(
+                        "  │  <fg=yellow>⚠</> Aucun élève pour {$class->name} → ignoré"
+                    );
+                    continue;
+                }
+
+                $uniqueStudents = count(array_unique(array_map(fn($s) => $s->id, $index)));
+
+                if (count($classes) > 1) {
+                    $this->command->line(
+                        "  │  <fg=cyan>{$class->name}</> : {$uniqueStudents} élève(s)"
+                    );
+                } else {
+                    $this->command->line("  │  Élèves BD   : <info>{$uniqueStudents}</info>");
+                }
+
+                if ($isConduite) {
+                    $stats = $this->importConduites(
+                        $mergedRows, $index,
+                        $class->id, $year->id, $meta['trimestre'],
+                        $relPath
+                    );
+                } else {
+                    $stats = $this->importGrades(
+                        $mergedRows, $index,
+                        $class->id, $subject->id, $year->id, $meta['trimestre'],
+                        $relPath
+                    );
+                }
+
+                foreach ($totalStats as $k => $_) {
+                    $totalStats[$k] += $stats[$k];
+                }
             }
 
             $this->command->line(sprintf(
-                '  └─ <info>✓</info> Inséré: <info>%d</info> | Mis à jour: <comment>%d</comment>'
+                '  └─ <info>✓</info> Inséré: <info>%d</info>'
+                . ' | Mis à jour: <comment>%d</comment>'
                 . ' | Ignoré: %d | Non trouvé: <fg=red>%d</>',
-                $stats['inserted'], $stats['updated'], $stats['skipped'], $stats['unmatched']
+                $totalStats['inserted'], $totalStats['updated'],
+                $totalStats['skipped'],  $totalStats['unmatched']
             ));
             $this->command->line('');
 
-            $this->gInserted += $stats['inserted'];
-            $this->gUpdated  += $stats['updated'];
-            $this->gSkipped  += $stats['skipped'];
+            $this->gInserted += $totalStats['inserted'];
+            $this->gUpdated  += $totalStats['updated'];
+            $this->gSkipped  += $totalStats['skipped'];
             $this->gDone[]    = $relPath;
 
         } catch (\Throwable $e) {
@@ -274,7 +245,7 @@ class GradesFromXlsSeeder extends Seeder
                 'file'  => $path,
                 'trace' => $e->getTraceAsString(),
             ]);
-            $this->failed[]  = ['file' => $relPath, 'reason' => $e->getMessage()];
+            $this->gFailed[] = ['file' => $relPath, 'reason' => $e->getMessage()];
             $this->gErrors++;
         }
     }
@@ -294,17 +265,13 @@ class GradesFromXlsSeeder extends Seeder
         foreach ($sheet->getRowIterator() as $rowObj) {
             $it = $rowObj->getCellIterator();
             $it->setIterateOnlyExistingCells(false);
-
             $row = [];
             foreach ($it as $cell) {
                 $row[] = $cell->getValue();
             }
-
-            // Garantir 28 colonnes minimum (index 0..27)
             while (count($row) < 28) {
                 $row[] = null;
             }
-
             $rows[] = $row;
         }
 
@@ -355,15 +322,246 @@ class GradesFromXlsSeeder extends Seeder
             'coef'         => max(1, (int) ($coefRaw ?? 1)),
         ];
     }
+    
+    private function resolveClasses(string $xlsName, int $yearId): array
+    {
+        $allClasses = DB::table('classes')
+            ->where('academic_year_id', $yearId)
+            ->get();
+
+        $nXls = $this->normalize($xlsName);
+
+        // ── Passe 1 : exact normalisé ─────────────────────────────────────────
+        $exact = $allClasses->first(fn($c) => $this->normalize($c->name) === $nXls);
+        if ($exact) {
+            return [$exact];
+        }
+
+        // ── Passe 2 : décomposition préfixe + variants ────────────────────────
+        [$prefix, $variants] = $this->splitPrefixVariants($xlsName);
+
+        if (!empty($variants)) {
+            $found = [];
+            foreach ($variants as $variant) {
+                $match = null;
+                $candidates = $prefix !== ''
+                    ? ["{$prefix}{$variant}", "{$prefix} {$variant}"]
+                    : [$variant];
+
+                foreach ($candidates as $cand) {
+                    $match = $allClasses->first(
+                        fn($c) => $this->normalize($c->name) === $this->normalize($cand)
+                    );
+                    if ($match) break;
+                }
+
+                if (!$match) {
+                    $nVar    = $this->normalize($variant);
+                    $nPrefix = $this->normalize($prefix);
+                    $match   = $allClasses->first(function ($c) use ($nVar, $nPrefix) {
+                        $nC     = $this->normalize($c->name);
+                        $nCFlat = str_replace(' ', '', $nC);
+                        $suffix = str_replace(' ', '', $nVar);
+                        return str_ends_with($nCFlat, $suffix)
+                            && ($nPrefix === '' || str_starts_with($nC, $nPrefix));
+                    });
+                }
+
+                if ($match && !in_array($match->id, array_column($found, 'id'))) {
+                    $found[] = $match;
+                }
+            }
+
+            if (!empty($found)) {
+                return $found;
+            }
+        }
+
+     
+        $mappedName = $this->resolveBySerieMapping($xlsName);
+
+        if ($mappedName !== null) {
+            $candidate = $allClasses->first(
+                fn($c) => $this->normalize($c->name) === $this->normalize($mappedName)
+            );
+
+            if ($candidate) {
+                // Vérifier que cette classe a bien des élèves (sinon mauvais mapping)
+                $hasStudents = DB::table('student_academic_records')
+                    ->where('class_id',         $candidate->id)
+                    ->where('academic_year_id', $yearId)
+                    ->exists();
+
+                if ($hasStudents) {
+                    $this->command->line(
+                        "  │  <fg=cyan>↪ Alias série</> : « {$xlsName} » → <comment>{$candidate->name}</comment>"
+                    );
+                    return [$candidate];
+                }
+            }
+        }
+
+        // ── Passe 4 : fuzzy ───────────────────────────────────────────────────
+        $fuzzy = $allClasses->filter(
+            fn($c) => str_contains($this->normalize($c->name), $nXls)
+                   || str_contains($nXls, $this->normalize($c->name))
+        )->values()->all();
+
+        if (!empty($fuzzy)) {
+            return $fuzzy;
+        }
+
+        // ── Passe 5 : rien trouvé → retourner vide (l'appelant créera la classe)
+        return [];
+    }
+
+    
+    private function resolveBySerieMapping(string $xlsName): ?string
+    {
+        // Correspondances séries → groupe
+        $serieToGroup = [
+            'A'  => 'AB', 'A1' => 'AB', 'A2' => 'AB', 'A3' => 'AB', 'A4' => 'AB',
+            'B'  => 'AB', 'B1' => 'AB', 'B2' => 'AB',
+            'C'  => 'CD', 'C1' => 'CD', 'C2' => 'CD',
+            'D'  => 'CD', "D'" => 'CD', 'D1' => 'CD', 'D2' => 'CD',
+        ];
+
+        // Niveaux reconnus et leur forme normalisée BD
+        $niveaux = [
+            '/^(tle|terminale)/i'  => 'Tle',
+            '/^1[eè]re/i'          => '1ère',
+            '/^2nde/i'             => '2nde',
+            '/^3[eè]me/i'          => '3ème',
+            '/^4[eè]me/i'          => '4ème',
+            '/^5[eè]me/i'          => '5ème',
+            '/^6[eè]me/i'          => '6ème',
+        ];
+
+        $name = trim($xlsName);
+
+        // Identifier le niveau
+        $niveauBD = null;
+        foreach ($niveaux as $pattern => $bd) {
+            if (preg_match($pattern, $name)) {
+                $niveauBD = $bd;
+                break;
+            }
+        }
+
+        if ($niveauBD === null) {
+            return null;
+        }
+
+        // Extraire la partie série (ce qui suit le niveau)
+        $serieRaw = trim(preg_replace('/^(tle|terminale|1[eè]re|2nde|3[eè]me|4[eè]me|5[eè]me|6[eè]me)\s*/i', '', $name));
+
+        if ($serieRaw === '') {
+            return null;
+        }
+
+        // Résoudre le groupe
+        $group = $serieToGroup[$serieRaw] ?? $serieToGroup[strtoupper($serieRaw)] ?? null;
+
+        if ($group === null) {
+            // Tentative par première lettre
+            $first = strtoupper($serieRaw[0] ?? '');
+            if (in_array($first, ['A', 'B'])) $group = 'AB';
+            elseif (in_array($first, ['C', 'D'])) $group = 'CD';
+        }
+
+        if ($group === null) {
+            return null;
+        }
+
+        return "{$niveauBD}{$group}";
+    }
+
+    /**
+     * Décompose un nom de classe XLS en [préfixe, [variants]].
+     *
+     * "2nde CD/ PF"  → ["2nde", ["CD", "PF"]]
+     * "1ère CD/ AB"  → ["1ère", ["CD", "AB"]]
+     * "Tle AB"       → ["Tle",  ["AB"]]
+     * "2ndeCD"       → ["",     ["2ndeCD"]]
+     */
+    private function splitPrefixVariants(string $xlsName): array
+    {
+        $frags = array_values(array_filter(
+            array_map('trim', preg_split('/[\/,]/', $xlsName)),
+            fn($f) => $f !== ''
+        ));
+
+        if (count($frags) >= 2) {
+            $firstWords = explode(' ', trim($frags[0]));
+            if (count($firstWords) >= 2) {
+                $prefix   = implode(' ', array_slice($firstWords, 0, -1));
+                $v1       = end($firstWords);
+                $variants = array_merge([$v1], array_slice($frags, 1));
+                return [$prefix, $variants];
+            }
+            return ['', $frags];
+        }
+
+        // Pas de / : tenter "Tle AB" → ["Tle", ["AB"]]
+        $words = explode(' ', trim($xlsName));
+        if (count($words) >= 2) {
+            $prefix  = implode(' ', array_slice($words, 0, -1));
+            $variant = end($words);
+            return [$prefix, [$variant]];
+        }
+
+        return ['', [$xlsName]];
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    //  CRÉATION AUTOMATIQUE D'UNE CLASSE MANQUANTE
+    //
+    //  Utilisé UNIQUEMENT si aucune des 4 passes précédentes n'a trouvé
+    //  de classe avec des élèves. Crée la classe en BD en copiant les frais
+    //  d'une classe similaire de même année et même entité.
+    // ─────────────────────────────────────────────────────────────────────────
+    private function createMissingClass(string $name, int $yearId): ?object
+    {
+        $upper = strtoupper($name);
+        if (str_contains($upper, 'MATERNELLE') || str_contains($upper, 'PRE')) {
+            $entityId = 1;
+        } elseif (preg_match('/\b(CP|CI|CE1|CE2|CM1|CM2)\b/', $upper)) {
+            $entityId = 2;
+        } else {
+            $entityId = 3;
+        }
+
+        $template = DB::table('classes')
+            ->where('academic_year_id', $yearId)
+            ->where('entity_id', $entityId)
+            ->first()
+            ?? DB::table('classes')
+                ->where('academic_year_id', $yearId)
+                ->first();
+
+        $newId = DB::table('classes')->insertGetId([
+            'name'                => trim($name),
+            'entity_id'           => $entityId,
+            'academic_year_id'    => $yearId,
+            'teacher_id'          => null,
+            'school_fees'         => $template?->school_fees         ?? '0.00',
+            'registration_fee'    => $template?->registration_fee    ?? '0.00',
+            're_registration_fee' => $template?->re_registration_fee ?? '0.00',
+            'description'         => null,
+            'created_at'          => now(),
+            'updated_at'          => now(),
+        ]);
+
+        return DB::table('classes')->find($newId);
+    }
 
     // ─────────────────────────────────────────────────────────────────────────
     //  FUSION DES NOMS SUR PLUSIEURS LIGNES
-    //  Règle : col0 vide ET col2 non vide → suite du prénom de la ligne précédente
     // ─────────────────────────────────────────────────────────────────────────
     private function mergeMultilineNames(array $rows): array
     {
         $merged = [];
-        $lastDataIdx = null;  // index dans $merged de la dernière ligne de données
+        $lastDataIdx = null;
 
         foreach ($rows as $ri => $row) {
             if ($ri < self::FIRST_DATA_ROW) {
@@ -371,18 +569,15 @@ class GradesFromXlsSeeder extends Seeder
                 continue;
             }
 
-            $numVal  = $row[self::C_NUM] ?? null;
+            $numVal  = $row[self::C_NUM]  ?? null;
             $nameVal = $row[self::C_NAME] ?? null;
-
             $numStr  = trim((string)$numVal);
             $nameStr = trim((string)$nameVal);
 
-            // Ligne vide → ignorer
             if ($numStr === '' && $nameStr === '') {
                 continue;
             }
 
-            // Ligne de continuation : col0 vide, col2 non vide, pas de notes
             $hasAnyNote = false;
             foreach ([self::C_I1, self::C_I2, self::C_I3, self::C_I4, self::C_I5,
                       self::C_D1, self::C_D2, self::C_MOY] as $c) {
@@ -393,28 +588,22 @@ class GradesFromXlsSeeder extends Seeder
             }
 
             if ($numStr === '' && $nameStr !== '' && !$hasAnyNote && $lastDataIdx !== null) {
-                // Concaténer au nom de la ligne précédente
-                $prev = &$merged[$lastDataIdx];
-                $prev[self::C_NAME] = trim((string)$prev[self::C_NAME]) . ' ' . $nameStr;
-                unset($prev);
+                $merged[$lastDataIdx][self::C_NAME] =
+                    trim((string)$merged[$lastDataIdx][self::C_NAME]) . ' ' . $nameStr;
                 continue;
             }
 
-            // Ligne normale de données
             if ($numStr !== '') {
-                $merged[]     = $row;
-                $lastDataIdx  = array_key_last($merged);
-                continue;
+                $merged[]    = $row;
+                $lastDataIdx = array_key_last($merged);
             }
-
-            // Ligne pied de page ou autre → ignorer
         }
 
         return $merged;
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    //  INDEX DES ÉLÈVES DE LA CLASSE
+    //  INDEX DES ÉLÈVES D'UNE CLASSE
     // ─────────────────────────────────────────────────────────────────────────
     private function buildStudentIndex(int $classId, int $yearId): array
     {
@@ -429,19 +618,17 @@ class GradesFromXlsSeeder extends Seeder
         }
 
         $students = DB::table('students')->whereIn('id', $ids)->get();
-
-        $index = [];
+        $index    = [];
 
         foreach ($students as $s) {
             $ln  = $this->normalize($s->last_name);
             $fn  = $this->normalize($s->first_name);
             $fn1 = explode(' ', $fn)[0] ?? '';
 
-            // 3 clés par priorité décroissante de précision
             foreach ([
-                0 => "{$ln} {$fn}",      // Nom + prénom complet
-                1 => "{$ln} {$fn1}",     // Nom + 1er mot prénom
-                2 => $ln,                 // Nom seul
+                0 => "{$ln} {$fn}",
+                1 => "{$ln} {$fn1}",
+                2 => $ln,
             ] as $prio => $key) {
                 if (!isset($index[$key]) || $prio < $index[$key]['prio']) {
                     $index[$key] = ['s' => $s, 'prio' => $prio];
@@ -453,59 +640,41 @@ class GradesFromXlsSeeder extends Seeder
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    //  IMPORT GRADES (table `grades`)
+    //  IMPORT GRADES
     // ─────────────────────────────────────────────────────────────────────────
     private function importGrades(
-        array $rows,
-        array $index,
-        int   $classId,
-        int   $subjectId,
-        int   $yearId,
-        int   $trimestre,
+        array  $rows,
+        array  $index,
+        int    $classId,
+        int    $subjectId,
+        int    $yearId,
+        int    $trimestre,
         string $relPath
     ): array {
         $inserted = $updated = $skipped = $unmatched = 0;
         $now      = now();
 
         foreach ($rows as $ri => $row) {
-            if ($ri < self::FIRST_DATA_ROW) {
-                continue;
-            }
+            if ($ri < self::FIRST_DATA_ROW) continue;
 
-            // Filtrer les lignes sans numéro valide
-            $num = trim((string)($row[self::C_NUM] ?? ''));
-            if ($num === '' || !is_numeric($num)) {
-                continue;
-            }
+            $num  = trim((string)($row[self::C_NUM]  ?? ''));
+            $name = trim((string)($row[self::C_NAME] ?? ''));
 
-            $xlsName = trim((string)($row[self::C_NAME] ?? ''));
-            if ($xlsName === '') {
-                continue;
-            }
+            if ($num === '' || !is_numeric($num)) continue;
+            if ($name === '') continue;
+            if (stripos($name, 'Imprimé') !== false) break;
 
-            // Stopper sur le pied de page "Imprimé le"
-            if (stripos($xlsName, 'Imprimé') !== false) {
-                break;
-            }
-
-            $student = $this->matchStudent($xlsName, $index);
+            $student = $this->matchStudent($name, $index);
 
             if (!$student) {
-                $this->command->line(
-                    "  │  <fg=yellow>⚠ Non trouvé</> L" . ($ri + 1) . " : « {$xlsName} »"
-                );
-                $this->gUnmatched[] = [
-                    'file' => $relPath, 'row' => $ri + 1, 'name' => $xlsName,
-                ];
+                // Un élève non trouvé dans cette classe peut appartenir à une autre
+                // classe résolue du même XLS → on ne le compte pas en erreur globale ici,
+                // le compteur "unmatched" est par classe
                 $unmatched++;
-
-                $this->addCsvRow(
-                    $relPath, $ri + 1, $xlsName, '—', '—', '—', '—', 'NON_TROUVÉ'
-                );
+                $this->addCsvRow($relPath, $ri+1, $name, '—', '—', '—', '—', 'NON_TROUVÉ');
                 continue;
             }
 
-            // Extraire toutes les notes de la ligne
             $notes = $this->extractGradeNotes($row);
 
             foreach ($notes as $note) {
@@ -513,15 +682,13 @@ class GradesFromXlsSeeder extends Seeder
                     $student->id, $classId, $subjectId, $yearId,
                     $trimestre, $note['type'], $note['seq'], $note['val'], $now
                 );
-
                 match ($action) {
                     'inserted' => $inserted++,
                     'updated'  => $updated++,
                     'skipped'  => $skipped++,
                 };
-
                 $this->addCsvRow(
-                    $relPath, $ri + 1, $xlsName,
+                    $relPath, $ri+1, $name,
                     $student->last_name . ' ' . $student->first_name,
                     $note['type'], (string)$note['seq'], (string)$note['val'],
                     strtoupper($action)
@@ -533,58 +700,41 @@ class GradesFromXlsSeeder extends Seeder
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    //  IMPORT CONDUITES (table `conducts`)
+    //  IMPORT CONDUITES
     // ─────────────────────────────────────────────────────────────────────────
     private function importConduites(
-        array $rows,
-        array $index,
-        int   $classId,
-        int   $yearId,
-        int   $trimestre,
+        array  $rows,
+        array  $index,
+        int    $classId,
+        int    $yearId,
+        int    $trimestre,
         string $relPath
     ): array {
         $inserted = $updated = $skipped = $unmatched = 0;
         $now      = now();
 
         foreach ($rows as $ri => $row) {
-            if ($ri < self::FIRST_DATA_ROW) {
-                continue;
-            }
+            if ($ri < self::FIRST_DATA_ROW) continue;
 
-            $num = trim((string)($row[self::C_NUM] ?? ''));
-            if ($num === '' || !is_numeric($num)) {
-                continue;
-            }
+            $num  = trim((string)($row[self::C_NUM]  ?? ''));
+            $name = trim((string)($row[self::C_NAME] ?? ''));
 
-            $xlsName = trim((string)($row[self::C_NAME] ?? ''));
-            if ($xlsName === '') {
-                continue;
-            }
+            if ($num === '' || !is_numeric($num)) continue;
+            if ($name === '') continue;
+            if (stripos($name, 'Imprimé') !== false) break;
 
-            if (stripos($xlsName, 'Imprimé') !== false) {
-                break;
-            }
-
-            $student = $this->matchStudent($xlsName, $index);
+            $student = $this->matchStudent($name, $index);
 
             if (!$student) {
-                $this->command->line(
-                    "  │  <fg=yellow>⚠ Non trouvé</> L" . ($ri + 1) . " : « {$xlsName} »"
-                );
-                $this->gUnmatched[] = [
-                    'file' => $relPath, 'row' => $ri + 1, 'name' => $xlsName,
-                ];
                 $unmatched++;
-                $this->addCsvRow($relPath, $ri + 1, $xlsName, '—', 'conduite', '—', '—', 'NON_TROUVÉ');
+                $this->addCsvRow($relPath, $ri+1, $name, '—', 'conduite', '—', '—', 'NON_TROUVÉ');
                 continue;
             }
 
-            // La note de conduite est dans col21 (ou col27 en fallback)
             $grade = $this->toFloat($row[self::C_D2] ?? null)
                   ?? $this->toFloat($row[self::C_MOY] ?? null);
 
             if ($grade === null) {
-                // Aucune note → skip silencieux
                 $skipped++;
                 continue;
             }
@@ -600,10 +750,9 @@ class GradesFromXlsSeeder extends Seeder
             };
 
             $this->addCsvRow(
-                $relPath, $ri + 1, $xlsName,
+                $relPath, $ri+1, $name,
                 $student->last_name . ' ' . $student->first_name,
-                'conduite', '—', (string)$grade,
-                strtoupper($action)
+                'conduite', '—', (string)$grade, strtoupper($action)
             );
         }
 
@@ -611,13 +760,12 @@ class GradesFromXlsSeeder extends Seeder
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    //  EXTRACTION DES NOTES D'UNE LIGNE (matières normales)
+    //  EXTRACTION DES NOTES D'UNE LIGNE
     // ─────────────────────────────────────────────────────────────────────────
     private function extractGradeNotes(array $row): array
     {
         $notes = [];
 
-        // ── Interrogations ───────────────────────────────────────────────────
         foreach (self::INTERRO_COLS as $seq => $col) {
             $v = $this->toFloat($row[$col] ?? null);
             if ($v !== null) {
@@ -625,35 +773,28 @@ class GradesFromXlsSeeder extends Seeder
             }
         }
 
-        // ── Devoir 1 ─────────────────────────────────────────────────────────
         $d1 = $this->toFloat($row[self::C_D1] ?? null);
         if ($d1 !== null) {
             $notes[] = ['type' => 'devoir', 'seq' => 1, 'val' => $d1];
         }
 
-        // ── Devoir 2 : règle robuste par recalcul ────────────────────────────
-        // col21 est une vraie note D2 si la moyenne recalculée SANS D2
-        // (= moyenne des interros + D1 seulement) diffère de col27.
-        // Si elles coïncident, col21 est un artefact de formule XLS.
-        $d2raw    = $this->toFloat($row[self::C_D2] ?? null);
-        $moyXls   = $this->toFloat($row[self::C_MOY] ?? null);
+        // D2 : réel si moy recalculée sans D2 ≠ moy XLS
+        $d2raw  = $this->toFloat($row[self::C_D2] ?? null);
+        $moyXls = $this->toFloat($row[self::C_MOY] ?? null);
 
         if ($d2raw !== null) {
-            // Calculer la moyenne attendue SANS D2
-            $interroVals = array_filter(
+            $interroVals = array_values(array_filter(
                 array_map(fn($c) => $this->toFloat($row[$c] ?? null), self::INTERRO_COLS),
                 fn($v) => $v !== null
-            );
+            ));
             $moyI = !empty($interroVals)
                 ? array_sum($interroVals) / count($interroVals)
                 : null;
-
             $notesSansD2 = array_filter([$moyI, $d1], fn($v) => $v !== null);
             $moyRecalc   = !empty($notesSansD2)
                 ? array_sum($notesSansD2) / count($notesSansD2)
                 : null;
 
-            // D2 est réel si moy recalculée sans D2 ≠ moy XLS
             $d2Reel = $moyXls === null
                 || $moyRecalc === null
                 || abs($moyRecalc - $moyXls) > self::D2_TOLERANCE;
@@ -706,14 +847,12 @@ class GradesFromXlsSeeder extends Seeder
             return 'inserted';
         }
 
-        // Valeur identique → skip
         if (abs((float)$existing->value - $val) < 0.001) {
             return 'skipped';
         }
 
-        // Valeur différente → mise à jour
         $this->command->line(sprintf(
-            '  │  <comment>↻ Update</comment> %s seq%d étudiant#%d : %s → %s',
+            '  │  <comment>↻</comment> %s seq%d étudiant#%d : %s → %s',
             $type, $seq, $studentId,
             number_format((float)$existing->value, 2),
             number_format($val, 2)
@@ -744,9 +883,8 @@ class GradesFromXlsSeeder extends Seeder
             ->first();
 
         if (!$existing) {
-            // Récupérer entity_id depuis student_academic_records
-            // (colonne NOT NULL dans la table conducts)
-            $record = DB::table('student_academic_records')
+            // entity_id depuis student_academic_records, fallback sur classes
+            $record   = DB::table('student_academic_records')
                 ->where('student_id',       $studentId)
                 ->where('class_id',         $classId)
                 ->where('academic_year_id', $yearId)
@@ -778,7 +916,7 @@ class GradesFromXlsSeeder extends Seeder
         }
 
         $this->command->line(sprintf(
-            '  │  <comment>↻ Conduite update</comment> étudiant#%d : %s → %s',
+            '  │  <comment>↻ conduite</comment> étudiant#%d : %s → %s',
             $studentId,
             number_format((float)$existing->grade, 2),
             number_format($grade, 2)
@@ -803,35 +941,48 @@ class GradesFromXlsSeeder extends Seeder
             ->first();
 
         if ($existing) {
-            // Relation existante → mettre à jour le coefficient uniquement
             DB::table('class_teacher_subject')
                 ->where('id', $existing->id)
                 ->update(['coefficient' => $coef, 'updated_at' => now()]);
             return;
         }
 
-        // Vérifier si teacher_id est nullable dans la table
-        // En inspectant la contrainte BD : on tente d'abord de trouver un teacher
-        // via l'année active (classe du même nom) pour ne pas laisser null
-        $teacherId = DB::table('class_teacher_subject')
-            ->join('classes', 'class_teacher_subject.class_id', '=', 'classes.id')
-            ->join('classes as c2', function ($join) use ($classId) {
-                $join->on('c2.name', '=', 'classes.name')
-                     ->where('c2.id', '=', $classId);
+        // Relation absente : chercher un teacher_id dans d'autres années
+        // pour la même classe (même nom) et même matière
+        $teacherId = DB::table('class_teacher_subject as cts')
+            ->join('classes as c', 'cts.class_id', '=', 'c.id')
+            ->join('classes as c2', function ($j) use ($classId) {
+                $j->on('c2.name', '=', 'c.name')->where('c2.id', '=', $classId);
             })
-            ->where('class_teacher_subject.subject_id', $subjectId)
-            ->whereNotNull('class_teacher_subject.teacher_id')
-            ->orderByDesc('class_teacher_subject.academic_year_id')
-            ->value('class_teacher_subject.teacher_id');
+            ->where('cts.subject_id', $subjectId)
+            ->whereNotNull('cts.teacher_id')
+            ->orderByDesc('cts.academic_year_id')
+            ->value('cts.teacher_id');
 
         if ($teacherId === null) {
-            // teacher_id NOT NULL en BD et aucun teacher trouvé :
-            // on ne crée PAS la relation pour éviter la violation de contrainte.
-            // Les notes seront quand même insérées (syncCoefficient n'est pas bloquant).
+            // Aucun teacher trouvé pour cette classe/matière dans toutes les années.
+            // Chercher n'importe quel enseignant qui enseigne cette matière.
+            $teacherId = DB::table('class_teacher_subject')
+                ->where('subject_id', $subjectId)
+                ->whereNotNull('teacher_id')
+                ->orderByDesc('academic_year_id')
+                ->value('teacher_id');
+        }
+
+        if ($teacherId === null) {
+            // En dernier recours: prendre le premier enseignant actif du système
+            $teacherId = DB::table('users')
+                ->whereNotNull('id')
+                ->orderBy('id')
+                ->value('id');
+        }
+
+        if ($teacherId === null) {
+            // Vraiment aucun enseignant en BD — log et continuer sans créer la relation
             $this->command->line(
-                '  │  <comment>⚠ class_teacher_subject non créée</comment>'
+                '  │  <fg=yellow>⚠</> class_teacher_subject non créée'
                 . " (subject_id={$subjectId} class_id={$classId})"
-                . ' → aucun teacher_id disponible. Assignez un enseignant manuellement.'
+                . ' — aucun enseignant disponible en BD.'
             );
             return;
         }
@@ -851,29 +1002,46 @@ class GradesFromXlsSeeder extends Seeder
     // ─────────────────────────────────────────────────────────────────────────
     //  RÉSOLUTION DE LA MATIÈRE
     // ─────────────────────────────────────────────────────────────────────────
-    private function resolveSubject(\Illuminate\Support\Collection $subjects, string $name): ?object
+    private function resolveSubject(string $name): ?object
     {
+        // CONDUITE → objet factice, la table conducts gère tout
+        if (strtoupper(trim($name)) === 'CONDUITE') {
+            return (object) ['id' => null, 'name' => 'CONDUITE'];
+        }
+
         $n = $this->normalize($name);
 
         // Passe 1 : correspondance exacte normalisée
-        $found = $subjects->first(fn($s) => $this->normalize($s->name) === $n);
+        $found = $this->allSubjects->first(fn($s) => $this->normalize($s->name) === $n);
         if ($found) return $found;
 
         // Passe 2 : l'un contient l'autre
-        $found = $subjects->first(
+        $found = $this->allSubjects->first(
             fn($s) => str_contains($this->normalize($s->name), $n)
                    || str_contains($n, $this->normalize($s->name))
         );
         if ($found) return $found;
 
-        // Pour CONDUITE, pas de matière BD obligatoire
-        // (le seeder utilise la table conducts directement)
-        if ($n === 'CONDUITE') {
-            // Retourner un objet factice pour ne pas bloquer
-            return (object) ['id' => null, 'name' => 'CONDUITE'];
-        }
+        // Passe 3 : la matière n'existe pas en BD → la créer automatiquement
+        // Ex: "LV 1", "LV 2", etc. rencontrées dans des XLS historiques
+        $this->command->line(
+            "  │  <fg=cyan>➕ Création matière</> : <comment>{$name}</comment>"
+        );
 
-        return null;
+        $newId = DB::table('subjects')->insertGetId([
+            'name'             => ucwords(strtolower(trim($name))),
+            'academic_year_id' => null,
+            'classe_id'        => null,
+            'coefficient'      => 1,
+            'created_at'       => now(),
+            'updated_at'       => now(),
+        ]);
+
+        // Recharger la collection en mémoire pour les fichiers suivants
+        $newSubject = DB::table('subjects')->find($newId);
+        $this->allSubjects = $this->allSubjects->push($newSubject);
+
+        return $newSubject;
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -886,20 +1054,16 @@ class GradesFromXlsSeeder extends Seeder
         $ln    = $parts[0] ?? '';
         $fn1   = $parts[1] ?? '';
 
-        // Passe 1 : nom complet normalisé
         if (isset($index[$n])) return $index[$n];
 
-        // Passe 2 : last + 1er mot prénom
         if ($fn1 !== '' && isset($index["{$ln} {$fn1}"])) {
             return $index["{$ln} {$fn1}"];
         }
 
-        // Passe 3 : last name seul
         if ($ln !== '' && isset($index[$ln])) {
             return $index[$ln];
         }
 
-        // Passe 4 : parcours partiel avec double vérification last+fn1
         foreach ($index as $key => $student) {
             $kp = explode(' ', $key);
             if (
@@ -918,8 +1082,6 @@ class GradesFromXlsSeeder extends Seeder
     // ─────────────────────────────────────────────────────────────────────────
     //  UTILITAIRES
     // ─────────────────────────────────────────────────────────────────────────
-
-    /** Normalise : MAJUSCULES, sans accents, espaces simples. */
     private function normalize(string $s): string
     {
         $s = mb_strtoupper(trim($s), 'UTF-8');
@@ -927,44 +1089,34 @@ class GradesFromXlsSeeder extends Seeder
         return preg_replace('/\s+/', ' ', trim($s));
     }
 
-    /** Convertit en float [0, 20] ou null. */
     private function toFloat(mixed $v): ?float
     {
         if ($v === null || $v === false || $v === '') return null;
-
         $s = trim(str_replace(',', '.', (string)$v));
-
         if (in_array(strtolower($s), ['', 'nan', 'null', '-', 'n/a', '#n/a', '#div/0!'], true)) {
             return null;
         }
-
         if (!is_numeric($s)) return null;
-
         $f = (float)$s;
         return ($f >= 0.0 && $f <= 20.0) ? round($f, 4) : null;
     }
 
-    /** Scan récursif des fichiers XLS/xlsx, trié par chemin. */
     private function scanFiles(string $dir): array
     {
         $files = [];
-
-        $it = new \RecursiveIteratorIterator(
+        $it    = new \RecursiveIteratorIterator(
             new \RecursiveDirectoryIterator($dir, \FilesystemIterator::SKIP_DOTS)
         );
-
         foreach ($it as $file) {
             if (!$file->isFile()) continue;
             if (in_array(strtolower($file->getExtension()), ['xls', 'xlsx', 'xlsm'])) {
                 $files[] = $file->getPathname();
             }
         }
-
-        sort($files); // ordre alphabétique → déterministe
+        sort($files);
         return $files;
     }
 
-    /** Chemin relatif pour l'affichage. */
     private function relPath(string $abs): string
     {
         return str_replace(base_path() . DIRECTORY_SEPARATOR, '', $abs);
@@ -974,7 +1126,7 @@ class GradesFromXlsSeeder extends Seeder
     {
         $this->command->line("  └─ <fg=red>✗ {$reason}</>");
         $this->command->line('');
-        $this->failed[]  = ['file' => $relPath, 'reason' => $reason];
+        $this->gFailed[] = ['file' => $relPath, 'reason' => $reason];
         $this->gErrors++;
     }
 
@@ -993,12 +1145,9 @@ class GradesFromXlsSeeder extends Seeder
         if (empty($this->csvRows)) return;
 
         $logDir = storage_path('logs');
-        if (!is_dir($logDir)) {
-            mkdir($logDir, 0755, true);
-        }
+        if (!is_dir($logDir)) mkdir($logDir, 0755, true);
 
         $csvPath = $logDir . '/grades_import_' . $this->startedAt . '.csv';
-
         $fp = fopen($csvPath, 'w');
         if (!$fp) {
             $this->command->line("  <fg=red>⚠ Impossible d'écrire le rapport CSV : {$csvPath}</>");
@@ -1029,42 +1178,30 @@ class GradesFromXlsSeeder extends Seeder
             }
         }
 
-        if (!empty($this->failed)) {
+        if (!empty($this->gFailed)) {
             $this->command->line('');
-            $this->command->line('  <fg=red>Fichiers en erreur (' . count($this->failed) . ') :</fg=red>');
-            foreach ($this->failed as $f) {
+            $this->command->line('  <fg=red>Fichiers en erreur (' . count($this->gFailed) . ') :</fg=red>');
+            foreach ($this->gFailed as $f) {
                 $this->command->line("    <fg=red>✗</> {$f['file']} → {$f['reason']}");
             }
         }
 
-        $p = fn(int $n) => str_pad((string)$n, 6, ' ', STR_PAD_LEFT);
+        $p = fn(int $n) => str_pad((string)$n, 7, ' ', STR_PAD_LEFT);
 
         $this->command->line('');
-        $this->command->line('  ┌──────────────────────────────────────┐');
-        $this->command->line('  │  Notes insérées     : ' . $p($this->gInserted) . '           │');
-        $this->command->line('  │  Notes mises à jour : ' . $p($this->gUpdated)  . '           │');
-        $this->command->line('  │  Notes inchangées   : ' . $p($this->gSkipped)  . '           │');
-        $this->command->line('  │  Erreurs fichiers   : ' . $p($this->gErrors)   . '           │');
-        $this->command->line('  └──────────────────────────────────────┘');
+        $this->command->line('  ┌────────────────────────────────────┐');
+        $this->command->line('  │  Notes insérées     : ' . $p($this->gInserted) . '          │');
+        $this->command->line('  │  Notes mises à jour : ' . $p($this->gUpdated)  . '          │');
+        $this->command->line('  │  Notes inchangées   : ' . $p($this->gSkipped)  . '          │');
+        $this->command->line('  │  Erreurs fichiers   : ' . $p($this->gErrors)   . '          │');
+        $this->command->line('  └────────────────────────────────────┘');
 
         if (!empty($this->gUnmatched)) {
             $this->command->line('');
-            $this->command->line(
-                '  <fg=yellow>⚠ Élèves non matchés ('
-                . count($this->gUnmatched) . ') :</fg=yellow>'
-            );
+            $this->command->line('  <fg=yellow>⚠ Élèves non matchés (' . count($this->gUnmatched) . ') :</fg=yellow>');
             foreach ($this->gUnmatched as $u) {
-                $this->command->line(
-                    "    L{$u['row']} [{$u['file']}] → « {$u['name']} »"
-                );
+                $this->command->line("    L{$u['row']} [{$u['file']}] → « {$u['name']} »");
             }
-            $this->command->line('');
-            $this->command->line(
-                '  <comment>→ Ces élèves n\'existent pas dans student_academic_records</comment>'
-            );
-            $this->command->line(
-                '  <comment>  pour la classe/année correspondante. Vérifiez et relancez.</comment>'
-            );
         }
 
         $this->command->line('');
@@ -1072,14 +1209,15 @@ class GradesFromXlsSeeder extends Seeder
         $this->command->line('');
     }
 
-    private function banner(string $title): void {
-        $w    = 58;
-        $line = str_repeat('═', $w);
-        $pad  = str_pad($title, $w, ' ', STR_PAD_BOTH);
+    private function banner(string $title): void
+    {
+        $w   = 58;
+        $bar = str_repeat('═', $w);
+        $pad = str_pad($title, $w, ' ', STR_PAD_BOTH);
         $this->command->line('');
-        $this->command->line("  ╔{$line}╗");
+        $this->command->line("  ╔{$bar}╗");
         $this->command->line("  ║{$pad}║");
-        $this->command->line("  ╚{$line}╝");
+        $this->command->line("  ╚{$bar}╝");
         $this->command->line('');
     }
 }
