@@ -816,3 +816,7 @@ Route::middleware(['auth'])->prefix('censeur')->name('censeur.')->group(function
 Route::get('/admin/students/emmagement/pdf', [StudentController::class, 'exportEmmagementPdf'])
     ->name('admin.students.emmagement.pdf')
     ->middleware('auth');
+
+Route::middleware(['auth'])->get('/censeur/classes/{classId}/point-annee/pdf', 
+    [CenseurNoteController::class, 'exportPointAnneePdf'])
+    ->name('censeur.classes.point-annee.pdf');

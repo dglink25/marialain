@@ -739,8 +739,6 @@ use App\Exports\NotesSubjectExport;
 
             $trimestres = [1, 2, 3];
 
-            // Récupération des matières via ClassTeacherSubject (avec le nom et le coeff)
-            // Utiliser with('subject') pour avoir le nom de la matière
             $matieresPivot = ClassTeacherSubject::with('subject')
                 ->where('class_id', $id)
                 ->when($activeYear, fn($q) => $q->where('academic_year_id', $activeYear->id))
@@ -1671,8 +1669,6 @@ use App\Exports\NotesSubjectExport;
 
             return $pdf->download($filename);
         }
-
-
 
         public function exportSubjectExcel(int $classId, int $trimestre, int $subjectId) {
             try {
@@ -3580,6 +3576,128 @@ use App\Exports\NotesSubjectExport;
             Log::error('exportListeRecursivePDF error: ' . $e->getMessage());
             return back()->with('error', 'Impossible de générer la liste récursive : ' . $e->getMessage());
         }
+    }
+
+    public function exportPointAnneePdf(int $classId) {
+        $activeYear = AcademicYear::where('active', true)->firstOrFail();
+        $classe = Classe::with(['students' => function ($q) use ($activeYear) {
+            $q->where('is_validated', 1)
+              ->where('academic_year_id', $activeYear->id)
+              ->orderBy('last_name')
+              ->orderBy('first_name');
+        }])->findOrFail($classId);
+ 
+        $subjects = Subject::whereHas('classTeacherSubjects', function ($q) use ($classId, $activeYear) {
+            $q->where('class_id', $classId)->where('academic_year_id', $activeYear->id);
+        })->with(['classTeacherSubjects' => function ($q) use ($classId, $activeYear) {
+            $q->where('class_id', $classId)->where('academic_year_id', $activeYear->id);
+        }])->orderBy('name')->get();
+ 
+        $trimestres = [1, 2, 3];
+        $moyennesParTrimestreTousEleves = [];
+        $moyennesParEleveParTrimestre   = [];
+ 
+        foreach ($trimestres as $t) {
+            foreach ($classe->students as $student) {
+                $moy = $this->calculerMoyenneEleve($student->id, $classId, $t, $activeYear, $subjects);
+                $moyennesParEleveParTrimestre[$student->id][$t] = $moy;
+                if ($moy !== null) {
+                    $moyennesParTrimestreTousEleves[$t][$student->id] = $moy;
+                }
+            }
+        }
+ 
+        $rangsParTrimestre = [];
+        foreach ($trimestres as $t) {
+            if (!empty($moyennesParTrimestreTousEleves[$t])) {
+                $sorted = $moyennesParTrimestreTousEleves[$t];
+                arsort($sorted);
+                $rang = 1; $prev = null; $sameCount = 1;
+                $tempRangs = [];
+                foreach ($sorted as $stId => $moy) {
+                    if ($prev !== null && $moy == $prev) { $sameCount++; }
+                    else { $rang += ($sameCount - 1); $sameCount = 1; }
+                    $tempRangs[$stId] = $rang . 'e/' . count($sorted);
+                    $prev = $moy;
+                    $rang++;
+                }
+                $rangsParTrimestre[$t] = $tempRangs;
+            }
+        }
+ 
+        $conductesParEleve = [];
+        foreach ($classe->students as $student) {
+            foreach ($trimestres as $t) {
+                $conduct = Conduct::where('student_id', $student->id)
+                    ->where('trimestre', $t)
+                    ->where('academic_year_id', $activeYear->id)->first();
+                $punishments = Punishment::where('student_id', $student->id)
+                    ->where('academic_year_id', $activeYear->id)->get();
+                $conduiteSur20 = max(0, ($conduct ? $conduct->grade : 0) - ($punishments->sum('hours') / 2));
+                $conductesParEleve[$student->id][$t] = round($conduiteSur20, 2);
+            }
+        }
+ 
+        $moyennesAnnuellesTousEleves = [];
+        foreach ($classe->students as $student) {
+            $moysTrimestres = array_filter(
+                array_map(fn($t) => $moyennesParEleveParTrimestre[$student->id][$t] ?? null, $trimestres),
+                fn($v) => $v !== null
+            );
+            if (!empty($moysTrimestres)) {
+                $moyennesAnnuellesTousEleves[$student->id] = round(array_sum($moysTrimestres) / count($moysTrimestres), 2);
+            }
+        }
+ 
+        $rangsAnnuels = [];
+        if (!empty($moyennesAnnuellesTousEleves)) {
+            $sorted = $moyennesAnnuellesTousEleves;
+            arsort($sorted);
+            $rang = 1; $prev = null; $sameCount = 1;
+            foreach ($sorted as $stId => $moy) {
+                if ($prev !== null && $moy == $prev) { $sameCount++; }
+                else { $rang += ($sameCount - 1); $sameCount = 1; }
+                $rangsAnnuels[$stId] = $rang . 'e/' . count($sorted);
+                $prev = $moy;
+                $rang++;
+            }
+        }
+ 
+        $tableauEleves = [];
+        $numOrdre = 1;
+        foreach ($classe->students as $student) {
+            $moyAnn = $moyennesAnnuellesTousEleves[$student->id] ?? null;
+            $tableauEleves[] = [
+                'num'          => $numOrdre++,
+                'student'      => $student,
+                'conduite_t1'  => $conductesParEleve[$student->id][1] ?? 0,
+                'conduite_t2'  => $conductesParEleve[$student->id][2] ?? 0,
+                'conduite_t3'  => $conductesParEleve[$student->id][3] ?? 0,
+                'moy_t1'       => $moyennesParEleveParTrimestre[$student->id][1] ?? null,
+                'moy_t2'       => $moyennesParEleveParTrimestre[$student->id][2] ?? null,
+                'moy_t3'       => $moyennesParEleveParTrimestre[$student->id][3] ?? null,
+                'rang_t1'      => $rangsParTrimestre[1][$student->id] ?? '-',
+                'rang_t2'      => $rangsParTrimestre[2][$student->id] ?? '-',
+                'rang_t3'      => $rangsParTrimestre[3][$student->id] ?? '-',
+                'moy_annuelle' => $moyAnn,
+                'rang_annuel'  => $rangsAnnuels[$student->id] ?? '-',
+                'statut'       => $moyAnn !== null ? ($moyAnn >= 10 ? 'Passé' : 'Redouble') : '-',
+            ];
+        }
+ 
+        $nbPasses    = collect($tableauEleves)->where('statut', 'Passé')->count();
+        $nbRedoubles = collect($tableauEleves)->where('statut', 'Redouble')->count();
+        $nbTotal     = count($tableauEleves);
+        $tauxReussite = $nbTotal > 0 ? round(($nbPasses / $nbTotal) * 100, 1) : 0;
+        $dateDownload = now()->locale('fr')->isoFormat('D MMMM YYYY');
+ 
+        $pdf = Pdf::loadView('censeur.classes.notes.point_annee_pdf', compact(
+            'classe', 'activeYear', 'tableauEleves',
+            'nbPasses', 'nbRedoubles', 'nbTotal', 'tauxReussite', 'dateDownload'
+        ))->setPaper('a3', 'landscape');
+ 
+        $nomClasse = str_replace([' ', '/'], '_', $classe->name);
+        return $pdf->download("Point_Annee_{$nomClasse}_{$activeYear->name}.pdf");
     }
 
 }

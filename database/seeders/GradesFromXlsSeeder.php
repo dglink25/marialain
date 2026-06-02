@@ -416,11 +416,10 @@ class GradesFromXlsSeeder extends Seeder
     }
 
     
-    private function resolveBySerieMapping(string $xlsName): ?string
-    {
+    private function resolveBySerieMapping(string $xlsName): ?string {
         // Correspondances séries → groupe
         $serieToGroup = [
-            'A'  => 'AB', 'A1' => 'AB', 'A2' => 'AB', 'A3' => 'AB', 'A4' => 'AB',
+            'A'  => 'AB', 'A1' => 'AB', 'A2' => 'AB', ' A2' => 'AB', 'A3' => 'AB', 'A4' => 'AB',
             'B'  => 'AB', 'B1' => 'AB', 'B2' => 'AB',
             'C'  => 'CD', 'C1' => 'CD', 'C2' => 'CD',
             'D'  => 'CD', "D'" => 'CD', 'D1' => 'CD', 'D2' => 'CD',
@@ -473,17 +472,10 @@ class GradesFromXlsSeeder extends Seeder
             return null;
         }
 
-        return "{$niveauBD}{$group}";
+        return "{$niveauBD} {$group}";
     }
 
-    /**
-     * Décompose un nom de classe XLS en [préfixe, [variants]].
-     *
-     * "2nde CD/ PF"  → ["2nde", ["CD", "PF"]]
-     * "1ère CD/ AB"  → ["1ère", ["CD", "AB"]]
-     * "Tle AB"       → ["Tle",  ["AB"]]
-     * "2ndeCD"       → ["",     ["2ndeCD"]]
-     */
+   
     private function splitPrefixVariants(string $xlsName): array
     {
         $frags = array_values(array_filter(
