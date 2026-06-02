@@ -52,8 +52,7 @@ public function store(Request $request){
         return back()->with('success', 'Inscription réussie. Un email a été envoyé au parent.');
     }
 
-    public function validateRegistration(Request $request, $id)
-    {
+    public function validateRegistration(Request $request, $id) {
         $student = Student::findOrFail($id);
 
         $request->validate([

@@ -810,6 +810,11 @@ Route::middleware(['auth'])->prefix('censeur')->name('censeur.')->group(function
     Route::post('/deliberation/{deliberationId}/cancel',
         [\App\Http\Controllers\Censeur\DeliberationController::class, 'cancel'])
         ->name('deliberation.cancel');
+
+    Route::patch(
+        'classes/{classId}/students/{studentId}/update-phone',
+        [ClasseController::class, 'updateParentPhone']
+    )->name('classes.students.update-phone');
 });
 
 
@@ -819,4 +824,5 @@ Route::get('/admin/students/emmagement/pdf', [StudentController::class, 'exportE
 
 Route::middleware(['auth'])->get('/censeur/classes/{classId}/point-annee/pdf', 
     [CenseurNoteController::class, 'exportPointAnneePdf'])
-    ->name('censeur.classes.point-annee.pdf');
+    ->name('censeur.classes.point-annee.pdf')
+    ->middleware('auth');
