@@ -129,9 +129,9 @@
                         <td class="px-3 py-2.5 text-center border-r border-gray-100 font-medium text-gray-700 text-xs">{{ $row['rang_annuel'] }}</td>
                         <td class="px-3 py-2.5 text-center border-r border-gray-100">
                             @if($row['statut'] === 'Passé')
-                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800 border border-green-300"><i class="fas fa-check-circle mr-1"></i> Passé</span>
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800 border border-green-300"><i class="fas fa-check-circle mr-1"></i>PASSE</span>
                             @elseif($row['statut'] === 'Redouble')
-                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-red-100 text-red-800 border border-red-300"><i class="fas fa-times-circle mr-1"></i> Redouble</span>
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-red-100 text-red-800 border border-red-300"><i class="fas fa-times-circle mr-1"></i>REDOUBLE</span>
                             @else
                                 <span class="text-gray-400 text-xs">—</span>
                             @endif

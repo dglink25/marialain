@@ -274,9 +274,9 @@
                 <td style="font-size: 7px;"><strong>{{ $row['rang_annuel'] }}</strong></td>
                 <td>
                     @if($row['statut'] === 'Passé')
-                        <span class="statut-passe">Passé</span>
+                        <span class="statut-passe">PASSE</span>
                     @elseif($row['statut'] === 'Redouble')
-                        <span class="statut-redouble">Redouble</span>
+                        <span class="statut-redouble">REDOUBLE</span>
                     @else
                         <span>—</span>
                     @endif
