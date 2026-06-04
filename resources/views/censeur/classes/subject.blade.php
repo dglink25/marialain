@@ -132,6 +132,15 @@
             @endforeach
         </div>
 
+        {{-- Bouton export conduite --}}
+        <div class="mt-6 flex justify-end">
+            <a href="{{ route('censeur.notes.export.conduite.excel', [$classe->id, $trimestre]) }}"
+            class="inline-flex items-center px-5 py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors duration-200 font-medium shadow-sm">
+                <i class="fas fa-file-excel mr-2"></i>
+                Exporter les conduites (Excel)
+            </a>
+        </div>
+
         <!-- Message si aucune matière -->
         @if($subjects->count() === 0)
         <div class="text-center py-12">

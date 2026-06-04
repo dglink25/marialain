@@ -327,7 +327,12 @@ Route::middleware(['auth'])->get('/censeur/classes/{classId}/trimestres/{trimest
 Route::get(
     '/classes/{classId}/trimestre/{trimestre}/matiere/{subjectId}/export-excel',
     [App\Http\Controllers\Censeur\NoteController::class, 'exportSubjectExcel']
-)->name('censeur.notes.export.excel');
+)->name('censeur.notes.export.excel')->middleware('auth');
+
+Route::get(
+    '/classes/{classId}/trimestre/{trimestre}/conduite/export-excel',
+    [App\Http\Controllers\Censeur\NoteController::class, 'exportConducteExcel']
+)->name('censeur.notes.export.conduite.excel')->middleware('auth');
 
 
 Route::middleware(['auth'])->get('/censeur/classes/{classId}/trimestres/{trimestre}/matieres', 
@@ -382,7 +387,7 @@ Route::prefix('censeur')->name('censeur.')->middleware('auth')->group(function (
 });
 Route::get('/censeur/classes/{classId}/bulletin-trimestre/{trimestre}/all-pdf', 
     [App\Http\Controllers\Censeur\NoteController::class, 'downloadAllBulletinsPdf'])
-    ->name('censeur.classes.bulletin.all-pdf');
+    ->name('censeur.classes.bulletin.all-pdf')->middleware('auth');
 
 Route::prefix('teacher')->name('teacher.')->middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -394,7 +399,7 @@ Route::prefix('teacher')->name('teacher.')->middleware('auth')->group(function (
 });
 
 
-Route::prefix('students')->name('students.')->group(function () {
+Route::prefix('students')->name('students.')->middleware('auth')->group(function () {
     Route::get('{student}/payments', [StudentPaymentController::class,'index'])->name('payments.index');
     Route::get('{student}/payments/create', [StudentPaymentController::class,'create'])->name('payments.create');
     Route::post('{student}/payments', [StudentPaymentController::class,'store'])->name('payments.store');

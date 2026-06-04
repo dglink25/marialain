@@ -25,6 +25,7 @@ use App\Models\NoteEditPermission;
 use Illuminate\Support\Facades\Log;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;    
 use App\Exports\NotesSubjectExport;
+use App\Exports\ConducteExport;
 
 
     class NoteController extends Controller{
@@ -1221,15 +1222,15 @@ use App\Exports\NotesSubjectExport;
             $subjects = $classSubjects->map(function ($item) {
                 $subject = $item->subject;
                 $subject->teacher_name = $item->teacher->name ?? 'Non assigné';
-                $subject->coefficient = $item->coefficient; // ✅ On ajoute le coefficient du pivot
+                $subject->coefficient = $item->coefficient; // On ajoute le coefficient du pivot
                 return $subject;
             });
 
 
-            // 5️⃣ On récupère le trimestre
+            // On récupère le trimestre
             $trimestre = $t;
 
-            // 6️⃣ On renvoie la même structure de variables que ta vue attend
+            // On renvoie la même structure de variables que ta vue attend
             return view('censeur.classes.subject', compact('subjects', 'activeYear', 'classe', 'trimestre'));
         }
 
@@ -1689,6 +1690,25 @@ use App\Exports\NotesSubjectExport;
                 );
 
             } catch (\Exception $e) {
+                return back()->with('error', 'Impossible de générer le fichier Excel : ' . $e->getMessage());
+            }
+        }
+
+        public function exportConducteExcel(int $classId, int $trimestre)  {
+            try {
+                $activeYear = AcademicYear::where('active', true)->firstOrFail();
+                $classe     = Classe::findOrFail($classId);
+
+                $nomClasse = str_replace([' ', '/'], '_', $classe->name);
+                $fileName  = "Conduite_{$nomClasse}_T{$trimestre}.xlsx";
+
+                return Excel::download(
+                    new ConducteExport($classe, $trimestre, $activeYear),
+                    $fileName
+                );
+
+            } 
+            catch (\Exception $e) {
                 return back()->with('error', 'Impossible de générer le fichier Excel : ' . $e->getMessage());
             }
         }

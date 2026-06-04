@@ -104,8 +104,25 @@ class NotesSubjectExport implements
         ];
     }
 
-    public function title(): string{
-        return strtoupper($this->subject->name);
+    public function title(): string {
+        $name = strtoupper($this->subject->name);
+
+        $mapping = [
+            'COMMUNICATION ECRITE'                     => 'FRANCAIS COM. ECRITE',
+            'ANGLAIS'                                  => 'ANGLAIS',
+            'MATHEMATIQUES'                            => 'MATHS GENE',
+            'EDUCATION PHYSIQUE ET SPORTIVE (EPS)'     => 'EPS',
+            'HISTOIRE-GEOGRAPHIE'                      => 'HIST-GEO',
+            'SCIENCE DE LA VIE ET DE LA TERRE (SVT)'  => 'SVT',
+            'SVT'                                      => 'SVT',
+            'LECTURE'                                  => 'FRANCAIS LECTURE',
+            'PHYSIQUE CHIMIE ET TECHNOLOGIE (PCT)'     => 'PCT',
+            'PHILOSOPHIE'                              => 'PHILO',
+            'ALLEMAND'                                 => 'ALLEMAND',
+            'ESPAGNOL'                                 => 'ESPAGNOL',
+        ];
+
+        return $mapping[$name] ?? $name;
     }
 
     public function styles(Worksheet $sheet): array {
