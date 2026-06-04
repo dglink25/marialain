@@ -2920,7 +2920,7 @@ use App\Exports\NotesSubjectExport;
                         $rang += ($sameCount - 1);
                         $sameCount = 1;
                     }
-                    $tempRangs[$stId] = $rang . 'e/' . count($sorted);
+                    $tempRangs[$stId] = $rang . 'e';
                     $prev = $moy;
                     $rang++;
                 }
@@ -2969,7 +2969,7 @@ use App\Exports\NotesSubjectExport;
             foreach ($sorted as $stId => $moy) {
                 if ($prev !== null && $moy == $prev) { $sameCount++; }
                 else { $rang += ($sameCount - 1); $sameCount = 1; }
-                $rangsAnnuels[$stId] = $rang . 'e/' . count($sorted);
+                $rangsAnnuels[$stId] = $rang . 'e';
                 $prev = $moy;
                 $rang++;
             }
@@ -3617,7 +3617,7 @@ use App\Exports\NotesSubjectExport;
                 foreach ($sorted as $stId => $moy) {
                     if ($prev !== null && $moy == $prev) { $sameCount++; }
                     else { $rang += ($sameCount - 1); $sameCount = 1; }
-                    $tempRangs[$stId] = $rang . 'e/' . count($sorted);
+                    $tempRangs[$stId] = $rang . 'e';
                     $prev = $moy;
                     $rang++;
                 }
@@ -3657,7 +3657,7 @@ use App\Exports\NotesSubjectExport;
             foreach ($sorted as $stId => $moy) {
                 if ($prev !== null && $moy == $prev) { $sameCount++; }
                 else { $rang += ($sameCount - 1); $sameCount = 1; }
-                $rangsAnnuels[$stId] = $rang . 'e/' . count($sorted);
+                $rangsAnnuels[$stId] = $rang . 'e';
                 $prev = $moy;
                 $rang++;
             }
