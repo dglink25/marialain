@@ -100,8 +100,8 @@
 
         /* En-têtes groupes trimestres */
         .th-group {
-            background-color: #000;
-            color: #fff;
+            background-color: #fff;
+            color: #000;
             font-weight: bold;
             font-size: 8px;
         }
@@ -116,8 +116,8 @@
 
         /* En-têtes fixes (N°, Matricule, Nom) */
         .th-base {
-            background-color: #000;
-            color: #fff;
+            background-color: #fff;
+            color: #000;
             font-weight: bold;
         }
 
