@@ -313,10 +313,6 @@
                         </div>
                     </div>
 
-                    {{-- ────────────────────────────────────────────────────────────
-                         Année académique INACTIVE de destination
-                         (les élèves seront inscrits dans cette année future)
-                    ──────────────────────────────────────────────────────────── --}}
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-1">
                             <i class="fas fa-calendar-alt text-indigo-500 mr-1"></i>

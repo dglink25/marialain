@@ -10,8 +10,7 @@ class AcademicYear extends Model
         'active' => 'boolean',
     ];
 
-    public function classes()
-    {
+    public function classes()  {
         return $this->hasMany(Classe::class);
     }
 

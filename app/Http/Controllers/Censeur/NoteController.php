@@ -3714,7 +3714,7 @@ use App\Exports\ConducteExport;
         $pdf = Pdf::loadView('censeur.classes.notes.point_annee_pdf', compact(
             'classe', 'activeYear', 'tableauEleves',
             'nbPasses', 'nbRedoubles', 'nbTotal', 'tauxReussite', 'dateDownload'
-        ))->setPaper('a3', 'landscape');
+        ))->setPaper('a4', 'landscape');
  
         $nomClasse = str_replace([' ', '/'], '_', $classe->name);
         return $pdf->download("Point_Annee_{$nomClasse}_{$activeYear->name}.pdf");

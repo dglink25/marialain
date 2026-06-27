@@ -18,19 +18,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 
-class DeliberationController extends Controller
-{
+class DeliberationController extends Controller{
     public function __construct(
         private readonly AcademicRecordService $recordService
     ) {}
 
-    /* =====================================================================
-     *  DONNÉES POUR LE MODAL DE DÉLIBÉRATION (JSON)
-     * ===================================================================== */
-
-    public function getModalData(int $classId): \Illuminate\Http\JsonResponse
-    {
-        $activeYear = AcademicYear::where('active', true)->firstOrFail();
+    public function getModalData(int $classId): \Illuminate\Http\JsonResponse  {
+        $activeYear = AcademicYear::where('active', true)->first();
+        
         $classe     = Classe::with('entity')->findOrFail($classId);
 
         // Matières de la classe
@@ -73,16 +68,24 @@ class DeliberationController extends Controller
             ];
         }
 
-        // Classes cibles disponibles (même entité, année active)
+        
+        // Années cibles : inactives avec nom > année active
+        $activeStartYear = (int) explode('-', $activeYear->name)[0];
+
+        $inactiveYears = AcademicYear::where('active', false)
+            ->get(['id', 'name'])
+            ->filter(function ($year) use ($activeStartYear) {
+                $parts = explode('-', $year->name);
+                return isset($parts[0]) && (int)$parts[0] > $activeStartYear;
+            })
+            ->values();
+
+        // Classes cibles : celles de l'ANNÉE ACTIVE (même entité, sauf la classe courante)
+        // C'est depuis ici que les élèves admis seront placés
         $targetClasses = Classe::where('entity_id', $classe->entity_id)
-            ->where('academic_year_id', $activeYear->id)
+            ->where('academic_year_id', $activeYear->id)   // ← année ACTIVE ici, c'est voulu
             ->where('id', '!=', $classId)
             ->orderBy('name')
-            ->get(['id', 'name']);
-
-        // Années cibles (active + à venir)
-        $targetYears = AcademicYear::orderByDesc('id')
-            ->limit(3)
             ->get(['id', 'name']);
 
         // Délibération existante ?
@@ -92,21 +95,17 @@ class DeliberationController extends Controller
             ->first();
 
         return response()->json([
-            'classe'          => $classe,
-            'students'        => $studentsData,
-            'targetClasses'   => $targetClasses,
-            'targetYears'     => $targetYears,
-            'existingDelib'   => $existingDelib,
-            'activeYear'      => $activeYear,
+            'classe'                => $classe,
+            'students'              => $studentsData,
+            'inactive_years'        => $inactiveYears,      // ← clé attendue par le JS
+            'target_classes'        => $targetClasses,       // ← clé attendue par le JS
+            'existing_deliberation' => $existingDelib,       // ← clé attendue par le JS (ligne 683)
+            'activeYear'            => $activeYear,
         ]);
+
     }
 
-    /* =====================================================================
-     *  VÉRIFIER SI UNE DÉLIBÉRATION EXISTE
-     * ===================================================================== */
-
-    public function checkExisting(int $classId): \Illuminate\Http\JsonResponse
-    {
+    public function checkExisting(int $classId): \Illuminate\Http\JsonResponse  {
         $activeYear = AcademicYear::where('active', true)->firstOrFail();
 
         $existing = Deliberation::where('source_class_id', $classId)

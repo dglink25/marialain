@@ -6,15 +6,15 @@
     <style>
         body {
             font-family: "Times New Roman", Times, serif;
-            font-size: 10px;
-            margin: 15px;
+            font-size: 7px;
+            margin: 0;
             color: #000;
         }
 
         /* --- Ligne tricolore --- */
         .tricolor-line {
             width: 70%;
-            margin-bottom: 8px;
+            margin-bottom: 5px;
             border-collapse: collapse;
             table-layout: fixed;
         }
@@ -32,41 +32,41 @@
         .header {
             display: table;
             width: 100%;
-            margin-bottom: 15px;
-            border-bottom: 2px solid #000;
-            padding-bottom: 10px;
+            margin-bottom: 8px;
+            border-bottom: 1.5px solid #000;
+            padding-bottom: 6px;
         }
         .header-left, .header-right {
             display: table-cell;
-            width: 15%;
+            width: 12%;
             vertical-align: middle;
             text-align: center;
         }
         .header-left img, .header-right img {
-            height: 70px;
+            height: 50px;
             object-fit: contain;
         }
         .school-info {
             display: table-cell;
-            width: 70%;
+            width: 76%;
             text-align: center;
-            font-size: 11px;
-            line-height: 1.4;
+            font-size: 8px;
+            line-height: 1.3;
         }
         .school-info .bold { font-weight: bold; }
 
         /* Date */
         .date-download {
             text-align: right;
-            font-size: 10px;
-            margin-bottom: 5px;
+            font-size: 7px;
+            margin-bottom: 3px;
         }
 
         /* Titre */
         .title {
             text-align: center;
-            margin-bottom: 10px;
-            font-size: 14px;
+            margin-bottom: 5px;
+            font-size: 10px;
             font-weight: bold;
             text-decoration: underline;
         }
@@ -74,23 +74,23 @@
         /* Informations de la classe */
         .class-info {
             text-align: center;
-            margin: 10px 0;
-            font-size: 11px;
+            margin: 4px 0;
+            font-size: 8px;
         }
-        .class-info span { margin: 0 10px; }
+        .class-info span { margin: 0 6px; }
 
         /* --- Tableau principal --- */
         table.main-table {
             border-collapse: collapse;
             width: 100%;
             table-layout: fixed;
-            margin-top: 15px;
-            font-size: 8px;
+            margin-top: 6px;
+            font-size: 6.5px;
         }
         table.main-table th,
         table.main-table td {
-            border: 1px solid #000;
-            padding: 3px 2px;
+            border: 0.5px solid #000;
+            padding: 2px 1px;
             text-align: center;
             vertical-align: middle;
             word-wrap: break-word;
@@ -100,60 +100,61 @@
 
         /* En-têtes groupes trimestres */
         .th-group {
-            background-color: #fff;
-            color: #000;
-            font-weight: bold;
-            font-size: 8px;
-        }
-
-        /* En-têtes colonnes */
-        .th-col {
-            background-color: #e5e5e5;
+            background-color: #d0d0d0;
             color: #000;
             font-weight: bold;
             font-size: 7px;
         }
 
-        /* En-têtes fixes (N°, Matricule, Nom) */
-        .th-base {
-            background-color: #fff;
+        /* En-têtes colonnes */
+        .th-col {
+            background-color: #e8e8e8;
             color: #000;
             font-weight: bold;
+            font-size: 6px;
+        }
+
+        /* En-têtes fixes (N°, Matricule, Nom) */
+        .th-base {
+            background-color: #f0f0f0;
+            color: #000;
+            font-weight: bold;
+            font-size: 7px;
         }
 
         /* Zébrure légère */
-        .row-even { background-color: #f5f5f5; }
+        .row-even { background-color: #f7f7f7; }
         .row-odd  { background-color: #ffffff; }
 
-        /* Moyenne annuelle en gras */
-        .moy-ann  { font-weight: bold; font-size: 10px; }
+        /* Moyenne annuelle */
+        .moy-ann  { font-weight: bold; font-size: 7px; }
 
         /* Statut */
-        .statut-passe    { font-weight: bold; }
-        .statut-redouble { font-weight: bold; }
+        .statut-passe    { font-weight: bold; font-size: 6px; }
+        .statut-redouble { font-weight: bold; font-size: 6px; }
 
         /* --- Statistiques --- */
         .stats-table {
-            width: 100%;
+            width: 60%;
+            margin: 8px auto 0 auto;
             border-collapse: collapse;
-            margin-top: 20px;
-            font-size: 10px;
+            font-size: 8px;
         }
         .stats-table td {
-            border: 1px solid #000;
-            padding: 8px 10px;
+            border: 0.5px solid #000;
+            padding: 5px 8px;
             text-align: center;
             vertical-align: middle;
             background-color: #fff;
         }
-        .stat-value { font-size: 20px; font-weight: bold; }
-        .stat-label { font-size: 9px; margin-top: 3px; }
+        .stat-value { font-size: 14px; font-weight: bold; }
+        .stat-label { font-size: 7px; margin-top: 2px; }
 
         /* Signature */
         .signature-block {
-            margin-top: 30px;
+            margin-top: 15px;
             text-align: right;
-            font-size: 10px;
+            font-size: 8px;
         }
 
         /* Pied de page */
@@ -163,12 +164,15 @@
             left: 0;
             right: 0;
             text-align: center;
-            font-size: 9px;
-            border-top: 1px solid #000;
-            padding-top: 4px;
+            font-size: 7px;
+            border-top: 0.5px solid #000;
+            padding-top: 3px;
         }
 
-        @page { margin: 15mm; size: A3 landscape; }
+        @page {
+            margin: 8mm 8mm 12mm 8mm;
+            size: A4 landscape;
+        }
     </style>
 </head>
 <body>
@@ -217,27 +221,35 @@
     <table class="main-table">
         <thead>
             <tr>
-                <th rowspan="2" class="th-base" style="width: 3%;">N°</th>
+                <th rowspan="2" class="th-base" style="width: 2%;">N°</th>
                 <th rowspan="2" class="th-base" style="width: 7%;">Matricule</th>
-                <th rowspan="2" class="th-base" style="width: 14%; text-align: left; padding-left: 4px;">Nom &amp; Prénom(s)</th>
+                <th rowspan="2" class="th-base" style="width: 17%; text-align: left; padding-left: 3px;">Nom &amp; Prénom(s)</th>
+                {{-- Trimestre 1 : 3 col × 6% = 18% --}}
                 <th colspan="3" class="th-group">Trimestre 1</th>
+                {{-- Trimestre 2 : 3 col × 6% = 18% --}}
                 <th colspan="3" class="th-group">Trimestre 2</th>
+                {{-- Trimestre 3 : 3 col × 6% = 18% --}}
                 <th colspan="3" class="th-group">Trimestre 3</th>
+                {{-- Fin d'année : 3 col --}}
                 <th colspan="3" class="th-group">Fin d'Année</th>
             </tr>
             <tr>
-                <th class="th-col">Conduite</th>
-                <th class="th-col">Moy.</th>
-                <th class="th-col">Rang</th>
-                <th class="th-col">Conduite</th>
-                <th class="th-col">Moy.</th>
-                <th class="th-col">Rang</th>
-                <th class="th-col">Conduite</th>
-                <th class="th-col">Moy.</th>
-                <th class="th-col">Rang</th>
-                <th class="th-col">Moy. Ann.</th>
-                <th class="th-col">Rang Ann.</th>
-                <th class="th-col">Statut</th>
+                {{-- T1 --}}
+                <th class="th-col" style="width: 5%;">Conduite</th>
+                <th class="th-col" style="width: 5%;">Moy.</th>
+                <th class="th-col" style="width: 4%;">Rang</th>
+                {{-- T2 --}}
+                <th class="th-col" style="width: 5%;">Conduite</th>
+                <th class="th-col" style="width: 5%;">Moy.</th>
+                <th class="th-col" style="width: 4%;">Rang</th>
+                {{-- T3 --}}
+                <th class="th-col" style="width: 5%;">Conduite</th>
+                <th class="th-col" style="width: 5%;">Moy.</th>
+                <th class="th-col" style="width: 4%;">Rang</th>
+                {{-- Fin année --}}
+                <th class="th-col" style="width: 6%;">Moy. Ann.</th>
+                <th class="th-col" style="width: 4%;">Rang</th>
+                <th class="th-col" style="width: 6%;">Statut</th>
             </tr>
         </thead>
         <tbody>
@@ -248,8 +260,8 @@
             @endphp
             <tr class="{{ $rowClass }}">
                 <td>{{ $row['num'] }}</td>
-                <td style="font-size: 7px;">{{ $row['student']->num_educ ?? '-' }}</td>
-                <td style="text-align: left; padding-left: 4px;">
+                <td style="font-size: 5.5px;">{{ $row['student']->num_educ ?? '-' }}</td>
+                <td style="text-align: left; padding-left: 3px; font-size: 6.5px;">
                     <strong>{{ strtoupper($row['student']->last_name) }}</strong>
                     {{ $row['student']->first_name }}
                 </td>
@@ -257,21 +269,21 @@
                 {{-- Trimestre 1 --}}
                 <td>{{ $row['conduite_t1'] > 0 ? number_format($row['conduite_t1'], 2, ',', '') : '—' }}</td>
                 <td><strong>{{ $fmtMoy($row['moy_t1']) }}</strong></td>
-                <td style="font-size: 7px;">{{ $row['rang_t1'] }}</td>
+                <td>{{ $row['rang_t1'] }}</td>
 
                 {{-- Trimestre 2 --}}
                 <td>{{ $row['conduite_t2'] > 0 ? number_format($row['conduite_t2'], 2, ',', '') : '—' }}</td>
                 <td><strong>{{ $fmtMoy($row['moy_t2']) }}</strong></td>
-                <td style="font-size: 7px;">{{ $row['rang_t2'] }}</td>
+                <td>{{ $row['rang_t2'] }}</td>
 
                 {{-- Trimestre 3 --}}
                 <td>{{ $row['conduite_t3'] > 0 ? number_format($row['conduite_t3'], 2, ',', '') : '—' }}</td>
                 <td><strong>{{ $fmtMoy($row['moy_t3']) }}</strong></td>
-                <td style="font-size: 7px;">{{ $row['rang_t3'] }}</td>
+                <td>{{ $row['rang_t3'] }}</td>
 
                 {{-- Fin d'Année --}}
                 <td class="moy-ann">{{ $fmtMoy($row['moy_annuelle']) }}</td>
-                <td style="font-size: 7px;"><strong>{{ $row['rang_annuel'] }}</strong></td>
+                <td><strong>{{ $row['rang_annuel'] }}</strong></td>
                 <td>
                     @if($row['statut'] === 'Passé')
                         <span class="statut-passe">PASSE</span>
@@ -289,15 +301,15 @@
     <!-- Statistiques -->
     <table class="stats-table">
         <tr>
-            <td style="width: 33%;">
+            <td>
                 <div class="stat-value">{{ $nbPasses }}</div>
                 <div class="stat-label">Élèves passent en classe supérieure</div>
             </td>
-            <td style="width: 33%;">
+            <td>
                 <div class="stat-value">{{ $nbRedoubles }}</div>
                 <div class="stat-label">Élèves redoublent</div>
             </td>
-            <td style="width: 33%;">
+            <td>
                 <div class="stat-value">{{ $tauxReussite }}%</div>
                 <div class="stat-label">Taux de Réussite</div>
             </td>
