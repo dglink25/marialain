@@ -169,7 +169,7 @@
                     <i class="fas fa-file-export"></i>
                     Export des données
                 </h2>
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
+                <div class="grid grid-cols-1 lg:grid-cols-4 gap-3">
                     <!-- Export liste classique -->
                     <form method="GET" action="{{ route('admin.students.export.pdf') }}" class="flex gap-2">
                         <select name="class_id" class="border border-gray-300 rounded-lg p-2 text-sm focus:outline-none focus:border-blue-500 flex-1">
@@ -193,6 +193,12 @@
                     <button type="button" onclick="openEmmagementModal()"
                         class="bg-purple-600 text-white px-3 py-2 rounded-lg hover:bg-purple-700 transition duration-200 text-sm font-medium whitespace-nowrap flex items-center gap-2 justify-center">
                         <i class="fas fa-clipboard-list"></i>Liste d'émargement (Bulletins)
+                    </button>
+
+                    <!-- Ajouter un paiement (modal par classe) -->
+                    <button type="button" onclick="openPaymentModal()"
+                        class="bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700 transition duration-200 text-sm font-medium whitespace-nowrap flex items-center gap-2 justify-center">
+                        <i class="fas fa-money-bill-wave"></i>Ajouter un paiement
                     </button>
                 </div>
             </div>
@@ -309,10 +315,95 @@
     @endif
 </div>
 
+<div id="paymentModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black bg-opacity-50 p-4">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-5xl mx-4 max-h-[90vh] flex flex-col">
+
+        <!-- En-tête -->
+        <div class="flex justify-between items-center p-6 border-b border-gray-200">
+            <div class="flex items-center gap-2">
+                <div class="bg-green-100 p-2 rounded-lg">
+                    <i class="fas fa-money-bill-wave text-green-600 text-lg"></i>
+                </div>
+                <h3 class="text-lg font-bold text-gray-800">Ajouter un paiement</h3>
+            </div>
+            <button onclick="closePaymentModal()" class="text-gray-400 hover:text-gray-600 transition">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+
+        <!-- Corps -->
+        <div class="p-6 overflow-y-auto flex-1">
+
+            <!-- Sélection de la classe -->
+            <div class="mb-5">
+                <label for="payment_class_id" class="block text-sm font-semibold text-gray-700 mb-1">
+                    <i class="fas fa-school text-green-500 mr-1"></i> Sélectionnez une classe
+                </label>
+                <select id="payment_class_id"
+                        onchange="loadStudentsForPayment(this.value)"
+                        class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500">
+                    <option value="">-- Sélectionner une classe --</option>
+                    @foreach($classes as $classe)
+                        <option value="{{ $classe->id }}">{{ $classe->name }}</option>
+                    @endforeach
+                </select>
+                <p class="text-xs text-gray-500 mt-1">Seuls les élèves validés de l'année académique active s'affichent.</p>
+            </div>
+
+            <!-- Message d'alerte (erreur / succès) -->
+            <div id="paymentModalAlert" class="hidden mb-4 p-3 rounded-lg text-sm"></div>
+
+            <!-- Indicateur de chargement -->
+            <div id="paymentModalLoading" class="hidden text-center py-10 text-gray-500">
+                <i class="fas fa-spinner fa-spin text-2xl mb-2 block"></i>
+                Chargement des élèves...
+            </div>
+
+            <!-- Tableau des élèves de la classe -->
+            <div id="paymentStudentsWrapper" class="hidden overflow-x-auto border border-gray-200 rounded-lg">
+                <table class="w-full bg-white text-sm">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-2 py-2 text-left font-semibold text-gray-600 uppercase tracking-wider text-xs">N°</th>
+                            <th class="px-2 py-2 text-left font-semibold text-gray-600 uppercase tracking-wider text-xs">Nom</th>
+                            <th class="px-2 py-2 text-left font-semibold text-gray-600 uppercase tracking-wider text-xs">Prénoms</th>
+                            <th class="px-2 py-2 text-left font-semibold text-gray-600 uppercase tracking-wider text-xs">Sexe</th>
+                            <th class="px-2 py-2 text-left font-semibold text-gray-600 uppercase tracking-wider text-xs">Total payé</th>
+                            <th class="px-2 py-2 text-left font-semibold text-gray-600 uppercase tracking-wider text-xs">Reste à payer</th>
+                            <th class="px-2 py-2 text-left font-semibold text-gray-600 uppercase tracking-wider text-xs">Tranche</th>
+                            <th class="px-2 py-2 text-left font-semibold text-gray-600 uppercase tracking-wider text-xs">Date</th>
+                            <th class="px-2 py-2 text-left font-semibold text-gray-600 uppercase tracking-wider text-xs">Nouveau paiement</th>
+                            <th class="px-2 py-2 text-left font-semibold text-gray-600 uppercase tracking-wider text-xs">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="paymentStudentsTbody" class="divide-y divide-gray-200">
+                        <!-- Rempli dynamiquement en JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Aucune classe sélectionnée -->
+            <div id="paymentStudentsEmpty" class="text-center py-10 text-gray-400">
+                <i class="fas fa-users text-2xl mb-2 block"></i>
+                Sélectionnez une classe pour afficher la liste des élèves.
+            </div>
+        </div>
+
+        <!-- Pied -->
+        <div class="p-4 border-t border-gray-200 flex justify-end">
+            <button type="button" onclick="closePaymentModal()"
+                class="bg-gray-100 text-gray-700 px-5 py-2.5 rounded-lg hover:bg-gray-200 transition font-medium text-sm">
+                Fermer
+            </button>
+        </div>
+    </div>
+</div>
+
 {{-- =============================================
      MODAL : Liste d'émargement des bulletins
      ============================================= --}}
 <div id="emmagementModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black bg-opacity-50">
+
     <div class="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 p-6">
         <div class="flex justify-between items-center mb-5">
             <div class="flex items-center gap-2">
@@ -437,6 +528,246 @@
             opt.textContent = c.name;
             if (c.id === currentClassId) opt.selected = true;
             classSelect.appendChild(opt);
+        });
+    }
+
+    // URLs fournies par Laravel (évite de re-générer des routes en JS)
+    const ROUTE_STUDENTS_BY_CLASS = "{{ url('admin/students/by-class') }}"; // + /{classId}
+    const ROUTE_QUICK_PAYMENT_BASE = "{{ url('admin/students') }}"; // + /{studentId}/quick-payment
+    const CSRF_TOKEN = "{{ csrf_token() }}";
+
+    // ─── Modal Paiement ───────────────────────────────────────────────────────
+    function openPaymentModal() {
+        document.getElementById('paymentModal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closePaymentModal() {
+        document.getElementById('paymentModal').classList.add('hidden');
+        document.body.style.overflow = '';
+        // Réinitialisation de l'état du modal
+        document.getElementById('payment_class_id').value = '';
+        document.getElementById('paymentStudentsWrapper').classList.add('hidden');
+        document.getElementById('paymentStudentsEmpty').classList.remove('hidden');
+        hidePaymentAlert();
+    }
+
+    document.getElementById('paymentModal').addEventListener('click', function(e) {
+        if (e.target === this) closePaymentModal();
+    });
+
+    function showPaymentAlert(message, type) {
+        const alertBox = document.getElementById('paymentModalAlert');
+        alertBox.textContent = message;
+        alertBox.className = 'mb-4 p-3 rounded-lg text-sm ' + (type === 'success'
+            ? 'bg-green-50 border border-green-200 text-green-700'
+            : 'bg-red-50 border border-red-200 text-red-700');
+        alertBox.classList.remove('hidden');
+    }
+
+    function hidePaymentAlert() {
+        document.getElementById('paymentModalAlert').classList.add('hidden');
+    }
+
+    function formatFcfa(value) {
+        return new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(value) + ' FCFA';
+    }
+
+    function todayStr() {
+        const d = new Date();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${d.getFullYear()}-${m}-${day}`;
+    }
+
+    function loadStudentsForPayment(classId) {
+        hidePaymentAlert();
+        const wrapper = document.getElementById('paymentStudentsWrapper');
+        const empty   = document.getElementById('paymentStudentsEmpty');
+        const loading = document.getElementById('paymentModalLoading');
+        const tbody   = document.getElementById('paymentStudentsTbody');
+
+        if (!classId) {
+            wrapper.classList.add('hidden');
+            empty.classList.remove('hidden');
+            loading.classList.add('hidden');
+            return;
+        }
+
+        empty.classList.add('hidden');
+        wrapper.classList.add('hidden');
+        loading.classList.remove('hidden');
+        tbody.innerHTML = '';
+
+        fetch(`${ROUTE_STUDENTS_BY_CLASS}/${classId}`, {
+            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(res => res.json().then(data => ({ status: res.status, data })))
+        .then(({ status, data }) => {
+            loading.classList.add('hidden');
+
+            if (status !== 200 || !data.success) {
+                showPaymentAlert(data.message || 'Erreur lors du chargement des élèves.', 'error');
+                empty.classList.remove('hidden');
+                return;
+            }
+
+            if (!data.students.length) {
+                showPaymentAlert('Aucun élève validé trouvé dans cette classe pour l\'année active.', 'error');
+                empty.classList.remove('hidden');
+                return;
+            }
+
+            renderPaymentStudents(data.students);
+            wrapper.classList.remove('hidden');
+        })
+        .catch(() => {
+            loading.classList.add('hidden');
+            empty.classList.remove('hidden');
+            showPaymentAlert('Erreur réseau lors du chargement des élèves.', 'error');
+        });
+    }
+
+    function renderPaymentStudents(students) {
+        const tbody = document.getElementById('paymentStudentsTbody');
+        tbody.innerHTML = '';
+
+        students.forEach(student => {
+            const isFullyPaid = student.remaining_fees <= 0;
+            const rowId = `student-row-${student.id}`;
+
+            const tr = document.createElement('tr');
+            tr.id = rowId;
+            tr.className = 'hover:bg-gray-50 transition duration-150';
+
+            tr.innerHTML = `
+                <td class="px-2 py-2 whitespace-nowrap text-gray-900 text-center">${student.numero}</td>
+                <td class="px-2 py-2 whitespace-nowrap font-medium text-gray-900">${student.last_name}</td>
+                <td class="px-2 py-2 whitespace-nowrap text-gray-900">${student.first_name}</td>
+                <td class="px-2 py-2 whitespace-nowrap text-gray-900 text-center">${student.gender ?? '-'}</td>
+                <td class="px-2 py-2 whitespace-nowrap text-gray-900">${formatFcfa(student.total_paid)}</td>
+                <td class="px-2 py-2 whitespace-nowrap font-semibold ${isFullyPaid ? 'text-green-600' : 'text-red-600'}">
+                    ${formatFcfa(student.remaining_fees)}
+                </td>
+                <td class="px-2 py-2 whitespace-nowrap">
+                    <select class="payment-tranche border border-gray-300 rounded p-1.5 text-xs w-20" ${isFullyPaid ? 'disabled' : ''}>
+                        <option value="1">T1</option>
+                        <option value="2">T2</option>
+                        <option value="3">T3</option>
+                    </select>
+                </td>
+                <td class="px-2 py-2 whitespace-nowrap">
+                    <input type="date" class="payment-date border border-gray-300 rounded p-1.5 text-xs w-32"
+                           value="${todayStr()}" max="${todayStr()}" ${isFullyPaid ? 'disabled' : ''}>
+                </td>
+                <td class="px-2 py-2 whitespace-nowrap">
+                    <input type="number" step="0.01" min="0.01"
+                           class="payment-amount border border-gray-300 rounded p-1.5 text-xs w-28"
+                           placeholder="0"
+                           max="${student.remaining_fees}"
+                           value="${isFullyPaid ? '0' : ''}"
+                           ${isFullyPaid ? 'readonly disabled' : ''}>
+                </td>
+                <td class="px-2 py-2 whitespace-nowrap">
+                    ${isFullyPaid
+                        ? `<span class="text-xs text-green-600 font-medium flex items-center gap-1"><i class="fas fa-check-circle"></i>Soldé</span>`
+                        : `<button type="button"
+                                  class="bg-green-600 text-white px-3 py-1.5 rounded text-xs hover:bg-green-700 transition duration-200 flex items-center gap-1"
+                                  onclick="submitQuickPayment(${student.id}, ${student.remaining_fees}, '${rowId}')">
+                                <i class="fas fa-check"></i>Enregistrer
+                           </button>`
+                    }
+                </td>
+            `;
+
+            tbody.appendChild(tr);
+
+            // Validation live du montant (ne dépasse pas le reste à payer)
+            if (!isFullyPaid) {
+                const amountInput = tr.querySelector('.payment-amount');
+                amountInput.addEventListener('input', function() {
+                    if (parseFloat(this.value) > student.remaining_fees) {
+                        this.value = student.remaining_fees;
+                    }
+                });
+            }
+        });
+    }
+
+    function submitQuickPayment(studentId, remainingFees, rowId) {
+        const row = document.getElementById(rowId);
+        const tranche = row.querySelector('.payment-tranche').value;
+        const paymentDate = row.querySelector('.payment-date').value;
+        const amountInput = row.querySelector('.payment-amount');
+        const amount = parseFloat(amountInput.value);
+        const submitBtn = row.querySelector('button');
+
+        hidePaymentAlert();
+
+        if (!amount || amount <= 0) {
+            showPaymentAlert('Veuillez saisir un montant valide.', 'error');
+            return;
+        }
+        if (amount > remainingFees) {
+            showPaymentAlert(`Le montant ne peut pas dépasser le reste à payer (${formatFcfa(remainingFees)}).`, 'error');
+            return;
+        }
+        if (!paymentDate) {
+            showPaymentAlert('Veuillez sélectionner une date de paiement.', 'error');
+            return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+        fetch(`${ROUTE_QUICK_PAYMENT_BASE}/${studentId}/quick-payment`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': CSRF_TOKEN,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                tranche: tranche,
+                amount: amount,
+                payment_date: paymentDate
+            })
+        })
+        .then(res => res.json().then(data => ({ status: res.status, data })))
+        .then(({ status, data }) => {
+            if (status !== 200 || !data.success) {
+                showPaymentAlert(data.message || 'Erreur lors de l\'enregistrement du paiement.', 'error');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-check"></i>Enregistrer';
+                return;
+            }
+
+            showPaymentAlert(data.message, 'success');
+
+            // Mise à jour de la ligne : total payé / reste à payer
+            row.children[4].textContent = formatFcfa(data.total_paid);
+            const resteCell = row.children[5];
+            resteCell.textContent = formatFcfa(data.remaining_fees);
+
+            if (data.remaining_fees <= 0) {
+                resteCell.className = 'px-2 py-2 whitespace-nowrap font-semibold text-green-600';
+                row.children[6].innerHTML = '<select disabled class="border border-gray-300 rounded p-1.5 text-xs w-20"><option>T1</option></select>';
+                row.children[7].innerHTML = `<input type="date" disabled class="border border-gray-300 rounded p-1.5 text-xs w-32" value="${todayStr()}">`;
+                row.children[8].innerHTML = '<input type="number" disabled readonly value="0" class="border border-gray-300 rounded p-1.5 text-xs w-28">';
+                row.children[9].innerHTML = '<span class="text-xs text-green-600 font-medium flex items-center gap-1"><i class="fas fa-check-circle"></i>Soldé</span>';
+            } else {
+                resteCell.className = 'px-2 py-2 whitespace-nowrap font-semibold text-red-600';
+                amountInput.value = '';
+                amountInput.max = data.remaining_fees;
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-check"></i>Enregistrer';
+            }
+        })
+        .catch(() => {
+            showPaymentAlert('Erreur réseau lors de l\'enregistrement du paiement.', 'error');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-check"></i>Enregistrer';
         });
     }
 

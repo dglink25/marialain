@@ -280,6 +280,10 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::post('students/{student}/validate', [StudentValidationController::class, 'validateStudent'])->name('students.validate');
     Route::get('students/list', [StudentController::class, 'listAlphabetical'])->name('students.list');
 
+    // Modal "Ajouter un paiement" depuis la liste des élèves
+    Route::get('students/by-class/{classe}', [StudentController::class, 'getStudentsByClass'])->name('students.by-class');
+    Route::post('students/{student}/quick-payment', [StudentController::class, 'quickPayment'])->name('students.quick-payment');
+
     // Exports
     Route::get('students/export/pdf', [StudentController::class, 'exportPdf'])->name('students.export.pdf');
     Route::get('students/export/excel', [StudentExportController::class, 'exportExcel'])->name('students.export.excel');

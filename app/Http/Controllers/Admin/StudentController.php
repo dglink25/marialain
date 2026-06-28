@@ -517,6 +517,145 @@ class StudentController extends Controller{
         }
     }
 
+    /**
+     * Retourne en JSON la liste alphabétique des élèves validés d'une classe,
+     * pour l'année académique active, avec total payé / reste à payer.
+     * Utilisé par le modal "Ajouter un paiement" sur la page Liste des élèves.
+     */
+    public function getStudentsByClass($classeId){
+        $activeYear = AcademicYear::where('active', true)->first();
+
+        if (!$activeYear) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Aucune année académique active trouvée.',
+            ], 422);
+        }
+
+        $classe = Classe::where('id', $classeId)
+            ->where('academic_year_id', $activeYear->id)
+            ->first();
+
+        if (!$classe) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Classe introuvable pour l\'année active.',
+            ], 404);
+        }
+
+        $students = Student::with('classe')
+            ->where('class_id', $classeId)
+            ->where('academic_year_id', $activeYear->id)
+            ->where('is_validated', 1)
+            ->orderBy('last_name')
+            ->orderBy('first_name')
+            ->get();
+
+        $data = $students->values()->map(function ($student, $index) {
+            $totalFees     = $student->total_fees ?? $student->classe->school_fees ?? 0;
+            $totalPaid     = $student->payments()->sum('amount');
+            $remainingFees = max($totalFees - $totalPaid, 0);
+
+            return [
+                'numero'         => $index + 1,
+                'id'             => $student->id,
+                'last_name'      => $student->last_name,
+                'first_name'     => $student->first_name,
+                'gender'         => $student->gender,
+                'total_fees'     => (float) $totalFees,
+                'total_paid'     => (float) $totalPaid,
+                'remaining_fees' => (float) $remainingFees,
+            ];
+        });
+
+        return response()->json([
+            'success'  => true,
+            'classe'   => $classe->name,
+            'students' => $data,
+        ]);
+    }
+
+    /**
+     * Enregistre un paiement rapide depuis le modal de la page Liste des élèves.
+     * Reprend la même logique que StudentPaymentController::store().
+     */
+    public function quickPayment(Request $request, $studentId){
+        $student = Student::with('classe')->findOrFail($studentId);
+
+        $activeAcademicYear = AcademicYear::where('active', true)->first();
+        if (!$activeAcademicYear) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Aucune année académique active trouvée.',
+            ], 422);
+        }
+
+        $totalFees     = $student->total_fees ?? $student->classe->school_fees ?? 0;
+        $totalPaid     = $student->payments()->sum('amount');
+        $remainingFees = max($totalFees - $totalPaid, 0);
+
+        if ($remainingFees <= 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cet élève a déjà payé l\'intégralité de ses frais.',
+            ], 422);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'tranche'      => 'required|integer|min:1|max:3',
+            'amount'       => 'required|numeric|min:0.01|max:' . $remainingFees,
+            'payment_date' => 'required|date|before_or_equal:today',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+                'errors'  => $validator->errors(),
+            ], 422);
+        }
+
+        $payment = $student->payments()->create([
+            'tranche'          => $request->tranche,
+            'amount'           => $request->amount,
+            'academic_year_id' => $activeAcademicYear->id,
+            'payment_date'     => $request->payment_date,
+        ]);
+
+        $newTotalPaid = $totalPaid + $request->amount;
+        $student->update([
+            'amount_paid'  => $newTotalPaid,
+            'is_validated' => $newTotalPaid >= $totalFees ? 1 : $student->is_validated,
+        ]);
+
+        // Génération du reçu PDF (même logique que StudentPaymentController::store)
+        try {
+            $pdf = Pdf::loadView('pdf.receipt', [
+                'student'       => $student,
+                'payment'       => $payment,
+                'totalFees'     => $totalFees,
+                'totalPaid'     => $newTotalPaid,
+                'remainingFees' => $totalFees - $newTotalPaid,
+            ]);
+
+            $pdfPath = 'receipts/recu_' . $payment->id . '_' . time() . '.pdf';
+            Storage::disk('public')->put($pdfPath, $pdf->output());
+            $payment->update(['receipt' => $pdfPath]);
+        } catch (\Exception $e) {
+            // On continue même sans PDF
+        }
+
+        $newRemaining = $totalFees - $newTotalPaid;
+
+        return response()->json([
+            'success'        => true,
+            'message'        => 'Paiement de ' . number_format($request->amount, 0, ',', ' ') . ' FCFA enregistré avec succès pour ' . $student->last_name . ' ' . $student->first_name . '.',
+            'total_paid'     => (float) $newTotalPaid,
+            'remaining_fees' => (float) max($newRemaining, 0),
+            'receipt_url'    => $payment->receipt ? route('payments.receipt', $payment->id) : null,
+        ]);
+    }
+
     public function exportEmmagementPdf(Request $request) {
         // 1. Vérifier l'année académique active
         $activeYear = AcademicYear::where('active', true)->first();
