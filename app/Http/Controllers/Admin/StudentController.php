@@ -313,7 +313,11 @@ class StudentController extends Controller{
                 $query->whereDate('created_at', $request->date);
             }
 
-            $students = $query->paginate(10)->withQueryString();
+            // Toujours retourner la liste par ordre alphabétique (nom puis prénom)
+            $students = $query->orderBy('last_name')
+                ->orderBy('first_name')
+                ->paginate(10)
+                ->withQueryString();
 
             // Classes et entités filtrées par l'année sélectionnée
             $classes  = Classe::where('academic_year_id', $selectedYear->id)->get();
