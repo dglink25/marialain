@@ -142,10 +142,10 @@
             <tr>
                 <td>{{ $loop->iteration }}</td>
                 <td>{{ $teacher->name ?? '-' }}</td>
-                 <td>{{ $teacher->gender ?? '-' }}</td>
-                  <td>{{ $teacher->phone ?? '-' }}</td>
-                   <td>{{ $teacher->email ?? '-' }}</td>
-                   <td> {{ $teacher->email ?? '-' }} </td>
+                <td>{{ $teacher->gender ?? '-' }}</td>
+                <td>{{ $teacher->phone ?? '-' }}</td>
+                <td>{{ $teacher->email ?? '-' }}</td>
+                <td>{{ $teacher->classe?->name ?? 'Non assignée' }}</td>
             </tr>
             @endforeach
         </tbody>

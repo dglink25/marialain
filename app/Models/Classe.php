@@ -16,13 +16,11 @@ class Classe extends Model{
         'description',
     ];
 
-    public function entity()
-    {
+    public function entity() {
         return $this->belongsTo(Entity::class, 'entity_id');
     }
 
-    public function academicYear()
-    {
+    public function academicYear() {
         return $this->belongsTo(AcademicYear::class, 'academic_year_id');
     }
 

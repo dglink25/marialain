@@ -41,7 +41,7 @@
                     <td class="px-4 py-2 text-center">{{ $loop->iteration }}</td>
                     <td class="px-4 py-2 font-semibold text-gray-800"><a href="{{ route('primaire.enseignants.show', $teacher->id) }} " class="text-blue-600 hover:underline">{{ $teacher->name }}</a></td>
                     <td class="px-4 py-2 text-gray-700">{{ $teacher->gender ?? "-" }}</td>
-                    <td class="px-4 py-2 text-gray-700">{{ $teacher->classePrimaire?->name ?? 'Non assignée' }}</td>
+                    <td class="px-4 py-2 text-gray-700">{{ $teacher->classe?->name ?? 'Non assignée' }}</td>
                     <td class="px-4 py-2 text-gray-700">{{ $teacher->phone ?? "-" }}</td>
                     <td class="px-4 py-2 text-gray-700">{{ $teacher->email ?? 'Non disponible' }}</td>
                 </tr>

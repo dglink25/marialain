@@ -16,34 +16,50 @@ class primaryteacherController extends Controller
      * Display a listing of the resource.
      */
     public function index(){
-     $annee_academique = AcademicYear::where('active', 1)-> first();
-     if(!$annee_academique){
-        echo ('Erreur ! Aucune année académique en cours');
-     }
-    // Récupère tous les enseignants du primaire de l'année acadmique en cours
-   
-    $teachers = User::whereHas('role', function ($q) {
-        $q->where('name', 'teacher');
-    })
-    ->whereHas('classe', function ($q2) use ($annee_academique) {
-        $q2->whereHas('entity', function ($q3) {
-            $q3->where('slug', 'primaire');
-        })
-        ->where('academic_year_id', $annee_academique->id);
-    })-> with('classePrimaire')
-    ->get();
+        $annee_academique = AcademicYear::where('active', 1)->first();
+        if (!$annee_academique) {
+            return back()->with('error', 'Aucune année académique active trouvée.');
+        }
 
-return view('primaire.enseignants.enseignants', compact('teachers', 'annee_academique'));}
+        // Enseignants du primaire et maternelle = ceux dont teacher_id
+        // correspond à une classe avec entity_id IN (1=maternelle, 2=primaire)
+        $teachers = User::whereHas('role', function ($q) {
+                $q->where('name', 'enseignant');
+            })
+            ->whereHas('classe', function ($q) use ($annee_academique) {
+                $q->whereIn('entity_id', [1, 2])
+                  ->where('academic_year_id', $annee_academique->id);
+            })
+            ->with(['classe' => function ($q) use ($annee_academique) {
+                $q->whereIn('entity_id', [1, 2])
+                  ->where('academic_year_id', $annee_academique->id);
+            }])
+            ->orderBy('name')
+            ->get();
 
-public function downloadTeachersList(){
-   // Récupère tous les enseignants du primaire
-    $teachers = User::whereHas('role', function ($query) {
-        $query->where('name', 'teacher');
-    })->with('classePrimaire') // eager load de la classe du primaire
-      ->get();  
-        $pdf = Pdf::loadView('primaire.enseignants.pdf', compact ('teachers'));
-    return $pdf->download('liste_des_enseignants.pdf');
-}
+        return view('primaire.enseignants.enseignants', compact('teachers', 'annee_academique'));
+    }
+
+    public function downloadTeachersList(){
+        $annee_academique = AcademicYear::where('active', 1)->first();
+
+        $teachers = User::whereHas('role', function ($q) {
+                $q->where('name', 'enseignant');
+            })
+            ->whereHas('classe', function ($q) use ($annee_academique) {
+                $q->whereIn('entity_id', [1, 2])
+                  ->where('academic_year_id', $annee_academique->id);
+            })
+            ->with(['classe' => function ($q) use ($annee_academique) {
+                $q->whereIn('entity_id', [1, 2])
+                  ->where('academic_year_id', $annee_academique->id);
+            }])
+            ->orderBy('name')
+            ->get();
+
+        $pdf = Pdf::loadView('primaire.enseignants.pdf', compact('teachers'));
+        return $pdf->download('liste_des_enseignants.pdf');
+    }
     /**
      * Show the form for creating a new resource.
      */
