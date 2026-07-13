@@ -9,7 +9,7 @@ use App\Models\AcademicYear;
 use Barryvdh\DomPDF\Facade\Pdf; // Import du PDF
 
 use App\Models\Student;
-class ClassesprimaireController extends Controller{
+class ClassesPrimaireController extends Controller{
     /**
      * Display a listing of the resource.
      */
@@ -25,7 +25,7 @@ class ClassesprimaireController extends Controller{
             // Récupérer les classes primaire + maternelle avec leurs enseignants
             $classes = Classe::where('academic_year_id', $annee_academique->id)
                 ->whereHas('entity', function ($query) {
-                    $query->whereIn('name', ['primaire', 'maternelle']);
+                    $query->whereIn('slug', ['primaire', 'maternelle']);
                 })
                 ->with(['academicYear', 'teacher']) // 🔑 Relation teacher ajoutée
                 ->get();
@@ -79,7 +79,7 @@ class ClassesprimaireController extends Controller{
     public function downloadClassStudents($id){
         $class = Classe:: FindorFail($id);
         $annee_academique = AcademicYear::where('active' , 1)-> first();
-        $students = Student::where('id', $class -> id)-> orderBy('last_name')-> orderBy('First_name')-> get();
+        $students = Student::where('id', $class -> id)-> orderBy('last_name')-> orderBy('first_name')-> get();
         $pdf = Pdf::loadView('primaire.classe.pdf', compact('students', 'class', 'annee_academique'));
         return $pdf -> download('liste_'. $class-> name. '.pdf');
     }

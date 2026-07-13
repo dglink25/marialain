@@ -10,7 +10,7 @@
     <!-- En-tête et actions -->
     <div class="flex flex-col md:flex-row items-center justify-between mb-6 gap-4">
         <h2 class="text-xl font-semibold text-gray-700">Liste des élèves - Primaire</h2>
-        <a href="{{ route('primaire.ecoliers.liste.pdf') }}" 
+        <a href="{{ route('primaire.ecoliers.liste.pdf', array_filter(request()->only(['classe', 'gender', 'search', 'sort']))) }}" 
            class="bg-green-600 text-white px-5 py-2 rounded-lg shadow hover:bg-green-700 transition">
            Télécharger la liste
         </a>

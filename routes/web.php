@@ -36,7 +36,7 @@ use App\Http\Controllers\Teacher\DashboardController;
 use App\Http\Controllers\Teacher\ClassController as TeacherClassController;
 
 // Primaire
-use App\Http\Controllers\Dprimaire\ClassesprimaireController;
+use App\Http\Controllers\Dprimaire\ClassesPrimaireController;
 use App\Http\Controllers\Dprimaire\primaryteacherController;
 
 use App\Http\Controllers\SecretaryDashboardController;
@@ -80,6 +80,8 @@ Route::get('/403', function () {
     abort(403);
 });
 
+
+
 Route::prefix('censeur')->middleware('auth')->group(function () {
 
     Route::get('/permissions/{classId}', [App\Http\Controllers\Censeur\NoteController::class, 'permissions'])
@@ -106,14 +108,14 @@ Route::get('/admin/entities/{entity}/classes', [EntityController::class, 'getCla
 
 Route::post('/contact/send', [ContactController::class, 'send'])->name('contact.send');
 //primaire
-Route:: get('/primaire/classe/classes', [ClassesprimaireController::class, 'index'])-> name('primaire.classe.classes');
-Route:: post('/primaire/classe/classes', [ClassesprimaireController::class, 'store'])-> name('primaire.classe.store');
-Route:: get('/primaire/classe/showclass/{id}', [ClassesprimaireController::class, 'show'])-> name('primaire.classe.showclass');
+Route:: get('/primaire/classe/classes', [ClassesPrimaireController::class, 'index'])-> name('primaire.classe.classes');
+Route:: post('/primaire/classe/classes', [ClassesPrimaireController::class, 'store'])-> name('primaire.classe.store');
+Route:: get('/primaire/classe/showclass/{id}', [ClassesPrimaireController::class, 'show'])-> name('primaire.classe.showclass');
 Route:: get('/primaire/enseignants/enseignants', [primaryteacherController::class, 'index'])-> name('primaire.enseignants.enseignants');
 Route:: get('/primaire/ecoliers/liste', [StudentsController::class, 'index'])-> name('primaire.ecoliers.liste');
 Route::get('/primaire/ecoliers/pdf', [StudentsController::class, 'downloadPrimaireStudents'])
     ->name('primaire.ecoliers.liste.pdf');
-Route::get('/primaire/classe/{id}/pdf', [ClassesprimaireController::class, 'downloadClassStudents'])-> name('primaire.classe.pdf');
+Route::get('/primaire/classe/{id}/pdf', [ClassesPrimaireController::class, 'downloadClassStudents'])-> name('primaire.classe.pdf');
 Route::get('/primaire/enseignants/pdf', [primaryteacherController::class, 'downloadTeachersList'])->name('primaire.enseignants.pdf');
 Route::get('/primaire/enseignants/{id}/show', [primaryteacherController::class, 'show'])-> name('primaire.enseignants.show');
 Route::get('/', function () {
@@ -173,9 +175,9 @@ Route::get('/test-invitation-mail', function () {
 |--------------------------------------------------------------------------
 */
 Route::prefix('primaire')->name('primaire.')->group(function () {
-    Route::get('classe/classes', [ClassesprimaireController::class, 'index'])->name('classe.classes');
-    Route::post('classe/classes', [ClassesprimaireController::class, 'store'])->name('classe.store');
-    Route::get('classe/showclass/{id}', [ClassesprimaireController::class, 'show'])->name('classe.showclass');
+    Route::get('classe/classes', [ClassesPrimaireController::class, 'index'])->name('classe.classes');
+    Route::post('classe/classes', [ClassesPrimaireController::class, 'store'])->name('classe.store');
+    Route::get('classe/showclass/{id}', [ClassesPrimaireController::class, 'show'])->name('classe.showclass');
 
     Route::get('enseignants/enseignants', [primaryteacherController::class, 'index'])->name('enseignants.enseignants');
     Route::get('enseignants/inviter', [InvitationPController::class, 'index'])->name('enseignants.inviter');
@@ -250,6 +252,11 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
         ->name('students.pending');
 });
 
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/dashboard/directeur', [DashboardPrimaireController::class, 'index'])
+        ->name('directeur.dashboard');
+});
 
 /*
 |--------------------------------------------------------------------------

@@ -10,11 +10,9 @@ use App\Models\AcademicYear;
 
 use Illuminate\Http\Request;
 
-class dashboardPrimaireController extends Controller
-{
+class DashboardPrimaireController extends Controller{
     //
-    public function index()
-    {
+    public function index()  {
         try {
             $user = Auth::user();
             // Vérifier l'année académique active
