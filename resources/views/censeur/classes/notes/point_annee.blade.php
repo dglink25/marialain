@@ -14,7 +14,7 @@
         <div class="mb-8">
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                    <h1 class="text-3xl font-bold text-gray-900">Point de l'Année Académique {{ $activeYear->name }} — {{ $classe->name }}</h1>
+                    <h1 class="text-3xl font-bold text-gray-900">Point de l'Année Académique {{ $activeYear->name }} - {{ $classe->name }}</h1>
                 </div>
                 <div class="flex flex-wrap gap-3">
 
@@ -30,13 +30,22 @@
                     </button>
 
                     {{-- ================================================================
-                         Bouton Bulletins Fin d'Année (PDF) — RÉSERVÉ Directeur & Secrétaire
+                         Boutons Bulletins Fin d'Année — RÉSERVÉS Directeur & Secrétaire
                     ================================================================ --}}
                     @if($isAuthorized)
+                        {{-- Télécharger PDF --}}
                         <a href="{{ route('censeur.classes.bulletin.fin-annee.all-pdf', $classe->id) }}"
                            class="inline-flex items-center px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl shadow-md hover:from-emerald-700 hover:to-teal-700 transition-all duration-200 hover:shadow-lg">
                             <i class="fas fa-file-archive mr-2"></i>
                             Bulletins Fin d'Année (PDF)
+                        </a>
+
+                        {{-- Imprimer directement --}}
+                        <a href="{{ route('censeur.classes.bulletin.fin-annee.print', $classe->id) }}"
+                           target="_blank"
+                           class="inline-flex items-center px-5 py-2.5 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl shadow-md hover:from-blue-700 hover:to-cyan-700 transition-all duration-200 hover:shadow-lg">
+                            <i class="fas fa-print mr-2"></i>
+                            Imprimer Bulletins
                         </a>
                     @else
                         <button onclick="ouvrirModalAccesRefuse()"
@@ -44,6 +53,12 @@
                             <i class="fas fa-lock mr-2 text-xs"></i>
                             <i class="fas fa-file-archive mr-2"></i>
                             Bulletins Fin d'Année (PDF)
+                        </button>
+                        <button onclick="ouvrirModalAccesRefuse()"
+                                class="inline-flex items-center px-5 py-2.5 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl shadow-md hover:from-blue-700 hover:to-cyan-700 transition-all duration-200 hover:shadow-lg opacity-75 cursor-not-allowed relative">
+                            <i class="fas fa-lock mr-2 text-xs"></i>
+                            <i class="fas fa-print mr-2"></i>
+                            Imprimer Bulletins
                         </button>
                     @endif
 

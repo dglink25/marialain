@@ -3384,6 +3384,37 @@ use App\Exports\ConducteExport;
         }
     }
 
+    public function printAllBulletinsFinAnnee(int $classId) {
+        try {
+            $activeYear = AcademicYear::where('active', true)->firstOrFail();
+
+            $classe = Classe::with(['students' => function ($q) use ($activeYear) {
+                $q->where('is_validated', 1)
+                  ->where('academic_year_id', $activeYear->id)
+                  ->orderBy('last_name')->orderBy('first_name');
+            }])->findOrFail($classId);
+
+            $subjects = Subject::whereHas('classTeacherSubjects', function ($q) use ($classId, $activeYear) {
+                $q->where('class_id', $classId)->where('academic_year_id', $activeYear->id);
+            })->with(['classTeacherSubjects' => function ($q) use ($classId, $activeYear) {
+                $q->where('class_id', $classId)->where('academic_year_id', $activeYear->id);
+            }])->orderBy('name')->get();
+
+            $allBulletins = [];
+            foreach ($classe->students as $student) {
+                $allBulletins[] = $this->getBulletinFinAnneeData($student->id, $classId, $activeYear, $subjects);
+            }
+
+            return view('censeur.classes.notes.print_bulletins_fin_annee', [
+                'allBulletins' => $allBulletins,
+                'classe'       => $classe,
+            ]);
+
+        } catch (\Exception $e) {
+            return back()->with('error', "Impossible de préparer l'impression : " . $e->getMessage());
+        }
+    }
+
     public function exportListeElevesPDF(int $classId, int $trimestre, int $subjectId) {
         try {
             // 1) Année académique active
