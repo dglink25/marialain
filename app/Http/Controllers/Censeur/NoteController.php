@@ -3394,24 +3394,38 @@ use App\Exports\ConducteExport;
                   ->orderBy('last_name')->orderBy('first_name');
             }])->findOrFail($classId);
 
-            $subjects = Subject::whereHas('classTeacherSubjects', function ($q) use ($classId, $activeYear) {
+            // On ne calcule rien ici : on passe juste la liste des IDs
+            // Les bulletins seront chargés un par un côté client via AJAX
+            $studentIds = $classe->students->pluck('id')->toArray();
+
+            return view('censeur.classes.notes.print_bulletins_fin_annee', [
+                'classe'      => $classe,
+                'studentIds'  => $studentIds,
+                'activeYear'  => $activeYear,
+                'bulletinUrl' => route('censeur.classes.bulletin.fin-annee.student-html', [$classId, '__ID__']),
+            ]);
+
+        } catch (\Exception $e) {
+            return back()->with('error', "Impossible de préparer l'impression : " . $e->getMessage());
+        }
+    }
+
+    public function bulletinFinAnneeHtml(int $classId, int $studentId) {
+        try {
+            $activeYear = AcademicYear::where('active', true)->firstOrFail();
+            $subjects   = Subject::whereHas('classTeacherSubjects', function ($q) use ($classId, $activeYear) {
                 $q->where('class_id', $classId)->where('academic_year_id', $activeYear->id);
             })->with(['classTeacherSubjects' => function ($q) use ($classId, $activeYear) {
                 $q->where('class_id', $classId)->where('academic_year_id', $activeYear->id);
             }])->orderBy('name')->get();
 
-            $allBulletins = [];
-            foreach ($classe->students as $student) {
-                $allBulletins[] = $this->getBulletinFinAnneeData($student->id, $classId, $activeYear, $subjects);
-            }
+            $data = $this->getBulletinFinAnneeData($studentId, $classId, $activeYear, $subjects);
 
-            return view('censeur.classes.notes.print_bulletins_fin_annee', [
-                'allBulletins' => $allBulletins,
-                'classe'       => $classe,
-            ]);
+            // Retourne uniquement le fragment HTML du bulletin (sans <html><head>)
+            return view('censeur.classes.notes.bulletin_fin_annee_fragment', ['data' => $data]);
 
         } catch (\Exception $e) {
-            return back()->with('error', "Impossible de préparer l'impression : " . $e->getMessage());
+            return response('<p style="color:red">Erreur : ' . e($e->getMessage()) . '</p>', 500);
         }
     }
 

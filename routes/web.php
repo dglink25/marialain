@@ -787,6 +787,10 @@ Route::middleware(['auth'])->get('/censeur/classes/{classId}/bulletin-fin-annee/
     [App\Http\Controllers\Censeur\NoteController::class, 'printAllBulletinsFinAnnee'])
     ->name('censeur.classes.bulletin.fin-annee.print');
 
+Route::middleware(['auth'])->get('/censeur/classes/{classId}/students/{studentId}/bulletin-fin-annee/html',
+    [App\Http\Controllers\Censeur\NoteController::class, 'bulletinFinAnneeHtml'])
+    ->name('censeur.classes.bulletin.fin-annee.student-html');
+
 Route::middleware(['auth'])->get('/censeur/classes/{classId}/students/{studentId}/bulletin-fin-annee/pdf', 
     [App\Http\Controllers\Censeur\NoteController::class, 'downloadBulletinFinAnneePdf'])
     ->name('censeur.classes.bulletin.fin-annee.student-pdf');
