@@ -115,6 +115,18 @@ Route:: get('/primaire/enseignants/enseignants', [primaryteacherController::clas
 Route:: get('/primaire/ecoliers/liste', [StudentsController::class, 'index'])-> name('primaire.ecoliers.liste');
 Route::get('/primaire/ecoliers/pdf', [StudentsController::class, 'downloadPrimaireStudents'])
     ->name('primaire.ecoliers.liste.pdf');
+
+// Gestion des notes & évaluations primaire/maternelle
+Route::middleware(['auth'])->prefix('primaire/notes')->name('primaire.notes.')->group(function () {
+    Route::get('/', [\App\Http\Controllers\Dprimaire\NotesEvaluationController::class, 'index'])
+         ->name('index');
+    Route::post('/composition', [\App\Http\Controllers\Dprimaire\NotesEvaluationController::class, 'programmerComposition'])
+         ->name('composition.store');
+    Route::get('/classe/{classeId}/formative', [\App\Http\Controllers\Dprimaire\NotesEvaluationController::class, 'evaluationFormative'])
+         ->name('formative');
+    Route::get('/classe/{classeId}/sommative', [\App\Http\Controllers\Dprimaire\NotesEvaluationController::class, 'evaluationSommative'])
+         ->name('sommative');
+});
 Route::get('/primaire/classe/{id}/pdf', [ClassesPrimaireController::class, 'downloadClassStudents'])-> name('primaire.classe.pdf');
 Route::get('/primaire/enseignants/pdf', [primaryteacherController::class, 'downloadTeachersList'])->name('primaire.enseignants.pdf');
 Route::get('/primaire/enseignants/{id}/show', [primaryteacherController::class, 'show'])-> name('primaire.enseignants.show');

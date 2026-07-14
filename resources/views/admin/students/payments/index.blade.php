@@ -231,19 +231,31 @@
                                    {{ $student->registration_type == 'new' ? 'checked' : '' }} class="mr-2">
                             <label for="type_new" class="text-sm text-gray-700">Nouvelle inscription</label>
                         </div>
+                        @if(in_array($student->entity_id, [null, 3]))
+                        {{-- Réinscription uniquement pour le secondaire (entity_id=3) --}}
                         <div class="flex items-center">
                             <input type="radio" name="registration_type" value="re_registration" id="type_re" 
                                    {{ $student->registration_type == 're_registration' ? 'checked' : '' }} class="mr-2">
                             <label for="type_re" class="text-sm text-gray-700">Réinscription</label>
                         </div>
+                        @else
+                        <p class="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded px-3 py-1.5 mt-1">
+                            La réinscription n'est pas applicable pour le primaire et la maternelle.
+                        </p>
+                        @endif
                     </div>
                 </div>
 
                 @if($student->classe)
                 <div class="mb-4 p-3 bg-gray-50 rounded-lg">
                     <p class="text-sm text-gray-600 mb-1">Frais de scolarité: <span class="font-semibold">{{ number_format($student->classe->school_fees ?? 0, 0, ',', ' ') }} FCFA</span></p>
-                    <p class="text-sm text-gray-600 mb-1">Frais inscription: <span class="font-semibold">{{ number_format($student->classe->registration_fee ?? 0, 0, ',', ' ') }} FCFA</span></p>
-                    <p class="text-sm text-gray-600">Frais réinscription: <span class="font-semibold">{{ number_format($student->classe->re_registration_fee ?? 0, 0, ',', ' ') }} FCFA</span></p>
+                    @if(in_array($student->entity_id, [null, 3]))
+                    <p class="text-sm text-gray-600 mb-1">Frais inscription: <span class="font-semibold">10 000 FCFA</span></p>
+                    <p class="text-sm text-gray-600">Frais réinscription: <span class="font-semibold">5 000 FCFA</span></p>
+                    @else
+                    <p class="text-sm text-gray-600">Frais inscription: <span class="font-semibold">5 000 FCFA</span></p>
+                    <p class="text-sm text-gray-400 italic">Pas de frais de réinscription</p>
+                    @endif
                 </div>
                 @endif
 

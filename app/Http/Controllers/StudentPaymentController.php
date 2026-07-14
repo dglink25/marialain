@@ -119,23 +119,35 @@ class StudentPaymentController extends Controller
         ]);
 
         $student->load('classe');
-        
-        // Recalculer les frais totaux en fonction du nouveau type d'inscription
-        $totalFees = $student->classe->school_fees ?? 0;
-        
-        if ($request->registration_type === 'new') {
-            $totalFees += $student->classe->registration_fee ?? 0;
-        } elseif ($request->registration_type === 're_registration') {
-            $totalFees += $student->classe->re_registration_fee ?? 0;
+
+        // Règles tarifaires par entité
+        $entityId = (int)($student->entity_id ?? $student->classe?->entity_id ?? 3);
+
+        if ($entityId === 3) {
+            $inscriptionFee   = 10000;
+            $reInscriptionFee = 5000;
+        } else {
+            // Primaire & Maternelle : pas de réinscription
+            $inscriptionFee   = 5000;
+            $reInscriptionFee = 0;
+            if ($request->registration_type === 're_registration') {
+                return redirect()->back()->with('error', 'La réinscription n\'est pas applicable pour le primaire/maternelle.');
+            }
         }
 
-        // Mettre à jour l'étudiant
+        $totalFees = $student->classe->school_fees ?? 0;
+        if ($request->registration_type === 'new') {
+            $totalFees += $inscriptionFee;
+        } elseif ($request->registration_type === 're_registration') {
+            $totalFees += $reInscriptionFee;
+        }
+
         $student->update([
             'registration_type' => $request->registration_type,
             'total_fees' => $totalFees,
         ]);
 
-        return redirect()->back()->with('success', 
+        return redirect()->back()->with('success',
             'Type d\'inscription mis à jour. Nouveaux frais totaux: ' . number_format($totalFees, 0, ',', ' ') . ' FCFA');
     }
 

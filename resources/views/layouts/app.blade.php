@@ -271,9 +271,9 @@
                                         <span class="ml-2">Ecoliers</span>
                                     </a>
 
-                                    <a href=""
-                                        class="flex items-center px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('censeur.notes.index') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
-                                        <i class="fas fa-sticky-note w-5"></i>
+                                    <a href="{{ route('primaire.notes.index') }}"
+                                        class="flex items-center px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('primaire.notes.*') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
+                                        <i class="fas fa-clipboard-list w-5"></i>
                                         <span class="ml-2">Gestion des notes</span>
                                     </a>
 

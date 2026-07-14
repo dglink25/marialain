@@ -90,11 +90,30 @@ class StudentController extends Controller{
                 ->where('academic_year_id', $activeYear->id)
                 ->firstOrFail();
 
+        // Règles tarifaires par entité :
+        // Secondaire (entity_id=3) : inscription=10000, réinscription=5000
+        // Primaire (entity_id=2) & Maternelle (entity_id=1) : inscription=5000, réinscription=0
+        $entityId = (int)($data['entity_id'] ?? $classe->entity_id);
+
+        if ($entityId === 3) {
+            // Secondaire
+            $inscriptionFee   = 10000;
+            $reInscriptionFee = 5000;
+        } else {
+            // Primaire & Maternelle
+            $inscriptionFee   = 5000;
+            $reInscriptionFee = 0;
+            // Pour primaire/maternelle, pas de réinscription — forcer "new"
+            if ($data['registration_type'] === 're_registration') {
+                $data['registration_type'] = 'new';
+            }
+        }
+
         $totalFees = $classe->school_fees ?? 0;
         if ($data['registration_type'] === 'new') {
-            $totalFees += $classe->registration_fee ?? 0;
+            $totalFees += $inscriptionFee;
         } elseif ($data['registration_type'] === 're_registration') {
-            $totalFees += $classe->re_registration_fee ?? 0;
+            $totalFees += $reInscriptionFee;
         }
 
 
