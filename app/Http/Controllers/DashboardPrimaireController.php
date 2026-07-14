@@ -25,25 +25,36 @@ class DashboardPrimaireController extends Controller{
             // Récupérer les classes primaire + maternelle avec leurs enseignants
             $primaryClassCount = Classe::where('academic_year_id', $annee_academique->id)
                 ->whereHas('entity', function ($query) {
-                    $query->whereIn('name', ['primaire', 'maternelle']);
+                    $query->whereIn('slug', ['primaire', 'maternelle']);
                 })
                 ->count();
             //nombre d'elèves au primaire
             $primaryStudentsCount = Student::where('academic_year_id', $annee_academique->id)
                 ->whereHas('entity', function ($q) {
-                    $q->whereIn('name', ['primaire', 'maternelle']);
+                    $q->whereIn('slug', ['primaire', 'maternelle']);
                 })->count();
-            //récupérer les enseignants du primaire
-            $primaryTeacherCount = User::whereHas('role', function ($q) {
-                $q->where('name', 'teacher');
-            })
-                ->whereHas('classe', function ($q2) use ($annee_academique) {
-                    $q2->whereHas('entity', function ($q3) {
-                        $q3->where('name', 'primaire');
-                    })
-                        ->where('academic_year_id', $annee_academique->id);
-                })->with('classePrimaire')->count();
-           return view('dashboards.directeur', compact('user', '$primaryClassCount', 'primaryStudentsCount', 'primaryTeacherCount'));   } catch (\Exception $e) {
+            //récupérer le nombre d'enseignants du primaire via les classes (entity_id 1 ou 2)
+            $primaryTeacherCount = Classe::where('academic_year_id', $annee_academique->id)
+                ->whereIn('entity_id', [1, 2])
+                ->whereNotNull('teacher_id')
+                ->distinct('teacher_id')
+                ->count('teacher_id');
+
+            // Répartition des classes par nom (pour l'affichage du dashboard)
+            $classesRepartition = Classe::where('academic_year_id', $annee_academique->id)
+                ->whereIn('entity_id', [1, 2])
+                ->withCount('students')
+                ->orderBy('name')
+                ->get();
+
+           return view('dashboards.directeur', compact(
+               'user',
+               'annee_academique',
+               'primaryClassCount',
+               'primaryStudentsCount',
+               'primaryTeacherCount',
+               'classesRepartition'
+           ));   } catch (\Exception $e) {
             // Gestion des exceptions générales
             return back()->with('error', 'Erreur lors du chargement des classes : ' . $e->getMessage());
         }

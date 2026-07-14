@@ -27,7 +27,7 @@ class ClassesPrimaireController extends Controller{
                 ->whereHas('entity', function ($query) {
                     $query->whereIn('slug', ['primaire', 'maternelle']);
                 })
-                ->with(['academicYear', 'teacher']) // 🔑 Relation teacher ajoutée
+                ->with(['academicYear', 'teacher'])
                 ->get();
 
             return view('primaire.classe.classes', compact('classes', 'annee_academique'));

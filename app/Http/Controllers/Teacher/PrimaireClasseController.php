@@ -16,7 +16,7 @@ class PrimaireClasseController extends Controller
             // Vérifie si l’enseignant a une classe assignée
             $classe = Classe::with(['students', 'entity'])
                 ->where('teacher_id', $user->id)
-                ->whereHas('entity', fn($q) => $q->where('name', 'primaire'))
+                ->whereHas('entity', fn($q) => $q->where('slug', 'primaire'))
                 ->first();
 
             if (!$classe) {

@@ -38,7 +38,7 @@
                 </p>
             </div>
             <div class="p-6 bg-gray-50 rounded-lg border">
-                <p class="text-sm text-gray-500"><a href="#">Voir l'emploi du temps</a> </p>
+                <p class="text-sm text-gray-500"><a href="{{ route('schedules.ind', $class->id) }}">Voir l'emploi du temps</a> </p>
                 
             </div>
         </div>

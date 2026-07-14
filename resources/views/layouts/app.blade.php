@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="icon" type="image/png" href="Image.png">
     <title>CPEG MARIE-ALAIN</title>
 
@@ -213,10 +214,11 @@
                             </a>
                         @elseif ($isnotCenseur)
                             {{-- 🔹 Menu par défaut --}}
-                            <a href="{{ route('schedules.index') }}" 
-                            class="flex items-center px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('schedules.index') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
-                                <i class="fa fa-layer-group w-5"></i>
-                                <span class="ml-2">Emploi du temps</span>
+
+                            <a href="{{ route('teacher.dashboard') }}" 
+                            class="flex items-center px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('teacher.dashboard') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
+                                <i class="fa fa-book-open w-5"></i> 
+                                <span class="ml-2">Tableau de bord</span>
                             </a>
 
                             <a href="{{ route('teacher.subjects.primaire') }}" 
@@ -225,23 +227,19 @@
                                 <span class="ml-2">Gestion matières</span>
                             </a>
 
-                            <a href="{{ route('teacher.dashboard') }}" 
-                            class="flex items-center px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('teacher.dashboard') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
-                                <i class="fa fa-book-open w-5"></i> 
-                                <span class="ml-2">Tableau de bord</span>
+                            <a href="{{ route('schedules.index') }}" 
+                            class="flex items-center px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('schedules.index') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
+                                <i class="fa fa-layer-group w-5"></i>
+                                <span class="ml-2">Emploi du temps</span>
                             </a>
+                            
 
                             <a href="{{ route('teacher.classes.primaire') }}" 
                             class="flex items-center px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('teacher.classes.primaire') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
                                 <i class="fa fa-layer-group w-5"></i>
-                                <span class="ml-2">Ma classe</span>
+                                <span class="ml-2">Notes</span>
                             </a>
 
-                            <a href="{{ route('teacher.subjects.primaire') }}" 
-                            class="flex items-center px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('teacher.subjects.primaire') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
-                                <i class="fa fa-layer-group w-5"></i>
-                                <span class="ml-2">Matières</span>
-                            </a>
                         @endif
 
                         <a href="{{ route('archives.index') }}" class="flex items-center px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('archives.index') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
@@ -272,6 +270,13 @@
                                         <i class="fa fa-users w-5"></i> 
                                         <span class="ml-2">Ecoliers</span>
                                     </a>
+
+                                    <a href=""
+                                        class="flex items-center px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('censeur.notes.index') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
+                                        <i class="fas fa-sticky-note w-5"></i>
+                                        <span class="ml-2">Gestion des notes</span>
+                                    </a>
+
                                     @break
 
                                 @case('teacher')

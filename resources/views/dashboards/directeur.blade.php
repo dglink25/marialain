@@ -15,7 +15,7 @@
                 <p class="mt-1 text-sm text-gray-600">Bienvenue, {{ $user->name }}. Gestion du cycle primaire.</p>
             </div>
             <div class="mt-4 md:mt-0 bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
-                <p class="text-sm text-gray-600">Année scolaire: <span class="font-medium">2023-2024</span></p>
+                <p class="text-sm text-gray-600">Année scolaire: <span class="font-medium">{{ $annee_academique->name }}</span></p>
             </div>
         </div>
     </div>
@@ -34,7 +34,7 @@
                     <div class="ml-5 w-0 flex-1">
                         <dl>
                             <dt class="text-sm font-medium text-gray-500 truncate">Élèves primaire</dt>
-                            <dd class="text-lg font-medium text-gray-900"> $primaryStudentsCount</dd>
+                            <dd class="text-lg font-medium text-gray-900">{{ $primaryStudentsCount }}</dd>
                         </dl>
                     </div>
                 </div>
@@ -59,9 +59,10 @@
                     <div class="ml-5 w-0 flex-1">
                         <dl>
                             <dt class="text-sm font-medium text-gray-500 truncate">Enseignants</dt>
-                            <dd class="text-lg font-medium text-gray-900">$primaryTeacherCount</dd>
+                            <dd class="text-lg font-medium text-gray-900">{{ $primaryTeacherCount }}</dd>
                         </dl>
                     </div>
+
                 </div>
             </div>
             <div class="bg-gray-50 px-5 py-3">
@@ -84,7 +85,7 @@
                     <div class="ml-5 w-0 flex-1">
                         <dl>
                             <dt class="text-sm font-medium text-gray-500 truncate">Classes</dt>
-                            <dd class="text-lg font-medium text-gray-900"> $primaryClassCount</dd>
+                            <dd class="text-lg font-medium text-gray-900">{{ $primaryClassCount }}</dd>
                         </dl>
                     </div>
                 </div>
@@ -97,30 +98,6 @@
             </div>
         </div>
 
-        <!-- Taux de réussite 
-        <div class="bg-white overflow-hidden shadow rounded-lg border border-gray-200 hover:shadow-md transition-shadow duration-300">
-            <div class="p-5">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <div class="h-10 w-10 rounded-full bg-yellow-100 flex items-center justify-center">
-                            <i class="fas fa-trophy text-yellow-600"></i>
-                        </div>
-                    </div>
-                    <div class="ml-5 w-0 flex-1">
-                        <dl>
-                            <dt class="text-sm font-medium text-gray-500 truncate">Taux de réussite</dt>
-                            <dd class="text-lg font-medium text-gray-900">94%</dd>
-                        </dl>
-                    </div>
-                </div>
-            </div>
-            <div class="bg-gray-50 px-5 py-3">
-                <div class="text-sm">
-                    <span class="text-green-600 font-medium">+3%</span>
-                    <span class="text-gray-500">vs dernier trimestre</span>
-                </div>
-            </div>
-        </div> -->
     </div>
 
     <!-- Contenu principal -->
@@ -135,31 +112,20 @@
                 </div>
                 <div class="p-6">
                     <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        @foreach(['CI', 'CP', 'CE1', 'CE2', 'CM1', 'CM2'] as $niveau)
+                        @forelse($classesRepartition as $classe)
                         <div class="text-center p-4 bg-gray-50 rounded-lg">
-                            <div class="text-2xl font-bold text-blue-600">
-                                @switch($niveau)
-                                    @case('CI') 3 @break
-                                    @case('CP') 3 @break
-                                    @case('CE1') 3 @break
-                                    @case('CE2') 3 @break
-                                    @case('CM1') 3 @break
-                                    @case('CM2') 3 @break
-                                @endswitch
-                            </div>
-                            <div class="text-sm text-gray-600">Classes de {{ $niveau }}</div>
+                            <div class="text-2xl font-bold text-blue-600">{{ $classe->students_count }}</div>
+                            <div class="text-sm font-medium text-gray-700">{{ $classe->name }}</div>
                             <div class="text-xs text-gray-500 mt-1">
-                                @switch($niveau)
-                                    @case('CI') ~25 élèves/classe @break
-                                    @case('CP') ~28 élèves/classe @break
-                                    @case('CE1') ~26 élèves/classe @break
-                                    @case('CE2') ~27 élèves/classe @break
-                                    @case('CM1') ~25 élèves/classe @break
-                                    @case('CM2') ~29 élèves/classe @break
-                                @endswitch
+                                {{ $classe->students_count }} élève{{ $classe->students_count > 1 ? 's' : '' }}
                             </div>
                         </div>
-                        @endforeach
+                        @empty
+                        <div class="col-span-3 text-center text-gray-400 py-6">
+                            <i class="fas fa-school text-2xl mb-2"></i>
+                            <p class="text-sm">Aucune classe pour cette année</p>
+                        </div>
+                        @endforelse
                     </div>
                 </div>
             </div>

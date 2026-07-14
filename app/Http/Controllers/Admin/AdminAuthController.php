@@ -82,13 +82,13 @@ class AdminAuthController extends Controller{
             // Récupérer les classes primaire + maternelle avec leurs enseignants
             $primaryClassCount = Classe::where('academic_year_id', $annee_academique->id)
                 ->whereHas('entity', function ($query) {
-                    $query->whereIn('name', ['primaire', 'maternelle']);
+                    $query->whereIn('slug', ['primaire', 'maternelle']);
                 })
                 ->count();
             //nombre d'elèves au primaire
             $primaryStudentsCount = Student::where('academic_year_id', $annee_academique->id)
                 ->whereHas('entity', function ($q) {
-                    $q->whereIn('name', ['primaire', 'maternelle']);
+                    $q->whereIn('slug', ['primaire', 'maternelle']);
                 })->count();
             //récupérer les enseignants du primaire
             $primaryTeacherCount = User::whereHas('role', function ($q) {
@@ -96,7 +96,7 @@ class AdminAuthController extends Controller{
             })
                 ->whereHas('classe', function ($q2) use ($annee_academique) {
                     $q2->whereHas('entity', function ($q3) {
-                        $q3->where('name', 'primaire');
+                        $q3->where('slug', 'primaire');
                     })
                         ->where('academic_year_id', $annee_academique->id);
                 })->with('classePrimaire')->count();

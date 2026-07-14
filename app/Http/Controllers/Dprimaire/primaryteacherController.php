@@ -10,8 +10,7 @@ use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf ;
 use App\Models\AcademicYear;
 
-class primaryteacherController extends Controller
-{
+class primaryteacherController extends Controller{
     /**
      * Display a listing of the resource.
      */
@@ -21,21 +20,25 @@ class primaryteacherController extends Controller
             return back()->with('error', 'Aucune année académique active trouvée.');
         }
 
-        // Enseignants du primaire et maternelle = ceux dont teacher_id
-        // correspond à une classe avec entity_id IN (1=maternelle, 2=primaire)
-        $teachers = User::whereHas('role', function ($q) {
-                $q->where('name', 'enseignant');
-            })
-            ->whereHas('classe', function ($q) use ($annee_academique) {
-                $q->whereIn('entity_id', [1, 2])
-                  ->where('academic_year_id', $annee_academique->id);
-            })
-            ->with(['classe' => function ($q) use ($annee_academique) {
-                $q->whereIn('entity_id', [1, 2])
-                  ->where('academic_year_id', $annee_academique->id);
-            }])
-            ->orderBy('name')
+        // On part des classes primaire/maternelle (entity_id 1 ou 2)
+        // et on récupère leur enseignant via la relation teacher (teacher_id)
+        $classes = Classe::where('academic_year_id', $annee_academique->id)
+            ->whereIn('entity_id', [1, 2])
+            ->whereNotNull('teacher_id')
+            ->with('teacher')
             ->get();
+
+        // On déduplique au cas où un enseignant aurait plusieurs classes
+        $teachers = $classes->map(fn($c) => $c->teacher)
+            ->filter()
+            ->unique('id')
+            ->sortBy('name')
+            ->values();
+
+        // On attache la classe à chaque enseignant pour l'affichage
+        foreach ($teachers as $teacher) {
+            $teacher->setRelation('classe', $classes->firstWhere('teacher_id', $teacher->id));
+        }
 
         return view('primaire.enseignants.enseignants', compact('teachers', 'annee_academique'));
     }
@@ -43,19 +46,21 @@ class primaryteacherController extends Controller
     public function downloadTeachersList(){
         $annee_academique = AcademicYear::where('active', 1)->first();
 
-        $teachers = User::whereHas('role', function ($q) {
-                $q->where('name', 'enseignant');
-            })
-            ->whereHas('classe', function ($q) use ($annee_academique) {
-                $q->whereIn('entity_id', [1, 2])
-                  ->where('academic_year_id', $annee_academique->id);
-            })
-            ->with(['classe' => function ($q) use ($annee_academique) {
-                $q->whereIn('entity_id', [1, 2])
-                  ->where('academic_year_id', $annee_academique->id);
-            }])
-            ->orderBy('name')
+        $classes = Classe::where('academic_year_id', $annee_academique->id)
+            ->whereIn('entity_id', [1, 2])
+            ->whereNotNull('teacher_id')
+            ->with('teacher')
             ->get();
+
+        $teachers = $classes->map(fn($c) => $c->teacher)
+            ->filter()
+            ->unique('id')
+            ->sortBy('name')
+            ->values();
+
+        foreach ($teachers as $teacher) {
+            $teacher->setRelation('classe', $classes->firstWhere('teacher_id', $teacher->id));
+        }
 
         $pdf = Pdf::loadView('primaire.enseignants.pdf', compact('teachers'));
         return $pdf->download('liste_des_enseignants.pdf');

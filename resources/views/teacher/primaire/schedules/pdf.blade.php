@@ -1,205 +1,188 @@
 <!DOCTYPE html>
 <html lang="fr">
-
 <head>
     <meta charset="UTF-8">
-    <title>Liste des élèves - {{ $className ?? '' }}</title>
+    <title>Emploi du temps - {{ $classe->name }}</title>
     <style>
-        body { 
-            font-family: "Times New Roman", Times, serif; 
-            font-size: 11px; 
-            margin: 20px; 
-        }
-
-        /* --- Ligne tricolore --- */
-        .tricolor-line {
-            width: 70%;
-            margin-bottom: 8px;
-            border-collapse: collapse;
-            table-layout: fixed;
-        }
-        .tricolor-line td {
-            height: 3px;
+        body {
+            font-family: "DejaVu Sans", Arial, sans-serif;
+            font-size: 9px;
+            margin: 0;
             padding: 0;
-            border: none;
-            width: 33.33%;
         }
-        .tricolor-line .green { background-color: #008751; }
-        .tricolor-line .yellow { background-color: #FCD116; }
-        .tricolor-line .red { background-color: #E8112D; }
 
-        /* --- Header --- */
-        .header {
-            display: table;
+        /* Ligne tricolore */
+        .tricolor { width: 60%; margin: 0 auto 6px; border-collapse: collapse; table-layout: fixed; }
+        .tricolor td { height: 3px; padding: 0; border: none; width: 33.33%; }
+        .tri-green  { background-color: #008751; }
+        .tri-yellow { background-color: #FCD116; }
+        .tri-red    { background-color: #E8112D; }
+
+        /* Header */
+        .header { display: table; width: 100%; margin-bottom: 10px; border-bottom: 1.5px solid #333; padding-bottom: 8px; }
+        .hd-logo { display: table-cell; width: 12%; vertical-align: middle; text-align: center; }
+        .hd-logo img { height: 60px; object-fit: contain; }
+        .hd-info  { display: table-cell; width: 76%; text-align: center; font-size: 9px; line-height: 1.4; vertical-align: middle; }
+        .hd-info .bold { font-weight: bold; font-size: 10px; }
+
+        /* Titre */
+        .title { text-align: center; font-size: 13px; font-weight: bold; margin: 8px 0 6px; text-decoration: underline; }
+
+        /* Grille */
+        table.grid {
             width: 100%;
-            margin-bottom: 15px;
-            border-bottom: 2px solid #333;
-            padding-bottom: 10px;
-        }
-        .header-left, .header-right {
-            display: table-cell;
-            width: 15%;
-            vertical-align: middle;
-            text-align: center;
-        }
-        .header-left img, .header-right img {
-            height: 70px;
-            object-fit: contain;
-        }
-        .school-info {
-            display: table-cell;
-            width: 70%;
-            text-align: center;
-            font-size: 11px;
-            line-height: 1.3;
-        }
-        .school-info .bold { font-weight: bold; }
-
-        /* --- Tableau --- */
-        table {
             border-collapse: collapse;
-            margin: auto;
-            width: 100%;
+            margin-top: 4px;
             table-layout: fixed;
-            font-family: "Times New Roman", Times, serif;
-            margin-top: 15px;
         }
-        th, td {
-            border: 1px solid #333;
-            padding: 6px 4px;
+        table.grid th,
+        table.grid td {
+            border: 1px solid #999;
+            padding: 5px 4px;
             text-align: center;
             vertical-align: middle;
             word-wrap: break-word;
-            overflow: hidden;
-            font-family: "Times New Roman", Times, serif;
-            font-size: 10px;
         }
-        th { 
-            background-color: #f0f0f0; 
-            font-size: 10px;
+        table.grid th {
+            background-color: #dde4f0;
             font-weight: bold;
+            font-size: 9px;
+        }
+        /* Colonne horaire plus étroite */
+        table.grid th:first-child,
+        table.grid td:first-child {
+            width: 72px;
+            font-size: 8px;
         }
 
-        /* Titre */
-        .title {
-            text-align: center;
-            margin-bottom: 10px;
-            font-family: "Times New Roman", Times, serif;
-        }
-
-        /* --- Footer --- */
-        .footer {
-            margin-top: 20px;
-            text-align: center;
-            font-size: 11px;
-            font-family: "Times New Roman", Times, serif;
-        }
-
-        .signature {
-            margin-top: 60px;
-            text-align: right;
+        /* Ligne heure : fond légèrement coloré */
+        .time-cell {
+            background-color: #f0f4fa;
             font-weight: bold;
-            font-family: "Times New Roman", Times, serif;
+            font-size: 8px;
+            color: #2d3a5e;
+            line-height: 1.4;
         }
 
-        /* --- Pagination PDF --- */
-        @page {
-            margin: 20mm;
-        }
-        .pagenum:before {
-            content: counter(page);
-        }
-        .pagecount:before {
-            content: counter(pages);
-        }
-        .pdf-footer {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            text-align: center;
-            font-size: 10px;
-            color: #555;
-            font-family: "Times New Roman", Times, serif;
+        /* Cellule vide */
+        .empty-cell {
+            background-color: #fafafa;
         }
 
-        /* Styles spécifiques pour le tableau des élèves */
-        .date-download {
-            text-align: right;
-            font-size: 11px;
-            margin-bottom: 10px;
-            font-family: "Times New Roman", Times, serif;
+        /* Cellule cours — fond coloré, lisible */
+        .course-cell {
+            background-color: #e8f0fe;
+            vertical-align: middle;
+            padding: 4px 3px;
         }
+
+        /* Un bloc par cours empilé dans la case (ex: plusieurs créneaux de 15 min) */
+        .course-block {
+            padding: 2px 0;
+        }
+        .course-block + .course-block {
+            border-top: 1px dashed #b6c6e8;
+            margin-top: 2px;
+        }
+
+        .subject-name {
+            font-weight: bold;
+            font-size: 9px;
+            color: #1a237e;
+            margin-bottom: 1px;
+        }
+
+        .time-range {
+            font-size: 7.5px;
+            color: #374151;
+            font-style: italic;
+        }
+
+        /* Footer */
+        .signature { margin-top: 40px; text-align: right; font-size: 10px; }
+
+        @page { size: A4 landscape; margin: 12mm; }
     </style>
 </head>
 <body>
-    <!-- HEADER -->
+
+    <!-- Header -->
     <div class="header">
-        <div class="header-left">
-            <img src="{{ public_path('logo.png') }}" alt="Logo gauche">
-        </div>
-        <div class="school-info">
-            <table class="tricolor-line">
-                <tr>
-                    <td class="green"></td>
-                    <td class="yellow"></td>
-                    <td class="red"></td>
-                </tr>
-            </table>
-           
-            <div class="bold">REPUBLIQUE DU BENIN</div>
+        <div class="hd-logo"><img src="{{ public_path('logo.png') }}" alt="Logo"></div>
+        <div class="hd-info">
+            <table class="tricolor"><tr>
+                <td class="tri-green"></td>
+                <td class="tri-yellow"></td>
+                <td class="tri-red"></td>
+            </tr></table>
+            <div>REPUBLIQUE DU BENIN</div>
             <div>MINISTERE DES ENSEIGNEMENTS SECONDAIRE, TECHNIQUE ET DE LA FORMATION PROFESSIONNELLE</div>
-            <div>DIRECTION DEPARTEMENTALE DES ENSEIGNEMENTS SECONDAIRE, TECHNIQUE ET DE LA FORMATION PROFESSIONNELLE DE L'ATLANTIQUE</div>
             <div class="bold">CPEG MARIE-ALAIN</div>
         </div>
-        <div class="header-right">
-            <img src="{{ public_path('logo.png') }}" alt="Logo droit">
-        </div>
+        <div class="hd-logo"><img src="{{ public_path('logo.png') }}" alt="Logo"></div>
     </div>
 
-    <div class="info">
-        <center>
-            <div class="">
-                <u><h2>Emploi du temps - {{ $classe->name }}</h2></u>
-            </div>
-        </center>
-    </div>
-    <table>
+    <div class="title">Emploi du temps &mdash; {{ $classe->name }}</div>
+
+    <table class="grid">
         <thead>
             <tr>
-                <th>Heures</th>
+                <th>Horaire</th>
                 @foreach($days as $day)
                     <th>{{ $day }}</th>
                 @endforeach
             </tr>
         </thead>
         <tbody>
-            @foreach($timeRanges as $range)
-                <tr>
-                    <td>{{ $range }}</td>
-                    @foreach($days as $day)
-                        @php
-                            $cell = $planning[$day][$range] ?? null;
-                        @endphp
-                        @if($cell && $cell['is_start'])
-                            <td class="subject" rowspan="{{ $cell['rowspan'] }}">
-                                {{ $cell['schedule']->subject->name }}<br>
-                                <small>{{ $cell['schedule']->start_time }} - {{ $cell['schedule']->end_time }}</small>
-                            </td>
-                        @elseif($cell && !$cell['is_start'])
-                            {{-- vide pour rowspan --}}
-                        @else
-                            <td></td>
-                        @endif
+            @foreach($timeSlots as $slot)
+            @php
+                // Chaque ligne représente une heure : 07h00–08h00, 08h00–09h00...
+                $h       = (int)substr($slot, 0, 2);
+                $nextH   = $h + 1;
+                $startFmt = $h . 'h00';
+                $endFmt   = $nextH . 'h00';
+            @endphp
+            <tr>
+                {{-- Colonne horaire : toujours affichée --}}
+                <td class="time-cell">{{ $startFmt }}<br>–{{ $endFmt }}</td>
+
+                @foreach($days as $day)
+                @php
+                    $cell = $grid[$day][$slot] ?? ['entries' => [], 'span' => 1, 'skip' => false];
+                @endphp
+
+                @if($cell['skip'])
+                    {{-- Couvert par rowspan d'une ligne précédente : ne rien rendre --}}
+                @elseif(count($cell['entries']))
+                @php
+                    $span = $cell['span'];
+                @endphp
+                <td rowspan="{{ $span }}" class="course-cell">
+                    @foreach($cell['entries'] as $s)
+                    @php
+                        $sfmt = str_replace(':', 'h', substr($s->start_time, 0, 5));
+                        $efmt = str_replace(':', 'h', substr($s->end_time,   0, 5));
+                    @endphp
+                    <div class="course-block">
+                        <div class="subject-name">{{ $s->subject->name ?? '—' }}</div>
+                        <div class="time-range">{{ $sfmt }} – {{ $efmt }}</div>
+                    </div>
                     @endforeach
-                </tr>
+                </td>
+                @else
+                <td class="empty-cell"></td>
+                @endif
+
+                @endforeach
+            </tr>
             @endforeach
         </tbody>
     </table>
-        
+
     <div class="signature">
-        Fait à Calavi, le {{ now()->format('d/m/Y') }}<br><br><br><br> 
+        Fait à Calavi, le {{ now()->format('d/m/Y') }}<br><br><br>
         L'Enseignant
     </div>
+
 </body>
 </html>

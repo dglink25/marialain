@@ -12,7 +12,7 @@
                     <i class="fas fa-user-circle text-2xl text-white"></i>
                 </div>
                 <div>
-                    <h1 class="text-3xl md:text-4xl font-light text-gray-900 mb-1">Bienvenue, <span class="font-semibold">{{ auth()->user()->name ?? 'Utilisateur' }}</span></h1>
+                    <h1 class="text-3xl md:text-4xl font-light text-gray-900 mb-1">Bienvenue <span class="font-semibold">{{ auth()->user()->name ?? 'Utilisateur' }}</span></h1>
                     <p class="text-gray-500 text-sm">Dernière connexion à {{ now()->format('d/m/Y H:i') }} (GMT)</p>
                 </div>
             </div>

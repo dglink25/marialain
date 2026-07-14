@@ -10,8 +10,7 @@ use App\Models\AcademicYear;
 
 class welcomeController extends Controller{
     //
-    public function index()
-    {
+    public function index() {
         try {
             // Vérifier l'année académique active
             $annee_academique = AcademicYear::where('active', 1)->first();
@@ -23,24 +22,20 @@ class welcomeController extends Controller{
             // Récupérer les classes primaire + maternelle avec leurs enseignants
             $primaryClassCount = Classe::where('academic_year_id', $annee_academique->id)
                 ->whereHas('entity', function ($query) {
-                    $query->whereIn('name', ['primaire', 'maternelle']);
+                    $query->whereIn('slug', ['primaire', 'maternelle']);
                 })
                 ->count();
             //nombre d'elèves au primaire
             $primaryStudentsCount = Student::where('academic_year_id', $annee_academique->id)
                 ->whereHas('entity', function ($q) {
-                    $q->whereIn('name', ['primaire', 'maternelle']);
+                    $q->whereIn('slug', ['primaire', 'maternelle']);
                 })->count();
             //récupérer les enseignants du primaire
-            $primaryTeacherCount = User::whereHas('role', function ($q) {
-                $q->where('name', 'teacher');
-            })
-                ->whereHas('classe', function ($q2) use ($annee_academique) {
-                    $q2->whereHas('entity', function ($q3) {
-                        $q3->where('name', 'primaire');
-                    })
-                        ->where('academic_year_id', $annee_academique->id);
-                })->with('classePrimaire')->count();
+            $primaryTeacherCount = Classe::where('academic_year_id', $annee_academique->id)
+                ->whereIn('entity_id', [1, 2])
+                ->whereNotNull('teacher_id')
+                ->count();
+
             return view('welcome', compact('primaryStudentsCount', 'primaryClassCount', 'primaryTeacherCount'));
         } 
         catch (\Exception $e) {
@@ -48,9 +43,6 @@ class welcomeController extends Controller{
             return back()->with('error', 'Erreur lors du chargement des classes : ' . $e->getMessage());
         }
 
-        /*$primaryTeacherCount = User:: whereHas('role', function($q){
-                $q ->whereHas('name', 'teacher');
-            }) -> whereHas('classes.entity', function($q2){ $q2 -> where('name', 'primaire');
-            }) -> count();*/
+    
     }
 }

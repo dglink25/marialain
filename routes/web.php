@@ -186,17 +186,25 @@ Route::prefix('primaire')->name('primaire.')->group(function () {
     Route::get('ecoliers/liste', [StudentsController::class, 'index'])->name('ecoliers.liste');
     Route::get('ecoliers/pdf', [StudentsController::class, 'downloadPrimaireStudents'])->name('ecoliers.liste.pdf');
 });
-Route::get('teacher/primaire/schedules/download', [PrimaireScheduleController::class, 'downloadPdf'])
-     ->name('schedules.download');
-// Page pour voir l'emploi du temps d'une classe (directeur)
-Route::get('teacher/primaire/schedules/{classe}', [PrimaireScheduleController::class, 'directeur'])
-     ->name('schedules.ind');
 
 Route::prefix('teacher/primaire')->middleware('auth')->group(function () {
+    // Routes statiques AVANT le resource pour éviter les conflits avec {schedule}
+    Route::get('schedules/download', [\App\Http\Controllers\Teacher\PrimaireScheduleController::class, 'downloadPdf'])
+         ->name('schedules.download');
+
+    // Vue emploi du temps d'une classe (pour le directeur primaire)
+    Route::get('schedules/{classe}/directeur/pdf', [\App\Http\Controllers\Teacher\PrimaireScheduleController::class, 'directeurPdf'])
+         ->where('classe', '[0-9]+')
+         ->name('schedules.directeur.pdf');
+
+    Route::get('schedules/{classe}', [\App\Http\Controllers\Teacher\PrimaireScheduleController::class, 'directeur'])
+         ->where('classe', '[0-9]+')
+         ->name('schedules.ind');
+
     Route::resource('schedules', \App\Http\Controllers\Teacher\PrimaireScheduleController::class);
 });
 
-
+// Page pour voir l'emploi du temps d'une classe (directeur)
 /*
 |--------------------------------------------------------------------------
 | Auth & Profils

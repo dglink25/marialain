@@ -45,7 +45,7 @@
                         <td class="px-6 py-4">
                             <a href="{{ route('schedules.ind', $class->id) }}" 
                                class="text-blue-600 hover:text-blue-800 font-medium transition">
-                                Consulter
+                                Consulter 
                             </a>
                         </td>
                         <td class="px-6 py-4">

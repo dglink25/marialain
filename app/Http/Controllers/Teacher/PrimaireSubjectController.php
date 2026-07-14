@@ -10,19 +10,24 @@ use Illuminate\Support\Facades\Auth;
 
 class PrimaireSubjectController extends Controller
 {
-    public function index()
-    {
-        $user = Auth::user();
-
-        $classe = Classe::where('teacher_id', $user->id)
-            ->whereHas('entity', fn($q) => $q->where('name', 'primaire'))
+    /**
+     * Cherche la classe primaire/maternelle de l'enseignant connecté.
+     * Utilise entity_id IN (1,2) — cohérent avec tout le reste du projet.
+     */
+    private function getTeacherClasse() {
+        return Classe::where('teacher_id', Auth::id())
+            ->whereIn('entity_id', [1, 2])
             ->first();
+    }
+
+    public function index() {
+        $classe = $this->getTeacherClasse();
 
         if (!$classe) {
             return view('teacher.primaire.subjects', [
-                'classe' => null,
+                'classe'   => null,
                 'subjects' => collect(),
-                'error' => 'Vous n’êtes assigné à aucune classe primaire.'
+                'error'    => "Vous n'êtes assigné à aucune classe primaire.",
             ]);
         }
 
@@ -35,17 +40,14 @@ class PrimaireSubjectController extends Controller
     {
         $request->validate([
             'name'  => 'required|string|max:255',
-            'hours' => 'nullable|integer|min:1'
+            'hours' => 'nullable|integer|min:1',
         ]);
 
-        $user = Auth::user();
-        $classe = Classe::where('teacher_id', $user->id)
-            ->whereHas('entity', fn($q) => $q->where('name', 'primaire'))
-            ->first();
+        $classe = $this->getTeacherClasse();
 
         if (!$classe) {
             return redirect()->route('teacher.subjects.primaire')
-                ->with('error', 'Impossible d’ajouter la matière car aucune classe primaire n’est assignée.');
+                ->with('error', "Impossible d'ajouter la matière : aucune classe primaire assignée.");
         }
 
         Subject::create([
@@ -62,7 +64,7 @@ class PrimaireSubjectController extends Controller
     {
         $request->validate([
             'name'  => 'required|string|max:255',
-            'hours' => 'nullable|integer|min:1'
+            'hours' => 'nullable|integer|min:1',
         ]);
 
         $subject->update([
