@@ -77,11 +77,15 @@ class ClassesPrimaireController extends Controller{
     }
 
     public function downloadClassStudents($id){
-        $class = Classe:: FindorFail($id);
-        $annee_academique = AcademicYear::where('active' , 1)-> first();
-        $students = Student::where('id', $class -> id)-> orderBy('last_name')-> orderBy('first_name')-> get();
+        $class = Classe::findOrFail($id);
+        $annee_academique = AcademicYear::where('active', 1)->first();
+        $students = Student::where('class_id', $class->id)
+            ->where('academic_year_id', $annee_academique->id)
+            ->where('is_validated', 1)
+            ->orderBy('last_name')->orderBy('first_name')
+            ->get();
         $pdf = Pdf::loadView('primaire.classe.pdf', compact('students', 'class', 'annee_academique'));
-        return $pdf -> download('liste_'. $class-> name. '.pdf');
+        return $pdf->download('liste_' . $class->name . '.pdf');
     }
 
 
