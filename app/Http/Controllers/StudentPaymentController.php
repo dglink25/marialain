@@ -127,12 +127,9 @@ class StudentPaymentController extends Controller
             $inscriptionFee   = 10000;
             $reInscriptionFee = 5000;
         } else {
-            // Primaire & Maternelle : pas de réinscription
+            // Primaire & Maternelle — réinscription gratuite (0 FCFA)
             $inscriptionFee   = 5000;
             $reInscriptionFee = 0;
-            if ($request->registration_type === 're_registration') {
-                return redirect()->back()->with('error', 'La réinscription n\'est pas applicable pour le primaire/maternelle.');
-            }
         }
 
         $totalFees = $student->classe->school_fees ?? 0;

@@ -114,7 +114,7 @@ class PrimaireEvaluationFormativeController extends Controller
             ]);
         }
 
-        return redirect()->route('teacher.primaire.formative.index', $classeId)
+        return redirect()->route('teacher.classes.formative', $classeId)
             ->with('success', 'Évaluation enregistrée avec succès.');
     }
 

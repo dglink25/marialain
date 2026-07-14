@@ -67,7 +67,7 @@
             <table class="w-full text-sm">
                 <thead class="bg-gray-50 text-xs uppercase text-gray-500 font-semibold">
                     <tr>
-                        <th class="px-6 py-3 text-left w-10">#</th>
+                        <th class="px-6 py-3 text-left w-10">N°</th>
                         <th class="px-6 py-3 text-left">Nom & Prénoms</th>
                         <th class="px-6 py-3 text-center w-16">Sexe</th>
                         <th class="px-6 py-3 text-center w-28">Note /{{ number_format($evaluation->note_max, 0) }}</th>

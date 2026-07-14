@@ -92,21 +92,16 @@ class StudentController extends Controller{
 
         // Règles tarifaires par entité :
         // Secondaire (entity_id=3) : inscription=10000, réinscription=5000
-        // Primaire (entity_id=2) & Maternelle (entity_id=1) : inscription=5000, réinscription=0
+        // Primaire (entity_id=2) & Maternelle (entity_id=1) : inscription=5000, réinscription=0 FCFA
         $entityId = (int)($data['entity_id'] ?? $classe->entity_id);
 
         if ($entityId === 3) {
-            // Secondaire
             $inscriptionFee   = 10000;
             $reInscriptionFee = 5000;
         } else {
-            // Primaire & Maternelle
+            // Primaire & Maternelle — réinscription autorisée mais gratuite (0 FCFA)
             $inscriptionFee   = 5000;
             $reInscriptionFee = 0;
-            // Pour primaire/maternelle, pas de réinscription — forcer "new"
-            if ($data['registration_type'] === 're_registration') {
-                $data['registration_type'] = 'new';
-            }
         }
 
         $totalFees = $classe->school_fees ?? 0;
