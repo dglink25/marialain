@@ -84,7 +84,7 @@ class NotesSubjectExport implements
 
     public function map($row): array {
         return [
-            $row['matricule'],
+            (string) $row['matricule'],
             $row['nom'],
             $row['prenoms'],
             $row['moy_interro'],
@@ -125,7 +125,12 @@ class NotesSubjectExport implements
         return $mapping[$name] ?? $name;
     }
 
- 
+    /**
+     * Largeurs de colonnes fixes reproduisant exactement le modèle
+     * d'importation (notamment l'espace observé à droite de la colonne
+     * "Matricule"), au lieu de ShouldAutoSize qui recalcule la largeur
+     * selon la longueur réelle du matricule.
+     */
     public function columnWidths(): array {
         return [
             'A' => 20.83, // Matricule
@@ -140,6 +145,15 @@ class NotesSubjectExport implements
     public function styles(Worksheet $sheet): array {
         // Police du modèle : Calibri, taille 12, non gras
         $sheet->getParent()->getDefaultStyle()->getFont()->setName('Calibri')->setSize(12);
+
+        $sheet->getStyle('A:A')
+            ->getNumberFormat()
+            ->setFormatCode(\PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_TEXT);
+
+        
+        $sheet->getStyle('A:A')
+            ->getAlignment()
+            ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
 
         return [];
     }
