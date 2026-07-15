@@ -153,7 +153,11 @@ Route::middleware(['auth'])
     });
 Route::middleware(['auth'])->prefix('teacher/primaire')->name('teacher.')->group(function () {
     Route::get('/classes', [PrimaireClasseController::class, 'index'])->name('classes.primaire');
-    Route::get('/classes/{classeId}/sommative', [PrimaireClasseController::class, 'evaluationSommative'])->name('classes.sommative');
+    Route::get('/classes/{classeId}/sommative', [\App\Http\Controllers\Teacher\PrimaireEvaluationSommativeController::class, 'index'])->name('classes.sommative');
+    Route::get('/classes/{classeId}/sommative/{compositionId}/subject/{subjectId}', [\App\Http\Controllers\Teacher\PrimaireEvaluationSommativeController::class, 'saisie'])->name('primaire.sommative.saisie');
+    Route::post('/classes/{classeId}/sommative/{compositionId}/subject/{subjectId}', [\App\Http\Controllers\Teacher\PrimaireEvaluationSommativeController::class, 'store'])->name('primaire.sommative.store');
+    Route::get('/classes/{classeId}/sommative/{compositionId}/subject/{subjectId}/show', [\App\Http\Controllers\Teacher\PrimaireEvaluationSommativeController::class, 'show'])->name('primaire.sommative.show');
+    Route::get('/classes/{classeId}/sommative/{compositionId}/recap', [\App\Http\Controllers\Teacher\PrimaireEvaluationSommativeController::class, 'recap'])->name('primaire.sommative.recap');
 
     // Évaluations formatives — route principale remplace l'ancienne
     Route::get('/classes/{classeId}/formative', [\App\Http\Controllers\Teacher\PrimaireEvaluationFormativeController::class, 'index'])->name('classes.formative');

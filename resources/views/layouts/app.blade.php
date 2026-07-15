@@ -250,10 +250,7 @@
                         @if(!isset($entityName))
                             @switch(optional(auth()->user()->role)->name)
                                 @case('directeur_primaire')
-                                    <a href="{{ route('students.create') }}" class="flex items-center px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('students.create') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
-                                        <i class="fa fa-user-plus w-5"></i> 
-                                        <span class="ml-2">Inscription</span>
-                                    </a>
+                            
                                     <a href="{{ route('directeur.dashboard') }}" class="flex items-center px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('directeur.dashboard') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
                                         <i class="fas fa-tachometer-alt w-5"></i>
                                         <span class="ml-2">Tableau de bord</span>

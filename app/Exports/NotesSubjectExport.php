@@ -12,7 +12,7 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithMapping;
-use Maatwebsite\Excel\Concerns\ShouldAutoSize;
+use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use Illuminate\Support\Collection;
 
@@ -22,7 +22,7 @@ class NotesSubjectExport implements
     WithTitle,
     WithStyles,
     WithMapping,
-    ShouldAutoSize
+    WithColumnWidths
     {
     protected Classe $classe;
     protected Subject $subject;
@@ -125,7 +125,22 @@ class NotesSubjectExport implements
         return $mapping[$name] ?? $name;
     }
 
+ 
+    public function columnWidths(): array {
+        return [
+            'A' => 20.83, // Matricule
+            'B' => 40.83, // Nom
+            'C' => 40.83, // Prénoms
+            'D' => 10.83, // Moy. interro
+            'E' => 10.83, // Devoir 1
+            'F' => 10.83, // Devoir 2
+        ];
+    }
+
     public function styles(Worksheet $sheet): array {
+        // Police du modèle : Calibri, taille 12, non gras
+        $sheet->getParent()->getDefaultStyle()->getFont()->setName('Calibri')->setSize(12);
+
         return [];
     }
 }
