@@ -79,8 +79,6 @@ class ConducteExport implements
             $row['nom'],
             $row['prenoms'],
             $row['moy_interro'],
-            $row['devoir1'],
-            $row['devoir2'],
         ];
     }
 
