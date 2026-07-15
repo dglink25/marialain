@@ -135,13 +135,14 @@ class NotesSubjectExport extends DefaultValueBinder implements
             'MATHEMATIQUES'                            => 'MATHS GENE',
             'EDUCATION PHYSIQUE ET SPORTIVE (EPS)'     => 'EPS',
             'HISTOIRE-GEOGRAPHIE'                      => 'HIST-GEO',
-            'SCIENCE DE LA VIE ET DE LA TERRE (SVT)'  => 'SVT',
+            'SCIENCE DE LA VIE ET DE LA TERRE (SVT)'   => 'SVT',
             'SVT'                                      => 'SVT',
             'LECTURE'                                  => 'FRANCAIS LECTURE',
             'PHYSIQUE CHIMIE ET TECHNOLOGIE (PCT)'     => 'PCT',
             'PHILOSOPHIE'                              => 'PHILO',
             'ALLEMAND'                                 => 'ALLEMAND',
             'ESPAGNOL'                                 => 'ESPAGNOL',
+            'INFORMATIQUE'                             => "INITIATION À L'INFORMATIQUE"
         ];
 
         return $mapping[$name] ?? $name;
