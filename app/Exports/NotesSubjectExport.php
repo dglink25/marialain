@@ -13,16 +13,21 @@ use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithColumnWidths;
+use Maatwebsite\Excel\Concerns\WithCustomValueBinder;
+use PhpOffice\PhpSpreadsheet\Cell\Cell;
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
+use PhpOffice\PhpSpreadsheet\Cell\DefaultValueBinder;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use Illuminate\Support\Collection;
 
-class NotesSubjectExport implements
+class NotesSubjectExport extends DefaultValueBinder implements
     FromCollection,
     WithHeadings,
     WithTitle,
     WithStyles,
     WithMapping,
-    WithColumnWidths
+    WithColumnWidths,
+    WithCustomValueBinder
     {
     protected Classe $classe;
     protected Subject $subject;
@@ -82,6 +87,23 @@ class NotesSubjectExport implements
         return $rows;
     }
 
+    /**
+     * Force la colonne A (Matricule) à être écrite comme un VRAI texte
+     * (type de cellule 's'), exactement comme dans le modèle. Sans ça,
+     * PhpSpreadsheet détecte automatiquement que "1150323458180"
+     * ressemble à un nombre et l'écrit en tant que nombre (type 'n'),
+     * même si on applique ensuite un format d'affichage texte : le
+     * format ne change pas le type réel de la donnée stockée.
+     */
+    public function bindValue(Cell $cell, $value): bool {
+        if ($cell->getColumn() === 'A') {
+            $cell->setValueExplicit((string) $value, DataType::TYPE_STRING);
+            return true;
+        }
+
+        return parent::bindValue($cell, $value);
+    }
+
     public function map($row): array {
         return [
             (string) $row['matricule'],
@@ -125,12 +147,6 @@ class NotesSubjectExport implements
         return $mapping[$name] ?? $name;
     }
 
-    /**
-     * Largeurs de colonnes fixes reproduisant exactement le modèle
-     * d'importation (notamment l'espace observé à droite de la colonne
-     * "Matricule"), au lieu de ShouldAutoSize qui recalcule la largeur
-     * selon la longueur réelle du matricule.
-     */
     public function columnWidths(): array {
         return [
             'A' => 20.83, // Matricule
@@ -145,15 +161,6 @@ class NotesSubjectExport implements
     public function styles(Worksheet $sheet): array {
         // Police du modèle : Calibri, taille 12, non gras
         $sheet->getParent()->getDefaultStyle()->getFont()->setName('Calibri')->setSize(12);
-
-        $sheet->getStyle('A:A')
-            ->getNumberFormat()
-            ->setFormatCode(\PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_TEXT);
-
-        
-        $sheet->getStyle('A:A')
-            ->getAlignment()
-            ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
 
         return [];
     }
