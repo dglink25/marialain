@@ -66,9 +66,7 @@ class ConducteExport implements
                 'matricule'   => $student->num_educ ?? '',
                 'nom'         => strtoupper($student->last_name),
                 'prenoms'     => $student->first_name,
-                'moy_interro' => '',
-                'devoir1'     => '',
-                'devoir2'     => $conduiteFinal > 0 ? number_format($conduiteFinal, 2, '.', '') : '',
+                'moy_interro' => $conduiteFinal > 0 ? number_format($conduiteFinal, 2, '.', '') : '',
             ]);
         }
 
@@ -91,9 +89,7 @@ class ConducteExport implements
             'Matricule',
             'Nom',
             'Prénoms',
-            'Moy. interro',
-            'Devoir 1',
-            'Devoir 2',
+            'Moy.',
         ];
     }
 
