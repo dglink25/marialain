@@ -12,17 +12,22 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithMapping;
-use Maatwebsite\Excel\Concerns\ShouldAutoSize;
+use Maatwebsite\Excel\Concerns\WithColumnWidths;
+use Maatwebsite\Excel\Concerns\WithCustomValueBinder;
+use PhpOffice\PhpSpreadsheet\Cell\Cell;
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
+use PhpOffice\PhpSpreadsheet\Cell\DefaultValueBinder;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use Illuminate\Support\Collection;
 
-class ConducteExport implements
+class ConducteExport extends DefaultValueBinder implements
     FromCollection,
     WithHeadings,
     WithTitle,
     WithStyles,
     WithMapping,
-    ShouldAutoSize
+    WithColumnWidths,
+    WithCustomValueBinder
     {
     protected Classe $classe;
     protected int $trimestre;
@@ -64,7 +69,7 @@ class ConducteExport implements
 
             $rows->push([
                 'matricule'   => $student->num_educ ?? '',
-                'nom'         => strtoupper($student->last_name),
+                'nom'         => mb_strtoupper($student->last_name, 'UTF-8'),
                 'prenoms'     => $student->first_name,
                 'moy_interro' => $conduiteFinal > 0 ? number_format($conduiteFinal, 2, '.', '') : '',
             ]);
@@ -73,9 +78,26 @@ class ConducteExport implements
         return $rows;
     }
 
+    /**
+     * Force la colonne A (Matricule) à être écrite comme un VRAI texte
+     * (type de cellule 's'), exactement comme dans le modèle. Sans ça,
+     * PhpSpreadsheet détecte automatiquement que le matricule ressemble
+     * à un nombre et l'écrit en tant que nombre (type 'n'), même si on
+     * applique ensuite un format d'affichage texte : le format ne change
+     * pas le type réel de la donnée stockée.
+     */
+    public function bindValue(Cell $cell, $value): bool {
+        if ($cell->getColumn() === 'A') {
+            $cell->setValueExplicit((string) $value, DataType::TYPE_STRING);
+            return true;
+        }
+
+        return parent::bindValue($cell, $value);
+    }
+
     public function map($row): array {
         return [
-            $row['matricule'],
+            (string) $row['matricule'],
             $row['nom'],
             $row['prenoms'],
             $row['moy_interro'],
@@ -95,7 +117,20 @@ class ConducteExport implements
         return 'Conduite';
     }
 
+
+    public function columnWidths(): array {
+        return [
+            'A' => 20.83, // Matricule
+            'B' => 40.83, // Nom
+            'C' => 40.83, // Prénoms
+            'D' => 10.83, // Moy.
+        ];
+    }
+
     public function styles(Worksheet $sheet): array {
+        // Police du modèle : Calibri, taille 12
+        $sheet->getParent()->getDefaultStyle()->getFont()->setName('Calibri')->setSize(12);
+
         return [];
     }
 }
