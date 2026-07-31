@@ -122,10 +122,22 @@ Route::middleware(['auth'])->prefix('primaire/notes')->name('primaire.notes.')->
          ->name('index');
     Route::post('/composition', [\App\Http\Controllers\Dprimaire\NotesEvaluationController::class, 'programmerComposition'])
          ->name('composition.store');
+
+    // Liste des évaluations par classe (directeur)
     Route::get('/classe/{classeId}/formative', [\App\Http\Controllers\Dprimaire\NotesEvaluationController::class, 'evaluationFormative'])
          ->name('formative');
     Route::get('/classe/{classeId}/sommative', [\App\Http\Controllers\Dprimaire\NotesEvaluationController::class, 'evaluationSommative'])
          ->name('sommative');
+
+    // Détail d'une évaluation (directeur)
+    Route::get('/classe/{classeId}/formative/{evaluationId}', [\App\Http\Controllers\Dprimaire\NotesEvaluationController::class, 'showFormative'])
+         ->name('formative.show');
+    Route::get('/classe/{classeId}/sommative/{evaluationId}', [\App\Http\Controllers\Dprimaire\NotesEvaluationController::class, 'showSommative'])
+         ->name('sommative.show');
+
+    // Récapitulatif sommative (directeur)
+    Route::get('/classe/{classeId}/sommative-recap', [\App\Http\Controllers\Dprimaire\NotesEvaluationController::class, 'recapSommative'])
+         ->name('sommative.recap');
 });
 Route::get('/primaire/classe/{id}/pdf', [ClassesPrimaireController::class, 'downloadClassStudents'])-> name('primaire.classe.pdf');
 Route::get('/primaire/enseignants/pdf', [primaryteacherController::class, 'downloadTeachersList'])->name('primaire.enseignants.pdf');
@@ -153,17 +165,17 @@ Route::middleware(['auth'])
     });
 Route::middleware(['auth'])->prefix('teacher/primaire')->name('teacher.')->group(function () {
     Route::get('/classes', [PrimaireClasseController::class, 'index'])->name('classes.primaire');
-    Route::get('/classes/{classeId}/sommative', [\App\Http\Controllers\Teacher\PrimaireEvaluationSommativeController::class, 'index'])->name('classes.sommative');
-    Route::get('/classes/{classeId}/sommative/{compositionId}/subject/{subjectId}', [\App\Http\Controllers\Teacher\PrimaireEvaluationSommativeController::class, 'saisie'])->name('primaire.sommative.saisie');
-    Route::post('/classes/{classeId}/sommative/{compositionId}/subject/{subjectId}', [\App\Http\Controllers\Teacher\PrimaireEvaluationSommativeController::class, 'store'])->name('primaire.sommative.store');
-    Route::get('/classes/{classeId}/sommative/{compositionId}/subject/{subjectId}/show', [\App\Http\Controllers\Teacher\PrimaireEvaluationSommativeController::class, 'show'])->name('primaire.sommative.show');
-    Route::get('/classes/{classeId}/sommative/{compositionId}/recap', [\App\Http\Controllers\Teacher\PrimaireEvaluationSommativeController::class, 'recap'])->name('primaire.sommative.recap');
 
-    // Évaluations formatives — route principale remplace l'ancienne
+    // ── Sommative ──
+    Route::get('/classes/{classeId}/sommative', [\App\Http\Controllers\Teacher\PrimaireEvaluationSommativeController::class, 'index'])->name('classes.sommative');
+    Route::post('/classes/{classeId}/sommative', [\App\Http\Controllers\Teacher\PrimaireEvaluationSommativeController::class, 'store'])->name('primaire.sommative.store');
+    Route::get('/classes/{classeId}/sommative-recap', [\App\Http\Controllers\Teacher\PrimaireEvaluationSommativeController::class, 'showAllSubjects'])->name('primaire.sommative.recap');
+    Route::get('/classes/{classeId}/sommative/{evaluationId}', [\App\Http\Controllers\Teacher\PrimaireEvaluationSommativeController::class, 'show'])->whereNumber('evaluationId')->name('primaire.sommative.show');
+
+    // ── Formative ──
     Route::get('/classes/{classeId}/formative', [\App\Http\Controllers\Teacher\PrimaireEvaluationFormativeController::class, 'index'])->name('classes.formative');
-    Route::get('/classes/{classeId}/formative/recap', [\App\Http\Controllers\Teacher\PrimaireEvaluationFormativeController::class, 'recap'])->name('primaire.formative.recap');
-    Route::get('/classes/{classeId}/formative/{evaluationId}', [\App\Http\Controllers\Teacher\PrimaireEvaluationFormativeController::class, 'show'])->whereNumber('evaluationId')->name('primaire.formative.show');
     Route::post('/classes/{classeId}/formative', [\App\Http\Controllers\Teacher\PrimaireEvaluationFormativeController::class, 'store'])->name('primaire.formative.store');
+    Route::get('/classes/{classeId}/formative/{evaluationId}', [\App\Http\Controllers\Teacher\PrimaireEvaluationFormativeController::class, 'show'])->whereNumber('evaluationId')->name('primaire.formative.show');
 
     Route::get('/subjects', [PrimaireSubjectController::class, 'index'])->name('subjects.primaire');
 });

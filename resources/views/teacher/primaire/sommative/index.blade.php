@@ -1,213 +1,273 @@
 @extends('layouts.app')
 
 @section('content')
-@php
-    $moisNoms = [
-        1=>'Septembre', 2=>'Octobre', 3=>'Novembre', 4=>'Décembre',
-        5=>'Janvier',   6=>'Février', 7=>'Mars',     8=>'Avril',
-        9=>'Mai',       10=>'Juin',
-    ];
-@endphp
-
 <div class="min-h-screen bg-gray-50 py-4 px-3 sm:py-6 sm:px-6 lg:px-8">
 
-    {{-- Toast --}}
     @if(session('success'))
-    <div class="mb-5 flex items-center gap-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl px-4 sm:px-5 py-4 shadow-sm">
-        <i class="fas fa-check-circle text-emerald-500 flex-shrink-0"></i>
+    <div class="mb-5 flex items-center gap-3 bg-orange-50 border border-orange-200 text-orange-800 rounded-xl px-5 py-4 shadow-sm">
+        <i class="fas fa-check-circle text-orange-500 flex-shrink-0"></i>
         <p class="text-sm font-semibold">{{ session('success') }}</p>
     </div>
     @endif
-
     @if($errors->any())
-    <div class="mb-5 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 sm:px-5 py-4 shadow-sm">
-        @foreach($errors->all() as $err)
-        <p class="text-sm">• {{ $err }}</p>
-        @endforeach
+    <div class="mb-5 bg-red-50 border border-red-200 text-red-700 rounded-xl px-5 py-4">
+        @foreach($errors->all() as $err)<p class="text-sm">• {{ $err }}</p>@endforeach
     </div>
     @endif
 
     {{-- En-tête --}}
-    <div class="mb-6 sm:mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div class="flex items-center gap-3">
-            <div class="w-10 h-10 sm:w-11 sm:h-11 bg-orange-500 rounded-xl flex items-center justify-center shadow-md shrink-0">
-                <i class="fas fa-file-alt text-white text-base sm:text-lg"></i>
+            <div class="w-10 h-10 bg-orange-500 rounded-xl flex items-center justify-center shadow-md shrink-0">
+                <i class="fas fa-file-alt text-white"></i>
             </div>
-            <div class="min-w-0">
+            <div>
                 <h1 class="text-xl sm:text-2xl font-bold text-gray-900">Évaluations sommatives</h1>
-                <p class="text-xs sm:text-sm text-gray-500 mt-0.5 break-words">
-                    Classe : <span class="font-semibold text-orange-700">{{ $classe->name }}</span> — {{ $annee->name }}
+                <p class="text-xs sm:text-sm text-gray-500 mt-0.5">
+                    <span class="font-semibold text-orange-700">{{ $classe->name }}</span> — {{ $annee->name }} — {{ $todayFr }}
                 </p>
             </div>
         </div>
-        <a href="{{ route('teacher.classes.primaire') }}"
-           class="inline-flex items-center gap-2 bg-white border border-gray-200 text-gray-700 font-medium text-sm px-4 py-2.5 rounded-xl shadow-sm hover:bg-gray-50 transition shrink-0">
-            <i class="fas fa-arrow-left text-xs"></i> Retour
-        </a>
-    </div>
-
-    {{-- Aucune composition --}}
-    @if($compositions->isEmpty())
-    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 sm:p-12 text-center">
-        <div class="w-20 h-20 bg-orange-50 rounded-full flex items-center justify-center mx-auto mb-4">
-            <i class="fas fa-calendar-times text-orange-300 text-3xl"></i>
+        <div class="flex flex-wrap gap-2">
+            <a href="{{ route('teacher.classes.primaire') }}"
+               class="inline-flex items-center gap-2 bg-white border border-gray-200 text-gray-700 text-sm font-medium px-4 py-2.5 rounded-xl shadow-sm hover:bg-gray-50 transition">
+                <i class="fas fa-arrow-left text-xs"></i> Retour
+            </a>
+            @if($evaluations->isNotEmpty())
+            <a href="{{ route('teacher.primaire.sommative.recap', $classe->id) }}"
+               class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl shadow-md transition active:scale-95">
+                <i class="fas fa-table"></i> Récapitulatif
+            </a>
+            @endif
+            <button onclick="openModal()"
+                    class="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold px-5 py-2.5 rounded-xl shadow-md transition active:scale-95">
+                <i class="fas fa-plus"></i> Nouvelle évaluation
+            </button>
         </div>
-        <h2 class="text-lg font-bold text-gray-600 mb-2">Aucune composition programmée</h2>
-        <p class="text-gray-400 text-sm">Le directeur n'a pas encore programmé de composition pour votre classe.</p>
     </div>
 
-    {{-- Aucune matière --}}
-    @elseif($subjects->isEmpty())
-    <div class="bg-amber-50 border border-amber-200 rounded-2xl p-8 text-center">
-        <i class="fas fa-exclamation-triangle text-amber-400 text-3xl mb-3"></i>
-        <p class="text-amber-800 font-semibold">Aucune matière configurée pour cette classe.</p>
+    {{-- Liste --}}
+    @if($evaluations->isEmpty())
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-10 text-center">
+        <div class="w-16 h-16 bg-orange-50 rounded-full flex items-center justify-center mx-auto mb-3">
+            <i class="fas fa-file-alt text-orange-300 text-2xl"></i>
+        </div>
+        <p class="text-gray-500 font-medium mb-3">Aucune évaluation sommative.</p>
+        <button onclick="openModal()" class="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold px-5 py-2.5 rounded-xl shadow-md transition">
+            <i class="fas fa-plus"></i> Nouvelle évaluation
+        </button>
     </div>
-
     @else
-    <div class="space-y-5">
-        @foreach($compositions as $comp)
-        @php
-            $couleur = $comp->couleur;
-            $bg     = "bg-{$couleur}-50";
-            $border = "border-{$couleur}-400";
-            $badge  = "bg-{$couleur}-100 text-{$couleur}-800";
-            $ring   = "ring-{$couleur}-200";
-        @endphp
-        <div class="bg-white rounded-2xl border-l-4 {{ $border }} shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden ring-1 {{ $ring }}">
-
-            {{-- Header composition --}}
-            <div class="px-4 sm:px-6 py-4 {{ $bg }} flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <div class="flex items-center gap-3 min-w-0">
-                    <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm shrink-0">
-                        <i class="{{ $comp->icone }} text-gray-600"></i>
-                    </div>
-                    <div class="min-w-0">
-                        <h2 class="text-base font-bold text-gray-900 truncate">
-                            Composition de {{ $moisNoms[$comp->mois] ?? 'Mois '.$comp->mois }}
-                        </h2>
-                        <span class="inline-flex items-center gap-1.5 mt-0.5 px-2.5 py-0.5 rounded-full text-xs font-bold {{ $badge }}">
-                            <span class="w-1.5 h-1.5 rounded-full bg-current opacity-70"></span>
-                            {{ $comp->etapeLabel }}
-                        </span>
-                    </div>
-                </div>
-
-                {{-- Compte à rebours / statut --}}
-                @if($comp->etape !== 'termine' && $comp->joursRestants > 0)
-                <div class="flex items-center gap-2 bg-white rounded-xl px-4 py-2 shadow-sm shrink-0">
-                    <i class="fas fa-hourglass-half text-gray-400 text-sm"></i>
-                    <div class="text-center">
-                        <span class="text-2xl font-black text-gray-800">{{ $comp->joursRestants }}</span>
-                        <span class="text-xs text-gray-500 block -mt-0.5">jour(s)</span>
-                    </div>
-                </div>
-                @elseif($comp->etape === 'termine')
-                <div class="flex items-center gap-2 bg-gray-100 rounded-xl px-4 py-2 shrink-0">
-                    <i class="fas fa-lock text-gray-500"></i>
-                    <span class="text-sm font-semibold text-gray-600">Saisie clôturée</span>
-                </div>
-                @endif
-            </div>
-
-            {{-- Dates de la période de saisie + Récapitulatif --}}
-            <div class="px-4 sm:px-6 pt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <div class="bg-gray-50 rounded-xl p-3 border border-gray-100 inline-flex flex-wrap items-center gap-2 text-xs text-gray-600">
-                    <i class="fas fa-edit text-orange-500"></i>
-                    <span>Saisie des notes :</span>
-                    <span class="font-semibold text-gray-800">{{ \Carbon\Carbon::parse($comp->saisie_debut)->locale('fr')->isoFormat('D MMM') }}</span>
-                    <i class="fas fa-arrow-right text-gray-400 text-[10px]"></i>
-                    <span class="font-semibold text-gray-800">{{ \Carbon\Carbon::parse($comp->saisie_fin)->locale('fr')->isoFormat('D MMM YYYY') }}</span>
-                </div>
-                @if($comp->etape !== 'a_venir')
-                <a href="{{ route('teacher.primaire.sommative.recap', [$classe->id, $comp->id]) }}"
-                   class="inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs px-4 py-2.5 rounded-xl shadow-sm transition-colors shrink-0">
-                    <i class="fas fa-table text-xs"></i>
-                    Récapitulatif toutes matières
-                </a>
-                @endif
-            </div>
-
-            {{-- Tableau des matières --}}
-            <div class="p-4 sm:p-6">
-                <p class="text-[11px] text-gray-400 mb-2 flex items-center gap-1.5">
-                    <i class="fas fa-info-circle"></i>
-                    Chaque matière peut avoir son propre barème (/10 ou /20). Les moyennes sont automatiquement
-                    ramenées sur /20 dans le récapitulatif pour rester comparables.
-                </p>
-                <div class="border border-gray-200 rounded-xl overflow-x-auto">
-                    <table class="w-full text-sm min-w-[480px]">
-                        <thead class="bg-gray-50 text-xs uppercase text-gray-500 font-semibold">
-                            <tr>
-                                <th class="px-4 py-2.5 text-left">Matière</th>
-                                <th class="px-4 py-2.5 text-center">Barème</th>
-                                <th class="px-4 py-2.5 text-center">Élèves notés</th>
-                                <th class="px-4 py-2.5 text-center">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-100">
-                            @foreach($subjects as $subject)
-                            @php
-                                $key         = $comp->id.'-'.$subject->id;
-                                $evalGroup   = $evaluations->get($key);
-                                $evaluation  = $evalGroup ? $evalGroup->first() : null;
-                                $notesCount  = $evaluation ? $evaluation->notes->whereNotNull('note')->count() : 0;
-                                $totalEleves = $classe->students->count();
-                            @endphp
-                            <tr class="hover:bg-gray-50 transition-colors">
-                                <td class="px-4 py-3 font-medium text-gray-700">{{ $subject->name }}</td>
-                                <td class="px-4 py-3 text-center">
-                                    @if($evaluation)
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-orange-100 text-orange-700 whitespace-nowrap">
-                                        /{{ number_format($evaluation->note_max, 0) }}
-                                    </span>
-                                    @else
-                                    <span class="text-xs text-gray-300 italic">—</span>
-                                    @endif
-                                </td>
-                                <td class="px-4 py-3 text-center">
-                                    <span class="inline-flex items-center gap-1 text-xs font-medium text-gray-600 whitespace-nowrap">
-                                        <i class="fas fa-users text-gray-400"></i>
-                                        {{ $notesCount }}/{{ $totalEleves }}
-                                    </span>
-                                </td>
-                                <td class="px-4 py-3">
-                                    <div class="flex items-center justify-center gap-2 flex-wrap">
-                                        {{-- Saisir / Modifier : uniquement pendant la fenêtre de saisie --}}
-                                        @if($comp->etape === 'saisie')
-                                        <a href="{{ route('teacher.primaire.sommative.saisie', [$classe->id, $comp->id, $subject->id]) }}"
-                                           class="inline-flex items-center gap-1.5 px-3 py-1.5 {{ $evaluation ? 'bg-blue-600 hover:bg-blue-700' : 'bg-orange-500 hover:bg-orange-600' }} text-white text-xs font-bold rounded-lg transition-colors whitespace-nowrap">
-                                            <i class="fas {{ $evaluation ? 'fa-edit' : 'fa-plus' }} text-xs"></i>
-                                            {{ $evaluation ? 'Modifier' : 'Saisir les notes' }}
-                                        </a>
-                                        @endif
-
-                                        {{-- Lire : dès qu'il existe des notes, à tout moment (même pendant la saisie) --}}
-                                        @if($evaluation)
-                                        <a href="{{ route('teacher.primaire.sommative.show', [$classe->id, $comp->id, $subject->id]) }}"
-                                           class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-bold rounded-lg transition-colors whitespace-nowrap">
-                                            <i class="fas fa-eye text-xs"></i> Lire
-                                        </a>
-                                        @endif
-
-                                        {{-- Rien saisi et hors période de saisie : état verrouillé --}}
-                                        @if(!$evaluation && $comp->etape !== 'saisie')
-                                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-400 text-xs font-bold rounded-lg whitespace-nowrap">
-                                            <i class="fas fa-lock text-xs"></i>
-                                            {{ $comp->etape === 'a_venir' ? 'Saisie non ouverte' : 'Saisie clôturée' }}
-                                        </span>
-                                        @endif
-                                    </div>
-                                </td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div class="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
+            <i class="fas fa-list text-orange-500"></i>
+            <h2 class="font-bold text-gray-800">{{ $evaluations->count() }} évaluation(s)</h2>
         </div>
-        @endforeach
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm min-w-[600px]">
+                <thead class="bg-gray-50 text-xs uppercase text-gray-500 font-semibold">
+                    <tr>
+                        <th class="px-5 py-3 text-left">Date</th>
+                        <th class="px-5 py-3 text-left">Matière</th>
+                        <th class="px-5 py-3 text-left">Titre</th>
+                        <th class="px-5 py-3 text-center">Barème</th>
+                        <th class="px-5 py-3 text-center">Notés</th>
+                        <th class="px-5 py-3 text-center">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    @foreach($evaluations as $eval)
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-5 py-3 font-medium text-gray-700 whitespace-nowrap">
+                            {{ $eval->date_evaluation ? $eval->date_evaluation->locale('fr')->isoFormat('ddd D MMM YYYY') : '—' }}
+                        </td>
+                        <td class="px-5 py-3">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-orange-100 text-orange-800 whitespace-nowrap">
+                                {{ $eval->subject->name ?? '—' }}
+                            </span>
+                        </td>
+                        <td class="px-5 py-3 text-gray-600">{{ $eval->titre ?: '—' }}</td>
+                        <td class="px-5 py-3 text-center font-bold text-gray-700">/{{ number_format($eval->note_max, 0) }}</td>
+                        <td class="px-5 py-3 text-center text-xs text-gray-600">
+                            {{ $eval->notes->whereNotNull('note')->count() }}/{{ $eval->notes->count() }}
+                        </td>
+                        <td class="px-5 py-3 text-center">
+                            <a href="{{ route('teacher.primaire.sommative.show', [$classe->id, $eval->id]) }}"
+                               class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg transition whitespace-nowrap">
+                                <i class="fas fa-eye text-xs"></i> Voir les notes
+                            </a>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
     </div>
     @endif
-
 </div>
+
+{{-- Modal --}}
+<div id="modal-overlay" class="fixed inset-0 z-[8000] hidden" onclick="closeModalIfBackdrop(event)">
+    <div class="absolute inset-0 bg-gray-900/50 backdrop-blur-sm"></div>
+    <div class="relative flex items-start sm:items-center justify-center h-full px-0 sm:px-4 py-0 sm:py-8 overflow-y-auto">
+        <div id="modal-panel"
+             class="relative bg-white w-full sm:max-w-2xl sm:rounded-2xl shadow-2xl flex flex-col h-full sm:h-auto sm:max-h-[90vh] transform transition-all duration-300 translate-y-8 opacity-0">
+
+            {{-- Header --}}
+            <div class="shrink-0 flex items-center justify-between px-5 pt-5 pb-4 border-b border-gray-100 bg-white sm:rounded-t-2xl">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 bg-orange-500 rounded-xl flex items-center justify-center shrink-0">
+                        <i class="fas fa-file-alt text-white text-sm"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-base sm:text-lg font-bold text-gray-900">Nouvelle évaluation sommative</h2>
+                        <p class="text-xs text-gray-400">{{ $classe->name }} — {{ $annee->name }}</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeModal()" class="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 transition shrink-0">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            <form action="{{ route('teacher.primaire.sommative.store', $classe->id) }}" method="POST" class="flex flex-col flex-1 min-h-0">
+                @csrf
+                {{-- Corps scrollable --}}
+                <div class="flex-1 min-h-0 overflow-y-auto px-5 py-5 space-y-5">
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {{-- Matière --}}
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1.5"><i class="fas fa-book text-orange-500 mr-1"></i>Matière <span class="text-red-500">*</span></label>
+                            @if($matieresAujourdhui->isEmpty())
+                            <p class="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">Aucune matière au programme aujourd'hui.</p>
+                            @else
+                            <select name="subject_id" required class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors">
+                                <option value="">— Choisir —</option>
+                                @foreach($matieresAujourdhui as $mat)
+                                <option value="{{ $mat->id }}" {{ old('subject_id')==$mat->id?'selected':'' }}>{{ $mat->name }}</option>
+                                @endforeach
+                            </select>
+                            @endif
+                            @error('subject_id')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
+                        </div>
+                        {{-- Date --}}
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1.5"><i class="fas fa-calendar text-orange-500 mr-1"></i>Date <span class="text-red-500">*</span></label>
+                            <input type="date" name="date_evaluation" value="{{ old('date_evaluation', date('Y-m-d')) }}" required max="{{ date('Y-m-d') }}"
+                                   class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors">
+                            @error('date_evaluation')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {{-- Titre --}}
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1.5"><i class="fas fa-tag text-orange-500 mr-1"></i>Titre (optionnel)</label>
+                            <input type="text" name="titre" value="{{ old('titre') }}" placeholder="Ex: Composition n°1"
+                                   class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors">
+                        </div>
+                        {{-- Barème --}}
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1.5"><i class="fas fa-sliders-h text-orange-500 mr-1"></i>Barème <span class="text-red-500">*</span></label>
+                            <div class="flex gap-3">
+                                <label class="flex-1 flex items-center justify-center gap-2 cursor-pointer border border-gray-200 rounded-xl px-4 py-2.5 bg-gray-50 hover:bg-orange-50 hover:border-orange-300 transition-colors has-[:checked]:bg-orange-50 has-[:checked]:border-orange-400">
+                                    <input type="radio" name="note_min" value="5" {{ old('note_min','5')=='5'?'checked':'' }} class="text-orange-600 focus:ring-orange-500">
+                                    <span class="text-sm font-semibold">5 → /10</span>
+                                </label>
+                                <label class="flex-1 flex items-center justify-center gap-2 cursor-pointer border border-gray-200 rounded-xl px-4 py-2.5 bg-gray-50 hover:bg-orange-50 hover:border-orange-300 transition-colors has-[:checked]:bg-orange-50 has-[:checked]:border-orange-400">
+                                    <input type="radio" name="note_min" value="10" {{ old('note_min')=='10'?'checked':'' }} class="text-orange-600 focus:ring-orange-500">
+                                    <span class="text-sm font-semibold">10 → /20</span>
+                                </label>
+                            </div>
+                            <p class="mt-1 text-xs text-gray-400">Note max = double de la note min. Varie par matière.</p>
+                            @error('note_min')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
+                        </div>
+                    </div>
+
+                    {{-- Tableau élèves --}}
+                    <div class="border-t border-gray-100 pt-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-sm font-bold text-gray-700 flex items-center gap-2">
+                                <i class="fas fa-users text-orange-500"></i> Notes des élèves
+                                <span class="text-xs font-normal text-gray-400">(vide = absent)</span>
+                            </h3>
+                            <span id="bareme-label" class="text-xs font-bold bg-orange-100 text-orange-700 px-2.5 py-1 rounded-full whitespace-nowrap">Barème : /10</span>
+                        </div>
+                        <div class="border border-gray-200 rounded-xl overflow-x-auto">
+                            <table class="w-full text-sm min-w-[380px]">
+                                <thead class="bg-gray-50 text-xs uppercase text-gray-500 font-semibold sticky top-0">
+                                    <tr>
+                                        <th class="px-3 py-2.5 text-left w-8">#</th>
+                                        <th class="px-3 py-2.5 text-left">Nom & Prénoms</th>
+                                        <th class="px-3 py-2.5 text-center w-14">Sexe</th>
+                                        <th class="px-3 py-2.5 text-center w-24">Note</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-100">
+                                    @foreach($classe->students as $i => $student)
+                                    <tr class="hover:bg-gray-50 transition-colors">
+                                        <td class="px-3 py-2 text-gray-400 text-xs">{{ $i+1 }}</td>
+                                        <td class="px-3 py-2">
+                                            <span class="font-semibold text-gray-800">{{ strtoupper($student->last_name) }}</span>
+                                            <span class="text-gray-600"> {{ $student->first_name }}</span>
+                                        </td>
+                                        <td class="px-3 py-2 text-center">
+                                            <span class="text-xs px-2 py-0.5 rounded-full font-medium {{ $student->gender==='M'?'bg-blue-100 text-blue-700':'bg-pink-100 text-pink-700' }}">{{ $student->gender }}</span>
+                                        </td>
+                                        <td class="px-3 py-2 text-center">
+                                            <input type="number" name="notes[{{ $student->id }}]"
+                                                   value="{{ old('notes.'.$student->id) }}"
+                                                   min="0" step="0.5" inputmode="decimal" placeholder="—"
+                                                   class="note-input w-16 text-center rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-orange-400 transition-colors">
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Footer fixe --}}
+                <div class="shrink-0 flex gap-3 px-5 py-4 border-t border-gray-100 bg-white sm:rounded-b-2xl">
+                    <button type="button" onclick="closeModal()" class="flex-1 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl py-3 transition-colors">Annuler</button>
+                    <button type="submit" class="flex-1 flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-bold text-sm py-3 rounded-xl shadow-md transition-all active:scale-95">
+                        <i class="fas fa-save text-xs"></i> Enregistrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@endsection
+
+@section('scripts')
+<script>
+const overlay = document.getElementById('modal-overlay');
+const panel   = document.getElementById('modal-panel');
+function openModal() {
+    overlay.classList.remove('hidden');
+    document.body.classList.add('overflow-hidden');
+    requestAnimationFrame(() => { panel.classList.remove('translate-y-8','opacity-0'); panel.classList.add('translate-y-0','opacity-100'); });
+}
+function closeModal() {
+    panel.classList.remove('translate-y-0','opacity-100'); panel.classList.add('translate-y-8','opacity-0');
+    setTimeout(() => { overlay.classList.add('hidden'); document.body.classList.remove('overflow-hidden'); }, 250);
+}
+function closeModalIfBackdrop(e) { if(e.target===overlay) closeModal(); }
+document.addEventListener('keydown', e => { if(e.key==='Escape') closeModal(); });
+
+function updateBareme() {
+    const min = parseInt(document.querySelector('input[name="note_min"]:checked')?.value || 5);
+    const max = min * 2;
+    document.getElementById('bareme-label').textContent = `Barème : /${max}`;
+    document.querySelectorAll('.note-input').forEach(inp => {
+        inp.max = max; inp.placeholder = `0–${max}`;
+        if(inp.value && parseFloat(inp.value) > max) inp.value = '';
+    });
+}
+document.querySelectorAll('input[name="note_min"]').forEach(r => r.addEventListener('change', updateBareme));
+updateBareme();
+@if($errors->any()) document.addEventListener('DOMContentLoaded', () => openModal()); @endif
+</script>
 @endsection

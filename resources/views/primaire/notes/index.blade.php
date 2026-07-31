@@ -116,12 +116,12 @@
                     <a href="{{ route('primaire.notes.formative', $classe->id) }}"
                        class="flex items-center justify-center gap-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-semibold text-sm py-2.5 px-4 rounded-xl border border-emerald-200 transition-colors duration-150">
                         <i class="fas fa-pencil-alt text-xs"></i>
-                        Évaluation formative
+                        Évaluations formatives
                     </a>
                     <a href="{{ route('primaire.notes.sommative', $classe->id) }}"
                        class="flex items-center justify-center gap-2 bg-orange-50 hover:bg-orange-100 text-orange-700 font-semibold text-sm py-2.5 px-4 rounded-xl border border-orange-200 transition-colors duration-150">
                         <i class="fas fa-file-alt text-xs"></i>
-                        Évaluation sommative
+                        Évaluations sommatives
                     </a>
                 </div>
             </div>
@@ -153,12 +153,12 @@
                     <a href="{{ route('primaire.notes.formative', $classe->id) }}"
                        class="flex items-center justify-center gap-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-semibold text-sm py-2.5 px-4 rounded-xl border border-emerald-200 transition-colors duration-150">
                         <i class="fas fa-pencil-alt text-xs"></i>
-                        Évaluation formative
+                        Évaluations formatives
                     </a>
                     <a href="{{ route('primaire.notes.sommative', $classe->id) }}"
                        class="flex items-center justify-center gap-2 bg-orange-50 hover:bg-orange-100 text-orange-700 font-semibold text-sm py-2.5 px-4 rounded-xl border border-orange-200 transition-colors duration-150">
                         <i class="fas fa-file-alt text-xs"></i>
-                        Évaluation sommative
+                        Évaluations sommatives
                     </a>
                 </div>
             </div>

@@ -103,11 +103,13 @@ class NotesEvaluationController extends Controller{
               ->orderBy('last_name')->orderBy('first_name');
         }])->findOrFail($classeId);
 
-        return view('primaire.notes.evaluation', [
-            'classe'           => $classe,
-            'annee_academique' => $annee_academique,
-            'type'             => 'formative',
-        ]);
+        $evaluations = \App\Models\PrimaireFormativeEvaluation::with(['subject', 'notes'])
+            ->where('classe_id', $classeId)
+            ->where('academic_year_id', $annee_academique->id)
+            ->orderByDesc('date_evaluation')
+            ->get();
+
+        return view('primaire.notes.formative', compact('classe', 'annee_academique', 'evaluations'));
     }
 
     public function evaluationSommative(int $classeId)
@@ -119,10 +121,126 @@ class NotesEvaluationController extends Controller{
               ->orderBy('last_name')->orderBy('first_name');
         }])->findOrFail($classeId);
 
-        return view('primaire.notes.evaluation', [
-            'classe'           => $classe,
-            'annee_academique' => $annee_academique,
-            'type'             => 'sommative',
-        ]);
+        $evaluations = \App\Models\PrimaireSommativeEvaluation::with(['subject', 'notes'])
+            ->where('classe_id', $classeId)
+            ->where('academic_year_id', $annee_academique->id)
+            ->orderByDesc('date_evaluation')
+            ->get();
+
+        return view('primaire.notes.sommative', compact('classe', 'annee_academique', 'evaluations'));
+    }
+
+    /** Détail notes d'une évaluation formative (vue directeur) */
+    public function showFormative(int $classeId, int $evaluationId)
+    {
+        $annee_academique = AcademicYear::where('active', true)->firstOrFail();
+        $classe = Classe::with(['students' => function ($q) use ($annee_academique) {
+            $q->where('academic_year_id', $annee_academique->id)
+              ->where('is_validated', 1)
+              ->orderBy('last_name')->orderBy('first_name');
+        }])->findOrFail($classeId);
+
+        $evaluation = \App\Models\PrimaireFormativeEvaluation::with(['subject', 'notes'])
+            ->where('classe_id', $classeId)->findOrFail($evaluationId);
+
+        $notesParEleve = $evaluation->notes->keyBy('student_id');
+
+        // Rangs
+        $notesValides = $evaluation->notes->whereNotNull('note')->sortByDesc('note')->values();
+        $rangs = []; $rang = 1;
+        foreach ($notesValides as $i => $n) {
+            $rangs[$n->student_id] = ($i > 0 && $n->note == $notesValides[$i-1]->note)
+                ? $rangs[$notesValides[$i-1]->student_id] : $rang;
+            $rang++;
+        }
+
+        return view('primaire.notes.show_evaluation', compact('classe', 'annee_academique', 'evaluation', 'notesParEleve', 'rangs'));
+    }
+
+    /** Détail notes d'une évaluation sommative (vue directeur) */
+    public function showSommative(int $classeId, int $evaluationId)
+    {
+        $annee_academique = AcademicYear::where('active', true)->firstOrFail();
+        $classe = Classe::with(['students' => function ($q) use ($annee_academique) {
+            $q->where('academic_year_id', $annee_academique->id)
+              ->where('is_validated', 1)
+              ->orderBy('last_name')->orderBy('first_name');
+        }])->findOrFail($classeId);
+
+        $evaluation = \App\Models\PrimaireSommativeEvaluation::with(['subject', 'notes'])
+            ->where('classe_id', $classeId)->findOrFail($evaluationId);
+
+        $notesParEleve = $evaluation->notes->keyBy('student_id');
+
+        $notesValides = $evaluation->notes->whereNotNull('note')->sortByDesc('note')->values();
+        $rangs = []; $rang = 1;
+        foreach ($notesValides as $i => $n) {
+            $rangs[$n->student_id] = ($i > 0 && $n->note == $notesValides[$i-1]->note)
+                ? $rangs[$notesValides[$i-1]->student_id] : $rang;
+            $rang++;
+        }
+
+        return view('primaire.notes.show_evaluation', compact('classe', 'annee_academique', 'evaluation', 'notesParEleve', 'rangs'));
+    }
+
+    /** Récapitulatif toutes matières sommatives (vue directeur) */
+    public function recapSommative(int $classeId)
+    {
+        $annee_academique = AcademicYear::where('active', true)->firstOrFail();
+        $classe = Classe::with(['students' => function ($q) use ($annee_academique) {
+            $q->where('academic_year_id', $annee_academique->id)
+              ->where('is_validated', 1)
+              ->orderBy('last_name')->orderBy('first_name');
+        }])->findOrFail($classeId);
+
+        $evaluations = \App\Models\PrimaireSommativeEvaluation::with(['subject', 'notes'])
+            ->where('classe_id', $classeId)
+            ->where('academic_year_id', $annee_academique->id)
+            ->get();
+
+        $evalParMatiere = $evaluations->sortByDesc('date_evaluation')->groupBy('subject_id');
+        $matieres = $evalParMatiere->map(fn($e) => $e->first())->values();
+        $students = $classe->students;
+
+        $matrix = [];
+        foreach ($students as $s) $matrix[$s->id] = [];
+        foreach ($evalParMatiere as $subId => $evals) {
+            $last = $evals->first();
+            $notesMap = $last->notes->keyBy('student_id');
+            foreach ($students as $s) {
+                $n = $notesMap->get($s->id);
+                $matrix[$s->id][$subId] = ['note' => $n?->note, 'note_max' => $last->note_max];
+            }
+        }
+
+        $moyennes = [];
+        foreach ($students as $s) {
+            $total = $cnt = 0;
+            foreach ($matieres as $e) {
+                $entry = $matrix[$s->id][$e->subject_id] ?? null;
+                if ($entry && $entry['note'] !== null) { $total += ($entry['note'] / $entry['note_max']) * 20; $cnt++; }
+            }
+            $moyennes[$s->id] = $cnt > 0 ? round($total / $cnt, 2) : null;
+        }
+
+        $rangGeneraux = [];
+        $sorted = collect($moyennes)->filter()->sortDesc()->values()->toArray();
+        foreach ($moyennes as $sid => $m) {
+            $rangGeneraux[$sid] = $m !== null ? (array_search($m, $sorted) + 1) : '—';
+        }
+
+        $rangsParMatiere = [];
+        foreach ($matieres as $e) {
+            $subId = $e->subject_id;
+            $ns = [];
+            foreach ($students as $s) { $entry = $matrix[$s->id][$subId] ?? null; if ($entry && $entry['note'] !== null) $ns[$s->id] = $entry['note']; }
+            arsort($ns); $rang = 1; $prev = null;
+            foreach ($ns as $sid => $note) {
+                $rangsParMatiere[$subId][$sid] = ($prev !== null && $note == $prev) ? ($rangsParMatiere[$subId][array_key_last($rangsParMatiere[$subId])] ?? $rang) : $rang;
+                $prev = $note; $rang++;
+            }
+        }
+
+        return view('primaire.notes.recap_sommative', compact('classe', 'annee_academique', 'matieres', 'matrix', 'moyennes', 'rangGeneraux', 'rangsParMatiere'));
     }
 }
