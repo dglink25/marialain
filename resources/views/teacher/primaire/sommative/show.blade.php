@@ -33,6 +33,12 @@
                 <i class="fas fa-edit text-xs"></i> Modifier
             </a>
             @endif
+            <a href="{{ route('teacher.primaire.sommative.recap', [$classe->id, $composition->id]) }}"
+               class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm px-4 py-2.5 rounded-xl shadow-sm transition">
+                <i class="fas fa-table text-xs"></i>
+                <span class="hidden sm:inline">Récapitulatif toutes matières</span>
+                <span class="sm:hidden">Récap</span>
+            </a>
             <a href="{{ route('teacher.classes.sommative', $classe->id) }}"
                class="inline-flex items-center gap-2 bg-white border border-gray-200 text-gray-700 font-medium text-sm px-4 py-2.5 rounded-xl shadow-sm hover:bg-gray-50 transition">
                 <i class="fas fa-arrow-left text-xs"></i> Retour
@@ -77,13 +83,19 @@
             <h2 class="text-base font-bold text-gray-800">Notes des élèves</h2>
         </div>
         <div class="overflow-x-auto">
-            <table class="w-full text-sm min-w-[560px]">
+            <table class="w-full text-sm min-w-[620px]">
                 <thead class="bg-gray-50 text-xs uppercase text-gray-500 font-semibold">
                     <tr>
                         <th class="px-4 sm:px-6 py-3 text-left w-10">N°</th>
                         <th class="px-4 sm:px-6 py-3 text-left">Nom & Prénoms</th>
                         <th class="px-4 sm:px-6 py-3 text-center w-16">Sexe</th>
-                        <th class="px-4 sm:px-6 py-3 text-center w-28">Note /{{ number_format($evaluation->note_max, 0) }}</th>
+                        <th class="px-4 sm:px-6 py-3 text-center w-24">Note /{{ number_format($evaluation->note_max, 0) }}</th>
+                        @if((float) $evaluation->note_max != 20)
+                        <th class="px-4 sm:px-6 py-3 text-center w-24 bg-indigo-50 text-indigo-700">
+                            Note /20
+                            <span class="block text-[9px] font-normal normal-case text-indigo-400">normalisée</span>
+                        </th>
+                        @endif
                         <th class="px-4 sm:px-6 py-3 text-center w-32">Appréciation</th>
                     </tr>
                 </thead>
@@ -92,8 +104,9 @@
                     @php
                         $noteEntry = $notesParEleve->get($student->id);
                         $note      = $noteEntry ? $noteEntry->note : null;
-                        $noteMax   = $evaluation->note_max;
+                        $noteMax   = (float) $evaluation->note_max;
                         $pct       = $note !== null ? ($note / $noteMax) * 100 : null;
+                        $noteSur20 = ($note !== null && $noteMax > 0) ? ((float) $note / $noteMax) * 20 : null;
                         if ($pct === null)       { $apprColor = 'gray';   $apprLabel = 'Absent'; }
                         elseif ($pct >= 80)      { $apprColor = 'green';  $apprLabel = 'Très bien'; }
                         elseif ($pct >= 60)      { $apprColor = 'blue';   $apprLabel = 'Bien'; }
@@ -121,6 +134,15 @@
                             <span class="text-gray-400 text-sm italic">—</span>
                             @endif
                         </td>
+                        @if($noteMax != 20)
+                        <td class="px-4 sm:px-6 py-3 text-center bg-indigo-50/50">
+                            @if($noteSur20 !== null)
+                            <span class="text-sm font-bold text-indigo-700">{{ number_format($noteSur20, 2, ',', '') }}</span>
+                            @else
+                            <span class="text-gray-300 text-xs italic">—</span>
+                            @endif
+                        </td>
+                        @endif
                         <td class="px-4 sm:px-6 py-3 text-center">
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold
                                 bg-{{ $apprColor }}-100 text-{{ $apprColor }}-800">

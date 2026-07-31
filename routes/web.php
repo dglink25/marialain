@@ -161,7 +161,8 @@ Route::middleware(['auth'])->prefix('teacher/primaire')->name('teacher.')->group
 
     // Évaluations formatives — route principale remplace l'ancienne
     Route::get('/classes/{classeId}/formative', [\App\Http\Controllers\Teacher\PrimaireEvaluationFormativeController::class, 'index'])->name('classes.formative');
-    Route::get('/classes/{classeId}/formative/{evaluationId}', [\App\Http\Controllers\Teacher\PrimaireEvaluationFormativeController::class, 'show'])->name('primaire.formative.show');
+    Route::get('/classes/{classeId}/formative/recap', [\App\Http\Controllers\Teacher\PrimaireEvaluationFormativeController::class, 'recap'])->name('primaire.formative.recap');
+    Route::get('/classes/{classeId}/formative/{evaluationId}', [\App\Http\Controllers\Teacher\PrimaireEvaluationFormativeController::class, 'show'])->whereNumber('evaluationId')->name('primaire.formative.show');
     Route::post('/classes/{classeId}/formative', [\App\Http\Controllers\Teacher\PrimaireEvaluationFormativeController::class, 'store'])->name('primaire.formative.store');
 
     Route::get('/subjects', [PrimaireSubjectController::class, 'index'])->name('subjects.primaire');

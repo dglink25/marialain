@@ -308,7 +308,7 @@
                     <h1 class="text-2xl font-bold text-gray-900 leading-tight">
                         Emploi du temps
                         @if($classe)
-                            &mdash; <span class="text-blue-700">{{ $classe->name }}</span>
+                            <span class="text-blue-700">{{ $classe->name }}</span>
                         @endif
                     </h1>
                     <p class="text-sm text-gray-500 mt-0.5">Gestion des horaires hebdomadaires</p>

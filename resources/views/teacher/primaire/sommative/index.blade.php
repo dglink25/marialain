@@ -129,11 +129,17 @@
 
             {{-- Tableau des matières --}}
             <div class="p-4 sm:p-6">
+                <p class="text-[11px] text-gray-400 mb-2 flex items-center gap-1.5">
+                    <i class="fas fa-info-circle"></i>
+                    Chaque matière peut avoir son propre barème (/10 ou /20). Les moyennes sont automatiquement
+                    ramenées sur /20 dans le récapitulatif pour rester comparables.
+                </p>
                 <div class="border border-gray-200 rounded-xl overflow-x-auto">
                     <table class="w-full text-sm min-w-[480px]">
                         <thead class="bg-gray-50 text-xs uppercase text-gray-500 font-semibold">
                             <tr>
                                 <th class="px-4 py-2.5 text-left">Matière</th>
+                                <th class="px-4 py-2.5 text-center">Barème</th>
                                 <th class="px-4 py-2.5 text-center">Élèves notés</th>
                                 <th class="px-4 py-2.5 text-center">Action</th>
                             </tr>
@@ -149,6 +155,15 @@
                             @endphp
                             <tr class="hover:bg-gray-50 transition-colors">
                                 <td class="px-4 py-3 font-medium text-gray-700">{{ $subject->name }}</td>
+                                <td class="px-4 py-3 text-center">
+                                    @if($evaluation)
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-orange-100 text-orange-700 whitespace-nowrap">
+                                        /{{ number_format($evaluation->note_max, 0) }}
+                                    </span>
+                                    @else
+                                    <span class="text-xs text-gray-300 italic">—</span>
+                                    @endif
+                                </td>
                                 <td class="px-4 py-3 text-center">
                                     <span class="inline-flex items-center gap-1 text-xs font-medium text-gray-600 whitespace-nowrap">
                                         <i class="fas fa-users text-gray-400"></i>

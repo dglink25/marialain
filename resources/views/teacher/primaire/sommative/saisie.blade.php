@@ -32,10 +32,26 @@
                 </p>
             </div>
         </div>
-        <a href="{{ route('teacher.classes.sommative', $classe->id) }}"
-           class="inline-flex items-center gap-2 bg-white border border-gray-200 text-gray-700 font-medium text-sm px-4 py-2.5 rounded-xl shadow-sm hover:bg-gray-50 transition shrink-0">
-            <i class="fas fa-arrow-left text-xs"></i> Retour
-        </a>
+        <div class="flex flex-wrap gap-2 shrink-0">
+            @if($evaluation)
+            <a href="{{ route('teacher.primaire.sommative.show', [$classe->id, $composition->id, $subject->id]) }}"
+               class="inline-flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold text-sm px-4 py-2.5 rounded-xl shadow-sm transition-colors">
+                <i class="fas fa-eye text-xs"></i> Lire
+            </a>
+            @endif
+            @if($composition->etape !== 'a_venir')
+            <a href="{{ route('teacher.primaire.sommative.recap', [$classe->id, $composition->id]) }}"
+               class="inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm px-4 py-2.5 rounded-xl shadow-sm transition-colors">
+                <i class="fas fa-table text-xs"></i>
+                <span class="hidden sm:inline">Récapitulatif toutes matières</span>
+                <span class="sm:hidden">Récapitulatif</span>
+            </a>
+            @endif
+            <a href="{{ route('teacher.classes.sommative', $classe->id) }}"
+               class="inline-flex items-center gap-2 bg-white border border-gray-200 text-gray-700 font-medium text-sm px-4 py-2.5 rounded-xl shadow-sm hover:bg-gray-50 transition">
+                <i class="fas fa-arrow-left text-xs"></i> Retour
+            </a>
+        </div>
     </div>
 
     {{-- Bandeau d'état de la période de saisie --}}
@@ -92,7 +108,8 @@
                     <i class="fas fa-users text-orange-500"></i>
                     <h2 class="text-base font-bold text-gray-800">Notes des élèves</h2>
                 </div>
-                <span id="bareme-label" class="text-xs font-bold bg-orange-100 text-orange-700 px-2.5 py-1 rounded-full whitespace-nowrap">
+                <span id="bareme-label" class="text-xs font-bold bg-orange-100 text-orange-700 px-2.5 py-1 rounded-full whitespace-nowrap"
+                      title="Les notes sont automatiquement ramenées sur /20 dans le récapitulatif pour permettre la comparaison entre matières.">
                     Barème : /{{ number_format($noteMaxAffiche, 0) }}
                 </span>
             </div>

@@ -39,6 +39,12 @@
                class="inline-flex items-center gap-2 bg-white border border-gray-200 text-gray-700 font-medium text-sm px-4 py-2.5 rounded-xl shadow-sm hover:bg-gray-50 transition">
                 <i class="fas fa-arrow-left text-xs"></i> Retour
             </a>
+            <a href="{{ route('teacher.primaire.formative.recap', $classe->id) }}"
+               class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm px-4 py-2.5 rounded-xl shadow-sm transition">
+                <i class="fas fa-table text-xs"></i>
+                <span class="hidden sm:inline">Récapitulatif toutes matières</span>
+                <span class="sm:hidden">Récap</span>
+            </a>
             <button onclick="openModal()"
                     class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm px-5 py-2.5 rounded-xl shadow-md transition-all duration-200 active:scale-95">
                 <i class="fas fa-plus"></i> Nouvelle évaluation
@@ -162,33 +168,8 @@
                 {{-- Corps (scrollable) --}}
                 <div class="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6 py-5 space-y-5">
 
-                    {{-- Ligne 1 : Matière + Date --}}
+                    {{-- Ligne 1 : Date + Matière (la date est choisie en premier, elle pilote la liste des matières) --}}
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {{-- Matière --}}
-                        <div>
-                            <label for="subject_id" class="block text-sm font-semibold text-gray-700 mb-1.5">
-                                <i class="fas fa-book text-emerald-500 mr-1"></i>
-                                Matière <span class="text-red-500">*</span>
-                            </label>
-                            @if($matieresAujourdhui->isEmpty())
-                            <p class="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
-                                <i class="fas fa-exclamation-triangle mr-1"></i>
-                                Aucune matière au programme aujourd'hui. Vérifiez l'emploi du temps.
-                            </p>
-                            @else
-                            <select id="subject_id" name="subject_id" required
-                                    class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors">
-                                <option value="">— Choisir —</option>
-                                @foreach($matieresAujourdhui as $mat)
-                                <option value="{{ $mat->id }}" {{ old('subject_id') == $mat->id ? 'selected' : '' }}>
-                                    {{ $mat->name }}
-                                </option>
-                                @endforeach
-                            </select>
-                            @endif
-                            @error('subject_id')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
-                        </div>
-
                         {{-- Date --}}
                         <div>
                             <label for="date_evaluation" class="block text-sm font-semibold text-gray-700 mb-1.5">
@@ -196,10 +177,31 @@
                                 Date <span class="text-red-500">*</span>
                             </label>
                             <input type="date" id="date_evaluation" name="date_evaluation"
-                                   value="{{ old('date_evaluation', date('Y-m-d')) }}" required
-                                   max="{{ date('Y-m-d') }}"
+                                   value="{{ old('date_evaluation', $dateParDefaut) }}" required
+                                   min="{{ $lundi->format('Y-m-d') }}"
+                                   max="{{ $samedi->format('Y-m-d') }}"
                                    class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors">
+                            <p class="mt-1 text-xs text-gray-400">
+                                Semaine en cours uniquement : Lundi {{ $lundi->format('d/m') }} → Samedi {{ $samedi->format('d/m') }}.
+                            </p>
                             @error('date_evaluation')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
+                        </div>
+
+                        {{-- Matière : dépend du jour de la date choisie (emploi du temps) --}}
+                        <div>
+                            <label for="subject_id" class="block text-sm font-semibold text-gray-700 mb-1.5">
+                                <i class="fas fa-book text-emerald-500 mr-1"></i>
+                                Matière <span class="text-red-500">*</span>
+                            </label>
+                            <select id="subject_id" name="subject_id" required
+                                    class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                <option value="">— Choisir —</option>
+                            </select>
+                            <p id="subject-empty-msg" class="hidden mt-1.5 text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
+                                <i class="fas fa-exclamation-triangle mr-1"></i>
+                                Aucune matière au programme ce jour-là. Vérifiez l'emploi du temps.
+                            </p>
+                            @error('subject_id')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                         </div>
                     </div>
 
@@ -325,6 +327,46 @@
 <script>
 const overlay = document.getElementById('modal-overlay');
 const panel   = document.getElementById('modal-panel');
+
+// ── Matières par jour de la semaine (issues de l'emploi du temps) ──
+const matieresParJour = @json($matieresParJourJs);
+const oldSubjectId     = @json(old('subject_id'));
+
+const dateInput      = document.getElementById('date_evaluation');
+const subjectSelect  = document.getElementById('subject_id');
+const subjectEmptyMsg = document.getElementById('subject-empty-msg');
+
+const JOURS_JS = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+
+function updateMatieresPourDate(preserveOldOnce) {
+    if (!dateInput.value) return;
+
+    // new Date('YYYY-MM-DD') est interprété en UTC ; on reconstruit en local pour éviter
+    // un décalage de jour selon le fuseau horaire du navigateur.
+    const [y, m, d] = dateInput.value.split('-').map(Number);
+    const jsDay = new Date(y, m - 1, d).getDay(); // 0=Dimanche .. 6=Samedi
+    const jour  = JOURS_JS[jsDay];
+
+    const matieres = matieresParJour[jour] || [];
+
+    subjectSelect.innerHTML = '<option value="">— Choisir —</option>';
+    matieres.forEach(mat => {
+        const opt = document.createElement('option');
+        opt.value = mat.id;
+        opt.textContent = mat.name;
+        if (preserveOldOnce && oldSubjectId && String(oldSubjectId) === String(mat.id)) {
+            opt.selected = true;
+        }
+        subjectSelect.appendChild(opt);
+    });
+
+    const vide = matieres.length === 0;
+    subjectSelect.disabled = vide;
+    subjectEmptyMsg.classList.toggle('hidden', !vide);
+}
+
+dateInput.addEventListener('change', () => updateMatieresPourDate(false));
+updateMatieresPourDate(true); // Init (garde la matière sélectionnée si erreurs de validation)
 
 function openModal() {
     overlay.classList.remove('hidden');

@@ -10,19 +10,16 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf;
 
-class PrimaireScheduleController extends Controller
-{
+class PrimaireScheduleController extends Controller{
     // ── Helpers ────────────────────────────────────────────────────
 
-    private function getClasse(): ?Classe
-    {
+    private function getClasse(): ?Classe {
         return Classe::where('teacher_id', Auth::id())
             ->whereIn('entity_id', [1, 2])
             ->first();
     }
 
-    private function timeSlots(): array
-    {
+    private function timeSlots(): array {
         $slots = [];
         for ($h = 7; $h < 18; $h++) {
             $slots[] = sprintf('%02d:00', $h);
@@ -104,8 +101,7 @@ class PrimaireScheduleController extends Controller
      *
      * @param int|null $excludeId  ID à exclure (pour update)
      */
-    private function hasOverlap(int $classeId, string $day, string $start, string $end, ?int $excludeId = null): bool
-    {
+    private function hasOverlap(int $classeId, string $day, string $start, string $end, ?int $excludeId = null): bool {
         return Schedule::where('classe_id', $classeId)
             ->where('day_of_week', $day)
             ->when($excludeId, fn($q) => $q->where('id', '!=', $excludeId))
