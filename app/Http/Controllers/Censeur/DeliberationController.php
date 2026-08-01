@@ -281,14 +281,15 @@ class DeliberationController extends Controller{
             }
 
             // ── ÉTAPE 5 : Copier class_teacher_subject vers la classe cible ─
-            // Évite les doublons (par class_id + academic_year_id + subject_id)
+            // La contrainte unique est sur (class_id, teacher_id, subject_id)
             $sourceCts = \App\Models\ClassTeacherSubject::where('class_id', $classId)
                 ->where('academic_year_id', $activeYear->id)
                 ->get();
 
             foreach ($sourceCts as $cts) {
-                $exists = \App\Models\ClassTeacherSubject::where('class_id', $targetClass->id)
-                    ->where('academic_year_id', $targetYear->id)
+                // Vérifier avec les 3 colonnes de la contrainte unique réelle
+                $exists = \App\Models\ClassTeacherSubject::where('class_id',  $targetClass->id)
+                    ->where('teacher_id', $cts->teacher_id)
                     ->where('subject_id', $cts->subject_id)
                     ->exists();
 
