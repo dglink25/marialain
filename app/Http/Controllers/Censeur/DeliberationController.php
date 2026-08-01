@@ -338,14 +338,25 @@ class DeliberationController extends Controller{
 
             DB::commit();
 
-            return back()->with('success',
-                "Délibération effectuée : {$passedCount} admis, {$repeatedCount} redoublants. " .
-                "Les archives ont été créées automatiquement."
-            );
+            return response()->json([
+                'success'       => true,
+                'passed_count'  => $passedCount,
+                'repeated_count'=> $repeatedCount,
+                'message'       => "Délibération effectuée : {$passedCount} admis, {$repeatedCount} redoublants.",
+            ]);
 
         } catch (\Throwable $e) {
             DB::rollBack();
-            return back()->with('error', 'Erreur lors de la délibération : ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Délibération échouée', [
+                'message' => $e->getMessage(),
+                'file'    => $e->getFile(),
+                'line'    => $e->getLine(),
+                'trace'   => $e->getTraceAsString(),
+            ]);
+            return response()->json([
+                'success' => false,
+                'error'   => $e->getMessage() . ' (' . basename($e->getFile()) . ':' . $e->getLine() . ')',
+            ], 422);
         }
     }
 
