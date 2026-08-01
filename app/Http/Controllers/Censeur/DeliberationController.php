@@ -143,7 +143,10 @@ class DeliberationController extends Controller{
             ->first();
 
         if ($existingDelib) {
-            return back()->with('error', 'Une délibération existe déjà pour cette classe. Annulez-la d\'abord.');
+            return response()->json([
+                'success' => false,
+                'error'   => 'Une délibération existe déjà pour cette classe. Annulez-la d\'abord.',
+            ], 422);
         }
 
         // Matières de la classe source
@@ -361,54 +364,61 @@ class DeliberationController extends Controller{
     }
 
 
-    public function cancel(int $deliberationId): \Illuminate\Http\RedirectResponse
+    public function cancel(int $deliberationId): \Illuminate\Http\JsonResponse
     {
         $deliberation = Deliberation::with('deliberationStudents')->findOrFail($deliberationId);
 
         if ($deliberation->is_cancelled) {
-            return back()->with('error', 'Cette délibération est déjà annulée.');
+            return response()->json(['success' => false, 'error' => 'Cette délibération est déjà annulée.'], 422);
         }
 
         DB::beginTransaction();
         try {
-            // Remettre les élèves dans leur état d'origine
             foreach ($deliberation->deliberationStudents as $ds) {
                 $student = Student::find($ds->student_id);
                 if (!$student) continue;
 
-                // Rétablir uniquement les élèves qui avaient été déplacés (admis)
                 if ($ds->status === 'passed') {
                     $student->update([
-                        'class_id'         => $ds->old_class_id,
-                        'academic_year_id' => $ds->old_academic_year_id,
-                        'registration_type'=> $ds->old_registration_type,
+                        'class_id'          => $ds->old_class_id,
+                        'academic_year_id'  => $ds->old_academic_year_id,
+                        'registration_type' => $ds->old_registration_type,
                     ]);
                 }
 
-                // Remettre le snapshot en 'pending'
                 StudentAcademicRecord::where('student_id', $ds->student_id)
                     ->where('academic_year_id', $ds->old_academic_year_id)
                     ->update([
-                        'statut_deliberation'  => 'pending',
-                        'next_class_id'        => null,
-                        'next_academic_year_id'=> null,
+                        'statut_deliberation'   => 'pending',
+                        'next_class_id'         => null,
+                        'next_academic_year_id' => null,
                     ]);
             }
 
-            // Marquer la délibération comme annulée
             $deliberation->update([
-                'is_cancelled'  => true,
-                'cancelled_at'  => now(),
-                'cancelled_by'  => auth()->id(),
+                'is_cancelled' => true,
+                'cancelled_at' => now(),
+                'cancelled_by' => auth()->id(),
             ]);
 
             DB::commit();
 
-            return back()->with('success', 'Délibération annulée. Les élèves ont été remis dans leur classe d\'origine.');
+            return response()->json([
+                'success' => true,
+                'message' => 'Délibération annulée. Les élèves ont été remis dans leur classe d\'origine.',
+            ]);
 
         } catch (\Throwable $e) {
             DB::rollBack();
-            return back()->with('error', 'Erreur lors de l\'annulation : ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Annulation délibération échouée', [
+                'message' => $e->getMessage(),
+                'file'    => $e->getFile(),
+                'line'    => $e->getLine(),
+            ]);
+            return response()->json([
+                'success' => false,
+                'error'   => $e->getMessage() . ' (' . basename($e->getFile()) . ':' . $e->getLine() . ')',
+            ], 422);
         }
     }
 }
