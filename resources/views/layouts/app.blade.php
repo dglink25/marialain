@@ -367,7 +367,13 @@
                                     <a href="{{ route('censeur.notes.index') }}"
                                         class="flex items-center px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('censeur.notes.index') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
                                         <i class="fas fa-sticky-note w-5"></i>
-                                        <span class="ml-2">Gestion de notes</span>
+                                        <span class="ml-2">Notes Secondaire</span>
+                                    </a>
+
+                                     <a href="{{ route('primaire.notes.index') }}"
+                                        class="flex items-center px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('primaire.notes.*') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
+                                        <i class="fas fa-clipboard-list w-5"></i>
+                                        <span class="ml-2">Notes Primaire</span>
                                     </a>
 
                                     @break
@@ -427,8 +433,15 @@
                                     <a href="{{ route('censeur.notes.index') }}"
                                         class="flex items-center px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('censeur.notes.index') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
                                         <i class="fas fa-sticky-note w-5"></i>
-                                        <span class="ml-2">Gestion de notes</span>
+                                        <span class="ml-2">Notes Secondaire</span>
                                     </a>
+
+                                    <a href="{{ route('primaire.notes.index') }}"
+                                        class="flex items-center px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('primaire.notes.*') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
+                                        <i class="fas fa-clipboard-list w-5"></i>
+                                        <span class="ml-2">Notes Primaire</span>
+                                    </a>
+
                                     @break
 
                                 @default

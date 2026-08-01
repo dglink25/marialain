@@ -56,6 +56,9 @@ class StudentAcademicRecord extends Model
         'parent_phone',
         'registration_type',
         'total_fees',
+        'school_fees_snapshot',
+        'registration_fee_snapshot',
+        're_registration_fee_snapshot',
         'amount_paid',
         'moy_trimestre_1',
         'moy_trimestre_2',
@@ -173,31 +176,41 @@ class StudentAcademicRecord extends Model
             ->where('academic_year_id', $year->id)
             ->sum('amount');
 
+        // Capturer les frais de la classe au moment de l'archivage
+        // pour éviter toute modification rétroactive
+        $classe = $student->classe;
+        $schoolFeesSnapshot        = $classe?->school_fees ?? null;
+        $registrationFeeSnapshot   = $classe?->registration_fee ?? null;
+        $reRegistrationFeeSnapshot = $classe?->re_registration_fee ?? null;
+
         $data = [
-            'class_id'             => $student->class_id,
-            'entity_id'            => $student->entity_id,
-            'first_name'           => $student->first_name,
-            'last_name'            => $student->last_name,
-            'birth_date'           => $student->birth_date,
-            'birth_place'          => $student->birth_place,
-            'gender'               => $student->gender,
-            'num_educ'             => $student->num_educ,
-            'parent_full_name'     => $student->parent_full_name,
-            'parent_email'         => $student->parent_email,
-            'parent_phone'         => $student->parent_phone,
-            'registration_type'    => $student->registration_type,
-            'total_fees'           => $student->total_fees,
-            'amount_paid'          => $totalPaid,
-            'moy_trimestre_1'      => $moyennes[1] ?? null,
-            'moy_trimestre_2'      => $moyennes[2] ?? null,
-            'moy_trimestre_3'      => $moyennes[3] ?? null,
-            'moy_annuelle'         => $moyennes['annuelle'] ?? null,
-            'rang_annuel'          => $moyennes['rang'] ?? null,
-            'statut_deliberation'  => $statut,
-            'next_class_id'        => $nextClassId,
-            'next_academic_year_id'=> $nextYearId,
-            'is_validated'         => $student->is_validated,
-            'archived_at'          => now(),
+            'class_id'                   => $student->class_id,
+            'entity_id'                  => $student->entity_id,
+            'first_name'                 => $student->first_name,
+            'last_name'                  => $student->last_name,
+            'birth_date'                 => $student->birth_date,
+            'birth_place'                => $student->birth_place,
+            'gender'                     => $student->gender,
+            'num_educ'                   => $student->num_educ,
+            'parent_full_name'           => $student->parent_full_name,
+            'parent_email'               => $student->parent_email,
+            'parent_phone'               => $student->parent_phone,
+            'registration_type'          => $student->registration_type,
+            'total_fees'                 => $student->total_fees,
+            'school_fees_snapshot'       => $schoolFeesSnapshot,
+            'registration_fee_snapshot'  => $registrationFeeSnapshot,
+            're_registration_fee_snapshot' => $reRegistrationFeeSnapshot,
+            'amount_paid'                => $totalPaid,
+            'moy_trimestre_1'            => $moyennes[1] ?? null,
+            'moy_trimestre_2'            => $moyennes[2] ?? null,
+            'moy_trimestre_3'            => $moyennes[3] ?? null,
+            'moy_annuelle'               => $moyennes['annuelle'] ?? null,
+            'rang_annuel'                => $moyennes['rang'] ?? null,
+            'statut_deliberation'        => $statut,
+            'next_class_id'              => $nextClassId,
+            'next_academic_year_id'      => $nextYearId,
+            'is_validated'               => $student->is_validated,
+            'archived_at'                => now(),
         ];
 
         return self::updateOrCreate(

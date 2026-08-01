@@ -241,9 +241,24 @@
                                 <label for="registration_type">Type d'inscription <span class="text-danger">*</span></label>
                                 <select name="registration_type" id="registration_type" class="form-control" required>
                                     <option value="">Sélectionnez le type</option>
-                                    <option value="new" {{ old('registration_type') == 'new' ? 'selected' : '' }}>Nouvelle inscription</option>
-                                    <option value="re_registration" {{ old('registration_type') == 're_registration' ? 'selected' : '' }}>Réinscription</option>
+                                    <option value="new" {{ old('registration_type') == 'new' ? 'selected' : '' }}>
+                                        Nouvelle inscription
+                                    </option>
+                                    <option value="re_registration" {{ old('registration_type') == 're_registration' ? 'selected' : '' }}>
+                                        Réinscription
+                                    </option>
                                 </select>
+                                {{-- Indicateur de montant --}}
+                                <div id="fee-indicator" class="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm hidden">
+                                    <div id="fee-new" class="flex justify-between items-center mb-1">
+                                        <span class="text-gray-600">Nouvelle inscription :</span>
+                                        <span id="fee-new-amount" class="font-bold text-blue-700">—</span>
+                                    </div>
+                                    <div id="fee-re" class="flex justify-between items-center">
+                                        <span class="text-gray-600">Réinscription :</span>
+                                        <span id="fee-re-amount" class="font-bold text-green-700">—</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -293,6 +308,44 @@
     const classeSelect = document.getElementById('classe_id');
     const vaccinationDiv = document.getElementById('vaccination_card_div');
 
+    // Frais selon entité
+    // entity_id=1 Maternelle, =2 Primaire → inscription 5000, réinscription 0
+    // entity_id=3 Secondaire → inscription 10000, réinscription 5000
+    const feesConfig = {
+        '1': { newFee: 5000,  reFee: 0 },    // Maternelle
+        '2': { newFee: 5000,  reFee: 0 },    // Primaire
+        '3': { newFee: 10000, reFee: 5000 }, // Secondaire
+    };
+
+    function formatFee(amount) {
+        return amount === 0
+            ? '<span class="text-green-600 font-bold">Gratuit (0 FCFA)</span>'
+            : amount.toLocaleString('fr-FR') + ' FCFA';
+    }
+
+    function updateFeeIndicator(entityId) {
+        const indicator    = document.getElementById('fee-indicator');
+        const feeNewAmount = document.getElementById('fee-new-amount');
+        const feeReAmount  = document.getElementById('fee-re-amount');
+        const regSelect    = document.getElementById('registration_type');
+        const config       = feesConfig[entityId];
+
+        if (!config) {
+            indicator.classList.add('hidden');
+            return;
+        }
+
+        feeNewAmount.innerHTML = formatFee(config.newFee);
+        feeReAmount.innerHTML  = formatFee(config.reFee);
+        indicator.classList.remove('hidden');
+
+        // Mettre à jour les labels du select
+        regSelect.options[1].text = `Nouvelle inscription (${config.newFee.toLocaleString('fr-FR')} FCFA)`;
+        regSelect.options[2].text = config.reFee === 0
+            ? 'Réinscription (Gratuit — 0 FCFA)'
+            : `Réinscription (${config.reFee.toLocaleString('fr-FR')} FCFA)`;
+    }
+
     entitySelect.addEventListener('change', function () {
         const entityId = this.value;
         const selectedText = entitySelect.options[entitySelect.selectedIndex].text.toLowerCase();
@@ -303,6 +356,9 @@
         } else {
             vaccinationDiv.classList.add('hidden');
         }
+
+        // Mettre à jour l'indicateur de frais
+        updateFeeIndicator(entityId);
 
         // Charger les classes dynamiquement
         if (entityId) {
@@ -321,6 +377,11 @@
             classeSelect.innerHTML = '<option value="">Sélectionnez une classe</option>';
         }
     });
+
+    // Appliquer au chargement si entité déjà sélectionnée (retour après erreur)
+    if (entitySelect.value) {
+        updateFeeIndicator(entitySelect.value);
+    }
 
     // Animation de focus sur les champs
     document.querySelectorAll('input, select').forEach(element => {

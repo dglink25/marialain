@@ -257,8 +257,83 @@ class DeliberationController extends Controller{
                         'registration_type' => 're_registration',
                     ]);
                 }
-                // Les redoublants restent dans la même classe mais gardent leur année
-                // (ils seront ré-inscrits manuellement ou via une autre action)
+            }
+
+            // ── ÉTAPE 5 : Copier class_teacher_subject vers la classe cible ─
+            // Évite les doublons (par class_id + academic_year_id + subject_id)
+            $sourceCts = \App\Models\ClassTeacherSubject::where('class_id', $classId)
+                ->where('academic_year_id', $activeYear->id)
+                ->get();
+
+            foreach ($sourceCts as $cts) {
+                $exists = \App\Models\ClassTeacherSubject::where('class_id', $targetClass->id)
+                    ->where('academic_year_id', $targetYear->id)
+                    ->where('subject_id', $cts->subject_id)
+                    ->exists();
+
+                if (!$exists) {
+                    \App\Models\ClassTeacherSubject::create([
+                        'class_id'         => $targetClass->id,
+                        'academic_year_id' => $targetYear->id,
+                        'teacher_id'       => $cts->teacher_id,
+                        'subject_id'       => $cts->subject_id,
+                        'coefficient'      => $cts->coefficient,
+                        'amount_brut'      => $cts->amount_brut ?? '0.00',
+                    ]);
+                }
+            }
+
+            // ── ÉTAPE 6 : Copier les schedules (emploi du temps) ────────────
+            // Copier uniquement si keep_timetable est activé ET pas de doublon
+            if ($request->boolean('keep_timetable', true)) {
+                $sourceSchedules = \App\Models\Schedule::where('classe_id', $classId)->get();
+
+                foreach ($sourceSchedules as $schedule) {
+                    $exists = \App\Models\Schedule::where('classe_id', $targetClass->id)
+                        ->where('day_of_week', $schedule->day_of_week)
+                        ->where('start_time',  $schedule->start_time)
+                        ->where('subject_id',  $schedule->subject_id)
+                        ->exists();
+
+                    if (!$exists) {
+                        \App\Models\Schedule::create([
+                            'classe_id'   => $targetClass->id,
+                            'teacher_id'  => $schedule->teacher_id,
+                            'subject_id'  => $schedule->subject_id,
+                            'day_of_week' => $schedule->day_of_week,
+                            'start_time'  => $schedule->start_time,
+                            'end_time'    => $schedule->end_time,
+                        ]);
+                    }
+                }
+            }
+
+            // ── ÉTAPE 7 : Copier les Timetables (emploi du temps secondaire) ─
+            if ($request->boolean('keep_timetable', true)) {
+                $sourceTimetables = \App\Models\Timetable::where('class_id', $classId)
+                    ->where('academic_year_id', $activeYear->id)
+                    ->get();
+
+                foreach ($sourceTimetables as $tt) {
+                    $exists = \App\Models\Timetable::where('class_id', $targetClass->id)
+                        ->where('academic_year_id', $targetYear->id)
+                        ->where('subject_id', $tt->subject_id)
+                        ->where('day',        $tt->day)
+                        ->where('start_time', $tt->start_time)
+                        ->exists();
+
+                    if (!$exists) {
+                        \App\Models\Timetable::create([
+                            'class_id'         => $targetClass->id,
+                            'academic_year_id' => $targetYear->id,
+                            'teacher_id'       => $tt->teacher_id,
+                            'subject_id'       => $tt->subject_id,
+                            'day'              => $tt->day,
+                            'start_time'       => $tt->start_time,
+                            'end_time'         => $tt->end_time,
+                        ]);
+                    }
+                }
             }
 
             DB::commit();

@@ -61,7 +61,7 @@
             <table class="w-full text-sm min-w-[500px]">
                 <thead class="bg-gray-50 text-xs uppercase text-gray-500 font-semibold">
                     <tr>
-                        <th class="px-5 py-3 text-left w-8">#</th>
+                        <th class="px-5 py-3 text-left w-8">N°</th>
                         <th class="px-5 py-3 text-left">N° Matricule</th>
                         <th class="px-5 py-3 text-left">Nom & Prénoms</th>
                         <th class="px-5 py-3 text-center w-14">Sexe</th>
