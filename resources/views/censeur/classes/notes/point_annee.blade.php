@@ -768,7 +768,18 @@ function executerDeliberation() {
             keep_timetable: keepTt,
         }),
     })
-    .then(r => r.json())
+    .then(r => {
+        // Lire le texte brut d'abord pour diagnostiquer si c'est pas du JSON
+        return r.text().then(text => {
+            try {
+                return JSON.parse(text);
+            } catch(e) {
+                // Réponse non-JSON (HTML d'erreur Laravel)
+                console.error('Réponse non-JSON du serveur:', text.substring(0, 500));
+                return { success: false, error: 'Erreur serveur (non-JSON). Vérifiez la console pour plus de détails. Début: ' + text.substring(0, 200) };
+            }
+        });
+    })
     .then(data => {
         btn.disabled = false;
         btn.innerHTML = '<i class="fas fa-gavel mr-2"></i>Confirmer la délibération';

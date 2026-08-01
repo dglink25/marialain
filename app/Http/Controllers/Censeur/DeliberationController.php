@@ -121,20 +121,38 @@ class DeliberationController extends Controller{
      *  EFFECTUER LA DÉLIBÉRATION
      * ===================================================================== */
 
-    public function deliberate(Request $request, int $classId): \Illuminate\Http\RedirectResponse
+    public function deliberate(Request $request, int $classId): \Illuminate\Http\JsonResponse
     {
-        $request->validate([
-            'target_class_id'       => 'required|exists:classes,id',
-            'target_academic_year_id' => 'required|exists:academic_years,id',
-            'seuil_passage'         => 'required|numeric|min:0|max:20',
-            'keep_timetable'        => 'boolean',
+        // Lire les données JSON ou form selon le Content-Type
+        $payload = $request->isJson()
+            ? $request->json()->all()
+            : $request->all();
+
+        \Illuminate\Support\Facades\Log::info('Deliberation payload', [
+            'payload'      => $payload,
+            'content_type' => $request->header('Content-Type'),
+            'all'          => $request->all(),
         ]);
+
+        $targetClassId  = $payload['target_class_id']          ?? $request->input('target_class_id');
+        $targetYearId   = $payload['target_academic_year_id']  ?? $request->input('target_academic_year_id');
+        $seuilPassage   = $payload['seuil_passage']            ?? $request->input('seuil_passage', 10);
+        $keepTimetable  = $payload['keep_timetable']           ?? $request->input('keep_timetable', true);
+
+        if (!$targetClassId || !$targetYearId) {
+            return response()->json([
+                'success' => false,
+                'error'   => "Paramètres manquants. Reçu : target_class_id={$targetClassId}, target_academic_year_id={$targetYearId}",
+                'payload' => $payload,
+            ], 422);
+        }
+
+        $seuilPassage = (float) $seuilPassage;
 
         $activeYear   = AcademicYear::where('active', true)->firstOrFail();
         $sourceClass  = Classe::findOrFail($classId);
-        $targetClass  = Classe::findOrFail($request->target_class_id);
-        $targetYear   = AcademicYear::findOrFail($request->target_academic_year_id);
-        $seuilPassage = (float) $request->seuil_passage;
+        $targetClass  = Classe::findOrFail($targetClassId);
+        $targetYear   = AcademicYear::findOrFail($targetYearId);
 
         // Vérifier qu'il n'y a pas déjà une délibération active
         $existingDelib = Deliberation::where('source_class_id', $classId)
@@ -227,7 +245,7 @@ class DeliberationController extends Controller{
                 'target_class_id'        => $targetClass->id,
                 'target_academic_year_id'=> $targetYear->id,
                 'deliberated_by'         => auth()->id(),
-                'keep_timetable'         => $request->boolean('keep_timetable'),
+                'keep_timetable'         => (bool) $keepTimetable,
                 'passed_count'           => $passedCount,
                 'repeated_count'         => $repeatedCount,
                 'deliberated_at'         => now(),
@@ -288,7 +306,7 @@ class DeliberationController extends Controller{
 
             // ── ÉTAPE 6 : Copier les schedules (emploi du temps) ────────────
             // Copier uniquement si keep_timetable est activé ET pas de doublon
-            if ($request->boolean('keep_timetable', true)) {
+            if ((bool) $keepTimetable) {
                 $sourceSchedules = \App\Models\Schedule::where('classe_id', $classId)->get();
 
                 foreach ($sourceSchedules as $schedule) {
@@ -312,7 +330,7 @@ class DeliberationController extends Controller{
             }
 
             // ── ÉTAPE 7 : Copier les Timetables (emploi du temps secondaire) ─
-            if ($request->boolean('keep_timetable', true)) {
+            if ((bool) $keepTimetable) {
                 $sourceTimetables = \App\Models\Timetable::where('class_id', $classId)
                     ->where('academic_year_id', $activeYear->id)
                     ->get();
