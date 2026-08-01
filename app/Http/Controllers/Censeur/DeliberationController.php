@@ -176,37 +176,38 @@ class DeliberationController extends Controller{
             ->where('is_validated', true)
             ->get();
 
+        // ── PRÉ-CALCUL des moyennes AVANT la transaction ─────────────────
+        // Important : les SELECT doivent être hors transaction PostgreSQL
+        // pour éviter l'erreur 25P02 si une requête précédente a échoué
+        $moyennesParEleve = [];
+        foreach ($students as $student) {
+            $moys = [];
+            foreach ([1, 2, 3] as $t) {
+                $moys[$t] = $this->recordService->calculerMoyenneTrimestre(
+                    $student->id, $classId, $t, $activeYear, $subjects
+                );
+            }
+            $valides = array_filter($moys, fn($v) => $v !== null);
+            $moys['annuelle'] = !empty($valides)
+                ? round(array_sum($valides) / count($valides), 2)
+                : null;
+            $moyennesParEleve[$student->id] = $moys;
+        }
+
+        // Calcul des rangs annuels
+        $annuelles = array_filter(
+            array_map(fn($d) => $d['annuelle'], $moyennesParEleve),
+            fn($v) => $v !== null
+        );
+        arsort($annuelles);
+        $rang = 1; $rangs = [];
+        foreach ($annuelles as $sid => $moy) {
+            $rangs[$sid] = $rang++;
+        }
+
         DB::beginTransaction();
         try {
-            // ── ÉTAPE 1 : Calculer les moyennes annuelles ─────────────────
-            $moyennesParEleve = [];
-            foreach ($students as $student) {
-                $moys = [];
-                foreach ([1, 2, 3] as $t) {
-                    $moys[$t] = $this->recordService->calculerMoyenneTrimestre(
-                        $student->id, $classId, $t, $activeYear, $subjects
-                    );
-                }
-                $valides = array_filter($moys, fn($v) => $v !== null);
-                $moys['annuelle'] = !empty($valides)
-                    ? round(array_sum($valides) / count($valides), 2)
-                    : null;
-                $moyennesParEleve[$student->id] = $moys;
-            }
-
-            // Calcul des rangs annuels
-            $annuelles = array_filter(
-                array_map(fn($d) => $d['annuelle'], $moyennesParEleve),
-                fn($v) => $v !== null
-            );
-            arsort($annuelles);
-            $rang = 1;
-            $rangs = [];
-            foreach ($annuelles as $sid => $moy) {
-                $rangs[$sid] = $rang++;
-            }
-
-            // ── ÉTAPE 2 : CRÉER les snapshots AVANT tout déplacement ──────
+            // ── ÉTAPE 1 : Snapshots (données déjà calculées hors transaction) ──
             foreach ($students as $student) {
                 $moyennes = $moyennesParEleve[$student->id];
                 $statut   = ($moyennes['annuelle'] !== null && $moyennes['annuelle'] >= $seuilPassage)
