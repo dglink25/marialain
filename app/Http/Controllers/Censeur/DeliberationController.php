@@ -149,8 +149,10 @@ class DeliberationController extends Controller{
 
         $seuilPassage = (float) $seuilPassage;
 
-        // Nettoyer toute transaction résiduelle en cours (erreur 25P02 PostgreSQL)
-        try { DB::rollBack(); } catch (\Throwable $e) { /* rien à faire */ }
+        // Force une reconnexion propre à PostgreSQL pour éviter 25P02
+        // (transaction résiduelle cassée d'une requête précédente sur le pooler)
+        DB::purge('pgsql');
+        DB::reconnect('pgsql');
 
         $activeYear   = AcademicYear::where('active', true)->firstOrFail();
         $sourceClass  = Classe::findOrFail($classId);
@@ -206,11 +208,6 @@ class DeliberationController extends Controller{
         $rang = 1; $rangs = [];
         foreach ($annuelles as $sid => $moy) {
             $rangs[$sid] = $rang++;
-        }
-
-        // En tout début de deliberate() et cancel(), avant beginTransaction()
-        if (DB::transactionLevel() > 0) {
-            DB::rollBack(); // nettoie une transaction laissée ouverte par une requête précédente
         }
 
         DB::beginTransaction();
