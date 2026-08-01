@@ -143,6 +143,15 @@ class DeliberationController extends Controller{
 
         $seuilPassage = (float) $seuilPassage;
 
+        // ── Nettoyer l'état PostgreSQL avant tout ─────────────────────────
+        // Sur AlwaysData, PHP-FPM réutilise les connexions PDO entre requêtes.
+        // Si une requête précédente a planté en pleine transaction, PostgreSQL
+        // garde la connexion en état "aborted" → toute requête suivante échoue
+        // avec SQLSTATE[25P02]. DB::disconnect() force un nouveau PDO propre.
+        try {
+            DB::disconnect('pgsql');
+        } catch (\Throwable $ignored) {}
+
         $activeYear   = AcademicYear::where('active', true)->firstOrFail();
         $sourceClass  = Classe::findOrFail($classId);
         $targetClass  = Classe::findOrFail($targetClassId);
@@ -202,8 +211,6 @@ class DeliberationController extends Controller{
         }
 
         // ── PRÉ-CHARGEMENT des fees de classe AVANT la transaction ────────
-        // On capture les fees ici (hors transaction) pour les passer à
-        // createOrUpdateSnapshot() et éviter tout lazy-load SQL dans la transaction.
         $classeSnapshotData = [];
         foreach ($students as $student) {
             $classe = $student->classe; // déjà eager-loadé via with('classe')
@@ -214,38 +221,38 @@ class DeliberationController extends Controller{
             ];
         }
 
+        // ── ÉTAPE 1 : Snapshots AVANT la transaction ──────────────────────
+        // Les snapshots sont des archives immuables, pas besoin de les rollback.
+        // Les faire avant DB::beginTransaction() évite tout conflit avec l'état
+        // PostgreSQL (erreur 25P02) si une requête dans la transaction échoue.
+        foreach ($students as $student) {
+            $moyennes = $moyennesParEleve[$student->id];
+            $statut   = ($moyennes['annuelle'] !== null && $moyennes['annuelle'] >= $seuilPassage)
+                ? 'passed'
+                : 'repeated';
+
+            $nextClassId = $statut === 'passed' ? $targetClass->id : null;
+            $nextYearId  = $statut === 'passed' ? $targetYear->id : null;
+
+            $moyennes['rang'] = $rangs[$student->id] ?? null;
+
+            StudentAcademicRecord::createOrUpdateSnapshot(
+                $student,
+                $activeYear,
+                $moyennes,
+                $statut,
+                $nextClassId,
+                $nextYearId,
+                $classeSnapshotData[$student->id] ?? null
+            );
+        }
+
         DB::beginTransaction();
         try {
-            // ── ÉTAPE 1 : Snapshots (données déjà calculées hors transaction) ──
-            foreach ($students as $student) {
-                $moyennes = $moyennesParEleve[$student->id];
-                $statut   = ($moyennes['annuelle'] !== null && $moyennes['annuelle'] >= $seuilPassage)
-                    ? 'passed'
-                    : 'repeated';
-
-                $nextClassId = $statut === 'passed' ? $targetClass->id : null;
-                $nextYearId  = $statut === 'passed' ? $targetYear->id : null;
-
-                $moyennes['rang'] = $rangs[$student->id] ?? null;
-
-                // Passer le snapshot de fees pré-chargé hors transaction
-                // pour éviter tout lazy-load SQL → erreur PostgreSQL 25P02
-                StudentAcademicRecord::createOrUpdateSnapshot(
-                    $student,
-                    $activeYear,
-                    $moyennes,
-                    $statut,
-                    $nextClassId,
-                    $nextYearId,
-                    $classeSnapshotData[$student->id] ?? null
-                );
-            }
-
-            // ── ÉTAPE 3 : Créer l'enregistrement de délibération ─────────
             $passedCount   = 0;
             $repeatedCount = 0;
 
-            // ── ÉTAPE 3.5 : Créer/retrouver la classe source dans target_year pour les redoublants ──
+            // ── ÉTAPE 2 : Créer/retrouver les classes dans la nouvelle année ─
             // Les redoublants restent dans la MÊME classe mais dans la NOUVELLE année
             $sourceClassInTargetYear = Classe::firstOrCreate(
                 [
@@ -283,8 +290,7 @@ class DeliberationController extends Controller{
                 else $repeatedCount++;
             }
 
-            $deliberation = Deliberation::create([
-                'source_class_id'        => $classId,
+            $deliberation = Deliberation::create([                'source_class_id'        => $classId,
                 'source_academic_year_id'=> $activeYear->id,
                 'target_class_id'        => $targetClassInTargetYear->id,
                 'target_academic_year_id'=> $targetYear->id,
