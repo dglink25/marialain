@@ -205,6 +205,11 @@ class DeliberationController extends Controller{
             $rangs[$sid] = $rang++;
         }
 
+        // En tout début de deliberate() et cancel(), avant beginTransaction()
+        if (DB::transactionLevel() > 0) {
+            DB::rollBack(); // nettoie une transaction laissée ouverte par une requête précédente
+        }
+
         DB::beginTransaction();
         try {
             // ── ÉTAPE 1 : Snapshots (données déjà calculées hors transaction) ──
