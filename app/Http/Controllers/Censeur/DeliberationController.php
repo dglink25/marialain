@@ -232,6 +232,37 @@ class DeliberationController extends Controller{
             $passedCount   = 0;
             $repeatedCount = 0;
 
+            // ── ÉTAPE 3.5 : Créer/retrouver la classe source dans target_year pour les redoublants ──
+            // Les redoublants restent dans la MÊME classe mais dans la NOUVELLE année
+            $sourceClassInTargetYear = Classe::firstOrCreate(
+                [
+                    'name'             => $sourceClass->name,
+                    'academic_year_id' => $targetYear->id,
+                    'entity_id'        => $sourceClass->entity_id,
+                ],
+                [
+                    'school_fees'         => $sourceClass->school_fees,
+                    'registration_fee'    => $sourceClass->registration_fee,
+                    're_registration_fee' => $sourceClass->re_registration_fee,
+                    'description'         => $sourceClass->description,
+                ]
+            );
+
+            // Créer aussi la classe cible dans target_year si elle n'existe pas encore
+            $targetClassInTargetYear = Classe::firstOrCreate(
+                [
+                    'name'             => $targetClass->name,
+                    'academic_year_id' => $targetYear->id,
+                    'entity_id'        => $targetClass->entity_id,
+                ],
+                [
+                    'school_fees'         => $targetClass->school_fees,
+                    'registration_fee'    => $targetClass->registration_fee,
+                    're_registration_fee' => $targetClass->re_registration_fee,
+                    'description'         => $targetClass->description,
+                ]
+            );
+
             foreach ($students as $student) {
                 $moyAnn = $moyennesParEleve[$student->id]['annuelle'];
                 $admis  = $moyAnn !== null && $moyAnn >= $seuilPassage;
@@ -242,7 +273,7 @@ class DeliberationController extends Controller{
             $deliberation = Deliberation::create([
                 'source_class_id'        => $classId,
                 'source_academic_year_id'=> $activeYear->id,
-                'target_class_id'        => $targetClass->id,
+                'target_class_id'        => $targetClassInTargetYear->id,
                 'target_academic_year_id'=> $targetYear->id,
                 'deliberated_by'         => auth()->id(),
                 'keep_timetable'         => (bool) $keepTimetable,
@@ -257,51 +288,62 @@ class DeliberationController extends Controller{
                 $admis  = $moyAnn !== null && $moyAnn >= $seuilPassage;
                 $statut = $admis ? 'passed' : 'repeated';
 
+                // Admis → classe cible dans nouvelle année
+                // Redoublants → même classe source mais dans nouvelle année
+                $newClassId = $admis ? $targetClassInTargetYear->id : $sourceClassInTargetYear->id;
+
                 DeliberationStudent::create([
                     'deliberation_id'        => $deliberation->id,
                     'student_id'             => $student->id,
                     'old_class_id'           => $classId,
                     'old_academic_year_id'   => $activeYear->id,
                     'old_registration_type'  => $student->registration_type,
-                    'new_class_id'           => $admis ? $targetClass->id : $classId,
-                    'new_academic_year_id'   => $admis ? $targetYear->id : $activeYear->id,
+                    'new_class_id'           => $newClassId,
+                    'new_academic_year_id'   => $targetYear->id,
                     'new_registration_type'  => 're_registration',
                     'status'                 => $statut,
                     'annual_average'         => $moyAnn,
                 ]);
 
-                // Déplacer l'élève seulement s'il est admis
-                if ($admis) {
-                    $student->update([
-                        'class_id'          => $targetClass->id,
-                        'academic_year_id'  => $targetYear->id,
-                        'registration_type' => 're_registration',
-                    ]);
-                }
+                // Déplacer TOUS les élèves (admis ET redoublants) vers la nouvelle année
+                $student->update([
+                    'class_id'          => $newClassId,
+                    'academic_year_id'  => $targetYear->id,
+                    'registration_type' => 're_registration',
+                ]);
             }
 
-            // ── ÉTAPE 5 : Copier class_teacher_subject vers la classe cible ─
-            // La contrainte unique est sur (class_id, teacher_id, subject_id)
-            $sourceCts = \App\Models\ClassTeacherSubject::where('class_id', $classId)
-                ->where('academic_year_id', $activeYear->id)
-                ->get();
+            // ── ÉTAPE 5 : Copier class_teacher_subject vers les classes de la nouvelle année ─
+            // 5a : Classe cible (pour les admis)
+            $classesCibles = [$targetClassInTargetYear, $sourceClassInTargetYear];
+            $classesSourceMap = [
+                $targetClassInTargetYear->id => $targetClass->id, // admis : copier depuis classe cible active
+                $sourceClassInTargetYear->id => $classId,          // redoublants : copier depuis classe source
+            ];
 
-            foreach ($sourceCts as $cts) {
-                // Vérifier avec les 3 colonnes de la contrainte unique réelle
-                $exists = \App\Models\ClassTeacherSubject::where('class_id',  $targetClass->id)
-                    ->where('teacher_id', $cts->teacher_id)
-                    ->where('subject_id', $cts->subject_id)
-                    ->exists();
+            foreach ($classesCibles as $classCible) {
+                $sourceClassId = $classesSourceMap[$classCible->id];
+                $sourceCts = \App\Models\ClassTeacherSubject::where('class_id', $sourceClassId)
+                    ->where('academic_year_id', $activeYear->id)
+                    ->get();
 
-                if (!$exists) {
-                    \App\Models\ClassTeacherSubject::create([
-                        'class_id'         => $targetClass->id,
-                        'academic_year_id' => $targetYear->id,
-                        'teacher_id'       => $cts->teacher_id,
-                        'subject_id'       => $cts->subject_id,
-                        'coefficient'      => $cts->coefficient,
-                        'amount_brut'      => $cts->amount_brut ?? '0.00',
-                    ]);
+                foreach ($sourceCts as $cts) {
+                    $exists = \App\Models\ClassTeacherSubject::where('class_id',         $classCible->id)
+                        ->where('teacher_id',      $cts->teacher_id)
+                        ->where('subject_id',       $cts->subject_id)
+                        ->where('academic_year_id', $targetYear->id)
+                        ->exists();
+
+                    if (!$exists) {
+                        \App\Models\ClassTeacherSubject::create([
+                            'class_id'         => $classCible->id,
+                            'academic_year_id' => $targetYear->id,
+                            'teacher_id'       => $cts->teacher_id,
+                            'subject_id'       => $cts->subject_id,
+                            'coefficient'      => $cts->coefficient,
+                            'amount_brut'      => $cts->amount_brut ?? '0.00',
+                        ]);
+                    }
                 }
             }
 
