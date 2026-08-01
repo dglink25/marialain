@@ -100,7 +100,7 @@ return [
                 // Désactiver les connexions persistantes pour éviter l'erreur 25P02
                 // sur AlwaysData/PostgreSQL (transaction cassée réutilisée)
                 PDO::ATTR_PERSISTENT => false,
-                PDO::ATTR_EMULATE_PREPARES => true,
+                //PDO::ATTR_EMULATE_PREPARES => true,
             ],
         ],
 
