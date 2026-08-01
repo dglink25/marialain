@@ -149,6 +149,9 @@ class DeliberationController extends Controller{
 
         $seuilPassage = (float) $seuilPassage;
 
+        // Nettoyer toute transaction résiduelle en cours (erreur 25P02 PostgreSQL)
+        try { DB::rollBack(); } catch (\Throwable $e) { /* rien à faire */ }
+
         $activeYear   = AcademicYear::where('active', true)->firstOrFail();
         $sourceClass  = Classe::findOrFail($classId);
         $targetClass  = Classe::findOrFail($targetClassId);

@@ -96,6 +96,11 @@ return [
             'prefix_indexes' => true,
             'search_path' => 'public',
             'sslmode' =>env('DB_SSLMODE', 'prefer'),
+            'options' => [
+                // Évite "cached plan must not change result type" et "25P02 failed transaction"
+                // avec PostgreSQL connection pooling (Neon, PgBouncer, etc.)
+                PDO::ATTR_EMULATE_PREPARES => true,
+            ],
         ],
 
         'sqlsrv' => [
