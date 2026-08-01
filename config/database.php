@@ -99,7 +99,7 @@ return [
             'options' => [
                 // Évite "cached plan must not change result type" et "25P02 failed transaction"
                 // avec PostgreSQL connection pooling (Neon, PgBouncer, etc.)
-                PDO::ATTR_EMULATE_PREPARES => true,
+                //PDO::ATTR_EMULATE_PREPARES => true,
             ],
         ],
 
