@@ -149,10 +149,15 @@ class DeliberationController extends Controller{
 
         $seuilPassage = (float) $seuilPassage;
 
-        // Force une reconnexion propre à PostgreSQL pour éviter 25P02
-        // (transaction résiduelle cassée d'une requête précédente sur le pooler)
-        DB::purge('pgsql');
-        DB::reconnect('pgsql');
+        // Forcer un ROLLBACK SQL direct pour nettoyer toute transaction
+        // PostgreSQL corrompue (erreur 25P02 sur AlwaysData/pooler)
+        try {
+            DB::statement('ROLLBACK');
+        } catch (\Throwable $ignored) {}
+        try {
+            DB::purge('pgsql');
+            DB::reconnect('pgsql');
+        } catch (\Throwable $ignored) {}
 
         $activeYear   = AcademicYear::where('active', true)->firstOrFail();
         $sourceClass  = Classe::findOrFail($classId);

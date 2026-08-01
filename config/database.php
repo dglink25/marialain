@@ -95,11 +95,12 @@ return [
             'prefix' => '',
             'prefix_indexes' => true,
             'search_path' => 'public',
-            'sslmode' =>env('DB_SSLMODE', 'prefer'),
+            'sslmode' => env('DB_SSLMODE', 'prefer'),
             'options' => [
-                // Évite "cached plan must not change result type" et "25P02 failed transaction"
-                // avec PostgreSQL connection pooling (Neon, PgBouncer, etc.)
-                //PDO::ATTR_EMULATE_PREPARES => true,
+                // Désactiver les connexions persistantes pour éviter l'erreur 25P02
+                // sur AlwaysData/PostgreSQL (transaction cassée réutilisée)
+                PDO::ATTR_PERSISTENT => false,
+                PDO::ATTR_EMULATE_PREPARES => true,
             ],
         ],
 
