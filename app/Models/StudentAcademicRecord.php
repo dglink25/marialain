@@ -162,7 +162,13 @@ class StudentAcademicRecord extends Model
 
     /**
      * Crée ou met à jour le snapshot d'un élève pour une année donnée.
-     * Calcule les moyennes trimestrielles si non fournies.
+     *
+     * IMPORTANT : ne pas appeler cette méthode à l'intérieur d'une transaction
+     * PostgreSQL active si les relations du student ne sont pas encore chargées.
+     * Passer $classeSnapshot pour éviter tout lazy-load SQL dans la transaction.
+     *
+     * @param  array|null  $classeSnapshot  ['school_fees', 'registration_fee', 're_registration_fee']
+     *                                       pré-chargé HORS transaction pour éviter l'erreur 25P02
      */
     public static function createOrUpdateSnapshot(
         Student $student,
@@ -170,18 +176,25 @@ class StudentAcademicRecord extends Model
         array $moyennes = [],
         string $statut = 'pending',
         ?int $nextClassId = null,
-        ?int $nextYearId = null
+        ?int $nextYearId = null,
+        ?array $classeSnapshot = null   // ← nouveau paramètre optionnel
     ): self {
         $totalPaid = $student->payments()
             ->where('academic_year_id', $year->id)
             ->sum('amount');
 
-        // Capturer les frais de la classe au moment de l'archivage
-        // pour éviter toute modification rétroactive
-        $classe = $student->classe;
-        $schoolFeesSnapshot        = $classe?->school_fees ?? null;
-        $registrationFeeSnapshot   = $classe?->registration_fee ?? null;
-        $reRegistrationFeeSnapshot = $classe?->re_registration_fee ?? null;
+        // Utiliser le snapshot pré-chargé si disponible (évite le lazy-load dans une transaction)
+        // Sinon fallback sur la relation (acceptable hors transaction)
+        if ($classeSnapshot !== null) {
+            $schoolFeesSnapshot        = $classeSnapshot['school_fees'] ?? null;
+            $registrationFeeSnapshot   = $classeSnapshot['registration_fee'] ?? null;
+            $reRegistrationFeeSnapshot = $classeSnapshot['re_registration_fee'] ?? null;
+        } else {
+            $classe = $student->relationLoaded('classe') ? $student->classe : $student->classe()->first();
+            $schoolFeesSnapshot        = $classe?->school_fees ?? null;
+            $registrationFeeSnapshot   = $classe?->registration_fee ?? null;
+            $reRegistrationFeeSnapshot = $classe?->re_registration_fee ?? null;
+        }
 
         $data = [
             'class_id'                   => $student->class_id,

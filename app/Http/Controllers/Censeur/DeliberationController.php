@@ -128,12 +128,6 @@ class DeliberationController extends Controller{
             ? $request->json()->all()
             : $request->all();
 
-        \Illuminate\Support\Facades\Log::info('Deliberation payload', [
-            'payload'      => $payload,
-            'content_type' => $request->header('Content-Type'),
-            'all'          => $request->all(),
-        ]);
-
         $targetClassId  = $payload['target_class_id']          ?? $request->input('target_class_id');
         $targetYearId   = $payload['target_academic_year_id']  ?? $request->input('target_academic_year_id');
         $seuilPassage   = $payload['seuil_passage']            ?? $request->input('seuil_passage', 10);
@@ -148,16 +142,6 @@ class DeliberationController extends Controller{
         }
 
         $seuilPassage = (float) $seuilPassage;
-
-        // Forcer un ROLLBACK SQL direct pour nettoyer toute transaction
-        // PostgreSQL corrompue (erreur 25P02 sur AlwaysData/pooler)
-        try {
-            DB::statement('ROLLBACK');
-        } catch (\Throwable $ignored) {}
-        try {
-            DB::purge('pgsql');
-            DB::reconnect('pgsql');
-        } catch (\Throwable $ignored) {}
 
         $activeYear   = AcademicYear::where('active', true)->firstOrFail();
         $sourceClass  = Classe::findOrFail($classId);
@@ -180,15 +164,17 @@ class DeliberationController extends Controller{
         // Matières de la classe source
         $subjects = $this->recordService->getSubjectsForClass($sourceClass, $activeYear);
 
-        // Élèves validés
+        // ── Charger les élèves avec la relation 'classe' pré-chargée ─────
+        // CRITIQUE : toutes les lectures SQL (moyennes + fees) doivent se faire
+        // AVANT DB::beginTransaction() pour éviter l'erreur PostgreSQL 25P02
+        // (transaction aborted) sur AlwaysData avec connexions persistantes.
         $students = Student::where('class_id', $classId)
             ->where('academic_year_id', $activeYear->id)
             ->where('is_validated', true)
+            ->with('classe')   // ← eager-load pour éviter le lazy-load dans la transaction
             ->get();
 
         // ── PRÉ-CALCUL des moyennes AVANT la transaction ─────────────────
-        // Important : les SELECT doivent être hors transaction PostgreSQL
-        // pour éviter l'erreur 25P02 si une requête précédente a échoué
         $moyennesParEleve = [];
         foreach ($students as $student) {
             $moys = [];
@@ -215,6 +201,19 @@ class DeliberationController extends Controller{
             $rangs[$sid] = $rang++;
         }
 
+        // ── PRÉ-CHARGEMENT des fees de classe AVANT la transaction ────────
+        // On capture les fees ici (hors transaction) pour les passer à
+        // createOrUpdateSnapshot() et éviter tout lazy-load SQL dans la transaction.
+        $classeSnapshotData = [];
+        foreach ($students as $student) {
+            $classe = $student->classe; // déjà eager-loadé via with('classe')
+            $classeSnapshotData[$student->id] = [
+                'school_fees'         => $classe?->school_fees ?? null,
+                'registration_fee'    => $classe?->registration_fee ?? null,
+                're_registration_fee' => $classe?->re_registration_fee ?? null,
+            ];
+        }
+
         DB::beginTransaction();
         try {
             // ── ÉTAPE 1 : Snapshots (données déjà calculées hors transaction) ──
@@ -229,13 +228,16 @@ class DeliberationController extends Controller{
 
                 $moyennes['rang'] = $rangs[$student->id] ?? null;
 
+                // Passer le snapshot de fees pré-chargé hors transaction
+                // pour éviter tout lazy-load SQL → erreur PostgreSQL 25P02
                 StudentAcademicRecord::createOrUpdateSnapshot(
                     $student,
                     $activeYear,
                     $moyennes,
                     $statut,
                     $nextClassId,
-                    $nextYearId
+                    $nextYearId,
+                    $classeSnapshotData[$student->id] ?? null
                 );
             }
 
