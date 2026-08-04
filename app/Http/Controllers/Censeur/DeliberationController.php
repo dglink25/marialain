@@ -132,30 +132,40 @@ class DeliberationController extends Controller{
         $targetYearId   = $payload['target_academic_year_id']  ?? $request->input('target_academic_year_id');
         $seuilPassage   = $payload['seuil_passage']            ?? $request->input('seuil_passage', 10);
         $keepTimetable  = $payload['keep_timetable']           ?? $request->input('keep_timetable', true);
+        // Affectations individuelles : [{ student_id, target_class_id }]
+        $studentAssignments = $payload['student_assignments']  ?? $request->input('student_assignments', []);
 
-        if (!$targetClassId || !$targetYearId) {
+        if (!$targetYearId) {
             return response()->json([
                 'success' => false,
-                'error'   => "Paramètres manquants. Reçu : target_class_id={$targetClassId}, target_academic_year_id={$targetYearId}",
+                'error'   => "Paramètre manquant : target_academic_year_id requis.",
                 'payload' => $payload,
             ], 422);
         }
 
         $seuilPassage = (float) $seuilPassage;
 
-        // ── Nettoyer l'état PostgreSQL avant tout ─────────────────────────
-        // Sur AlwaysData, PHP-FPM réutilise les connexions PDO entre requêtes.
-        // Si une requête précédente a planté en pleine transaction, PostgreSQL
-        // garde la connexion en état "aborted" → toute requête suivante échoue
-        // avec SQLSTATE[25P02]. DB::disconnect() force un nouveau PDO propre.
-        try {
-            DB::disconnect('pgsql');
-        } catch (\Throwable $ignored) {}
+        // Construire un index rapide : student_id → target_class_id ('diplome', int, ou null)
+        $assignmentMap = [];
+        foreach ($studentAssignments as $a) {
+            if (!empty($a['student_id'])) {
+                $val = $a['target_class_id'] ?? null;
+                // 'diplome' = diplômé/terminé, int = classe cible, null = redoublant
+                $assignmentMap[(int)$a['student_id']] = ($val === 'diplome') ? 'diplome'
+                    : ($val ? (int)$val : null);
+            }
+        }
 
-        $activeYear   = AcademicYear::where('active', true)->firstOrFail();
-        $sourceClass  = Classe::findOrFail($classId);
-        $targetClass  = Classe::findOrFail($targetClassId);
-        $targetYear   = AcademicYear::findOrFail($targetYearId);
+        // ── Nettoyer l'état PostgreSQL avant tout ─────────────────────────
+        try { DB::disconnect('pgsql'); } catch (\Throwable $ignored) {}
+
+        $activeYear  = AcademicYear::where('active', true)->firstOrFail();
+        $sourceClass = Classe::findOrFail($classId);
+        $targetYear  = AcademicYear::findOrFail($targetYearId);
+
+        // Charger toutes les classes cibles possibles (depuis les affectations, hors 'diplome')
+        $targetClassIds   = array_unique(array_filter(array_values($assignmentMap), fn($v) => is_int($v)));
+        $targetClassesMap = Classe::whereIn('id', $targetClassIds)->get()->keyBy('id');
 
         // Vérifier qu'il n'y a pas déjà une délibération active
         $existingDelib = Deliberation::where('source_class_id', $classId)
@@ -222,27 +232,26 @@ class DeliberationController extends Controller{
         }
 
         // ── ÉTAPE 1 : Snapshots AVANT la transaction ──────────────────────
-        // Les snapshots sont des archives immuables, pas besoin de les rollback.
-        // Les faire avant DB::beginTransaction() évite tout conflit avec l'état
-        // PostgreSQL (erreur 25P02) si une requête dans la transaction échoue.
         foreach ($students as $student) {
-            $moyennes = $moyennesParEleve[$student->id];
-            $statut   = ($moyennes['annuelle'] !== null && $moyennes['annuelle'] >= $seuilPassage)
-                ? 'passed'
-                : 'repeated';
+            $moyennes    = $moyennesParEleve[$student->id];
+            $dest        = $assignmentMap[$student->id] ?? null;
+            $admis       = $moyennes['annuelle'] !== null && $moyennes['annuelle'] >= $seuilPassage;
 
-            $nextClassId = $statut === 'passed' ? $targetClass->id : null;
-            $nextYearId  = $statut === 'passed' ? $targetYear->id : null;
+            if ($dest === 'diplome') {
+                $statut = 'graduated';
+            } elseif ($admis) {
+                $statut = 'passed';
+            } else {
+                $statut = 'repeated';
+            }
 
+            $nextClassId = is_int($dest) ? $dest : null;
+            $nextYearId  = ($statut !== 'repeated') ? $targetYear->id : null;
             $moyennes['rang'] = $rangs[$student->id] ?? null;
 
             StudentAcademicRecord::createOrUpdateSnapshot(
-                $student,
-                $activeYear,
-                $moyennes,
-                $statut,
-                $nextClassId,
-                $nextYearId,
+                $student, $activeYear, $moyennes, $statut,
+                $nextClassId, $nextYearId,
                 $classeSnapshotData[$student->id] ?? null
             );
         }
@@ -252,64 +261,76 @@ class DeliberationController extends Controller{
             $passedCount   = 0;
             $repeatedCount = 0;
 
-            // ── ÉTAPE 2 : Créer/retrouver les classes dans la nouvelle année ─
-            // Les redoublants restent dans la MÊME classe mais dans la NOUVELLE année
+            // ── ÉTAPE 2 : Créer la classe source dans la nouvelle année (redoublants) ─
             $sourceClassInTargetYear = Classe::firstOrCreate(
-                [
-                    'name'             => $sourceClass->name,
-                    'academic_year_id' => $targetYear->id,
-                    'entity_id'        => $sourceClass->entity_id,
-                ],
-                [
-                    'school_fees'         => $sourceClass->school_fees,
-                    'registration_fee'    => $sourceClass->registration_fee,
-                    're_registration_fee' => $sourceClass->re_registration_fee,
-                    'description'         => $sourceClass->description,
-                ]
+                ['name' => $sourceClass->name, 'academic_year_id' => $targetYear->id, 'entity_id' => $sourceClass->entity_id],
+                ['school_fees' => $sourceClass->school_fees, 'registration_fee' => $sourceClass->registration_fee, 're_registration_fee' => $sourceClass->re_registration_fee, 'description' => $sourceClass->description]
             );
 
-            // Créer aussi la classe cible dans target_year si elle n'existe pas encore
-            $targetClassInTargetYear = Classe::firstOrCreate(
-                [
-                    'name'             => $targetClass->name,
-                    'academic_year_id' => $targetYear->id,
-                    'entity_id'        => $targetClass->entity_id,
-                ],
-                [
-                    'school_fees'         => $targetClass->school_fees,
-                    'registration_fee'    => $targetClass->registration_fee,
-                    're_registration_fee' => $targetClass->re_registration_fee,
-                    'description'         => $targetClass->description,
-                ]
-            );
+            // Créer les classes cibles distinctes dans la nouvelle année (admis)
+            $targetClassesInTargetYear = []; // original_id => nouvelle Classe
+            foreach ($targetClassesMap as $origId => $origClass) {
+                $targetClassesInTargetYear[$origId] = Classe::firstOrCreate(
+                    ['name' => $origClass->name, 'academic_year_id' => $targetYear->id, 'entity_id' => $origClass->entity_id],
+                    ['school_fees' => $origClass->school_fees, 'registration_fee' => $origClass->registration_fee, 're_registration_fee' => $origClass->re_registration_fee, 'description' => $origClass->description]
+                );
+            }
 
+            // Classe principale pour l'enregistrement Deliberation (première classe cible)
+            $mainTargetClassInTargetYear = !empty($targetClassesInTargetYear)
+                ? array_values($targetClassesInTargetYear)[0]
+                : $sourceClassInTargetYear;
+
+            // Compter admis/redoublants/diplômés
+            $graduatedCount = 0;
             foreach ($students as $student) {
                 $moyAnn = $moyennesParEleve[$student->id]['annuelle'];
                 $admis  = $moyAnn !== null && $moyAnn >= $seuilPassage;
-                if ($admis) $passedCount++;
+                $dest   = $assignmentMap[$student->id] ?? null;
+                if ($dest === 'diplome') $graduatedCount++;
+                elseif ($admis) $passedCount++;
                 else $repeatedCount++;
             }
 
-            $deliberation = Deliberation::create([                'source_class_id'        => $classId,
-                'source_academic_year_id'=> $activeYear->id,
-                'target_class_id'        => $targetClassInTargetYear->id,
-                'target_academic_year_id'=> $targetYear->id,
-                'deliberated_by'         => auth()->id(),
-                'keep_timetable'         => (bool) $keepTimetable,
-                'passed_count'           => $passedCount,
-                'repeated_count'         => $repeatedCount,
-                'deliberated_at'         => now(),
+            $deliberation = Deliberation::create([
+                'source_class_id'         => $classId,
+                'source_academic_year_id' => $activeYear->id,
+                'target_class_id'         => $mainTargetClassInTargetYear->id,
+                'target_academic_year_id' => $targetYear->id,
+                'deliberated_by'          => auth()->id(),
+                'keep_timetable'          => (bool) $keepTimetable,
+                'passed_count'            => $passedCount,
+                'repeated_count'          => $repeatedCount,
+                'deliberated_at'          => now(),
             ]);
 
             // ── ÉTAPE 4 : Enregistrer deliberation_students + déplacer ────
             foreach ($students as $student) {
                 $moyAnn = $moyennesParEleve[$student->id]['annuelle'];
                 $admis  = $moyAnn !== null && $moyAnn >= $seuilPassage;
-                $statut = $admis ? 'passed' : 'repeated';
+                $dest   = $assignmentMap[$student->id] ?? null;
 
-                // Admis → classe cible dans nouvelle année
-                // Redoublants → même classe source mais dans nouvelle année
-                $newClassId = $admis ? $targetClassInTargetYear->id : $sourceClassInTargetYear->id;
+                if ($dest === 'diplome') {
+                    $statut = 'graduated';
+                } elseif ($admis) {
+                    $statut = 'passed';
+                } else {
+                    $statut = 'repeated';
+                }
+
+                if ($statut === 'graduated') {
+                    // Diplômé : pas de nouvelle classe, l'élève reste avec son ID
+                    // mais on met academic_year_id à la nouvelle année pour traçabilité
+                    $newClassId = $student->class_id; // garde la même classe
+                } elseif ($statut === 'passed') {
+                    $origTargetClassId    = is_int($dest) ? $dest : null;
+                    $newClassInTargetYear = ($origTargetClassId && isset($targetClassesInTargetYear[$origTargetClassId]))
+                        ? $targetClassesInTargetYear[$origTargetClassId]
+                        : $mainTargetClassInTargetYear;
+                    $newClassId = $newClassInTargetYear->id;
+                } else {
+                    $newClassId = $sourceClassInTargetYear->id;
+                }
 
                 DeliberationStudent::create([
                     'deliberation_id'        => $deliberation->id,
@@ -319,102 +340,69 @@ class DeliberationController extends Controller{
                     'old_registration_type'  => $student->registration_type,
                     'new_class_id'           => $newClassId,
                     'new_academic_year_id'   => $targetYear->id,
-                    'new_registration_type'  => 're_registration',
+                    'new_registration_type'  => $statut === 'graduated' ? 'graduated' : 're_registration',
                     'status'                 => $statut,
                     'annual_average'         => $moyAnn,
                 ]);
 
-                // Déplacer TOUS les élèves (admis ET redoublants) vers la nouvelle année
                 $student->update([
                     'class_id'          => $newClassId,
                     'academic_year_id'  => $targetYear->id,
-                    'registration_type' => 're_registration',
+                    'registration_type' => $statut === 'graduated' ? 'graduated' : 're_registration',
+                    'total_fees'        => 0,
+                    'amount_paid'       => 0,
                 ]);
             }
 
-            // ── ÉTAPE 5 : Copier class_teacher_subject vers les classes de la nouvelle année ─
-            // 5a : Classe cible (pour les admis)
-            $classesCibles = [$targetClassInTargetYear, $sourceClassInTargetYear];
-            $classesSourceMap = [
-                $targetClassInTargetYear->id => $targetClass->id, // admis : copier depuis classe cible active
-                $sourceClassInTargetYear->id => $classId,          // redoublants : copier depuis classe source
-            ];
-
-            foreach ($classesCibles as $classCible) {
-                $sourceClassId = $classesSourceMap[$classCible->id];
-                $sourceCts = \App\Models\ClassTeacherSubject::where('class_id', $sourceClassId)
-                    ->where('academic_year_id', $activeYear->id)
-                    ->get();
-
-                foreach ($sourceCts as $cts) {
-                    $exists = \App\Models\ClassTeacherSubject::where('class_id',         $classCible->id)
-                        ->where('teacher_id',      $cts->teacher_id)
-                        ->where('subject_id',       $cts->subject_id)
-                        ->where('academic_year_id', $targetYear->id)
-                        ->exists();
-
+            // ── ÉTAPE 5 : Copier class_teacher_subject ─────────────────────
+            // source → redoublants ; chaque cible → admis affectés
+            $copieMap = [$sourceClassInTargetYear->id => $classId];
+            foreach ($targetClassesInTargetYear as $origId => $newClass) {
+                $copieMap[$newClass->id] = $origId;
+            }
+            foreach ($copieMap as $newClassId => $srcId) {
+                $cts = \App\Models\ClassTeacherSubject::where('class_id', $srcId)
+                    ->where('academic_year_id', $activeYear->id)->get();
+                foreach ($cts as $ct) {
+                    $exists = \App\Models\ClassTeacherSubject::where('class_id', $newClassId)
+                        ->where('teacher_id', $ct->teacher_id)->where('subject_id', $ct->subject_id)
+                        ->where('academic_year_id', $targetYear->id)->exists();
                     if (!$exists) {
                         \App\Models\ClassTeacherSubject::create([
-                            'class_id'         => $classCible->id,
-                            'academic_year_id' => $targetYear->id,
-                            'teacher_id'       => $cts->teacher_id,
-                            'subject_id'       => $cts->subject_id,
-                            'coefficient'      => $cts->coefficient,
-                            'amount_brut'      => $cts->amount_brut ?? '0.00',
+                            'class_id' => $newClassId, 'academic_year_id' => $targetYear->id,
+                            'teacher_id' => $ct->teacher_id, 'subject_id' => $ct->subject_id,
+                            'coefficient' => $ct->coefficient, 'amount_brut' => $ct->amount_brut ?? '0.00',
                         ]);
                     }
                 }
             }
 
-            // ── ÉTAPE 6 : Copier les schedules (emploi du temps) ────────────
-            // Copier uniquement si keep_timetable est activé ET pas de doublon
+            // ── ÉTAPE 6 & 7 : Copier emplois du temps ─────────────────────
             if ((bool) $keepTimetable) {
-                $sourceSchedules = \App\Models\Schedule::where('classe_id', $classId)->get();
-
-                foreach ($sourceSchedules as $schedule) {
-                    $exists = \App\Models\Schedule::where('classe_id', $targetClass->id)
-                        ->where('day_of_week', $schedule->day_of_week)
-                        ->where('start_time',  $schedule->start_time)
-                        ->where('subject_id',  $schedule->subject_id)
-                        ->exists();
-
-                    if (!$exists) {
-                        \App\Models\Schedule::create([
-                            'classe_id'   => $targetClass->id,
-                            'teacher_id'  => $schedule->teacher_id,
-                            'subject_id'  => $schedule->subject_id,
-                            'day_of_week' => $schedule->day_of_week,
-                            'start_time'  => $schedule->start_time,
-                            'end_time'    => $schedule->end_time,
-                        ]);
-                    }
-                }
-            }
-
-            // ── ÉTAPE 7 : Copier les Timetables (emploi du temps secondaire) ─
-            if ((bool) $keepTimetable) {
+                $sourceSchedules  = \App\Models\Schedule::where('classe_id', $classId)->get();
                 $sourceTimetables = \App\Models\Timetable::where('class_id', $classId)
-                    ->where('academic_year_id', $activeYear->id)
-                    ->get();
+                    ->where('academic_year_id', $activeYear->id)->get();
 
-                foreach ($sourceTimetables as $tt) {
-                    $exists = \App\Models\Timetable::where('class_id', $targetClass->id)
-                        ->where('academic_year_id', $targetYear->id)
-                        ->where('subject_id', $tt->subject_id)
-                        ->where('day',        $tt->day)
-                        ->where('start_time', $tt->start_time)
-                        ->exists();
-
-                    if (!$exists) {
-                        \App\Models\Timetable::create([
-                            'class_id'         => $targetClass->id,
-                            'academic_year_id' => $targetYear->id,
-                            'teacher_id'       => $tt->teacher_id,
-                            'subject_id'       => $tt->subject_id,
-                            'day'              => $tt->day,
-                            'start_time'       => $tt->start_time,
-                            'end_time'         => $tt->end_time,
-                        ]);
+                foreach ($targetClassesInTargetYear as $newClass) {
+                    foreach ($sourceSchedules as $s) {
+                        $exists = \App\Models\Schedule::where('classe_id', $newClass->id)
+                            ->where('day_of_week', $s->day_of_week)->where('start_time', $s->start_time)
+                            ->where('subject_id', $s->subject_id)->exists();
+                        if (!$exists) {
+                            \App\Models\Schedule::create(['classe_id' => $newClass->id, 'teacher_id' => $s->teacher_id,
+                                'subject_id' => $s->subject_id, 'day_of_week' => $s->day_of_week,
+                                'start_time' => $s->start_time, 'end_time' => $s->end_time]);
+                        }
+                    }
+                    foreach ($sourceTimetables as $tt) {
+                        $exists = \App\Models\Timetable::where('class_id', $newClass->id)
+                            ->where('academic_year_id', $targetYear->id)->where('subject_id', $tt->subject_id)
+                            ->where('day', $tt->day)->where('start_time', $tt->start_time)->exists();
+                        if (!$exists) {
+                            \App\Models\Timetable::create(['class_id' => $newClass->id, 'academic_year_id' => $targetYear->id,
+                                'teacher_id' => $tt->teacher_id, 'subject_id' => $tt->subject_id,
+                                'day' => $tt->day, 'start_time' => $tt->start_time, 'end_time' => $tt->end_time]);
+                        }
                     }
                 }
             }
@@ -422,10 +410,11 @@ class DeliberationController extends Controller{
             DB::commit();
 
             return response()->json([
-                'success'       => true,
-                'passed_count'  => $passedCount,
-                'repeated_count'=> $repeatedCount,
-                'message'       => "Délibération effectuée : {$passedCount} admis, {$repeatedCount} redoublants.",
+                'success'         => true,
+                'passed_count'    => $passedCount,
+                'repeated_count'  => $repeatedCount,
+                'graduated_count' => $graduatedCount,
+                'message'         => "Délibération effectuée : {$passedCount} admis, {$repeatedCount} redoublants, {$graduatedCount} diplômés.",
             ]);
 
         } catch (\Throwable $e) {

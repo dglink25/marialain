@@ -262,7 +262,7 @@
 <div id="modalDeliberation" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true">
     <div class="fixed inset-0 bg-black/60 backdrop-blur-sm" onclick="fermerModalDeliberation()"></div>
     <div class="fixed inset-0 flex items-center justify-center p-4 overflow-y-auto">
-        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-modalIn my-4">
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden animate-modalIn my-4">
             {{-- Header --}}
             <div class="bg-gradient-to-r from-indigo-600 to-purple-700 px-6 py-5">
                 <div class="flex items-center justify-between">
@@ -310,99 +310,101 @@
                     </div>
                 </div>
 
-                <div class="p-6 space-y-5" id="deliForm">
+                <div class="p-6 space-y-4" id="deliForm">
 
-                    {{-- Stats résumé --}}
-                    <div class="grid grid-cols-3 gap-3">
-                        <div class="bg-green-50 border border-green-200 rounded-xl p-3 text-center">
-                            <div class="text-2xl font-bold text-green-700">{{ $nbPasses ?? 0 }}</div>
-                            <div class="text-xs text-green-600 mt-0.5">Passent</div>
+                    {{-- Ligne 1 : Année + Seuil --}}
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">
+                                <i class="fas fa-calendar-alt text-indigo-500 mr-1"></i>Année de destination *
+                            </label>
+                            <select id="selectTargetYear" onchange="recalculerStatuts()"
+                                    class="w-full px-3 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 text-gray-700 bg-white text-sm">
+                                <option value="">-- Année inactive --</option>
+                            </select>
+                            <p id="yearMissingMsg" class="hidden mt-1 text-xs text-red-600"><i class="fas fa-info-circle mr-1"></i>Aucune année inactive disponible.</p>
                         </div>
-                        <div class="bg-red-50 border border-red-200 rounded-xl p-3 text-center">
-                            <div class="text-2xl font-bold text-red-700">{{ $nbRedoubles ?? 0 }}</div>
-                            <div class="text-xs text-red-600 mt-0.5">Redoublent</div>
-                        </div>
-                        <div class="bg-blue-50 border border-blue-200 rounded-xl p-3 text-center">
-                            <div class="text-2xl font-bold text-blue-700">{{ $nbTotal ?? 0 }}</div>
-                            <div class="text-xs text-blue-600 mt-0.5">Total</div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">
+                                <i class="fas fa-sliders-h text-indigo-500 mr-1"></i>Seuil de passage /20
+                            </label>
+                            <input type="number" id="seuilPassage" value="10" min="0" max="20" step="0.5"
+                                   onchange="recalculerStatuts()"
+                                   class="w-full px-3 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 text-gray-700 text-sm">
                         </div>
                     </div>
 
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">
-                            <i class="fas fa-calendar-alt text-indigo-500 mr-1"></i>
-                            Année académique de destination *
-                        </label>
-                        <p class="text-xs text-gray-500 mb-2">
-                            <i class="fas fa-info-circle mr-1 text-gray-400"></i>
-                            Sélectionnez l'année <strong>inactive</strong> vers laquelle les élèves seront transférés (ex : prochaine année scolaire).
-                        </p>
-                        <select id="selectTargetYear"
-                                class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700 bg-white transition-all">
-                            <option value="">-- Sélectionnez l'année inactive --</option>
-                        </select>
-                        <p id="yearMissingMsg" class="hidden mt-2 text-xs text-red-600 flex items-center gap-1">
-                            <i class="fas fa-info-circle"></i>
-                            Aucune année inactive disponible. Contactez le fondateur pour créer l'année de passage manquante.
-                        </p>
-                    </div>
-
-                    {{-- ────────────────────────────────────────────────────────────
-                         Classe cible parmi les classes de l'ANNÉE ACTIVE
-                         (c'est dans cette classe que les élèves admis seront placés,
-                          et c'est son emploi du temps qui sera copié si activé)
-                    ──────────────────────────────────────────────────────────── --}}
+                    {{-- Classe par défaut pour les admis --}}
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-1">
                             <i class="fas fa-school text-indigo-500 mr-1"></i>
-                            Classe de destination (pour les admis) *
+                            Classe par défaut pour les admis *
+                            <span class="text-xs font-normal text-gray-400 ml-1">(modifiable par élève ci-dessous)</span>
                         </label>
-                        <p class="text-xs text-gray-500 mb-2">
-                            <i class="fas fa-info-circle mr-1 text-gray-400"></i>
-                            Choisissez la classe <strong>de l'année active ({{ $activeYear->name }})</strong> dans laquelle les élèves admis passeront. Son emploi du temps et ses relations enseignant-matière seront copiés vers la nouvelle année.
-                        </p>
-                        <select id="selectTargetClass"
-                                class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700 bg-white transition-all">
+                        <select id="selectTargetClass" onchange="appliquerClasseParDefaut()"
+                                class="w-full px-3 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 text-gray-700 bg-white text-sm">
                             <option value="">-- Sélectionnez la classe --</option>
                         </select>
-                        <p id="classMissingMsg" class="hidden mt-2 text-xs text-red-600 flex items-center gap-1">
-                            <i class="fas fa-info-circle"></i>
-                            Aucune classe disponible pour l'année active.
-                        </p>
-                        <p class="text-xs text-gray-500 mt-1">
-                            <i class="fas fa-redo mr-1 text-gray-400"></i>
-                            Les redoublants resteront dans la classe <strong>{{ $classe->name }}</strong> pour l'année choisie.
-                        </p>
+                        <p id="classMissingMsg" class="hidden mt-1 text-xs text-red-600"><i class="fas fa-info-circle mr-1"></i>Aucune classe disponible.</p>
                     </div>
 
                     {{-- Option emploi du temps --}}
-                    <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-4">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-sm font-semibold text-gray-700">
-                                    <i class="fas fa-calendar-week text-indigo-500 mr-1"></i>
-                                    Copier l'emploi du temps
-                                </p>
-                                <p class="text-xs text-gray-500 mt-0.5">
-                                    Copier l'emploi du temps de la <strong>classe de destination (année active)</strong> vers la nouvelle année inactive, avec toutes les relations enseignant-classe-matière.
-                                </p>
+                    <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-3 flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-semibold text-gray-700">
+                                <i class="fas fa-calendar-week text-indigo-500 mr-1"></i>Copier l'emploi du temps
+                            </p>
+                            <p class="text-xs text-gray-500 mt-0.5">Copier les EDT & relations enseignant-matière vers la nouvelle année</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer ml-4 flex-shrink-0">
+                            <input type="checkbox" id="keepTimetable" class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                        </label>
+                    </div>
+
+                    {{-- Tableau des élèves avec affectation individuelle --}}
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="text-sm font-bold text-gray-700">
+                                <i class="fas fa-users text-indigo-500 mr-1"></i>Affectation individuelle des élèves
+                            </h3>
+                            <div class="flex gap-2 text-xs">
+                                <span id="compteurAdmis" class="bg-green-100 text-green-700 font-bold px-2 py-1 rounded-full">0 admis</span>
+                                <span id="compteurRedoublants" class="bg-red-100 text-red-700 font-bold px-2 py-1 rounded-full">0 redoublants</span>
                             </div>
-                            {{-- Toggle switch --}}
-                            <label class="relative inline-flex items-center cursor-pointer ml-4 flex-shrink-0">
-                                <input type="checkbox" id="keepTimetable" class="sr-only peer">
-                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
-                            </label>
                         </div>
-                        <div id="keepTimetableInfo" class="hidden mt-3 text-xs text-indigo-700 bg-white border border-indigo-200 rounded-lg px-3 py-2">
-                            <i class="fas fa-check-circle mr-1 text-indigo-500"></i>
-                            L'emploi du temps de la classe sélectionnée sera copié pour la nouvelle année, avec toutes les affectations enseignant-matière.
+                        <div class="border border-gray-200 rounded-xl overflow-hidden">
+                            <div class="overflow-x-auto max-h-64 overflow-y-auto">
+                                <table class="min-w-full text-xs">
+                                    <thead class="bg-gray-100 sticky top-0 z-10">
+                                        <tr>
+                                            <th class="px-3 py-2 text-left font-semibold text-gray-600 w-8">#</th>
+                                            <th class="px-3 py-2 text-left font-semibold text-gray-600">Élève</th>
+                                            <th class="px-3 py-2 text-center font-semibold text-gray-600 w-20">Moy. Ann.</th>
+                                            <th class="px-3 py-2 text-center font-semibold text-gray-600 w-24">Statut auto</th>
+                                            <th class="px-3 py-2 text-left font-semibold text-gray-600 min-w-[160px]">Classe de destination</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tableauElevesDelib" class="divide-y divide-gray-100 bg-white">
+                                        <tr>
+                                            <td colspan="5" class="px-3 py-6 text-center text-gray-400">
+                                                <i class="fas fa-info-circle mr-1"></i>Sélectionnez une classe par défaut pour afficher les élèves.
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
+                        <p class="text-xs text-gray-400 mt-1">
+                            <i class="fas fa-lightbulb text-yellow-400 mr-1"></i>
+                            Les redoublants restent dans <strong>{{ $classe->name }}</strong>. Vous pouvez choisir une autre classe pour les admis.
+                        </p>
                     </div>
 
                     {{-- Bouton soumettre --}}
                     <button id="btnSoumettreDeli"
                             onclick="demanderConfirmation()"
-                            class="w-full py-3.5 bg-gradient-to-r from-indigo-600 to-purple-700 text-white font-bold rounded-xl hover:from-indigo-700 hover:to-purple-800 transition-all duration-200 shadow-lg hover:shadow-xl active:scale-[0.99] flex items-center justify-center gap-2">
+                            class="w-full py-3.5 bg-gradient-to-r from-indigo-600 to-purple-700 text-white font-bold rounded-xl hover:from-indigo-700 hover:to-purple-800 transition-all duration-200 shadow-lg flex items-center justify-center gap-2">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                   d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
@@ -420,59 +422,61 @@
      MODAL 3 : CONFIRMATION IRRÉVERSIBLE
 ═══════════════════════════════════════════════════════════════════ --}}
 <div id="modalConfirmation" class="fixed inset-0 z-60 hidden" role="dialog" aria-modal="true">
-    <div class="fixed inset-0 bg-black/70 backdrop-blur-sm"></div>
-    <div class="fixed inset-0 flex items-center justify-center p-4">
-        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-modalIn">
-            <div class="h-2 bg-gradient-to-r from-orange-500 to-red-500"></div>
-            <div class="p-8">
-                <div class="flex justify-center mb-5">
-                    <div class="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center ring-8 ring-orange-50">
-                        <svg class="w-10 h-10 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                        </svg>
+    <div class="fixed inset-0 bg-black/70 backdrop-blur-sm" onclick="fermerModalConfirmation()"></div>
+    <div class="fixed inset-0 overflow-y-auto">
+        <div class="flex min-h-full items-center justify-center p-4">
+            <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md animate-modalIn">
+                <div class="h-2 bg-gradient-to-r from-orange-500 to-red-500 rounded-t-2xl"></div>
+                <div class="p-6 sm:p-8">
+                    <div class="flex justify-center mb-4">
+                        <div class="w-16 h-16 sm:w-20 sm:h-20 bg-orange-100 rounded-full flex items-center justify-center ring-8 ring-orange-50">
+                            <svg class="w-8 h-8 sm:w-10 sm:h-10 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                            </svg>
+                        </div>
                     </div>
-                </div>
 
-                <h2 class="text-2xl font-bold text-gray-900 text-center mb-2">Action Irréversible !</h2>
-                <p class="text-gray-500 text-center text-sm mb-6">Veuillez lire attentivement avant de confirmer</p>
+                    <h2 class="text-xl sm:text-2xl font-bold text-gray-900 text-center mb-1">Action Irréversible !</h2>
+                    <p class="text-gray-500 text-center text-sm mb-4">Veuillez lire attentivement avant de confirmer</p>
 
-                <div class="bg-orange-50 border border-orange-200 rounded-xl p-4 mb-5">
-                    <ul class="space-y-2 text-sm text-orange-800">
-                        <li class="flex items-start gap-2">
-                            <i class="fas fa-exclamation-circle text-orange-500 mt-0.5 flex-shrink-0"></i>
-                            <span>Tous les élèves admis seront <strong>transférés</strong> dans la nouvelle classe / année.</span>
-                        </li>
-                        <li class="flex items-start gap-2">
-                            <i class="fas fa-exclamation-circle text-orange-500 mt-0.5 flex-shrink-0"></i>
-                            <span>Les redoublants resteront dans la même classe pour la nouvelle année.</span>
-                        </li>
-                        <li class="flex items-start gap-2">
-                            <i class="fas fa-exclamation-circle text-orange-500 mt-0.5 flex-shrink-0"></i>
-                            <span>Les paiements seront <strong>remis à zéro</strong> pour la nouvelle année.</span>
-                        </li>
-                        <li class="flex items-start gap-2">
-                            <i class="fas fa-shield-alt text-orange-500 mt-0.5 flex-shrink-0"></i>
-                            <span>Un <strong>snapshot</strong> de toutes les données sera conservé pour les archives.</span>
-                        </li>
-                    </ul>
-                </div>
+                    <div class="bg-orange-50 border border-orange-200 rounded-xl p-3 mb-4">
+                        <ul class="space-y-2 text-sm text-orange-800">
+                            <li class="flex items-start gap-2">
+                                <i class="fas fa-exclamation-circle text-orange-500 mt-0.5 flex-shrink-0"></i>
+                                <span>Les élèves admis seront <strong>transférés</strong> dans leur classe choisie.</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fas fa-exclamation-circle text-orange-500 mt-0.5 flex-shrink-0"></i>
+                                <span>Les redoublants restent dans la même classe pour la nouvelle année.</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fas fa-exclamation-circle text-orange-500 mt-0.5 flex-shrink-0"></i>
+                                <span>Les paiements seront <strong>remis à zéro</strong> pour la nouvelle année.</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fas fa-shield-alt text-orange-500 mt-0.5 flex-shrink-0"></i>
+                                <span>Un <strong>snapshot</strong> des données sera conservé pour les archives.</span>
+                            </li>
+                        </ul>
+                    </div>
 
-                <div id="confirmSummary" class="bg-indigo-50 border border-indigo-200 rounded-xl p-4 mb-6 text-sm text-indigo-800">
-                    {{-- Rempli dynamiquement --}}
-                </div>
+                    <div id="confirmSummary" class="bg-indigo-50 border border-indigo-200 rounded-xl p-3 mb-5 text-sm text-indigo-800 max-h-48 overflow-y-auto">
+                        {{-- Rempli dynamiquement --}}
+                    </div>
 
-                <div class="flex gap-3">
-                    <button onclick="fermerModalConfirmation()"
-                            class="flex-1 py-3 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-gray-200 transition-colors duration-200">
-                        Annuler
-                    </button>
-                    <button id="btnConfirmerDeli"
-                            onclick="executerDeliberation()"
-                            class="flex-1 py-3 bg-gradient-to-r from-orange-500 to-red-600 text-white font-bold rounded-xl hover:from-orange-600 hover:to-red-700 transition-all duration-200 shadow-lg flex items-center justify-center gap-2">
-                        <i class="fas fa-gavel"></i>
-                        Confirmer la délibération
-                    </button>
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <button onclick="fermerModalConfirmation()"
+                                class="flex-1 py-3 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-gray-200 transition-colors">
+                            Annuler
+                        </button>
+                        <button id="btnConfirmerDeli"
+                                onclick="executerDeliberation()"
+                                class="flex-1 py-3 bg-gradient-to-r from-orange-500 to-red-600 text-white font-bold rounded-xl hover:from-orange-600 hover:to-red-700 transition-all shadow-lg flex items-center justify-center gap-2">
+                            <i class="fas fa-gavel"></i>
+                            Confirmer
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -484,43 +488,45 @@
      MODAL 4 : CONFIRMATION ANNULATION
 ═══════════════════════════════════════════════════════════════════ --}}
 <div id="modalAnnulation" class="fixed inset-0 z-60 hidden" role="dialog" aria-modal="true">
-    <div class="fixed inset-0 bg-black/70 backdrop-blur-sm"></div>
-    <div class="fixed inset-0 flex items-center justify-center p-4">
-        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-modalIn">
-            <div class="h-2 bg-gradient-to-r from-red-600 to-rose-700"></div>
-            <div class="p-8">
-                <div class="flex justify-center mb-5">
-                    <div class="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center ring-8 ring-red-50">
-                        <i class="fas fa-undo text-red-600 text-3xl"></i>
+    <div class="fixed inset-0 bg-black/70 backdrop-blur-sm" onclick="fermerModalAnnulation()"></div>
+    <div class="fixed inset-0 overflow-y-auto">
+        <div class="flex min-h-full items-center justify-center p-4">
+            <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md animate-modalIn">
+                <div class="h-2 bg-gradient-to-r from-red-600 to-rose-700 rounded-t-2xl"></div>
+                <div class="p-6 sm:p-8">
+                    <div class="flex justify-center mb-4">
+                        <div class="w-16 h-16 sm:w-20 sm:h-20 bg-red-100 rounded-full flex items-center justify-center ring-8 ring-red-50">
+                            <i class="fas fa-undo text-red-600 text-2xl sm:text-3xl"></i>
+                        </div>
                     </div>
-                </div>
-                <h2 class="text-2xl font-bold text-gray-900 text-center mb-2">Annuler la délibération ?</h2>
-                <p class="text-gray-500 text-center text-sm mb-6">Cette action restaurera tous les élèves à leur état précédent.</p>
+                    <h2 class="text-xl sm:text-2xl font-bold text-gray-900 text-center mb-1">Annuler la délibération ?</h2>
+                    <p class="text-gray-500 text-center text-sm mb-4">Cette action restaurera tous les élèves à leur état précédent.</p>
 
-                <div class="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
-                    <ul class="space-y-2 text-sm text-red-800">
-                        <li class="flex items-start gap-2">
-                            <i class="fas fa-undo text-red-500 mt-0.5 flex-shrink-0"></i>
-                            <span>Les élèves seront replacés dans leurs classes et années d'origine.</span>
-                        </li>
-                        <li class="flex items-start gap-2">
-                            <i class="fas fa-exclamation-triangle text-red-500 mt-0.5 flex-shrink-0"></i>
-                            <span>L'emploi du temps copié (si activé) sera également supprimé.</span>
-                        </li>
-                    </ul>
-                </div>
+                    <div class="bg-red-50 border border-red-200 rounded-xl p-3 mb-5">
+                        <ul class="space-y-2 text-sm text-red-800">
+                            <li class="flex items-start gap-2">
+                                <i class="fas fa-undo text-red-500 mt-0.5 flex-shrink-0"></i>
+                                <span>Les élèves seront replacés dans leurs classes et années d'origine.</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fas fa-exclamation-triangle text-red-500 mt-0.5 flex-shrink-0"></i>
+                                <span>L'emploi du temps copié (si activé) sera également supprimé.</span>
+                            </li>
+                        </ul>
+                    </div>
 
-                <div class="flex gap-3">
-                    <button onclick="fermerModalAnnulation()"
-                            class="flex-1 py-3 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-gray-200 transition-colors duration-200">
-                        Ne pas annuler
-                    </button>
-                    <button id="btnConfirmerAnnulation"
-                            onclick="executerAnnulation()"
-                            class="flex-1 py-3 bg-gradient-to-r from-red-600 to-rose-700 text-white font-bold rounded-xl hover:from-red-700 hover:to-rose-800 transition-all duration-200 shadow-lg flex items-center justify-center gap-2">
-                        <i class="fas fa-undo"></i>
-                        Confirmer l'annulation
-                    </button>
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <button onclick="fermerModalAnnulation()"
+                                class="flex-1 py-3 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-gray-200 transition-colors">
+                            Ne pas annuler
+                        </button>
+                        <button id="btnConfirmerAnnulation"
+                                onclick="executerAnnulation()"
+                                class="flex-1 py-3 bg-gradient-to-r from-red-600 to-rose-700 text-white font-bold rounded-xl hover:from-red-700 hover:to-rose-800 transition-all shadow-lg flex items-center justify-center gap-2">
+                            <i class="fas fa-undo"></i>
+                            Confirmer l'annulation
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -533,26 +539,28 @@
 ═══════════════════════════════════════════════════════════════════ --}}
 <div id="modalSucces" class="fixed inset-0 z-70 hidden" role="dialog" aria-modal="true">
     <div class="fixed inset-0 bg-black/60 backdrop-blur-sm"></div>
-    <div class="fixed inset-0 flex items-center justify-center p-4">
-        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-modalIn">
-            <div class="h-2 bg-gradient-to-r from-green-500 to-emerald-600"></div>
-            <div class="p-8 text-center">
-                <div class="flex justify-center mb-5">
-                    <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center ring-8 ring-green-50">
-                        <svg class="w-12 h-12 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
+    <div class="fixed inset-0 overflow-y-auto">
+        <div class="flex min-h-full items-center justify-center p-4">
+            <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm animate-modalIn">
+                <div class="h-2 bg-gradient-to-r from-green-500 to-emerald-600 rounded-t-2xl"></div>
+                <div class="p-6 text-center">
+                    <div class="flex justify-center mb-4">
+                        <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center ring-8 ring-green-50">
+                            <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
                     </div>
+                    <h2 class="text-xl font-bold text-gray-900 mb-1">Délibération Réussie !</h2>
+                    <p class="text-gray-500 text-sm mb-4">Tous les transferts ont été effectués avec succès.</p>
+                    <div id="succesStats" class="grid grid-cols-2 gap-3 mb-5">
+                        {{-- Rempli dynamiquement --}}
+                    </div>
+                    <button onclick="location.reload()"
+                            class="w-full py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all shadow-lg">
+                        <i class="fas fa-sync-alt mr-2"></i>Actualiser la page
+                    </button>
                 </div>
-                <h2 class="text-2xl font-bold text-gray-900 mb-2">Délibération Réussie !</h2>
-                <p class="text-gray-500 text-sm mb-6">Tous les transferts ont été effectués avec succès.</p>
-                <div id="succesStats" class="grid grid-cols-2 gap-4 mb-6">
-                    {{-- Rempli dynamiquement --}}
-                </div>
-                <button onclick="location.reload()"
-                        class="w-full py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all duration-200 shadow-lg">
-                    <i class="fas fa-sync-alt mr-2"></i>Actualiser la page
-                </button>
             </div>
         </div>
     </div>
@@ -656,10 +664,10 @@ function ouvrirModalDeliberation() {
 
 // ── Remplir le formulaire ────────────────────────────────────────────
 function remplirFormulaire(data) {
-    // ── Années INACTIVES (destination des élèves)
-    const selYear       = document.getElementById('selectTargetYear');
+    // ── Années INACTIVES
+    const selYear        = document.getElementById('selectTargetYear');
     const yearMissingMsg = document.getElementById('yearMissingMsg');
-    selYear.innerHTML   = '<option value="">-- Sélectionnez l\'année inactive --</option>';
+    selYear.innerHTML    = '<option value="">-- Sélectionnez l\'année inactive --</option>';
 
     if (!data.inactive_years || data.inactive_years.length === 0) {
         selYear.disabled = true;
@@ -675,10 +683,10 @@ function remplirFormulaire(data) {
         });
     }
 
-    // ── Classes de l'ANNÉE ACTIVE (où les élèves vont passer)
-    const selClass       = document.getElementById('selectTargetClass');
+    // ── Classes disponibles (année active)
+    const selClass        = document.getElementById('selectTargetClass');
     const classMissingMsg = document.getElementById('classMissingMsg');
-    selClass.innerHTML   = '<option value="">-- Sélectionnez la classe --</option>';
+    selClass.innerHTML    = '<option value="">-- Sélectionnez la classe par défaut --</option>';
 
     if (!data.target_classes || data.target_classes.length === 0) {
         selClass.disabled = true;
@@ -712,32 +720,178 @@ function remplirFormulaire(data) {
     }
 }
 
-// ── Toggle emploi du temps ───────────────────────────────────────────
-document.getElementById('keepTimetable')?.addEventListener('change', function() {
-    document.getElementById('keepTimetableInfo').classList.toggle('hidden', !this.checked);
-});
+// ── Recalculer les statuts + reconstruire le tableau élèves ──────────
+function recalculerStatuts() {
+    appliquerClasseParDefaut();
+}
+
+// ── Construire le tableau élèves avec select individuel ──────────────
+function appliquerClasseParDefaut() {
+    const defaultClassId  = document.getElementById('selectTargetClass').value;
+    const seuil           = parseFloat(document.getElementById('seuilPassage').value) || 10;
+    const students        = deliberationData.students || [];
+    const targetClasses   = deliberationData.target_classes || [];
+    const tbody           = document.getElementById('tableauElevesDelib');
+
+    if (students.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="px-3 py-6 text-center text-gray-400"><i class="fas fa-users-slash mr-1"></i>Aucun élève validé.</td></tr>';
+        return;
+    }
+
+    // Options classes + option spéciale Diplômé
+    const classOptionsHtml = targetClasses.map(c =>
+        `<option value="${c.id}">${c.name}</option>`
+    ).join('');
+
+    const allOptionsHtml = classOptionsHtml +
+        `<option value="diplome" class="text-purple-700 font-semibold"> Diplômé / Terminé</option>`;
+
+    let admisCount = 0, redoublantCount = 0, diplomeCount = 0;
+    let rows = '';
+
+    students.forEach((s, idx) => {
+        const moy   = s.moy_annuelle;
+        const admis = moy !== null && moy >= seuil;
+        if (admis) admisCount++; else redoublantCount++;
+
+        const moyStr   = moy !== null ? moy.toFixed(2).replace('.', ',') : '—';
+        const moyColor = moy !== null ? (admis ? 'text-green-700 font-bold' : 'text-red-700 font-bold') : 'text-gray-400';
+        const statutBadge = admis
+            ? '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-800"><i class="fas fa-check mr-1"></i>Admis</span>'
+            : '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-800"><i class="fas fa-times mr-1"></i>Redouble</span>';
+
+        let classeCell;
+        if (admis) {
+            // Pré-sélectionner la classe par défaut si choisie
+            let opts = `<option value="">-- Choisir --</option>` + allOptionsHtml;
+            if (defaultClassId) {
+                opts = `<option value="">-- Choisir --</option>` +
+                    allOptionsHtml.replace(`value="${defaultClassId}"`, `value="${defaultClassId}" selected`);
+            }
+            classeCell = `<select data-student-id="${s.id}"
+                class="student-class-select w-full px-2 py-1 border border-gray-200 rounded-lg text-xs focus:ring-1 focus:ring-indigo-400 bg-white"
+                onchange="onDestinationChange(this)">
+                ${opts}
+            </select>`;
+        } else {
+            classeCell = `<span class="text-gray-500 text-xs italic">Redouble (même classe)</span>`;
+        }
+
+        const rowBg = admis ? 'hover:bg-green-50' : 'bg-red-50 hover:bg-red-100';
+        rows += `<tr class="${rowBg} transition-colors" data-student-id="${s.id}" data-admis="${admis ? 1 : 0}" data-dest="">
+            <td class="px-3 py-2 text-gray-400 text-xs">${idx + 1}</td>
+            <td class="px-3 py-2">
+                <div class="font-semibold text-gray-800 text-xs">${s.full_name}</div>
+                <div class="text-gray-400 text-xs">${s.num_educ || ''}</div>
+            </td>
+            <td class="px-3 py-2 text-center ${moyColor} text-xs">${moyStr}</td>
+            <td class="px-3 py-2 text-center">${statutBadge}</td>
+            <td class="px-3 py-2">${classeCell}</td>
+        </tr>`;
+    });
+
+    tbody.innerHTML = rows;
+    mettreAJourCompteurs();
+}
+
+// ── Quand on change la destination d'un élève ────────────────────────
+function onDestinationChange(sel) {
+    const row = sel.closest('tr');
+    if (sel.value === 'diplome') {
+        row.dataset.dest = 'diplome';
+        row.classList.add('bg-purple-50');
+        row.classList.remove('hover:bg-green-50');
+    } else {
+        row.dataset.dest = sel.value ? 'classe' : '';
+        row.classList.remove('bg-purple-50');
+        row.classList.add('hover:bg-green-50');
+    }
+    mettreAJourCompteurs();
+}
+
+// ── Mettre à jour les compteurs ──────────────────────────────────────
+function mettreAJourCompteurs() {
+    let admis = 0, redoublants = 0, diplomes = 0;
+    document.querySelectorAll('#tableauElevesDelib tr[data-student-id]').forEach(row => {
+        if (row.dataset.admis === '1') {
+            const sel = row.querySelector('.student-class-select');
+            if (sel?.value === 'diplome') diplomes++;
+            else admis++;
+        } else {
+            redoublants++;
+        }
+    });
+    document.getElementById('compteurAdmis').textContent       = admis + ' admis';
+    document.getElementById('compteurRedoublants').textContent = redoublants + ' redoublants';
+    // Afficher/cacher le compteur diplômés dynamiquement
+    let diplomeEl = document.getElementById('compteurDiplomes');
+    if (!diplomeEl) {
+        diplomeEl = document.createElement('span');
+        diplomeEl.id = 'compteurDiplomes';
+        diplomeEl.className = 'bg-purple-100 text-purple-700 font-bold px-2 py-1 rounded-full text-xs';
+        document.getElementById('compteurAdmis').parentElement.appendChild(diplomeEl);
+    }
+    diplomeEl.textContent = diplomes + ' diplômé(s)';
+    diplomeEl.classList.toggle('hidden', diplomes === 0);
+}
 
 // ── Demander confirmation avant délibération ─────────────────────────
 function demanderConfirmation() {
-    const yearId  = document.getElementById('selectTargetYear').value;
-    const classId = document.getElementById('selectTargetClass').value;
+    const yearId = document.getElementById('selectTargetYear').value;
+    const seuil  = parseFloat(document.getElementById('seuilPassage').value) || 10;
+    const keepTt = document.getElementById('keepTimetable').checked;
 
-    if (!yearId)  { alert('Veuillez sélectionner une année académique de destination.'); return; }
-    if (!classId) { alert('Veuillez sélectionner une classe de destination.'); return; }
+    if (!yearId) { alert('Veuillez sélectionner une année académique de destination.'); return; }
 
-    const yearName  = document.getElementById('selectTargetYear').options[document.getElementById('selectTargetYear').selectedIndex].text;
-    const className = document.getElementById('selectTargetClass').options[document.getElementById('selectTargetClass').selectedIndex].text;
-    const keepTt    = document.getElementById('keepTimetable').checked;
+    // Vérifier que tous les admis ont une destination (classe ou diplôme)
+    const admisRows = document.querySelectorAll('#tableauElevesDelib tr[data-admis="1"]');
+    for (const row of admisRows) {
+        const sel = row.querySelector('.student-class-select');
+        if (sel && !sel.value) {
+            const name = row.querySelector('td:nth-child(2) .font-semibold')?.textContent || 'un élève';
+            alert(`Veuillez choisir une destination pour ${name}.`);
+            return;
+        }
+    }
+
+    const yearName = document.getElementById('selectTargetYear').options[document.getElementById('selectTargetYear').selectedIndex].text;
+
+    // Résumé des affectations
+    const affectations = {};
+    let diplomeCount = 0, redoublantCount = 0;
+
+    document.querySelectorAll('#tableauElevesDelib tr[data-student-id]').forEach(row => {
+        if (row.dataset.admis === '1') {
+            const sel = row.querySelector('.student-class-select');
+            if (sel?.value === 'diplome') {
+                diplomeCount++;
+            } else {
+                const className = sel?.options[sel.selectedIndex]?.text || '?';
+                affectations[className] = (affectations[className] || 0) + 1;
+            }
+        } else {
+            redoublantCount++;
+        }
+    });
+
+    const admisCount = admisRows.length - diplomeCount;
+    const affectationsHtml = Object.entries(affectations)
+        .map(([cls, count]) => `<div class="flex justify-between"><span>${cls}</span><span class="font-bold text-green-700">${count} élève(s)</span></div>`)
+        .join('');
 
     document.getElementById('confirmSummary').innerHTML = `
-        <div class="space-y-1.5">
+        <div class="space-y-1.5 text-sm">
             <div class="flex justify-between"><span class="font-medium">Classe source :</span><span>{{ $classe->name }}</span></div>
-            <div class="flex justify-between"><span class="font-medium">Classe destination (active) :</span><span>${className}</span></div>
-            <div class="flex justify-between"><span class="font-medium">Année inactive destination :</span><span>${yearName}</span></div>
-            <div class="flex justify-between"><span class="font-medium">Emploi du temps :</span><span>${keepTt ? 'Copié depuis ' + className + ' ✓' : 'Non copié'}</span></div>
+            <div class="flex justify-between"><span class="font-medium">Année destination :</span><span>${yearName}</span></div>
+            <div class="flex justify-between"><span class="font-medium">Seuil :</span><span>${seuil}/20</span></div>
+            <div class="flex justify-between"><span class="font-medium">Emploi du temps :</span><span>${keepTt ? 'Copié ✓' : 'Non copié'}</span></div>
             <hr class="border-indigo-200 my-2">
-            <div class="flex justify-between font-bold text-green-700"><span>Admis :</span><span>{{ $nbPasses ?? 0 }}</span></div>
-            <div class="flex justify-between font-bold text-red-700"><span>Redoublants :</span><span>{{ $nbRedoubles ?? 0 }}</span></div>
+            <div class="font-semibold text-gray-700 mb-1">Admis → classes :</div>
+            ${affectationsHtml || '<div class="text-gray-400 text-xs">Aucun</div>'}
+            <hr class="border-indigo-200 my-2">
+            <div class="flex justify-between font-bold text-green-700"><span>Admis (classe sup.) :</span><span>${admisCount}</span></div>
+            ${diplomeCount > 0 ? `<div class="flex justify-between font-bold text-purple-700"><span>Diplômés / Terminés :</span><span>${diplomeCount}</span></div>` : ''}
+            <div class="flex justify-between font-bold text-red-700"><span>Redoublants :</span><span>${redoublantCount}</span></div>
         </div>
     `;
 
@@ -747,54 +901,63 @@ function demanderConfirmation() {
 
 // ── Exécuter la délibération ─────────────────────────────────────────
 function executerDeliberation() {
-    const yearId  = document.getElementById('selectTargetYear').value;
-    const classId = document.getElementById('selectTargetClass').value;
-    const keepTt  = document.getElementById('keepTimetable').checked;
-    const btn     = document.getElementById('btnConfirmerDeli');
+    const yearId = document.getElementById('selectTargetYear').value;
+    const seuil  = parseFloat(document.getElementById('seuilPassage').value) || 10;
+    const keepTt = document.getElementById('keepTimetable').checked;
+    const btn    = document.getElementById('btnConfirmerDeli');
+
+    // Collecter les affectations par élève
+    // target_class_id = ID (classe), "diplome" (diplômé), ou null (redoublant)
+    const studentAssignments = [];
+    document.querySelectorAll('#tableauElevesDelib tr[data-student-id]').forEach(row => {
+        const studentId = parseInt(row.dataset.studentId);
+        const admis     = row.dataset.admis === '1';
+        const sel       = row.querySelector('.student-class-select');
+        let   classId   = null;
+
+        if (admis && sel) {
+            classId = sel.value === 'diplome' ? 'diplome' : (sel.value || null);
+        }
+        studentAssignments.push({ student_id: studentId, target_class_id: classId });
+    });
 
     btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Délibération en cours...';
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>En cours...';
 
     fetch(URL_DELIBERATE, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': CSRF,
-            'X-Requested-With': 'XMLHttpRequest',
-        },
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'X-Requested-With': 'XMLHttpRequest' },
         body: JSON.stringify({
             target_academic_year_id: yearId,
-            target_class_id: classId,
+            seuil_passage: seuil,
             keep_timetable: keepTt,
+            student_assignments: studentAssignments,
         }),
     })
-    .then(r => {
-        // Lire le texte brut d'abord pour diagnostiquer si c'est pas du JSON
-        return r.text().then(text => {
-            try {
-                return JSON.parse(text);
-            } catch(e) {
-                // Réponse non-JSON (HTML d'erreur Laravel)
-                console.error('Réponse non-JSON du serveur:', text.substring(0, 500));
-                return { success: false, error: 'Erreur serveur (non-JSON). Vérifiez la console pour plus de détails. Début: ' + text.substring(0, 200) };
-            }
-        });
-    })
+    .then(r => r.text().then(text => {
+        try { return JSON.parse(text); }
+        catch(e) { return { success: false, error: 'Erreur serveur. ' + text.substring(0, 200) }; }
+    }))
     .then(data => {
         btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-gavel mr-2"></i>Confirmer la délibération';
+        btn.innerHTML = '<i class="fas fa-gavel mr-2"></i>Confirmer';
 
         if (data.success) {
             hideModal('modalConfirmation');
             document.getElementById('succesStats').innerHTML = `
-                <div class="bg-green-50 border border-green-200 rounded-xl p-4">
-                    <div class="text-3xl font-bold text-green-700">${data.passed_count}</div>
-                    <div class="text-xs text-green-600 mt-1">Élèves admis</div>
+                <div class="bg-green-50 border border-green-200 rounded-xl p-3">
+                    <div class="text-2xl font-bold text-green-700">${data.passed_count}</div>
+                    <div class="text-xs text-green-600 mt-1">Admis</div>
                 </div>
-                <div class="bg-red-50 border border-red-200 rounded-xl p-4">
-                    <div class="text-3xl font-bold text-red-700">${data.repeated_count}</div>
+                <div class="bg-red-50 border border-red-200 rounded-xl p-3">
+                    <div class="text-2xl font-bold text-red-700">${data.repeated_count}</div>
                     <div class="text-xs text-red-600 mt-1">Redoublants</div>
                 </div>
+                ${data.graduated_count > 0 ? `
+                <div class="bg-purple-50 border border-purple-200 rounded-xl p-3 col-span-2">
+                    <div class="text-2xl font-bold text-purple-700">${data.graduated_count}</div>
+                    <div class="text-xs text-purple-600 mt-1"> Diplômés / Terminés</div>
+                </div>` : ''}
             `;
             showModal('modalSucces');
         } else {
@@ -804,7 +967,7 @@ function executerDeliberation() {
     })
     .catch(err => {
         btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-gavel mr-2"></i>Confirmer la délibération';
+        btn.innerHTML = '<i class="fas fa-gavel mr-2"></i>Confirmer';
         alert('Erreur réseau. Veuillez réessayer.');
         console.error(err);
     });

@@ -123,6 +123,14 @@ Route::middleware(['auth'])->prefix('primaire/notes')->name('primaire.notes.')->
     Route::post('/composition', [\App\Http\Controllers\Dprimaire\NotesEvaluationController::class, 'programmerComposition'])
          ->name('composition.store');
 
+    // Délibération primaire
+    Route::get('/deliberation/eleves/{classeId}', [\App\Http\Controllers\Dprimaire\NotesEvaluationController::class, 'getElevesClasse'])
+         ->name('deliberation.eleves');
+    Route::get('/deliberation/classes-destination', [\App\Http\Controllers\Dprimaire\NotesEvaluationController::class, 'getClassesDestination'])
+         ->name('deliberation.classes-destination');
+    Route::post('/deliberation', [\App\Http\Controllers\Dprimaire\NotesEvaluationController::class, 'delibererPrimaire'])
+         ->name('deliberation.store');
+
     // Liste des évaluations par classe (directeur)
     Route::get('/classe/{classeId}/formative', [\App\Http\Controllers\Dprimaire\NotesEvaluationController::class, 'evaluationFormative'])
          ->name('formative');

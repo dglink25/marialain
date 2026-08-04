@@ -94,6 +94,109 @@ class NotesEvaluationController extends Controller{
             ->with('success', 'Composition programmée avec succès.');
     }
 
+    /** AJAX — liste des élèves validés d'une classe (alphabétique) */
+    public function getElevesClasse(int $classeId): \Illuminate\Http\JsonResponse
+    {
+        $annee = AcademicYear::where('active', true)->firstOrFail();
+        $eleves = \App\Models\Student::where('class_id', $classeId)
+            ->where('academic_year_id', $annee->id)
+            ->where('is_validated', 1)
+            ->orderBy('last_name')->orderBy('first_name')
+            ->get(['id', 'last_name', 'first_name', 'num_educ', 'gender']);
+
+        return response()->json($eleves);
+    }
+
+    /** AJAX — classes disponibles dans un cycle (entity_id) pour une année */
+    public function getClassesDestination(\Illuminate\Http\Request $request): \Illuminate\Http\JsonResponse
+    {
+        $entityId = (int) $request->query('entity_id');
+        $yearId   = (int) $request->query('year_id');
+
+        $classes = Classe::where('entity_id', $entityId)
+            ->where('academic_year_id', $yearId)
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        return response()->json($classes);
+    }
+
+    /** Délibération primaire/maternelle — transfert simple sans calcul de notes */
+    public function delibererPrimaire(\Illuminate\Http\Request $request): \Illuminate\Http\JsonResponse
+    {
+        $request->validate([
+            'source_class_id'        => 'required|exists:classes,id',
+            'target_academic_year_id'=> 'required|exists:academic_years,id',
+            'target_entity_id'       => 'required|integer|in:1,2,3',
+            'target_class_id'        => 'required|exists:classes,id',
+            'student_ids'            => 'required|array|min:1',
+            'student_ids.*'          => 'exists:students,id',
+        ]);
+
+        $activeYear  = AcademicYear::where('active', true)->firstOrFail();
+        $targetYear  = AcademicYear::findOrFail($request->target_academic_year_id);
+        $targetClass = Classe::findOrFail($request->target_class_id);
+
+        DB::beginTransaction();
+        try {
+            foreach ($request->student_ids as $studentId) {
+                $student = \App\Models\Student::findOrFail($studentId);
+
+                // Snapshot archive
+                \App\Models\StudentAcademicRecord::updateOrCreate(
+                    ['student_id' => $student->id, 'academic_year_id' => $activeYear->id],
+                    [
+                        'class_id'             => $student->class_id,
+                        'entity_id'            => $student->entity_id,
+                        'first_name'           => $student->first_name,
+                        'last_name'            => $student->last_name,
+                        'birth_date'           => $student->birth_date,
+                        'birth_place'          => $student->birth_place,
+                        'gender'               => $student->gender,
+                        'num_educ'             => $student->num_educ,
+                        'parent_full_name'     => $student->parent_full_name,
+                        'parent_email'         => $student->parent_email,
+                        'parent_phone'         => $student->parent_phone,
+                        'registration_type'    => $student->registration_type,
+                        'total_fees'           => $student->total_fees,
+                        'amount_paid'          => $student->payments()->where('academic_year_id', $activeYear->id)->sum('amount'),
+                        'statut_deliberation'  => 'passed',
+                        'next_class_id'        => $targetClass->id,
+                        'next_academic_year_id'=> $targetYear->id,
+                        'is_validated'         => $student->is_validated,
+                        'archived_at'          => now(),
+                    ]
+                );
+
+                // Déplacer l'élève
+                $student->update([
+                    'class_id'          => $targetClass->id,
+                    'entity_id'         => $targetClass->entity_id,
+                    'academic_year_id'  => $targetYear->id,
+                    'registration_type' => 're_registration',
+                    'total_fees'        => 0,
+                    'amount_paid'       => 0,
+                ]);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'count'   => count($request->student_ids),
+                'message' => count($request->student_ids) . ' élève(s) transféré(s) vers ' . $targetClass->name . ' (' . $targetYear->name . ').',
+            ]);
+
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            \Illuminate\Support\Facades\Log::error('Délibération primaire échouée', [
+                'message' => $e->getMessage(), 'line' => $e->getLine(),
+            ]);
+            return response()->json(['success' => false, 'error' => $e->getMessage()], 422);
+        }
+    }
+
+    /** Liste des évaluations formatives par classe (vue directeur) */
     public function evaluationFormative(int $classeId)
     {
         $annee_academique = AcademicYear::where('active', true)->firstOrFail();
