@@ -94,6 +94,103 @@ class NotesEvaluationController extends Controller{
             ->with('success', 'Composition programmée avec succès.');
     }
 
+    /** Historique des délibérations primaires (élèves transférés depuis l'année active) */
+    public function historiqueDeliberation(): \Illuminate\Http\JsonResponse
+    {
+        $activeYear = AcademicYear::where('active', true)->firstOrFail();
+
+        // Chercher tous les snapshots de l'année active avec statut 'passed'
+        // groupés par classe source
+        $records = \App\Models\StudentAcademicRecord::with(['student', 'classe'])
+            ->where('academic_year_id', $activeYear->id)
+            ->where('statut_deliberation', 'passed')
+            ->whereNotNull('next_class_id')
+            ->whereNotNull('next_academic_year_id')
+            ->get();
+
+        // Grouper par classe source
+        $grouped = $records->groupBy('class_id')->map(function ($items, $classId) use ($activeYear) {
+            $classe     = $items->first()->classe;
+            $nextYear   = \App\Models\AcademicYear::find($items->first()->next_academic_year_id);
+            $nextClasse = \App\Models\Classe::find($items->first()->next_class_id);
+            return [
+                'source_class_id'   => $classId,
+                'source_class_name' => $classe?->name ?? 'Classe #'.$classId,
+                'source_year_name'  => $activeYear->name,
+                'target_class_name' => $nextClasse?->name ?? '—',
+                'target_year_name'  => $nextYear?->name ?? '—',
+                'student_ids'       => $items->pluck('student_id')->toArray(),
+                'count'             => $items->count(),
+            ];
+        })->values();
+
+        return response()->json($grouped);
+    }
+
+    /** Annuler une délibération primaire — remet les élèves dans leur classe/année d'origine */
+    public function annulerDeliberation(\Illuminate\Http\Request $request): \Illuminate\Http\JsonResponse
+    {
+        $request->validate([
+            'source_class_id' => 'required|integer',
+            'student_ids'     => 'required|array|min:1',
+            'student_ids.*'   => 'integer|exists:students,id',
+        ]);
+
+        $activeYear = AcademicYear::where('active', true)->firstOrFail();
+
+        DB::beginTransaction();
+        try {
+            $restoredCount = 0;
+
+            foreach ($request->student_ids as $studentId) {
+                // Récupérer le snapshot de l'année active
+                $snapshot = \App\Models\StudentAcademicRecord::where('student_id', $studentId)
+                    ->where('academic_year_id', $activeYear->id)
+                    ->where('statut_deliberation', 'passed')
+                    ->first();
+
+                if (!$snapshot) continue;
+
+                $student = \App\Models\Student::find($studentId);
+                if (!$student) continue;
+
+                // Remettre l'élève dans sa classe/année/entité d'origine
+                $student->update([
+                    'class_id'          => $snapshot->class_id,
+                    'entity_id'         => $snapshot->entity_id,
+                    'academic_year_id'  => $activeYear->id,
+                    'registration_type' => $snapshot->registration_type,
+                    'total_fees'        => $snapshot->total_fees ?? 0,
+                    'amount_paid'       => $snapshot->amount_paid ?? 0,
+                ]);
+
+                // Réinitialiser le snapshot
+                $snapshot->update([
+                    'statut_deliberation'   => 'pending',
+                    'next_class_id'         => null,
+                    'next_academic_year_id' => null,
+                ]);
+
+                $restoredCount++;
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'count'   => $restoredCount,
+                'message' => "{$restoredCount} élève(s) remis dans leur classe d'origine.",
+            ]);
+
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            \Illuminate\Support\Facades\Log::error('Annulation délibération primaire échouée', [
+                'message' => $e->getMessage(), 'line' => $e->getLine(),
+            ]);
+            return response()->json(['success' => false, 'error' => $e->getMessage()], 422);
+        }
+    }
+
     /** AJAX — liste des élèves validés d'une classe (alphabétique) */
     public function getElevesClasse(int $classeId): \Illuminate\Http\JsonResponse
     {
@@ -107,18 +204,34 @@ class NotesEvaluationController extends Controller{
         return response()->json($eleves);
     }
 
-    /** AJAX — classes disponibles dans un cycle (entity_id) pour une année */
+    /** AJAX — classes disponibles dans un cycle (entity_id) pour une année
+     *  Si aucune classe n'existe encore dans cette année pour ce cycle,
+     *  on retourne les classes du même cycle depuis l'année active comme référence.
+     */
     public function getClassesDestination(\Illuminate\Http\Request $request): \Illuminate\Http\JsonResponse
     {
         $entityId = (int) $request->query('entity_id');
         $yearId   = (int) $request->query('year_id');
 
-        $yearId   = $yearId-1;
-
+        // Classes dans l'année cible
         $classes = Classe::where('entity_id', $entityId)
             ->where('academic_year_id', $yearId)
             ->orderBy('name')
             ->get(['id', 'name']);
+
+        // Si aucune classe dans l'année cible, proposer les classes
+        // de l'année active comme référence (elles seront créées automatiquement)
+        if ($classes->isEmpty()) {
+            $activeYearId = AcademicYear::where('active', true)->value('id');
+            $classes = Classe::where('entity_id', $entityId)
+                ->where('academic_year_id', $activeYearId)
+                ->orderBy('name')
+                ->get(['id', 'name'])
+                ->map(function ($c) {
+                    $c->name = $c->name . ' (sera créée)';
+                    return $c;
+                });
+        }
 
         return response()->json($classes);
     }
@@ -135,9 +248,34 @@ class NotesEvaluationController extends Controller{
             'student_ids.*'          => 'exists:students,id',
         ]);
 
-        $activeYear  = AcademicYear::where('active', true)->firstOrFail();
-        $targetYear  = AcademicYear::findOrFail($request->target_academic_year_id);
-        $targetClass = Classe::findOrFail($request->target_class_id);
+        $activeYear      = AcademicYear::where('active', true)->firstOrFail();
+        $targetYear      = AcademicYear::findOrFail($request->target_academic_year_id);
+        $targetClassRef  = Classe::findOrFail($request->target_class_id);
+        $targetEntityId  = (int) $request->target_entity_id;
+
+        // ── S'assurer que la classe de destination existe dans la nouvelle année ──
+        // Si l'utilisateur a sélectionné une classe d'une autre année (ex: année active),
+        // on la crée automatiquement dans l'année cible avec firstOrCreate.
+        $targetClass = Classe::firstOrCreate(
+            [
+                'name'             => $targetClassRef->name,
+                'entity_id'        => $targetEntityId,
+                'academic_year_id' => $targetYear->id,
+            ],
+            [
+                'school_fees'         => $targetClassRef->school_fees,
+                'registration_fee'    => $targetClassRef->registration_fee,
+                're_registration_fee' => $targetClassRef->re_registration_fee,
+                'description'         => $targetClassRef->description,
+            ]
+        );
+
+        // Pré-charger les paiements hors transaction pour éviter l'erreur 25P02
+        $paiementsParEleve = [];
+        foreach ($request->student_ids as $studentId) {
+            $paiementsParEleve[$studentId] = \App\Models\Student::find($studentId)
+                ?->payments()->where('academic_year_id', $activeYear->id)->sum('amount') ?? 0;
+        }
 
         DB::beginTransaction();
         try {
@@ -161,7 +299,7 @@ class NotesEvaluationController extends Controller{
                         'parent_phone'         => $student->parent_phone,
                         'registration_type'    => $student->registration_type,
                         'total_fees'           => $student->total_fees,
-                        'amount_paid'          => $student->payments()->where('academic_year_id', $activeYear->id)->sum('amount'),
+                        'amount_paid'          => $paiementsParEleve[$studentId] ?? 0,
                         'statut_deliberation'  => 'passed',
                         'next_class_id'        => $targetClass->id,
                         'next_academic_year_id'=> $targetYear->id,
@@ -170,10 +308,10 @@ class NotesEvaluationController extends Controller{
                     ]
                 );
 
-                // Déplacer l'élève
+                // Déplacer l'élève vers la classe et l'année de destination
                 $student->update([
                     'class_id'          => $targetClass->id,
-                    'entity_id'         => $targetClass->entity_id,
+                    'entity_id'         => $targetEntityId,
                     'academic_year_id'  => $targetYear->id,
                     'registration_type' => 're_registration',
                     'total_fees'        => 0,
@@ -183,18 +321,20 @@ class NotesEvaluationController extends Controller{
 
             DB::commit();
 
+            $created = $targetClass->wasRecentlyCreated ? ' (classe créée automatiquement)' : '';
+
             return response()->json([
                 'success' => true,
                 'count'   => count($request->student_ids),
-                'message' => count($request->student_ids) . ' élève(s) transféré(s) vers ' . $targetClass->name . ' (' . $targetYear->name . ').',
+                'message' => count($request->student_ids) . ' élève(s) transféré(s) vers ' . $targetClass->name . ' — ' . $targetYear->name . $created . '.',
             ]);
 
         } catch (\Throwable $e) {
             DB::rollBack();
             \Illuminate\Support\Facades\Log::error('Délibération primaire échouée', [
-                'message' => $e->getMessage(), 'line' => $e->getLine(),
+                'message' => $e->getMessage(), 'line' => $e->getLine(), 'trace' => $e->getTraceAsString(),
             ]);
-            return response()->json(['success' => false, 'error' => $e->getMessage()], 422);
+            return response()->json(['success' => false, 'error' => $e->getMessage() . ' (ligne ' . $e->getLine() . ')'], 422);
         }
     }
 

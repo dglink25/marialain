@@ -130,6 +130,10 @@ Route::middleware(['auth'])->prefix('primaire/notes')->name('primaire.notes.')->
          ->name('deliberation.classes-destination');
     Route::post('/deliberation', [\App\Http\Controllers\Dprimaire\NotesEvaluationController::class, 'delibererPrimaire'])
          ->name('deliberation.store');
+    Route::get('/deliberation/historique', [\App\Http\Controllers\Dprimaire\NotesEvaluationController::class, 'historiqueDeliberation'])
+         ->name('deliberation.historique');
+    Route::post('/deliberation/annuler', [\App\Http\Controllers\Dprimaire\NotesEvaluationController::class, 'annulerDeliberation'])
+         ->name('deliberation.annuler');
 
     // Liste des évaluations par classe (directeur)
     Route::get('/classe/{classeId}/formative', [\App\Http\Controllers\Dprimaire\NotesEvaluationController::class, 'evaluationFormative'])

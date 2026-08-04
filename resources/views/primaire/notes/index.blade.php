@@ -38,6 +38,11 @@
             </div>
             <div class="flex flex-wrap gap-2 shrink-0">
                 @if($isAuthorized)
+                <button onclick="openAnnulModal()"
+                        class="inline-flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 text-white font-semibold text-sm px-5 py-2.5 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 active:scale-95">
+                    <i class="fas fa-undo text-xs"></i>
+                    Annuler délibération
+                </button>
                 <button onclick="openDeliModal()"
                         class="inline-flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white font-semibold text-sm px-5 py-2.5 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 active:scale-95">
                     <i class="fas fa-graduation-cap text-xs"></i>
@@ -242,8 +247,107 @@
 </div>
 
 {{-- ══════════════════════════════════════════════
-     MODAL — Programmer une composition
+     MODAL — Annuler une délibération primaire
 ══════════════════════════════════════════════ --}}
+<div id="annul-overlay" class="fixed inset-0 z-[8002] hidden" onclick="closeAnnulIfBackdrop(event)">
+    <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm"></div>
+    <div class="relative flex items-start sm:items-center justify-center h-full w-full px-0 sm:px-4 py-0 sm:py-6 overflow-y-auto">
+        <div id="annul-panel"
+             class="relative bg-white w-full sm:max-w-xl sm:rounded-2xl shadow-2xl border border-slate-100
+                    flex flex-col h-full sm:h-auto sm:max-h-[88vh]
+                    transform transition-all duration-300 translate-y-8 opacity-0">
+
+            {{-- Header --}}
+            <div class="shrink-0 flex items-center justify-between px-5 pt-5 pb-4 border-b border-slate-100 bg-white sm:rounded-t-2xl">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 bg-red-500 rounded-xl flex items-center justify-center shrink-0">
+                        <i class="fas fa-undo text-white text-sm"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-base font-bold text-slate-800">Annuler une délibération</h2>
+                        <p class="text-xs text-slate-400">Remet les élèves dans leur classe d'origine</p>
+                    </div>
+                </div>
+                <button onclick="closeAnnulModal()"
+                        class="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors shrink-0">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            {{-- Spinner chargement --}}
+            <div id="annul-loading" class="py-12 text-center">
+                <div class="w-8 h-8 border-2 border-red-400 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+                <p class="text-xs text-slate-400">Chargement de l'historique...</p>
+            </div>
+
+            {{-- Contenu --}}
+            <div id="annul-content" class="hidden flex-1 min-h-0 overflow-y-auto px-5 py-5 space-y-3">
+                <p class="text-xs text-slate-500 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+                    <i class="fas fa-exclamation-triangle text-amber-500 mr-1"></i>
+                    Les élèves ci-dessous ont été transférés lors d'une délibération. Sélectionnez un groupe pour annuler le transfert.
+                </p>
+                <div id="annul-list" class="space-y-3">
+                    {{-- Rempli via AJAX --}}
+                </div>
+            </div>
+
+            {{-- Vide --}}
+            <div id="annul-empty" class="hidden py-12 text-center px-5">
+                <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-check-circle text-slate-300 text-2xl"></i>
+                </div>
+                <p class="text-sm font-semibold text-slate-700 mb-1">Aucune délibération à annuler</p>
+                <p class="text-xs text-slate-400">Aucun élève n'a été transféré depuis l'année active.</p>
+            </div>
+
+            {{-- Footer --}}
+            <div class="shrink-0 px-5 py-4 border-t border-slate-100 bg-white sm:rounded-b-2xl">
+                <button onclick="closeAnnulModal()"
+                        class="w-full text-sm font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl py-3 transition-colors">
+                    Fermer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- Modal confirmation annulation --}}
+<div id="annul-confirm-overlay" class="fixed inset-0 z-[8003] hidden">
+    <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
+    <div class="fixed inset-0 overflow-y-auto">
+        <div class="flex min-h-full items-center justify-center p-4">
+            <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm animate-modalIn">
+                <div class="h-2 bg-red-500 rounded-t-2xl"></div>
+                <div class="p-6">
+                    <div class="flex justify-center mb-4">
+                        <div class="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center">
+                            <i class="fas fa-undo text-red-600 text-xl"></i>
+                        </div>
+                    </div>
+                    <h3 class="text-base font-bold text-slate-800 text-center mb-1">Confirmer l'annulation</h3>
+                    <p id="annul-confirm-text" class="text-sm text-slate-500 text-center mb-5"></p>
+                    <div class="bg-red-50 border border-red-200 rounded-xl p-3 mb-5 text-xs text-red-800">
+                        <i class="fas fa-exclamation-circle mr-1"></i>
+                        Les élèves seront remis dans leur classe d'origine de l'année <strong>{{ $annee_academique->name }}</strong>.
+                    </div>
+                    <div class="flex gap-3">
+                        <button onclick="closeAnnulConfirm()"
+                                class="flex-1 py-2.5 bg-slate-100 text-slate-700 font-semibold rounded-xl hover:bg-slate-200 text-sm transition-colors">
+                            Annuler
+                        </button>
+                        <button id="annul-confirm-btn" onclick="executerAnnulation()"
+                                class="flex-1 py-2.5 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl text-sm shadow transition-all flex items-center justify-center gap-2">
+                            <i class="fas fa-undo text-xs"></i>
+                            Confirmer
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 <div id="composition-overlay"
      class="fixed inset-0 z-[8000] hidden"
      onclick="closeModalIfBackdrop(event)">
@@ -601,6 +705,121 @@
 
 @section('scripts')
 <script>
+// ── Modal Annulation Délibération ─────────────────────────────────
+const annulOverlay        = document.getElementById('annul-overlay');
+const annulPanel          = document.getElementById('annul-panel');
+const annulConfirmOverlay = document.getElementById('annul-confirm-overlay');
+const URL_HISTORIQUE      = '{{ route("primaire.notes.deliberation.historique") }}';
+const URL_ANNULER         = '{{ route("primaire.notes.deliberation.annuler") }}';
+
+let pendingAnnulation = null; // { source_class_id, student_ids, label }
+
+function openAnnulModal() {
+    annulOverlay.classList.remove('hidden');
+    document.body.classList.add('overflow-hidden');
+    document.getElementById('annul-loading').classList.remove('hidden');
+    document.getElementById('annul-content').classList.add('hidden');
+    document.getElementById('annul-empty').classList.add('hidden');
+    requestAnimationFrame(() => {
+        annulPanel.classList.remove('translate-y-8','opacity-0');
+        annulPanel.classList.add('translate-y-0','opacity-100');
+    });
+
+    fetch(URL_HISTORIQUE, { headers:{'X-Requested-With':'XMLHttpRequest'} })
+        .then(r => r.json())
+        .then(data => {
+            document.getElementById('annul-loading').classList.add('hidden');
+            if (!data.length) {
+                document.getElementById('annul-empty').classList.remove('hidden');
+                return;
+            }
+            document.getElementById('annul-content').classList.remove('hidden');
+            document.getElementById('annul-list').innerHTML = data.map(item => `
+                <div class="bg-white border border-slate-200 rounded-xl p-4 hover:border-red-300 transition-colors">
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="min-w-0">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="font-bold text-slate-800 text-sm">${item.source_class_name}</span>
+                                <span class="text-slate-400 text-xs">→</span>
+                                <span class="font-semibold text-amber-700 text-sm">${item.target_class_name}</span>
+                            </div>
+                            <p class="text-xs text-slate-500">
+                                <i class="fas fa-calendar-alt mr-1"></i>${item.source_year_name}
+                                <span class="mx-1.5 text-slate-300">→</span>
+                                <span class="font-semibold text-indigo-600">${item.target_year_name}</span>
+                                <span class="ml-2 px-2 py-0.5 bg-slate-100 text-slate-600 rounded-full font-semibold">${item.count} élève(s)</span>
+                            </p>
+                        </div>
+                        <button onclick='demanderAnnulation(${JSON.stringify(item)})'
+                                class="shrink-0 flex items-center gap-1.5 px-3 py-2 bg-red-50 hover:bg-red-500 text-red-600 hover:text-white font-semibold text-xs rounded-xl border border-red-200 hover:border-red-500 transition-all">
+                            <i class="fas fa-undo text-xs"></i>
+                            Annuler
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        })
+        .catch(() => {
+            document.getElementById('annul-loading').classList.add('hidden');
+            document.getElementById('annul-list').innerHTML =
+                '<p class="text-xs text-red-500 text-center py-4">Erreur de chargement.</p>';
+            document.getElementById('annul-content').classList.remove('hidden');
+        });
+}
+
+function closeAnnulModal() {
+    annulPanel.classList.remove('translate-y-0','opacity-100');
+    annulPanel.classList.add('translate-y-8','opacity-0');
+    setTimeout(() => { annulOverlay.classList.add('hidden'); document.body.classList.remove('overflow-hidden'); }, 250);
+}
+function closeAnnulIfBackdrop(e) { if (e.target === annulOverlay) closeAnnulModal(); }
+
+function demanderAnnulation(item) {
+    pendingAnnulation = item;
+    document.getElementById('annul-confirm-text').innerHTML =
+        `Annuler le transfert de <strong>${item.count} élève(s)</strong> de <strong>${item.source_class_name}</strong> vers <strong>${item.target_class_name}</strong> (${item.target_year_name}) ?`;
+    annulConfirmOverlay.classList.remove('hidden');
+}
+
+function closeAnnulConfirm() {
+    annulConfirmOverlay.classList.add('hidden');
+    pendingAnnulation = null;
+}
+
+function executerAnnulation() {
+    if (!pendingAnnulation) return;
+    const btn = document.getElementById('annul-confirm-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>En cours...';
+
+    fetch(URL_ANNULER, {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json', 'X-CSRF-TOKEN':CSRF, 'X-Requested-With':'XMLHttpRequest' },
+        body: JSON.stringify({
+            source_class_id: pendingAnnulation.source_class_id,
+            student_ids: pendingAnnulation.student_ids,
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-undo mr-1"></i>Confirmer';
+        closeAnnulConfirm();
+        if (data.success) {
+            closeAnnulModal();
+            alert('✅ ' + data.message);
+            location.reload();
+        } else {
+            alert('Erreur : ' + (data.error || 'Une erreur est survenue.'));
+        }
+    })
+    .catch(() => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-undo mr-1"></i>Confirmer';
+        alert('Erreur réseau. Réessayez.');
+    });
+}
+
 // ── Modal Composition ──────────────────────────────────────────────
 const overlay = document.getElementById('composition-overlay');
 const panel   = document.getElementById('composition-panel');
