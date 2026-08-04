@@ -113,6 +113,8 @@ class NotesEvaluationController extends Controller{
         $entityId = (int) $request->query('entity_id');
         $yearId   = (int) $request->query('year_id');
 
+        $yearId   = $yearId-1;
+
         $classes = Classe::where('entity_id', $entityId)
             ->where('academic_year_id', $yearId)
             ->orderBy('name')
