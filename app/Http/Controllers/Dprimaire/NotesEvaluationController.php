@@ -138,21 +138,29 @@ class NotesEvaluationController extends Controller{
 
         $activeYear = AcademicYear::where('active', true)->firstOrFail();
 
+        // Déconnecter pour avoir une connexion PostgreSQL propre (évite 25P02)
+        try { DB::disconnect('pgsql'); } catch (\Throwable $ignored) {}
+        $activeYear = AcademicYear::where('active', true)->firstOrFail();
+
+        // Pré-charger les snapshots + élèves hors transaction
+        $snapshots = \App\Models\StudentAcademicRecord::whereIn('student_id', $request->student_ids)
+            ->where('academic_year_id', $activeYear->id)
+            ->where('statut_deliberation', 'passed')
+            ->get()
+            ->keyBy('student_id');
+
+        $students = \App\Models\Student::whereIn('id', $request->student_ids)
+            ->get()->keyBy('id');
+
         DB::beginTransaction();
         try {
             $restoredCount = 0;
 
             foreach ($request->student_ids as $studentId) {
-                // Récupérer le snapshot de l'année active
-                $snapshot = \App\Models\StudentAcademicRecord::where('student_id', $studentId)
-                    ->where('academic_year_id', $activeYear->id)
-                    ->where('statut_deliberation', 'passed')
-                    ->first();
+                $snapshot = $snapshots[$studentId] ?? null;
+                $student  = $students[$studentId] ?? null;
 
-                if (!$snapshot) continue;
-
-                $student = \App\Models\Student::find($studentId);
-                if (!$student) continue;
+                if (!$snapshot || !$student) continue;
 
                 // Remettre l'élève dans sa classe/année/entité d'origine
                 $student->update([
@@ -254,8 +262,6 @@ class NotesEvaluationController extends Controller{
         $targetEntityId  = (int) $request->target_entity_id;
 
         // ── S'assurer que la classe de destination existe dans la nouvelle année ──
-        // Si l'utilisateur a sélectionné une classe d'une autre année (ex: année active),
-        // on la crée automatiquement dans l'année cible avec firstOrCreate.
         $targetClass = Classe::firstOrCreate(
             [
                 'name'             => $targetClassRef->name,
@@ -270,45 +276,66 @@ class NotesEvaluationController extends Controller{
             ]
         );
 
-        // Pré-charger les paiements hors transaction pour éviter l'erreur 25P02
-        $paiementsParEleve = [];
+        // ── Pré-charger TOUT hors transaction pour éviter 25P02 sur PostgreSQL ──
+        // Sur AlwaysData, les connexions sont persistantes. Si une requête précédente
+        // a échoué, PostgreSQL bloque toute la session. Les snapshots (updateOrCreate)
+        // font un SELECT interne → ils DOIVENT être hors transaction.
+        try { DB::disconnect('pgsql'); } catch (\Throwable $ignored) {}
+
+        // Recharger les modèles après reconnexion
+        $activeYear     = AcademicYear::where('active', true)->firstOrFail();
+        $targetYear     = AcademicYear::findOrFail($request->target_academic_year_id);
+        $targetClass    = Classe::firstOrCreate(
+            ['name' => $targetClassRef->name, 'entity_id' => $targetEntityId, 'academic_year_id' => $targetYear->id],
+            ['school_fees' => $targetClassRef->school_fees, 'registration_fee' => $targetClassRef->registration_fee, 're_registration_fee' => $targetClassRef->re_registration_fee, 'description' => $targetClassRef->description]
+        );
+
+        // Pré-charger les élèves + paiements
+        $students = \App\Models\Student::whereIn('id', $request->student_ids)
+            ->with(['payments' => fn($q) => $q->where('academic_year_id', $activeYear->id)])
+            ->get()
+            ->keyBy('id');
+
+        // ── ÉTAPE 1 : Snapshots AVANT la transaction ──────────────────────────────
         foreach ($request->student_ids as $studentId) {
-            $paiementsParEleve[$studentId] = \App\Models\Student::find($studentId)
-                ?->payments()->where('academic_year_id', $activeYear->id)->sum('amount') ?? 0;
+            $student = $students[$studentId] ?? null;
+            if (!$student) continue;
+
+            $totalPaid = $student->payments->sum('amount');
+
+            \App\Models\StudentAcademicRecord::updateOrCreate(
+                ['student_id' => $student->id, 'academic_year_id' => $activeYear->id],
+                [
+                    'class_id'             => $student->class_id,
+                    'entity_id'            => $student->entity_id,
+                    'first_name'           => $student->first_name,
+                    'last_name'            => $student->last_name,
+                    'birth_date'           => $student->birth_date,
+                    'birth_place'          => $student->birth_place,
+                    'gender'               => $student->gender,
+                    'num_educ'             => $student->num_educ,
+                    'parent_full_name'     => $student->parent_full_name,
+                    'parent_email'         => $student->parent_email,
+                    'parent_phone'         => $student->parent_phone,
+                    'registration_type'    => $student->registration_type,
+                    'total_fees'           => $student->total_fees,
+                    'amount_paid'          => $totalPaid,
+                    'statut_deliberation'  => 'passed',
+                    'next_class_id'        => $targetClass->id,
+                    'next_academic_year_id'=> $targetYear->id,
+                    'is_validated'         => $student->is_validated,
+                    'archived_at'          => now(),
+                ]
+            );
         }
 
+        // ── ÉTAPE 2 : Déplacer les élèves DANS la transaction ─────────────────────
         DB::beginTransaction();
         try {
             foreach ($request->student_ids as $studentId) {
-                $student = \App\Models\Student::findOrFail($studentId);
+                $student = $students[$studentId] ?? null;
+                if (!$student) continue;
 
-                // Snapshot archive
-                \App\Models\StudentAcademicRecord::updateOrCreate(
-                    ['student_id' => $student->id, 'academic_year_id' => $activeYear->id],
-                    [
-                        'class_id'             => $student->class_id,
-                        'entity_id'            => $student->entity_id,
-                        'first_name'           => $student->first_name,
-                        'last_name'            => $student->last_name,
-                        'birth_date'           => $student->birth_date,
-                        'birth_place'          => $student->birth_place,
-                        'gender'               => $student->gender,
-                        'num_educ'             => $student->num_educ,
-                        'parent_full_name'     => $student->parent_full_name,
-                        'parent_email'         => $student->parent_email,
-                        'parent_phone'         => $student->parent_phone,
-                        'registration_type'    => $student->registration_type,
-                        'total_fees'           => $student->total_fees,
-                        'amount_paid'          => $paiementsParEleve[$studentId] ?? 0,
-                        'statut_deliberation'  => 'passed',
-                        'next_class_id'        => $targetClass->id,
-                        'next_academic_year_id'=> $targetYear->id,
-                        'is_validated'         => $student->is_validated,
-                        'archived_at'          => now(),
-                    ]
-                );
-
-                // Déplacer l'élève vers la classe et l'année de destination
                 $student->update([
                     'class_id'          => $targetClass->id,
                     'entity_id'         => $targetEntityId,
