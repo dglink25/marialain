@@ -354,24 +354,63 @@ class DeliberationController extends Controller{
                 ]);
             }
 
-            // ── ÉTAPE 5 : Copier class_teacher_subject ─────────────────────
-            // source → redoublants ; chaque cible → admis affectés
+            // ── ÉTAPE 5 : Copier les matières + class_teacher_subject ─────
+            // Map : nouvelle_classe_id → source_classe_id (ancienne année)
             $copieMap = [$sourceClassInTargetYear->id => $classId];
             foreach ($targetClassesInTargetYear as $origId => $newClass) {
                 $copieMap[$newClass->id] = $origId;
             }
+
+            // 1. Copier les subjects de l'ancienne année vers la nouvelle
+            //    et construire le mapping ancien_id → nouveau_id
+            $subjectIdMap = []; // ancien subject_id → nouveau subject_id
+
+            $allSourceClassIds = array_unique(array_values($copieMap)); // tous les class_id sources
+            $sourceSubjectIds = \App\Models\ClassTeacherSubject::whereIn('class_id', $allSourceClassIds)
+                ->where('academic_year_id', $activeYear->id)
+                ->pluck('subject_id')
+                ->unique()
+                ->toArray();
+
+            foreach ($sourceSubjectIds as $oldSubjectId) {
+                $oldSubject = \App\Models\Subject::find($oldSubjectId);
+                if (!$oldSubject) continue;
+
+                // Chercher si une matière du même nom existe déjà dans la nouvelle année
+                $newSubject = \App\Models\Subject::where('name', $oldSubject->name)
+                    ->where('academic_year_id', $targetYear->id)
+                    ->first();
+
+                if (!$newSubject) {
+                    $newSubject = \App\Models\Subject::create([
+                        'name'             => $oldSubject->name,
+                        'coefficient'      => $oldSubject->coefficient,
+                        'academic_year_id' => $targetYear->id,
+                        'classe_id'        => $oldSubject->classe_id,
+                    ]);
+                }
+
+                $subjectIdMap[$oldSubjectId] = $newSubject->id;
+            }
+
+            // 2. Copier les class_teacher_subject en utilisant les nouveaux subject_ids
             foreach ($copieMap as $newClassId => $srcId) {
                 $cts = \App\Models\ClassTeacherSubject::where('class_id', $srcId)
                     ->where('academic_year_id', $activeYear->id)->get();
                 foreach ($cts as $ct) {
+                    $newSubjectId = $subjectIdMap[$ct->subject_id] ?? $ct->subject_id;
                     $exists = \App\Models\ClassTeacherSubject::where('class_id', $newClassId)
-                        ->where('teacher_id', $ct->teacher_id)->where('subject_id', $ct->subject_id)
+                        ->where('teacher_id', $ct->teacher_id)
+                        ->where('subject_id', $newSubjectId)
                         ->where('academic_year_id', $targetYear->id)->exists();
                     if (!$exists) {
                         \App\Models\ClassTeacherSubject::create([
-                            'class_id' => $newClassId, 'academic_year_id' => $targetYear->id,
-                            'teacher_id' => $ct->teacher_id, 'subject_id' => $ct->subject_id,
-                            'coefficient' => $ct->coefficient, 'amount_brut' => $ct->amount_brut ?? '0.00',
+                            'class_id'         => $newClassId,
+                            'academic_year_id' => $targetYear->id,
+                            'teacher_id'       => $ct->teacher_id,
+                            'subject_id'       => $newSubjectId,
+                            'coefficient'      => $ct->coefficient,
+                            'amount_brut'      => $ct->amount_brut ?? '0.00',
                         ]);
                     }
                 }
