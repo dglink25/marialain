@@ -24,14 +24,17 @@ class AppServiceProvider extends ServiceProvider{
 
         Student::saved(function ($student) {
             if ($student->parent_phone) {
-                $parent = ParentUser::updateOrCreate(
-                    ['phone' => $student->parent_phone],
-                    [
-                        'full_name' => $student->parent_full_name ?? 'Parent ' . $student->parent_phone,
-                        'email' => $student->parent_email,
-                        // Ne pas écraser le mot de passe existant
-                    ]
-                );
+                // afterCommit : s'exécute APRÈS le commit de la transaction
+                // pour éviter l'erreur PostgreSQL 25P02 sur AlwaysData
+                \Illuminate\Support\Facades\DB::afterCommit(function () use ($student) {
+                    ParentUser::updateOrCreate(
+                        ['phone' => $student->parent_phone],
+                        [
+                            'full_name' => $student->parent_full_name ?? 'Parent ' . $student->parent_phone,
+                            'email'     => $student->parent_email,
+                        ]
+                    );
+                });
             }
         });
     
