@@ -407,6 +407,38 @@ class DeliberationController extends Controller{
                 }
             }
 
+            // ── ÉTAPE 8 : Copier les invitations des enseignants ──────────
+            // Pour chaque nouvelle classe (cibles + source redoublants),
+            // dupliquer les invitations acceptées de la classe source
+            // vers la nouvelle année, liées à la nouvelle classe.
+            foreach ($copieMap as $newClassId => $srcId) {
+                $invitations = \App\Models\TeacherInvitation::where('classe_id', $srcId)
+                    ->where('academic_year_id', $activeYear->id)
+                    ->where('accepted', true)
+                    ->get();
+
+                foreach ($invitations as $inv) {
+                    $exists = \App\Models\TeacherInvitation::where('user_id', $inv->user_id)
+                        ->where('classe_id', $newClassId)
+                        ->where('academic_year_id', $targetYear->id)
+                        ->exists();
+
+                    if (!$exists) {
+                        \App\Models\TeacherInvitation::create([
+                            'user_id'          => $inv->user_id,
+                            'name'             => $inv->name,
+                            'email'            => $inv->email,
+                            'token'            => \Illuminate\Support\Str::random(32),
+                            'academic_year_id' => $targetYear->id,
+                            'censeur_id'       => $inv->censeur_id,
+                            'classe_id'        => $newClassId,
+                            'accepted'         => true,
+                            'accepted_at'      => $inv->accepted_at,
+                        ]);
+                    }
+                }
+            }
+
             DB::commit();
 
             return response()->json([
