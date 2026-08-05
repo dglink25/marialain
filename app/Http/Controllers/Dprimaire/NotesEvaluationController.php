@@ -212,34 +212,20 @@ class NotesEvaluationController extends Controller{
         return response()->json($eleves);
     }
 
-    /** AJAX — classes disponibles dans un cycle (entity_id) pour une année
-     *  Si aucune classe n'existe encore dans cette année pour ce cycle,
-     *  on retourne les classes du même cycle depuis l'année active comme référence.
+    /** AJAX — classes du cycle sélectionné depuis l'année ACTIVE
+     *  (ce sont ces classes qui seront créées automatiquement dans l'année cible)
      */
     public function getClassesDestination(\Illuminate\Http\Request $request): \Illuminate\Http\JsonResponse
     {
         $entityId = (int) $request->query('entity_id');
-        $yearId   = (int) $request->query('year_id');
 
-        // Classes dans l'année cible
+        // Toujours depuis l'année active — indépendamment de l'année cible
+        $activeYearId = AcademicYear::where('active', true)->value('id');
+
         $classes = Classe::where('entity_id', $entityId)
-            ->where('academic_year_id', $yearId)
+            ->where('academic_year_id', $activeYearId)
             ->orderBy('name')
             ->get(['id', 'name']);
-
-        // Si aucune classe dans l'année cible, proposer les classes
-        // de l'année active comme référence (elles seront créées automatiquement)
-        if ($classes->isEmpty()) {
-            $activeYearId = AcademicYear::where('active', true)->value('id');
-            $classes = Classe::where('entity_id', $entityId)
-                ->where('academic_year_id', $activeYearId)
-                ->orderBy('name')
-                ->get(['id', 'name'])
-                ->map(function ($c) {
-                    $c->name = $c->name . ' (sera créée)';
-                    return $c;
-                });
-        }
 
         return response()->json($classes);
     }

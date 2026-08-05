@@ -560,7 +560,7 @@
                     </div>
                 </div>
 
-                {{-- Étape 4 : Cycle de destination --}}
+                    {{-- Étape 4 : Cycle de destination --}}
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">
                         <span class="inline-flex items-center justify-center w-5 h-5 bg-amber-500 text-white rounded-full text-xs font-bold mr-1.5">4</span>
@@ -581,11 +581,16 @@
                     <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">
                         <span class="inline-flex items-center justify-center w-5 h-5 bg-amber-500 text-white rounded-full text-xs font-bold mr-1.5">5</span>
                         Classe de destination
+                        <span class="normal-case font-normal text-slate-400 ml-1">(sera créée dans la nouvelle année)</span>
                     </label>
                     <select id="deli-target-class"
                             class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors">
-                        <option value="">— Choisissez d'abord le cycle et l'année —</option>
+                        <option value="">— Choisissez d'abord le cycle —</option>
                     </select>
+                    <p class="text-xs text-slate-400 mt-1">
+                        <i class="fas fa-magic mr-1 text-amber-400"></i>
+                        Si la classe n'existe pas encore dans l'année de destination, elle sera créée automatiquement.
+                    </p>
                     <div id="deli-classes-loader" class="hidden mt-1 text-xs text-slate-400 flex items-center gap-1">
                         <div class="w-3 h-3 border border-amber-400 border-t-transparent rounded-full animate-spin"></div>
                         Chargement des classes...
@@ -614,93 +619,7 @@
     </div>
 </div>
 
-            {{-- Header (fixe) --}}
-            <div class="shrink-0 flex items-center justify-between px-4 sm:px-6 pt-5 sm:pt-6 pb-4 border-b border-gray-100 bg-white sm:rounded-t-2xl">
-                <div class="flex items-center gap-3 min-w-0">
-                    <div class="w-9 h-9 bg-purple-600 rounded-xl flex items-center justify-center shrink-0">
-                        <i class="fas fa-calendar-plus text-white text-sm"></i>
-                    </div>
-                    <div class="min-w-0">
-                        <h2 class="text-base sm:text-lg font-bold text-gray-900 truncate">Programmer une composition</h2>
-                        <p class="text-xs text-gray-400 truncate">{{ $annee_academique->name }}</p>
-                    </div>
-                </div>
-                <button type="button" onclick="closeModal()"
-                        class="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors shrink-0">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                </button>
-            </div>
-
-            {{-- Form --}}
-            <form action="{{ route('primaire.notes.composition.store') }}" method="POST" class="flex flex-col flex-1 min-h-0">
-                @csrf
-
-                {{-- Corps (scrollable) --}}
-                <div class="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6 py-5 space-y-5">
-
-                    {{-- Champ 1 : Classes --}}
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">
-                            <i class="fas fa-school text-purple-500 mr-1"></i>
-                            Classes concernées <span class="text-red-500">*</span>
-                        </label>
-                        <div class="border border-gray-200 rounded-xl p-3 bg-gray-50 max-h-48 overflow-y-auto space-y-1.5">
-                            {{-- Sélectionner tout --}}
-                            <label class="flex items-center gap-2 cursor-pointer text-sm font-semibold text-purple-700 pb-1.5 border-b border-gray-200 mb-1">
-                                <input type="checkbox" id="select-all" class="rounded border-gray-300 text-purple-600 focus:ring-purple-500">
-                                Toutes les classes
-                            </label>
-
-                            {{-- Primaire --}}
-                            @if($classesPrimaire->count())
-                            <p class="text-[10px] uppercase tracking-wider text-gray-400 font-semibold pt-1">Primaire</p>
-                            @foreach($classesPrimaire as $classe)
-                            <label class="flex items-center gap-2 cursor-pointer text-sm text-gray-700 hover:bg-white rounded-lg px-2 py-1 transition-colors">
-                                <input type="checkbox" name="classe_ids[]" value="{{ $classe->id }}"
-                                       class="classe-checkbox rounded border-gray-300 text-purple-600 focus:ring-purple-500">
-                                {{ $classe->name }}
-                            </label>
-                            @endforeach
-                            @endif
-
-                            {{-- Maternelle --}}
-                            @if($classesMaternelle->count())
-                            <p class="text-[10px] uppercase tracking-wider text-gray-400 font-semibold pt-1">Maternelle</p>
-                            @foreach($classesMaternelle as $classe)
-                            <label class="flex items-center gap-2 cursor-pointer text-sm text-gray-700 hover:bg-white rounded-lg px-2 py-1 transition-colors">
-                                <input type="checkbox" name="classe_ids[]" value="{{ $classe->id }}"
-                                       class="classe-checkbox rounded border-gray-300 text-purple-600 focus:ring-purple-500">
-                                {{ $classe->name }}
-                            </label>
-                            @endforeach
-                            @endif
-                        </div>
-                        @error('classe_ids')
-                        <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    {{-- Champ 2 : Mois --}}
-                    <div>
-                        <label for="mois" class="block text-sm font-semibold text-gray-700 mb-1.5">
-                            <i class="fas fa-calendar text-purple-500 mr-1"></i>
-                            Composition du mois de <span class="text-red-500">*</span>
-                        </label>
-                        <select id="mois" name="mois" required
-                                class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors">
-                            <option value="">— Choisir un mois —</option>
-                            @foreach($moisNoms as $num => $nom)
-                            <option value="{{ $num }}" {{ old('mois') == $num ? 'selected' : '' }}>{{ $nom }}</option>
-                            @endforeach
-                        </select>
-                        @error('mois')
-                        <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    {{-- Champ 3 : Période de composition — dates --}}
+  
 @endsection
 
 @section('scripts')
@@ -960,21 +879,17 @@ function deliToutSelectionner() {
     document.querySelector('[onclick="deliToutSelectionner()"]').textContent = allChecked ? 'Tout sélectionner' : 'Tout désélectionner';
 }
 
-// Charger les classes de destination selon cycle + année
+// Charger les classes de destination selon le cycle (toujours depuis l'année active)
 function deliChargerClassesDest() {
     const entityId = document.getElementById('deli-target-entity').value;
-    const yearId   = document.getElementById('deli-target-year').value;
     const sel      = document.getElementById('deli-target-class');
     const loader   = document.getElementById('deli-classes-loader');
 
-    sel.innerHTML = '<option value="">— Chargement... —</option>';
-    if (!entityId || !yearId) {
-        sel.innerHTML = '<option value="">— Choisissez d\'abord le cycle et l\'année —</option>';
-        return;
-    }
+    sel.innerHTML = '<option value="">— Choisissez d\'abord le cycle —</option>';
+    if (!entityId) return;
 
     loader.classList.remove('hidden');
-    fetch(`${URL_CLASSES}?entity_id=${entityId}&year_id=${yearId}`, { headers: {'X-Requested-With':'XMLHttpRequest'} })
+    fetch(`${URL_CLASSES}?entity_id=${entityId}`, { headers: {'X-Requested-With':'XMLHttpRequest'} })
         .then(r => r.json())
         .then(classes => {
             loader.classList.add('hidden');
