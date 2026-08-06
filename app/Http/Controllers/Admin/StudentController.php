@@ -168,9 +168,13 @@ class StudentController extends Controller{
 
 
 
-    // Méthode pour récupérer les classes par entité
+    // Méthode pour récupérer les classes par entité (année active uniquement)
     public function getClassesByEntity($entity_id){
-        $classes = Classe::where('entity_id', $entity_id)->get();
+        $activeYear = AcademicYear::where('active', true)->firstOrFail();
+        $classes = Classe::where('entity_id', $entity_id)
+            ->where('academic_year_id', $activeYear->id)
+            ->orderBy('name')
+            ->get(['id', 'name']);
         return response()->json($classes);
     }
 
@@ -261,8 +265,9 @@ class StudentController extends Controller{
             return $this->checkActiveYear();
         }
 
-        $entities = Entity::all();
-        $classes  = Classe::all();
+        $activeYear = AcademicYear::where('active', true)->first();
+        $entities   = Entity::all();
+        $classes    = Classe::where('academic_year_id', $activeYear->id)->get();
         return view('admin.students.create', compact('entities', 'classes'));
     }
 
@@ -388,8 +393,9 @@ class StudentController extends Controller{
             return $this->checkActiveYear();
         }
 
-        $entities = Entity::all();
-        $classes  = Classe::all(); 
+        $activeYear = AcademicYear::where('active', true)->first();
+        $entities   = Entity::all();
+        $classes    = Classe::where('academic_year_id', $activeYear->id)->get();
         return view('admin.students.inscription', compact('entities', 'classes'));
     }
 
