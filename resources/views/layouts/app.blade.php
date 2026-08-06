@@ -330,117 +330,166 @@
                                     @break
 
                                 @case('secretaire')
-                                    <a href="{{ route('secretaire.dashboard') }}" class="flex items-center px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('secretaire.dashboard') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}"> 
+                                    <a href="{{ route('secretaire.dashboard') }}" class="flex items-center px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('secretaire.dashboard') ? 'bg-[#ffffff36] font-bold' : '' }}"> 
                                         <i class="fas fa-tachometer-alt w-5"></i> 
                                         <span class="ml-2">Tableau de bord</span>
                                     </a>
 
-                                    <a href="{{ route('subject.teachers.active') }}" class="flex items-center px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('censeur.subjects.index') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
-                                        <i class="fas fa-book-open w-5"></i>
-                                        <span class="ml-2">Enseignants par matière</span>
-                                    </a>
-                                    
-                                    <div x-data="{ open: false }" class="space-y-1">
-                                        <!-- Lien principal -->
+                                    {{-- Élèves --}}
+                                    <div x-data="{ open: {{ request()->routeIs('admin.students.*') || request()->routeIs('students.create') ? 'true' : 'false' }} }" class="space-y-1">
                                         <button @click="open = !open" class="w-full flex items-center px-3 py-3 rounded-md hover:bg-[#63c6ff70] transition text-left">
                                             <i class="fas fa-users-cog w-5"></i>
-                                            <span class="ml-2 font-semibold">Elèves</span>
+                                            <span class="ml-2 font-semibold">Élèves</span>
                                             <i class="fas fa-chevron-down ml-auto transition-transform duration-300" :class="{ 'rotate-180': open }"></i>
                                         </button>
-
-                                        <!-- Sous-liens -->
-                                        <div x-show="open" x-transition class="pl-6 space-y-2">
-                                            <a href="{{ route('admin.students.pending') }}" class="flex items-center px-3 py-2 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('admin.students.pending') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
-                                                <i class="far fa-circle w-5"></i>
-                                                <span class="ml-2">En attente</span>
+                                        <div x-show="open" x-transition class="pl-6 space-y-1">
+                                            <a href="{{ route('admin.students.create') }}" class="flex items-center px-3 py-2 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('students.create') ? 'bg-[#ffffff36] font-bold' : '' }}">
+                                                <i class="far fa-circle w-4"></i><span class="ml-2">Inscription</span>
                                             </a>
-                                            <a href="{{ route('admin.students.index') }}" class="flex items-center px-3 py-2 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('admin.students.index') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
-                                                <i class="far fa-circle w-5"></i>
-                                                <span class="ml-2">Inscrits</span>
+                                            <a href="{{ route('admin.students.pending') }}" class="flex items-center px-3 py-2 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('admin.students.pending') ? 'bg-[#ffffff36] font-bold' : '' }}">
+                                                <i class="far fa-circle w-4"></i><span class="ml-2">En attente</span>
+                                            </a>
+                                            <a href="{{ route('admin.students.index') }}" class="flex items-center px-3 py-2 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('admin.students.index') ? 'bg-[#ffffff36] font-bold' : '' }}">
+                                                <i class="far fa-circle w-4"></i><span class="ml-2">Inscrits</span>
                                             </a>
                                         </div>
                                     </div>
-                                    <a href="{{ route('admin.classes.index') }}" class="flex items-center px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('admin.classes.index') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
-                                        <i class="fas fa-school w-5"></i>
-                                        <span class="ml-2">Classes</span>
-                                    </a>
-                                    <a href="{{ route('censeur.notes.index') }}"
-                                        class="flex items-center px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('censeur.notes.index') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
-                                        <i class="fas fa-sticky-note w-5"></i>
-                                        <span class="ml-2">Notes Secondaire</span>
-                                    </a>
 
-                                     <a href="{{ route('primaire.notes.index') }}"
-                                        class="flex items-center px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('primaire.notes.*') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
-                                        <i class="fas fa-clipboard-list w-5"></i>
-                                        <span class="ml-2">Notes Primaire</span>
-                                    </a>
+                                    {{-- Collège --}}
+                                    <div x-data="{ open: {{ request()->routeIs('censeur.*') || request()->routeIs('admin.classes.*') ? 'true' : 'false' }} }" class="space-y-1">
+                                        <button @click="open = !open" class="w-full flex items-center px-3 py-3 rounded-md hover:bg-[#63c6ff70] transition text-left">
+                                            <i class="fas fa-school w-5"></i>
+                                            <span class="ml-2 font-semibold">Collège</span>
+                                            <i class="fas fa-chevron-down ml-auto transition-transform duration-300" :class="{ 'rotate-180': open }"></i>
+                                        </button>
+                                        <div x-show="open" x-transition class="pl-6 space-y-1">
+                                            <a href="{{ route('admin.classes.index') }}" class="flex items-center px-3 py-2 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('admin.classes.index') ? 'bg-[#ffffff36] font-bold' : '' }}">
+                                                <i class="far fa-circle w-4"></i><span class="ml-2">Classes</span>
+                                            </a>
+                                            <a href="{{ route('censeur.invitations.index') }}" class="flex items-center px-3 py-2 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('censeur.invitations.index') ? 'bg-[#ffffff36] font-bold' : '' }}">
+                                                <i class="far fa-circle w-4"></i><span class="ml-2">Enseignants</span>
+                                            </a>
+                                            <a href="{{ route('censeur.subjects.index') }}" class="flex items-center px-3 py-2 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('censeur.subjects.index') ? 'bg-[#ffffff36] font-bold' : '' }}">
+                                                <i class="far fa-circle w-4"></i><span class="ml-2">Matières</span>
+                                            </a>
+                                            <a href="{{ route('censeur.classes.index') }}" class="flex items-center px-3 py-2 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('censeur.classes.index') ? 'bg-[#ffffff36] font-bold' : '' }}">
+                                                <i class="far fa-circle w-4"></i><span class="ml-2">Emplois du temps</span>
+                                            </a>
+                                            <a href="{{ route('censeur.notes.index') }}" class="flex items-center px-3 py-2 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('censeur.notes.index') ? 'bg-[#ffffff36] font-bold' : '' }}">
+                                                <i class="far fa-circle w-4"></i><span class="ml-2">Notes</span>
+                                            </a>
+                                            <a href="{{ route('subject.teachers.active') }}" class="flex items-center px-3 py-2 rounded-md hover:bg-[#ffffff36] transition">
+                                                <i class="far fa-circle w-4"></i><span class="ml-2">Enseignants/Matières</span>
+                                            </a>
+                                        </div>
+                                    </div>
+
+                                    {{-- Primaire --}}
+                                    <div x-data="{ open: {{ request()->routeIs('primaire.*') ? 'true' : 'false' }} }" class="space-y-1">
+                                        <button @click="open = !open" class="w-full flex items-center px-3 py-3 rounded-md hover:bg-[#63c6ff70] transition text-left">
+                                            <i class="fas fa-child w-5"></i>
+                                            <span class="ml-2 font-semibold">Primaire</span>
+                                            <i class="fas fa-chevron-down ml-auto transition-transform duration-300" :class="{ 'rotate-180': open }"></i>
+                                        </button>
+                                        <div x-show="open" x-transition class="pl-6 space-y-1">
+                                            <a href="{{ route('primaire.classe.classes') }}" class="flex items-center px-3 py-2 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('primaire.classe.classes') ? 'bg-[#ffffff36] font-bold' : '' }}">
+                                                <i class="far fa-circle w-4"></i><span class="ml-2">Classes</span>
+                                            </a>
+                                            <a href="{{ route('primaire.enseignants.enseignants') }}" class="flex items-center px-3 py-2 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('primaire.enseignants.enseignants') ? 'bg-[#ffffff36] font-bold' : '' }}">
+                                                <i class="far fa-circle w-4"></i><span class="ml-2">Enseignants</span>
+                                            </a>
+                                            <a href="{{ route('primaire.ecoliers.liste') }}" class="flex items-center px-3 py-2 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('primaire.ecoliers.liste') ? 'bg-[#ffffff36] font-bold' : '' }}">
+                                                <i class="far fa-circle w-4"></i><span class="ml-2">Écoliers</span>
+                                            </a>
+                                            <a href="{{ route('primaire.notes.index') }}" class="flex items-center px-3 py-2 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('primaire.notes.*') ? 'bg-[#ffffff36] font-bold' : '' }}">
+                                                <i class="far fa-circle w-4"></i><span class="ml-2">Notes</span>
+                                            </a>
+                                        </div>
+                                    </div>
 
                                     @break
 
                                 @case('super_admin')
-                                    <a href="{{ route('students.create') }}" class="flex items-center px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('students.create') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
-                                        <i class="fa fa-user-plus w-5"></i> 
-                                        <span class="ml-2">Inscription</span>
-                                    </a>
-                                    <a href="{{ route('admin.dashboard') }}" class="flex items-center px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('admin.dashboard') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}"> 
+                                    <a href="{{ route('admin.dashboard') }}" class="flex items-center px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('admin.dashboard') ? 'bg-[#ffffff36] font-bold' : '' }}"> 
                                         <i class="fas fa-tachometer-alt w-5"></i>
                                         <span class="ml-2">Tableau de bord</span>
                                     </a>
-                                    <a href="{{ route('admin.academic_years.index') }}" class="flex items-center px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('admin.academic_years.index') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
+                                    <a href="{{ route('admin.academic_years.index') }}" class="flex items-center px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('admin.academic_years.index') ? 'bg-[#ffffff36] font-bold' : '' }}">
                                         <i class="fas fa-calendar-alt w-5"></i>
                                         <span class="ml-2">Années académiques</span>
                                     </a>
 
-                                    <a href="{{ route('subject.teachers.active') }}" class="flex items-center px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('censeur.subjects.index') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
-                                        <i class="fas fa-book-open w-5"></i>
-                                        <span class="ml-2">Enseignants par matière</span>
-                                    </a>
-                                    
-                                    <div x-data="{ open: false }" class="space-y-1">
-                                        <!-- Lien principal -->
+                                    {{-- Élèves --}}
+                                    <div x-data="{ open: {{ request()->routeIs('admin.students.*') || request()->routeIs('students.create') ? 'true' : 'false' }} }" class="space-y-1">
                                         <button @click="open = !open" class="w-full flex items-center px-3 py-3 rounded-md hover:bg-[#63c6ff70] transition text-left">
                                             <i class="fas fa-users-cog w-5"></i>
-                                            <span class="ml-2 font-semibold">Elèves</span>
+                                            <span class="ml-2 font-semibold">Élèves</span>
                                             <i class="fas fa-chevron-down ml-auto transition-transform duration-300" :class="{ 'rotate-180': open }"></i>
                                         </button>
-
-                                        <!-- Sous-liens -->
-                                        <div x-show="open" x-transition class="pl-6 space-y-2">
-                                            <a href="{{ route('admin.students.pending') }}" class="flex items-center px-3 py-2 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('admin.students.pending') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
-                                                <i class="far fa-circle w-5"></i>
-                                                <span class="ml-2">En attente</span>
+                                        <div x-show="open" x-transition class="pl-6 space-y-1">
+                                            <a href="{{ route('admin.students.create') }}" class="flex items-center px-3 py-2 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('students.create') ? 'bg-[#ffffff36] font-bold' : '' }}">
+                                                <i class="far fa-circle w-4"></i><span class="ml-2">Inscription</span>
                                             </a>
-                                            <a href="{{ route('admin.students.index') }}" class="flex items-center px-3 py-2 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('admin.students.index') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
-                                                <i class="far fa-circle w-5"></i>
-                                                <span class="ml-2">Inscrits</span>
+                                            <a href="{{ route('admin.students.pending') }}" class="flex items-center px-3 py-2 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('admin.students.pending') ? 'bg-[#ffffff36] font-bold' : '' }}">
+                                                <i class="far fa-circle w-4"></i><span class="ml-2">En attente</span>
+                                            </a>
+                                            <a href="{{ route('admin.students.index') }}" class="flex items-center px-3 py-2 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('admin.students.index') ? 'bg-[#ffffff36] font-bold' : '' }}">
+                                                <i class="far fa-circle w-4"></i><span class="ml-2">Inscrits</span>
                                             </a>
                                         </div>
                                     </div>
-                                    <a href="{{ route('admin.classes.index') }}" class="flex items-center px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('admin.classes.index') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
-                                        <i class="fas fa-school w-5"></i>
-                                        <span class="ml-2">Classes</span>
-                                    </a>
 
-                                    <a href="{{ route('censeur.invitations.index') }}" class="flex items-center px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('censeur.invitations.index') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
-                                        <i class="fas fa-chalkboard-teacher w-5"></i>
-                                        <span class="ml-2">Invitations</span>
-                                    </a>
-                                    <a href="{{ route('censeur.classes.index') }}" class="flex items-center px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('censeur.classes.index') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
-                                        <i class="fas fa-list w-5"></i>
-                                        <span class="ml-2">Gestion Emploi du temps</span>
-                                    </a>
-                                    <a href="{{ route('censeur.notes.index') }}"
-                                        class="flex items-center px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('censeur.notes.index') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
-                                        <i class="fas fa-sticky-note w-5"></i>
-                                        <span class="ml-2">Notes Secondaire</span>
-                                    </a>
+                                    {{-- Collège --}}
+                                    <div x-data="{ open: {{ request()->routeIs('censeur.*') || request()->routeIs('admin.classes.*') ? 'true' : 'false' }} }" class="space-y-1">
+                                        <button @click="open = !open" class="w-full flex items-center px-3 py-3 rounded-md hover:bg-[#63c6ff70] transition text-left">
+                                            <i class="fas fa-school w-5"></i>
+                                            <span class="ml-2 font-semibold">Collège</span>
+                                            <i class="fas fa-chevron-down ml-auto transition-transform duration-300" :class="{ 'rotate-180': open }"></i>
+                                        </button>
+                                        <div x-show="open" x-transition class="pl-6 space-y-1">
+                                            <a href="{{ route('admin.classes.index') }}" class="flex items-center px-3 py-2 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('admin.classes.index') ? 'bg-[#ffffff36] font-bold' : '' }}">
+                                                <i class="far fa-circle w-4"></i><span class="ml-2">Classes</span>
+                                            </a>
+                                            <a href="{{ route('censeur.invitations.index') }}" class="flex items-center px-3 py-2 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('censeur.invitations.index') ? 'bg-[#ffffff36] font-bold' : '' }}">
+                                                <i class="far fa-circle w-4"></i><span class="ml-2">Enseignants</span>
+                                            </a>
+                                            <a href="{{ route('censeur.subjects.index') }}" class="flex items-center px-3 py-2 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('censeur.subjects.index') ? 'bg-[#ffffff36] font-bold' : '' }}">
+                                                <i class="far fa-circle w-4"></i><span class="ml-2">Matières</span>
+                                            </a>
+                                            <a href="{{ route('censeur.classes.index') }}" class="flex items-center px-3 py-2 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('censeur.classes.index') ? 'bg-[#ffffff36] font-bold' : '' }}">
+                                                <i class="far fa-circle w-4"></i><span class="ml-2">Emplois du temps</span>
+                                            </a>
+                                            <a href="{{ route('censeur.notes.index') }}" class="flex items-center px-3 py-2 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('censeur.notes.index') ? 'bg-[#ffffff36] font-bold' : '' }}">
+                                                <i class="far fa-circle w-4"></i><span class="ml-2">Notes</span>
+                                            </a>
+                                            <a href="{{ route('subject.teachers.active') }}" class="flex items-center px-3 py-2 rounded-md hover:bg-[#ffffff36] transition">
+                                                <i class="far fa-circle w-4"></i><span class="ml-2">Enseignants/Matières</span>
+                                            </a>
+                                        </div>
+                                    </div>
 
-                                    <a href="{{ route('primaire.notes.index') }}"
-                                        class="flex items-center px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('primaire.notes.*') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
-                                        <i class="fas fa-clipboard-list w-5"></i>
-                                        <span class="ml-2">Notes Primaire</span>
-                                    </a>
+                                    {{-- Primaire --}}
+                                    <div x-data="{ open: {{ request()->routeIs('primaire.*') ? 'true' : 'false' }} }" class="space-y-1">
+                                        <button @click="open = !open" class="w-full flex items-center px-3 py-3 rounded-md hover:bg-[#63c6ff70] transition text-left">
+                                            <i class="fas fa-child w-5"></i>
+                                            <span class="ml-2 font-semibold">Primaire</span>
+                                            <i class="fas fa-chevron-down ml-auto transition-transform duration-300" :class="{ 'rotate-180': open }"></i>
+                                        </button>
+                                        <div x-show="open" x-transition class="pl-6 space-y-1">
+                                            <a href="{{ route('primaire.classe.classes') }}" class="flex items-center px-3 py-2 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('primaire.classe.classes') ? 'bg-[#ffffff36] font-bold' : '' }}">
+                                                <i class="far fa-circle w-4"></i><span class="ml-2">Classes</span>
+                                            </a>
+                                            <a href="{{ route('primaire.enseignants.enseignants') }}" class="flex items-center px-3 py-2 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('primaire.enseignants.enseignants') ? 'bg-[#ffffff36] font-bold' : '' }}">
+                                                <i class="far fa-circle w-4"></i><span class="ml-2">Enseignants</span>
+                                            </a>
+                                            <a href="{{ route('primaire.ecoliers.liste') }}" class="flex items-center px-3 py-2 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('primaire.ecoliers.liste') ? 'bg-[#ffffff36] font-bold' : '' }}">
+                                                <i class="far fa-circle w-4"></i><span class="ml-2">Écoliers</span>
+                                            </a>
+                                            <a href="{{ route('primaire.notes.index') }}" class="flex items-center px-3 py-2 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('primaire.notes.*') ? 'bg-[#ffffff36] font-bold' : '' }}">
+                                                <i class="far fa-circle w-4"></i><span class="ml-2">Notes</span>
+                                            </a>
+                                        </div>
+                                    </div>
 
                                     @break
 

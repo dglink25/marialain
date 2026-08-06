@@ -143,11 +143,11 @@
                         </h2>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Entité *</label>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Cycle *</label>
                                 <select name="entity_id" id="entity_id" 
                                         class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200" 
                                         required>
-                                    <option value="">Sélectionnez une entité</option>
+                                    <option value="">Sélectionnez un cycle</option>
                                     @foreach($entities as $entity)
                                         <option value="{{ $entity->id }}" {{ old('entity_id') == $entity->id ? 'selected' : '' }}>
                                             {{ $entity->name }}
