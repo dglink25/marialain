@@ -163,7 +163,7 @@
                                 </label>
                                 <select name="coef" class="form-select @error('coef') is-invalid @enderror" required>
                                     <option value="">-- Sélectionner un coefficient --</option>
-                                    @for($i = 1; $i <= 10; $i++)
+                                    @for($i = 1; $i <= 20; $i++)
                                         <option value="{{ $i }}" 
                                             {{ old('coef', $coef) == $i ? 'selected' : '' }}>
                                             Coef {{ $i }}
