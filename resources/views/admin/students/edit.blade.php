@@ -107,11 +107,11 @@
             </div>
 
             <div>
-                <label for="entity_id" class="block text-sm font-medium text-gray-700 mb-2">Entité *</label>
+                <label for="entity_id" class="block text-sm font-medium text-gray-700 mb-2">Cycle *</label>
                 <select name="entity_id" id="entity_id" 
                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
                         required>
-                    <option value="">-- Sélectionnez une entité --</option>
+                    <option value="">-- Sélectionnez un cycle --</option>
                     @foreach ($entities as $entity)
                         <option value="{{ $entity->id }}" 
                             {{ old('entity_id', $student->entity_id) == $entity->id ? 'selected' : '' }}>
@@ -127,13 +127,15 @@
                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
                         required>
                     <option value="">-- Sélectionnez une classe --</option>
+                    {{-- Options pré-chargées pour la classe actuelle --}}
                     @foreach ($classes as $classe)
                         <option value="{{ $classe->id }}" 
-                            {{ old('classe_id', $student->classe_id) == $classe->id ? 'selected' : '' }}>
-                            {{ $classe->name }} ({{ $classe->entity->name }})
+                            {{ old('class_id', $student->class_id) == $classe->id ? 'selected' : '' }}>
+                            {{ $classe->name }}
                         </option>
                     @endforeach
                 </select>
+                <p class="text-xs text-gray-500 mt-1">Sélectionnez d'abord le cycle pour filtrer les classes</p>
             </div>
 
             <!-- Informations du parent -->
@@ -188,41 +190,45 @@
 </div>
 
 <script>
-    // Gestion des classes dynamiques
     const entitySelect = document.getElementById('entity_id');
     const classeSelect = document.getElementById('classe_id');
+    const currentClassId = {{ old('class_id', $student->class_id) }};
 
-    entitySelect.addEventListener('change', function () {
-        const entityId = this.value;
-
-        // Charger les classes dynamiquement
-        if (entityId) {
-            fetch(`/admin/entities/${entityId}/classes`)
-                .then(res => res.json())
-                .then(data => {
-                    classeSelect.innerHTML = '<option value="">-- Sélectionnez une classe --</option>';
-                    data.forEach(cls => {
-                        const selected = cls.id == {{ old('classe_id', $student->classe_id) }} ? 'selected' : '';
-                        classeSelect.innerHTML += `<option value="${cls.id}" ${selected}>${cls.name}</option>`;
-                    });
-                })
-                .catch(error => {
-                    console.error('Erreur lors du chargement des classes:', error);
-                });
-        } else {
+    function loadClasses(entityId, selectedClassId) {
+        if (!entityId) {
             classeSelect.innerHTML = '<option value="">-- Sélectionnez une classe --</option>';
+            return;
+        }
+        classeSelect.innerHTML = '<option value="">Chargement...</option>';
+        fetch(`/admin/entities/${entityId}/classes`)
+            .then(res => res.json())
+            .then(data => {
+                classeSelect.innerHTML = '<option value="">-- Sélectionnez une classe --</option>';
+                if (!data.length) {
+                    classeSelect.innerHTML += '<option value="" disabled>Aucune classe disponible</option>';
+                    return;
+                }
+                data.forEach(cls => {
+                    const sel = cls.id == selectedClassId ? 'selected' : '';
+                    classeSelect.innerHTML += `<option value="${cls.id}" ${sel}>${cls.name}</option>`;
+                });
+            })
+            .catch(() => {
+                classeSelect.innerHTML = '<option value="">Erreur de chargement</option>';
+            });
+    }
+
+    // Au chargement : pré-charger les classes de l'entité actuelle
+    document.addEventListener('DOMContentLoaded', function () {
+        const initialEntityId = entitySelect.value;
+        if (initialEntityId) {
+            loadClasses(initialEntityId, currentClassId);
         }
     });
 
-    // Animation de focus sur les champs
-    document.querySelectorAll('input, select').forEach(element => {
-        element.addEventListener('focus', function() {
-            this.parentElement.classList.add('ring-2', 'ring-blue-200');
-        });
-        
-        element.addEventListener('blur', function() {
-            this.parentElement.classList.remove('ring-2', 'ring-blue-200');
-        });
+    // Au changement de cycle
+    entitySelect.addEventListener('change', function () {
+        loadClasses(this.value, null);
     });
 </script>
 

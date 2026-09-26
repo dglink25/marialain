@@ -183,12 +183,16 @@ class StudentController extends Controller{
             return $this->checkActiveYear();
         }
 
-        if (!$this->checkActiveYear() instanceof AcademicYear) {
-            return $this->checkActiveYear();
-        }
-        $student = Student::findOrFail($id);
-        $entities = Entity::all();
-        $classes = Classe::all();
+        $activeYear = AcademicYear::where('active', true)->first();
+        $student    = Student::findOrFail($id);
+        $entities   = Entity::all();
+
+        // Charger les classes de l'entité actuelle de l'élève pour l'année active
+        // (pré-remplissage initial — l'AJAX recharge si on change le cycle)
+        $classes = Classe::where('entity_id', $student->entity_id)
+            ->where('academic_year_id', $activeYear->id)
+            ->orderBy('name')
+            ->get(['id', 'name']);
 
         return view('admin.students.edit', compact('student', 'entities', 'classes'));
     }
@@ -204,37 +208,44 @@ class StudentController extends Controller{
         }
         $student = Student::findOrFail($id);
 
-        $validated = $request->validate([
-            'first_name' => 'nullable|string',
-            'last_name' => 'nullable|string',
-            'birth_date' => 'nullable|date',
-            'birth_place' => 'nullable|string',
-            'entity_id' => 'nullable|exists:entities,id',
-            'class_id' => 'nullable|exists:classes,id',
-            'birth_certificate' => 'nullable|mimes:pdf|max:2048',
-            'vaccination_card' => 'nullable|mimes:pdf|max:2048',
-            'previous_report_card' => 'nullable|mimes:pdf|max:2048',
-            'diploma_certificate' => 'nullable|mimes:pdf|max:2048',
-            'parent_full_name' => 'nullable|string',
-            'parent_email' => 'nullable|email',
-            'parent_phone' => 'nullable|string',
-            'num_educ' => 'nullable|string',
-            'gender' => 'nullable|string',
+        $request->validate([
+            'first_name'       => 'nullable|string|max:255',
+            'last_name'        => 'nullable|string|max:255',
+            'birth_date'       => 'nullable|date',
+            'birth_place'      => 'nullable|string|max:255',
+            'entity_id'        => 'nullable|exists:entities,id',
+            'classe_id'        => 'nullable|exists:classes,id',  // formulaire envoie classe_id
+            'parent_full_name' => 'nullable|string|max:255',
+            'parent_email'     => 'nullable|email|max:255',
+            'parent_phone'     => 'nullable|string|max:20',
+            'num_educ'         => 'nullable|string|max:50',
+            'gender'           => 'nullable|string|in:M,F',
         ]);
 
-        $data['age'] = now()->diffInYears($request->birth_date);
-        $data['age'] = (-1)*$data['age'];
-        $data = $request->all();
+        $data = [
+            'first_name'       => $request->first_name,
+            'last_name'        => $request->last_name,
+            'birth_date'       => $request->birth_date,
+            'birth_place'      => $request->birth_place,
+            'gender'           => $request->gender,
+            'entity_id'        => $request->entity_id,
+            'class_id'         => $request->classe_id,  // mapper classe_id → class_id
+            'parent_full_name' => $request->parent_full_name,
+            'parent_email'     => $request->parent_email,
+            'parent_phone'     => $request->parent_phone,
+            'num_educ'         => $request->num_educ,
+            'age'              => $request->birth_date ? now()->diffInYears($request->birth_date) : $student->age,
+        ];
 
         // Upload fichiers si nécessaire
         foreach (['birth_certificate','vaccination_card','previous_report_card','diploma_certificate'] as $fileField) {
             if ($request->hasFile($fileField)) {
-                $data[$fileField] = $request->file($fileField)->store('students_files','public');
+                $data[$fileField] = $request->file($fileField)->store('students_files', 'public');
             }
         }
 
-        // Calcul automatique de l'âge
-        $data['age'] = now()->diffInYears($request->birth_date);
+        // Retirer les valeurs null pour ne pas écraser les champs non soumis
+        $data = array_filter($data, fn($v) => $v !== null);
 
         $student->update($data);
 
