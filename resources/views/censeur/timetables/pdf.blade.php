@@ -4,231 +4,187 @@
     <meta charset="utf-8">
     <title>Emploi du temps - {{ $class->name }}</title>
     <style>
-        body { 
-            font-family: "Times New Roman", Times, serif; 
-            font-size: 11px; 
-            margin: 20px; 
-        }
-
-        /* --- Ligne tricolore --- */
-        .tricolor-line {
-            width: 70%;
-            margin-bottom: 8px;
-            border-collapse: collapse;
-            table-layout: fixed;
-        }
-        .tricolor-line td {
-            height: 3px;
-            padding: 0;
-            border: none;
-            width: 33,33%;
-        }
-        .tricolor-line .green { background-color: #008751; } /* Vert du Bénin */
-        .tricolor-line .yellow { background-color: #FCD116; } /* Jaune du Bénin */
-        .tricolor-line .red { background-color: #E8112D; } /* Rouge du Bénin */
-
-        /* --- Header --- */
-        .header {
-            display: table;
-            width: 100%;
-            margin-bottom: 15px;
-            border-bottom: 2px solid #333;
-            padding-bottom: 10px;
-        }
-        .header-left, .header-right {
-            display: table-cell;
-            width: 15%;
-            vertical-align: middle;
-            text-align: center;
-        }
-        .header-left img, .header-right img {
-            height: 70px;
-            object-fit: contain;
-        }
-        .school-info {
-            display: table-cell;
-            width: 70%;
-            text-align: center;
+        body {
+            font-family: "Times New Roman", Times, serif;
             font-size: 11px;
-            line-height: 1.3;
+            margin: 15px;
         }
+        .tricolor-line {
+            width: 70%; margin-bottom: 6px; border-collapse: collapse; table-layout: fixed;
+        }
+        .tricolor-line td { height: 3px; padding: 0; border: none; }
+        .tricolor-line .green  { background-color: #008751; }
+        .tricolor-line .yellow { background-color: #FCD116; }
+        .tricolor-line .red    { background-color: #E8112D; }
+
+        .header { display: table; width: 100%; margin-bottom: 12px; border-bottom: 2px solid #333; padding-bottom: 8px; }
+        .header-left, .header-right { display: table-cell; width: 13%; vertical-align: middle; text-align: center; }
+        .header-left img, .header-right img { height: 65px; object-fit: contain; }
+        .school-info { display: table-cell; width: 74%; text-align: center; font-size: 10px; line-height: 1.4; vertical-align: middle; }
         .school-info .bold { font-weight: bold; }
 
-        /* --- Tableau --- */
-        table {
+        table.main {
             border-collapse: collapse;
-            margin: auto;
             width: 100%;
-            table-layout: fixed; /* empêche les débordements */
+            table-layout: fixed;
             font-family: "Times New Roman", Times, serif;
         }
-        th, td {
+        table.main th, table.main td {
             border: 1px solid #333;
-            padding: 6px 4px;
+            padding: 4px 3px;
             text-align: center;
             vertical-align: middle;
-            word-wrap: break-word; /* coupe le texte trop long */
+            word-wrap: break-word;
             overflow: hidden;
-            font-family: "Times New Roman", Times, serif;
         }
-        th { 
-            background-color: #f0f0f0; 
-            font-size: 11px;
-        }
+        table.main th { background-color: #e8e8e8; font-size: 10px; font-weight: bold; }
+        table.main td:first-child { width: 55px; font-size: 10px; font-weight: bold; background-color: #f5f5f5; }
 
-        /* Largeurs adaptées */
-        th:nth-child(1), td:nth-child(1) { width: 60px; }   /* Heure */
-        th:nth-child(2), td:nth-child(2),
-        th:nth-child(3), td:nth-child(3),
-        th:nth-child(4), td:nth-child(4),
-        th:nth-child(5), td:nth-child(5),
-        th:nth-child(6), td:nth-child(6),
-        th:nth-child(7), td:nth-child(7) { width: 90px; }
+        .course { background-color: #cce5ff; font-size: 9px; font-weight: bold; }
+        .teacher { font-size: 8px; color: #333; }
+        .time-range { font-size: 8px; color: #555; font-style: italic; }
+        .empty { background-color: #fafafa; }
 
-        /* Cours */
-        .course {
-            background-color: #cce5ff;
-            font-weight: bold;
-            padding: 3px;
-            font-size: 10px;
-            font-family: "Times New Roman", Times, serif;
-        }
-        .teacher { 
-            font-size: 9px; 
-            font-family: "Times New Roman", Times, serif;
-        }
+        .title { text-align: center; margin: 8px 0; font-size: 13px; font-weight: bold; text-decoration: underline; }
 
-        /* Titre */
-        .title {
-            text-align: center;
-            margin-bottom: 10px;
-            font-family: "Times New Roman", Times, serif;
-        }
+        .footer { margin-top: 30px; text-align: center; font-size: 11px; }
 
-        /* --- Footer --- */
-        .footer {
-            margin-top: 20px;
-            text-align: center;
-            font-size: 11px;
-            font-family: "Times New Roman", Times, serif;
-        }
-
-        /* --- Pagination PDF (DOMPDF / mPDF) --- */
-        @page {
-            margin: 20mm;
-        }
-        .pagenum:before {
-            content: counter(page);
-        }
-        .pagecount:before {
-            content: counter(pages);
-        }
         .pdf-footer {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            text-align: center;
-            font-size: 10px;
-            color: #555;
-            font-family: "Times New Roman", Times, serif;
+            position: fixed; bottom: 5mm; left: 0; right: 0;
+            text-align: center; font-size: 9px; color: #777;
         }
+        @page { margin: 15mm; }
     </style>
 </head>
 <body>
 
-    <!-- HEADER -->
-    <div class="header">
-        <div class="header-left">
-            <img src="{{ public_path('logo.png') }}" alt="Logo gauche">
-        </div>
-        <div class="school-info">
-            <!-- Ligne tricolore ajoutée ici avec un tableau pour meilleur support PDF -->
-            
-            <table class="tricolor-line">
-                <tr>
-                    <td class="green"></td>
-                    <td class="yellow"></td>
-                    <td class="red"></td>
-                </tr>
-            </table>
-           
-            <div class="bold">REPUBLIQUE DU BENIN</div>
-            <div>MINISTERE DES ENSEIGNEMENTS SECONDAIRE, TECHNIQUE ET DE LA FORMATION PROFESSIONNELLE</div>
-            <div>DIRECTION DEPARTEMENTALE DES ENSEIGNEMENTS SECONDAIRE, TECHNIQUE ET DE LA FORMATION PROFESSIONNELLE DE L'ATLANTIQUE</div>
-            <div class="bold">CPEG MARIE-ALAIN</div>
-        </div>
-        <div class="header-right">
-            <img src="{{ public_path('logo.png') }}" alt="Logo droit">
-        </div>
+<!-- HEADER -->
+<div class="header">
+    <div class="header-left">
+        <img src="{{ public_path('logo.png') }}" alt="Logo">
     </div>
+    <div class="school-info">
+        <table class="tricolor-line" align="center">
+            <tr><td class="green"></td><td class="yellow"></td><td class="red"></td></tr>
+        </table>
+        <div class="bold">REPUBLIQUE DU BENIN</div>
+        <div>MINISTERE DES ENSEIGNEMENTS SECONDAIRE, TECHNIQUE ET DE LA FORMATION PROFESSIONNELLE</div>
+        <div>DIRECTION DEPARTEMENTALE DES ENSEIGNEMENTS SECONDAIRE,<br>TECHNIQUE ET DE LA FORMATION PROFESSIONNELLE DE L'ATLANTIQUE</div>
+        <div class="bold">CPEG MARIE-ALAIN</div>
+    </div>
+    <div class="header-right">
+        <img src="{{ public_path('logo.png') }}" alt="Logo">
+    </div>
+</div>
 
-    <!-- TITRE -->
-    <h2 class="title"><u>Emploi du temps - {{ $class->name }}</u></h2>
-        <br>
-    <!-- TABLEAU -->
-    <table>
-        <thead>
-            <tr>
-                <th>Heure</th>
-                @foreach(['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'] as $day)
-                    <th>{{ $day }}</th>
-                @endforeach
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($hours as $hourSlot)
-                <tr>
-                    <td>{{ $hourSlot }}</td>
-                    @foreach(['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'] as $day)
-                        @php
-                            $startHour = explode('-', $hourSlot)[0];
-                            $startHourFormatted = str_replace('h', ':00', $startHour);
+<!-- TITRE -->
+<div class="title">Emploi du temps - {{ $class->name }}</div>
 
-                            $course = $timetables->first(function($t) use ($day, $startHourFormatted) {
-                                return $t->day === $day && date('H:i', strtotime($t->start_time)) === $startHourFormatted;
-                            });
+@php
+    $days = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
 
-                            $overlap = $timetables->first(function($t) use ($day, $startHourFormatted) {
-                                return $t->day === $day && strtotime($t->start_time) < strtotime($startHourFormatted) && strtotime($t->end_time) > strtotime($startHourFormatted);
-                            });
-                        @endphp
+    // Construire une grille : day => heure_debut => timetable
+    // On marque aussi les cellules "couvertes" par un rowspan
+    $grid    = [];   // $grid[day][slotIndex] = timetable|null|'skip'
+    $rowspan = [];   // $rowspan[day][slotIndex] = nb de lignes à fusionner
 
-                        @if($course)
-                            @php
-                                $duration = max(1, round((strtotime($course->end_time) - strtotime($course->start_time)) / 3600));
-                            @endphp
-                            <td class="course" rowspan="{{ $duration }}">
-                                <div>{{ $course->subject->name }}</div>
-                                <div class="teacher">{{ $course->teacher->name }}</div>
-                                <div class="teacher">{{ date('H:i', strtotime($course->start_time)) }} - {{ date('H:i', strtotime($course->end_time)) }}</div>
-                            </td>
-                        @elseif($overlap)
-                            {{-- cellule fusionnée --}}
-                        @else
-                            <td></td>
-                        @endif
-                    @endforeach
-                </tr>
+    foreach ($days as $day) {
+        foreach ($hours as $idx => $slot) {
+            $grid[$day][$idx]    = null;
+            $rowspan[$day][$idx] = 1;
+        }
+    }
+
+    // Pour chaque timetable, trouver le slot de départ et calculer le rowspan
+    foreach ($timetables as $tt) {
+        $ttStart    = strtotime($tt->start_time);
+        $ttEnd      = strtotime($tt->end_time);
+        $startSlot  = null;
+        $slotSpan   = 0;
+
+        foreach ($hours as $idx => $slot) {
+            // Heure de début du slot (ex: "07h-08h" → 07:00)
+            $slotStartStr = substr($slot, 0, 2) . ':00';
+            $slotEndStr   = substr($slot, 4, 2) . ':00';
+            $slotStart    = strtotime($slotStartStr);
+            $slotEnd      = strtotime($slotEndStr);
+
+            // Le cours démarre dans ce slot (ou exactement à son début)
+            if ($startSlot === null && $ttStart >= $slotStart && $ttStart < $slotEnd) {
+                $startSlot = $idx;
+            }
+            // Compter les slots couverts par ce cours
+            if ($startSlot !== null && $ttEnd > $slotStart) {
+                $slotSpan++;
+            }
+        }
+
+        if ($startSlot !== null && $slotSpan > 0) {
+            $grid[$tt->day][$startSlot]    = $tt;
+            $rowspan[$tt->day][$startSlot] = $slotSpan;
+            // Marquer les slots suivants comme 'skip'
+            for ($s = $startSlot + 1; $s < $startSlot + $slotSpan; $s++) {
+                if (isset($grid[$tt->day][$s])) {
+                    $grid[$tt->day][$s] = 'skip';
+                }
+            }
+        }
+    }
+@endphp
+
+<!-- TABLEAU -->
+<table class="main">
+    <thead>
+        <tr>
+            <th>Heure</th>
+            @foreach($days as $day)
+                <th>{{ $day }}</th>
             @endforeach
-        </tbody>
-    </table>
-    <br>
-    <br>
-    <br>
-    <br>
-    <br>
-    <br>
-    <!-- SIGNATURE -->
-    <div class="footer">
-        Fait à Calavi, le {{ now()->format('d/m/Y') }}<br><br><br><br> 
-        Le Censeur
-    </div>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach($hours as $idx => $slot)
+        <tr>
+            <td>{{ $slot }}</td>
+            @foreach($days as $day)
+                @php $cell = $grid[$day][$idx] ?? null; @endphp
+                @if($cell === 'skip')
+                    {{-- cellule couverte par rowspan, ne pas afficher --}}
+                @elseif($cell !== null)
+                    <td class="course" rowspan="{{ $rowspan[$day][$idx] }}">
+                        <div>{{ $cell->subject->name }}</div>
+                        <div class="teacher">{{ $cell->teacher->name }}</div>
+                        <div class="time-range">{{ date('H:i', strtotime($cell->start_time)) }} - {{ date('H:i', strtotime($cell->end_time)) }}</div>
+                    </td>
+                @else
+                    <td class="empty"></td>
+                @endif
+            @endforeach
+        </tr>
+        @endforeach
+    </tbody>
+</table>
 
-    <!-- NUMÉRO DE PAGE -->
-    <div class="pdf-footer">
-        Page <span class="pagenum"></span> / <span class="pagecount"></span>
-    </div>
+<br><br><br>
+
+<!-- SIGNATURE -->
+<div class="footer">
+    Fait à Calavi, le {{ isset($dateDownload) ? $dateDownload : now()->format('d/m/Y') }}<br><br><br><br>
+    Le Censeur
+</div>
+
+<!-- PAGINATION (DomPDF compatible) -->
+<div class="pdf-footer">
+    Page <span class="pagenum"></span>
+</div>
+
+<script type="text/php">
+    if (isset($pdf)) {
+        $x = $pdf->get_width() / 2;
+        $y = $pdf->get_height() - 20;
+        $pdf->page_text($x, $y, "Page {PAGE_NUM} / {PAGE_COUNT}", null, 8, array(0, 0, 0));
+    }
+</script>
 
 </body>
 </html>
