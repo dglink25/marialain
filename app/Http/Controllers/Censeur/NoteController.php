@@ -1504,7 +1504,7 @@ use App\Exports\ConducteExport;
 
         public function setCoefficient(Request $request, $classeId, $subjectId){
             $request->validate([
-                'coefficient' => 'required|integer|min:1|max:10',
+                'coefficient' => 'required|integer|min:1|max:20',
             ]);
 
             // Récupérer l'année académique active

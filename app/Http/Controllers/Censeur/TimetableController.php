@@ -140,7 +140,7 @@ class TimetableController extends Controller{
             $validator = Validator::make($request->all(), [
                 'teacher_id' => 'required|exists:users,id',
                 'subject_id' => 'required|exists:subjects,id',
-                 'coef' => 'required|integer|min:1|max:10', 
+                 'coef' => 'required|integer|min:1|max:20', 
                 'day' => 'required|in:Lundi,Mardi,Mercredi,Jeudi,Vendredi,Samedi',
                 'start_time' => 'required|date_format:H:i',
                 'end_time' => 'required|date_format:H:i|after:start_time',
@@ -314,7 +314,7 @@ class TimetableController extends Controller{
             $validator = Validator::make($request->all(), [
                 'teacher_id' => 'required|exists:users,id',
                 'subject_id' => 'required|exists:subjects,id',
-                'coef' => 'required|integer|min:1|max:10', 
+                'coef' => 'required|integer|min:1|max:20', 
                 'day' => 'required|in:Lundi,Mardi,Mercredi,Jeudi,Vendredi,Samedi',
                 'start_time' => 'required|date_format:H:i',
                 'end_time' => 'required|date_format:H:i|after:start_time',
