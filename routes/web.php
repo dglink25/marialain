@@ -645,6 +645,9 @@ Route::middleware(['auth'])->post('/censeur/notes/autoriser-modification', [Cens
 Route::middleware(['auth'])->delete('/teacher-invitations/{invitation}', [CenseurInvitationController::class, 'destroy'])
     ->name('teacher_invitations.destroy');
 
+Route::middleware(['auth'])->patch('/teacher-invitations/{invitation}/update-name', [CenseurInvitationController::class, 'updateName'])
+    ->name('teacher_invitations.update_name');
+
 Route::middleware(['auth'])->post('/teacher/cahier/update/{id}', [CahierDeTexteController::class, 'update'])->name('teacher.cahier.update');
 
 Route::middleware(['auth'])->group(function () {

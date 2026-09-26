@@ -166,20 +166,32 @@
                             @endif
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-
-                            <form action="{{ route('teacher_invitations.destroy', $inv->id) }}" method="POST"
-                                onsubmit="return confirm('Voulez-vous vraiment supprimer cet enseignant ?')">
-                                @csrf
-                                @method('DELETE')
-
-                                <button type="submit"
-                                    class="p-2 bg-red-100 text-red-600 rounded-full hover:bg-red-200 hover:text-red-800 transition">
+                            <div class="flex items-center gap-2">
+                                {{-- Bouton modifier nom --}}
+                                <button onclick="ouvrirModalNom({{ $inv->id }}, '{{ addslashes($inv->user->name) }}')"
+                                        class="p-2 bg-blue-50 text-blue-600 rounded-full hover:bg-blue-100 hover:text-blue-800 transition"
+                                        title="Modifier le nom">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M19 7H5m3 0V5a2 2 0 012-2h4a2 2 0 012 2v2m-5 4v6m4-6v6m-8-6v6"/>
+                                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                     </svg>
                                 </button>
-                            </form>
+
+                                {{-- Bouton supprimer --}}
+                                <form action="{{ route('teacher_invitations.destroy', $inv->id) }}" method="POST"
+                                    onsubmit="return confirm('Voulez-vous vraiment supprimer cet enseignant ?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit"
+                                        class="p-2 bg-red-100 text-red-600 rounded-full hover:bg-red-200 hover:text-red-800 transition"
+                                        title="Supprimer">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M19 7H5m3 0V5a2 2 0 012-2h4a2 2 0 012 2v2m-5 4v6m4-6v6m-8-6v6"/>
+                                        </svg>
+                                    </button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                     @endforeach
@@ -199,14 +211,79 @@
     </div>
 </div>
 
+{{-- Modal modifier nom --}}
+<div id="modal-nom" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true">
+    <div class="fixed inset-0 bg-black/50 backdrop-blur-sm" onclick="fermerModalNom()"></div>
+    <div class="fixed inset-0 overflow-y-auto flex items-center justify-center p-4">
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 bg-blue-50 rounded-xl flex items-center justify-center">
+                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-base font-bold text-gray-800">Modifier le nom</h3>
+                </div>
+                <button onclick="fermerModalNom()" class="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <form id="form-nom" method="POST" class="p-6 space-y-4">
+                @csrf
+                @method('PATCH')
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Nom complet *</label>
+                    <input type="text" id="input-nom" name="name" required
+                           class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                </div>
+                <div class="flex gap-3 pt-2">
+                    <button type="button" onclick="fermerModalNom()"
+                            class="flex-1 py-2.5 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-gray-200 text-sm transition">
+                        Annuler
+                    </button>
+                    <button type="submit"
+                            class="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl text-sm shadow transition">
+                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        Enregistrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <style>
     .bg-white {
         transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
     }
-    
     .bg-white:hover {
         transform: translateY(-1px);
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
 </style>
+
+<script>
+function ouvrirModalNom(invId, nomActuel) {
+    document.getElementById('input-nom').value = nomActuel;
+    document.getElementById('form-nom').action = '/teacher-invitations/' + invId + '/update-name';
+    document.getElementById('modal-nom').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => document.getElementById('input-nom').focus(), 100);
+}
+
+function fermerModalNom() {
+    document.getElementById('modal-nom').classList.add('hidden');
+    document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') fermerModalNom();
+});
+</script>
 @endsection

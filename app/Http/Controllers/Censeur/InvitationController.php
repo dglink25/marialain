@@ -116,6 +116,22 @@ class InvitationController extends Controller{
     }
 
 
+    public function updateName(Request $request, TeacherInvitation $invitation)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+        ]);
+
+        // Mettre à jour le nom sur l'invitation et sur le user
+        $invitation->update(['name' => $request->name]);
+
+        if ($invitation->user) {
+            $invitation->user->update(['name' => $request->name]);
+        }
+
+        return back()->with('success', 'Nom mis à jour avec succès.');
+    }
+
     public function destroy(TeacherInvitation $invitation){
         // Supprimer d'abord le user concerné
         if ($invitation->user) {
