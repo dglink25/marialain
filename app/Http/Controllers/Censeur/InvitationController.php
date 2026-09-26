@@ -116,6 +116,45 @@ class InvitationController extends Controller{
     }
 
 
+    public function exportPdf()
+    {
+        $activeYear = AcademicYear::where('active', true)->first();
+
+        // Récupérer tous les enseignants (users) qui ont une invitation acceptée
+        // pour l'année active, avec leurs matières distinctes via class_teacher_subject
+        $invitations = TeacherInvitation::with('user')
+            ->where('academic_year_id', $activeYear->id)
+            ->where('censeur_id', 4)
+            ->where('accepted', true)
+            ->get()
+            ->unique('user_id'); // un seul enregistrement par enseignant
+
+        // Pour chaque enseignant, récupérer ses matières distinctes (toutes années confondues)
+        $enseignants = $invitations->map(function ($inv) {
+            $user = $inv->user;
+            if (!$user) return null;
+
+            // Matières via class_teacher_subject (toutes années)
+            $matieres = \App\Models\Subject::whereHas('classTeacherSubjects', function ($q) use ($user) {
+                $q->where('teacher_id', $user->id);
+            })->distinct()->pluck('name')->toArray();
+
+            return [
+                'name'     => $user->name,
+                'email'    => $user->email,
+                'phone'    => $user->phone ?? '—',
+                'matieres' => $matieres,
+            ];
+        })->filter()->values();
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView(
+            'censeur.invitations.pdf_enseignants',
+            compact('enseignants', 'activeYear')
+        )->setPaper('a4', 'portrait');
+
+        return $pdf->download('liste-enseignants-' . ($activeYear->name ?? 'export') . '.pdf');
+    }
+
     public function updateName(Request $request, TeacherInvitation $invitation)
     {
         $request->validate([

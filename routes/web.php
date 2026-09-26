@@ -430,6 +430,7 @@ Route::prefix('censeur')->name('censeur.')->middleware('auth')->group(function (
     // Invitations enseignants
     Route::get('/invitations', [CenseurInvitationController::class, 'index'])->name('invitations.index');
     Route::post('/invitations', [CenseurInvitationController::class, 'send'])->name('invitations.send');
+    Route::get('/invitations/export-pdf', [CenseurInvitationController::class, 'exportPdf'])->name('invitations.export_pdf');
 
     // Matières
     Route::resource('subjects', SubjectController::class);
