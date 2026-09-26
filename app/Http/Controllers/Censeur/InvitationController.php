@@ -142,7 +142,7 @@ class InvitationController extends Controller{
             return [
                 'name'     => $user->name,
                 'email'    => $user->email,
-                'phone'    => $user->phone ?? '—',
+                'phone'    => $user->phone ?? '-',
                 'matieres' => $matieres,
             ];
         })->filter()->values();
@@ -155,8 +155,7 @@ class InvitationController extends Controller{
         return $pdf->download('liste-enseignants-' . ($activeYear->name ?? 'export') . '.pdf');
     }
 
-    public function updateName(Request $request, TeacherInvitation $invitation)
-    {
+    public function updateName(Request $request, TeacherInvitation $invitation) {
         $request->validate([
             'name' => 'required|string|max:255',
         ]);
