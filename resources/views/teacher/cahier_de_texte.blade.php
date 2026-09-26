@@ -46,6 +46,11 @@
             <input type="hidden" name="day"          value="{{ $slot->day }}">
 
             {{-- Dates début / fin --}}
+            @php
+                $today    = \Carbon\Carbon::today()->format('Y-m-d');
+                $startStr = \Carbon\Carbon::parse($slot->start_time)->format('H:i');
+                $endStr   = \Carbon\Carbon::parse($slot->end_time)->format('H:i');
+            @endphp
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <label class="block text-sm font-semibold text-slate-700 mb-1.5">
@@ -54,7 +59,7 @@
                     </label>
                     <input type="datetime-local"
                            name="course_start_date"
-                           value="{{ \Carbon\Carbon::today()->format('Y-m-d') }}T{{ \Carbon\Carbon::parse($slot->start_time)->format('H:i') }}"
+                           value="{{ $today }}T{{ $startStr }}"
                            class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 bg-slate-50 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
                            required>
                     @error('course_start_date')
@@ -68,7 +73,7 @@
                     </label>
                     <input type="datetime-local"
                            name="course_end_date"
-                           value="{{ \Carbon\Carbon::today()->format('Y-m-d') }}T{{ \Carbon\Carbon::parse($slot->end_time)->format('H:i') }}"
+                           value="{{ $today }}T{{ $endStr }}"
                            class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 bg-slate-50 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
                            required>
                     @error('course_end_date')
