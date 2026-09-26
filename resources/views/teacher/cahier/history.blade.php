@@ -105,9 +105,9 @@
                         </label>
                         <input type="datetime-local" name="course_start_date" id="course_start_date" 
                             class="w-full border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
-                            max="{{ now()->format('Y-m-d\TH:i') }}"
+                            value="{{ now()->format('Y-m-d') }}T{{ $currentLesson ? \Carbon\Carbon::parse($currentLesson->start_time)->format('H:i') : now()->format('H:i') }}"
                             required>
-                        <p class="text-xs text-gray-500 mt-1">Ne peut pas être une date future</p>
+                        <p class="text-xs text-gray-500 mt-1">Date du jour + heure de l'emploi du temps</p>
                     </div>
                     
                     <div>
@@ -119,6 +119,7 @@
                         </label>
                         <input type="datetime-local" name="course_end_date" id="course_end_date" 
                             class="w-full border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+                            value="{{ now()->format('Y-m-d') }}T{{ $currentLesson ? \Carbon\Carbon::parse($currentLesson->end_time)->format('H:i') : now()->addHour()->format('H:i') }}"
                             required>
                     </div>
                     <div class="md:col-span-2">
