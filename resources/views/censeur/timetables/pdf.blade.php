@@ -9,9 +9,7 @@
             font-size: 11px;
             margin: 15px;
         }
-        .tricolor-line {
-            width: 70%; margin-bottom: 6px; border-collapse: collapse; table-layout: fixed;
-        }
+        .tricolor-line { width: 70%; margin-bottom: 6px; border-collapse: collapse; table-layout: fixed; }
         .tricolor-line td { height: 3px; padding: 0; border: none; }
         .tricolor-line .green  { background-color: #008751; }
         .tricolor-line .yellow { background-color: #FCD116; }
@@ -27,7 +25,6 @@
             border-collapse: collapse;
             width: 100%;
             table-layout: fixed;
-            font-family: "Times New Roman", Times, serif;
         }
         table.main th, table.main td {
             border: 1px solid #333;
@@ -38,21 +35,15 @@
             overflow: hidden;
         }
         table.main th { background-color: #e8e8e8; font-size: 10px; font-weight: bold; }
-        table.main td:first-child { width: 55px; font-size: 10px; font-weight: bold; background-color: #f5f5f5; }
+        table.main td:first-child { width: 50px; font-size: 10px; font-weight: bold; background-color: #f5f5f5; }
 
         .course { background-color: #cce5ff; font-size: 9px; font-weight: bold; }
         .teacher { font-size: 8px; color: #333; }
         .time-range { font-size: 8px; color: #555; font-style: italic; }
-        .empty { background-color: #fafafa; }
 
-        .title { text-align: center; margin: 8px 0; font-size: 13px; font-weight: bold; text-decoration: underline; }
-
+        .title { text-align: center; margin: 8px 0 10px; font-size: 13px; font-weight: bold; text-decoration: underline; }
         .footer { margin-top: 30px; text-align: center; font-size: 11px; }
 
-        .pdf-footer {
-            position: fixed; bottom: 5mm; left: 0; right: 0;
-            text-align: center; font-size: 9px; color: #777;
-        }
         @page { margin: 15mm; }
     </style>
 </head>
@@ -83,10 +74,10 @@
 @php
     $days = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
 
-    // Construire une grille : day => heure_debut => timetable
-    // On marque aussi les cellules "couvertes" par un rowspan
-    $grid    = [];   // $grid[day][slotIndex] = timetable|null|'skip'
-    $rowspan = [];   // $rowspan[day][slotIndex] = nb de lignes à fusionner
+    // Construire la grille slot par slot
+    // grid[day][slotIdx] = timetable | 'skip' | null
+    $grid    = [];
+    $rowspan = [];
 
     foreach ($days as $day) {
         foreach ($hours as $idx => $slot) {
@@ -95,36 +86,40 @@
         }
     }
 
-    // Pour chaque timetable, trouver le slot de départ et calculer le rowspan
     foreach ($timetables as $tt) {
-        $ttStart    = strtotime($tt->start_time);
-        $ttEnd      = strtotime($tt->end_time);
-        $startSlot  = null;
-        $slotSpan   = 0;
+        $ttStart = strtotime($tt->start_time);
+        $ttEnd   = strtotime($tt->end_time);
+
+        $startSlot = null;
+        $span      = 0;
 
         foreach ($hours as $idx => $slot) {
-            // Heure de début du slot (ex: "07h-08h" → 07:00)
-            $slotStartStr = substr($slot, 0, 2) . ':00';
-            $slotEndStr   = substr($slot, 4, 2) . ':00';
-            $slotStart    = strtotime($slotStartStr);
-            $slotEnd      = strtotime($slotEndStr);
+            // Extraire heure début/fin du slot : "07h-08h" → 07:00 / 08:00
+            preg_match('/^(\d{2})h-(\d{2})h$/', $slot, $m);
+            $slotStart = strtotime(sprintf('%02d:00', (int)$m[1]));
+            $slotEnd   = strtotime(sprintf('%02d:00', (int)$m[2]));
 
-            // Le cours démarre dans ce slot (ou exactement à son début)
-            if ($startSlot === null && $ttStart >= $slotStart && $ttStart < $slotEnd) {
-                $startSlot = $idx;
-            }
-            // Compter les slots couverts par ce cours
-            if ($startSlot !== null && $ttEnd > $slotStart) {
-                $slotSpan++;
+            if ($startSlot === null) {
+                // Le cours démarre dans ce slot (debut compris entre slotStart et slotEnd exclus)
+                if ($ttStart >= $slotStart && $ttStart < $slotEnd) {
+                    $startSlot = $idx;
+                    $span = 1;
+                }
+            } else {
+                // On est dans les slots suivants : le cours couvre ce slot si ttEnd > slotStart
+                if ($ttEnd > $slotStart) {
+                    $span++;
+                } else {
+                    break;
+                }
             }
         }
 
-        if ($startSlot !== null && $slotSpan > 0) {
+        if ($startSlot !== null && $span > 0) {
             $grid[$tt->day][$startSlot]    = $tt;
-            $rowspan[$tt->day][$startSlot] = $slotSpan;
-            // Marquer les slots suivants comme 'skip'
-            for ($s = $startSlot + 1; $s < $startSlot + $slotSpan; $s++) {
-                if (isset($grid[$tt->day][$s])) {
+            $rowspan[$tt->day][$startSlot] = $span;
+            for ($s = $startSlot + 1; $s < $startSlot + $span; $s++) {
+                if (array_key_exists($s, $grid[$tt->day])) {
                     $grid[$tt->day][$s] = 'skip';
                 }
             }
@@ -149,15 +144,17 @@
             @foreach($days as $day)
                 @php $cell = $grid[$day][$idx] ?? null; @endphp
                 @if($cell === 'skip')
-                    {{-- cellule couverte par rowspan, ne pas afficher --}}
+                    {{-- fusionné par rowspan --}}
                 @elseif($cell !== null)
                     <td class="course" rowspan="{{ $rowspan[$day][$idx] }}">
                         <div>{{ $cell->subject->name }}</div>
                         <div class="teacher">{{ $cell->teacher->name }}</div>
-                        <div class="time-range">{{ date('H:i', strtotime($cell->start_time)) }} - {{ date('H:i', strtotime($cell->end_time)) }}</div>
+                        <div class="time-range">
+                            {{ date('H:i', strtotime($cell->start_time)) }} - {{ date('H:i', strtotime($cell->end_time)) }}
+                        </div>
                     </td>
                 @else
-                    <td class="empty"></td>
+                    <td></td>
                 @endif
             @endforeach
         </tr>
@@ -169,20 +166,17 @@
 
 <!-- SIGNATURE -->
 <div class="footer">
-    Fait à Calavi, le {{ isset($dateDownload) ? $dateDownload : now()->format('d/m/Y') }}<br><br><br><br>
+    Fait à Calavi, le {{ isset($dateDownload) ? $dateDownload : now()->format('d/m/Y') }}
+    <br><br><br><br>
     Le Censeur
-</div>
-
-<!-- PAGINATION (DomPDF compatible) -->
-<div class="pdf-footer">
-    Page <span class="pagenum"></span>
 </div>
 
 <script type="text/php">
     if (isset($pdf)) {
-        $x = $pdf->get_width() / 2;
-        $y = $pdf->get_height() - 20;
-        $pdf->page_text($x, $y, "Page {PAGE_NUM} / {PAGE_COUNT}", null, 8, array(0, 0, 0));
+        $x     = $pdf->get_width() / 2;
+        $y     = $pdf->get_height() - 14;
+        $font  = $fontMetrics->getFont("Times New Roman");
+        $pdf->page_text($x, $y, "Page {PAGE_NUM} / {PAGE_COUNT}", $font, 8, [0,0,0]);
     }
 </script>
 
