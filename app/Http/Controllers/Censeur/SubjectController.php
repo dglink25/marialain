@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Subject;
 use App\Models\AcademicYear;
+use App\Models\User;    
 
 class SubjectController extends Controller{
     public function index(){
@@ -44,14 +45,44 @@ class SubjectController extends Controller{
         return back()->with('success','Matière ajoutée.');
     }
     public function teachers($subjectId){
-        $subject = Subject::with(['teachers' => function($query) {
-            $query->distinct(); // Éviter les doublons
-        }])->findOrFail($subjectId);
+        $activeYear = AcademicYear::where('active', true)->first();
 
-        // Alternative: Récupérer les enseignants distincts
-        $subject = Subject::with('teachers')->findOrFail($subjectId);
-        $subject->teachers = $subject->teachers->unique('id'); // Supprimer les doublons
+        if (!$activeYear) {
+            return redirect()->route('censeur.subjects.index')
+                ->with('error', "Aucune année scolaire active n'a été trouvée.");
+        }
 
-        return view('censeur.subjects.teachers', compact('subject'));
+        $subject = Subject::where('academic_year_id', $activeYear->id)
+            ->findOrFail($subjectId);
+
+        // Récupérer toutes les assignations de cette matière dans les classes de l'année active
+        $assignments = \App\Models\ClassTeacherSubject::with(['teacher', 'classe'])
+            ->where('subject_id', $subjectId)
+            ->whereHas('classe', function ($q) use ($activeYear) {
+                $q->where('academic_year_id', $activeYear->id); // ✅ pas d'ambiguïté ici
+            })
+            ->get();
+
+        // Enseignants uniques
+        $teachers = $assignments->pluck('teacher')
+            ->filter()
+            ->unique('id')
+            ->values();
+
+        // Pour chaque enseignant, ne garder que les classes concernées (année active + matière)
+        $teachers->each(function ($teacher) use ($assignments) {
+            $classes = $assignments
+                ->where('teacher_id', $teacher->id)
+                ->pluck('classe')
+                ->filter()
+                ->unique('id')
+                ->values();
+            $teacher->setRelation('classes', $classes);
+        });
+
+        $subject->setRelation('teachers', $teachers);
+
+        return view('censeur.subjects.teachers', compact('subject', 'activeYear'));
     }
+
 }
