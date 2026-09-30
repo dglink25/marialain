@@ -22,6 +22,7 @@ class CahierDeTexte extends Model{
         'validated_at',
         'validated_by',
         'validation_notes',
+        'idempotency_key'
     ];
 
     protected $casts = [

@@ -628,6 +628,9 @@ Route::middleware(['auth'])->prefix('teacher')->group(function () {
         [CahierDeTexteController::class, 'history']
     )->name('teacher.cahier.history.subject');
 
+    Route::get('/teacher/cahier/check-duplicate', [CahierDeTexteController::class, 'checkDuplicate'])
+    ->name('teacher.cahier.check-duplicate');
+
 });
 
 

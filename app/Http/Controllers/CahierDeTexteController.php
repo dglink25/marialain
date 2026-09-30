@@ -16,6 +16,8 @@ use App\Models\Classe;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Database\QueryException;
 
 class CahierDeTexteController extends Controller{
     
@@ -35,94 +37,180 @@ class CahierDeTexteController extends Controller{
         return view('teacher.cahier_de_texte', compact('timetable', 'classeId'));
     }
 
-    // Enregistrer le cahier de texte
-    public function store(Request $request){
-        $request->validate([
-            'class_id' => 'required|integer',
-            'subject_id' => 'required|integer',
-            'teacher_id' => 'required|integer',
-            'timetable_id' => 'required|integer',
-            'day' => 'required|string',
-            'content' => 'required|string',
+    private function findConflict(int $teacherId, int $classId, int $subjectId, Carbon $start, Carbon $end, ?int $ignoreId = null)    {
+        return CahierDeTexte::where('teacher_id', $teacherId)
+            ->where('class_id', $classId)
+            ->where('subject_id', $subjectId)
+            ->when($ignoreId, fn ($q) => $q->where('id', '!=', $ignoreId))
+            ->where('course_start_date', '<', $end)
+            ->where('course_end_date', '>', $start)
+            ->first();
+    }
+
+    private function duplicateMessage(CahierDeTexte $c): string    {
+        return 'Un cahier de texte existe déjà pour ce créneau ('
+            . Carbon::parse($c->course_start_date)->format('d/m/Y H:i') . ' - '
+            . Carbon::parse($c->course_end_date)->format('H:i')
+            . ') pour cette classe et cette matière.';
+    }
+
+    // Vérification AJAX avant soumission
+    public function checkDuplicate(Request $request)    {
+        $data = $request->validate([
+            'class_id'          => 'required|integer',
+            'subject_id'        => 'required|integer',
             'course_start_date' => 'required|date',
-            'course_end_date' => 'required|date|after:course_start_date',
+            'course_end_date'   => 'required|date',
+            'ignore_id'         => 'nullable|integer',
         ]);
+
+        $conflict = $this->findConflict(
+            Auth::id(),
+            (int) $data['class_id'],
+            (int) $data['subject_id'],
+            Carbon::parse($data['course_start_date']),
+            Carbon::parse($data['course_end_date']),
+            $data['ignore_id'] ?? null
+        );
+
+        return response()->json([
+            'duplicate' => (bool) $conflict,
+            'message'   => $conflict ? $this->duplicateMessage($conflict) : null,
+        ]);
+    }
+
+    // Enregistrer le cahier de texte
+    public function store(Request $request)    {
+        $request->validate([
+            'class_id'          => 'required|integer',
+            'subject_id'        => 'required|integer',
+            'timetable_id'      => 'required|integer',
+            'day'               => 'required|string',
+            'content'           => 'required|string',
+            'course_start_date' => 'required|date',
+            'course_end_date'   => 'required|date|after:course_start_date',
+            'idempotency_key'   => 'required|uuid',
+        ]);
+
+        // L'enseignant vient TOUJOURS de la session, jamais du formulaire
+        $teacherId = Auth::id();
+        $key       = $request->idempotency_key;
+
+        // 1) Rejeu de la même requête (double clic, F5, bouton retour) : on répond OK sans recréer
+        if (CahierDeTexte::where('idempotency_key', $key)->exists()) {
+            return back()->with('success', 'Cahier de texte déjà enregistré.');
+        }
 
         $academicYear = AcademicYear::where('active', 1)->firstOrFail();
-
-        // Vérifier que la date de fin est après la date de début
         $startDate = Carbon::parse($request->course_start_date);
-        $endDate = Carbon::parse($request->course_end_date);
-        
+        $endDate   = Carbon::parse($request->course_end_date);
+
         if ($endDate->lessThanOrEqualTo($startDate)) {
-            return back()
-                ->withErrors(['course_end_date' => 'La date de fin doit être après la date de début.'])
-                ->withInput();
+            return back()->withErrors(['course_end_date' => 'La date de fin doit être après la date de début.'])->withInput();
         }
 
-        // Vérifier que la durée n'excède pas 8 heures (480 minutes)
-        $durationMinutes = $startDate->diffInMinutes($endDate);
-        if ($durationMinutes > 480) {
-            return back()
-                ->withErrors(['course_end_date' => 'La durée du cours ne peut excéder 8 heures.'])
-                ->withInput();
+        if ($startDate->diffInMinutes($endDate, true) > 480) {
+            return back()->withErrors(['course_end_date' => 'La durée du cours ne peut excéder 8 heures.'])->withInput();
         }
 
-        CahierDeTexte::create([
-            'class_id' => $request->class_id,
-            'subject_id' => $request->subject_id,
-            'teacher_id' => $request->teacher_id,
-            'timetable_id' => $request->timetable_id,
-            'day' => $request->day,
-            'content' => $request->content,
-            'academic_year_id' => $academicYear->id,
-            'course_start_date' => $startDate,
-            'course_end_date' => $endDate,
-            'is_validated' => false,
-        ]);
+        // 2) Verrou : bloque deux requêtes simultanées sur le même créneau
+        $lock = Cache::lock(
+            "cahier-store:{$teacherId}:{$request->class_id}:{$request->subject_id}:" . $startDate->format('YmdHi'),
+            10
+        );
+
+        if (!$lock->get()) {
+            return back()->with('error', 'Une soumission est déjà en cours, veuillez patienter.');
+        }
+
+        try {
+            // 3) Doublon / chevauchement
+            $conflict = $this->findConflict(
+                $teacherId, (int) $request->class_id, (int) $request->subject_id, $startDate, $endDate
+            );
+
+            if ($conflict) {
+                return back()
+                    ->withErrors(['course_start_date' => $this->duplicateMessage($conflict)])
+                    ->withInput();
+            }
+
+            CahierDeTexte::create([
+                'class_id'          => $request->class_id,
+                'subject_id'        => $request->subject_id,
+                'teacher_id'        => $teacherId,
+                'timetable_id'      => $request->timetable_id,
+                'day'               => $request->day,
+                'content'           => $request->content,
+                'academic_year_id'  => $academicYear->id,
+                'course_start_date' => $startDate,
+                'course_end_date'   => $endDate,
+                'is_validated'      => false,
+                'idempotency_key'   => $key,
+            ]);
+        } catch (QueryException $e) {
+            // 4) Dernier rempart : contrainte unique en base (code 23000)
+            if ($e->getCode() === '23000') {
+                return back()->with('error', 'Ce cahier de texte existe déjà (doublon refusé).')->withInput();
+            }
+            throw $e;
+        } finally {
+            $lock->release();
+        }
 
         return back()->with('success', 'Cahier de texte enregistré avec succès.');
     }
 
     // Mettre à jour le cahier de texte
-    public function update(Request $request, $id){
+    public function update(Request $request, $id)    {
         $request->validate([
-            'content' => 'required|string',
+            'content'           => 'required|string',
             'course_start_date' => 'required|date',
-            'course_end_date' => 'required|date|after:course_start_date',
+            'course_end_date'   => 'required|date|after:course_start_date',
         ]);
 
-        $cahier = CahierDeTexte::findOrFail($id);
-        
-        // Vérifier que l'enseignant peut modifier (dans les 10 minutes suivant la création)
-        $canEdit = Carbon::now()->diffInMinutes($cahier->created_at) <= 10;
-        
+        // L'enseignant ne peut modifier que SES cahiers
+        $cahier = CahierDeTexte::where('teacher_id', Auth::id())->findOrFail($id);
+
+        $canEdit = Carbon::now()->diffInMinutes($cahier->created_at, true) <= 10;
         if (!$canEdit) {
             return back()->with('error', 'Le délai de modification est expiré (10 minutes maximum).');
         }
 
         $startDate = Carbon::parse($request->course_start_date);
-        $endDate = Carbon::parse($request->course_end_date);
-        
+        $endDate   = Carbon::parse($request->course_end_date);
+
         if ($endDate->lessThanOrEqualTo($startDate)) {
+            return back()->withErrors(['course_end_date' => 'La date de fin doit être après la date de début.'])->withInput();
+        }
+
+        if ($startDate->diffInMinutes($endDate, true) > 480) {
+            return back()->withErrors(['course_end_date' => 'La durée du cours ne peut excéder 8 heures.'])->withInput();
+        }
+
+        // Doublon avec un AUTRE cahier (on s'exclut soi-même)
+        $conflict = $this->findConflict(
+            Auth::id(), (int) $cahier->class_id, (int) $cahier->subject_id, $startDate, $endDate, $cahier->id
+        );
+
+        if ($conflict) {
             return back()
-                ->withErrors(['course_end_date' => 'La date de fin doit être après la date de début.'])
+                ->withErrors(['course_start_date' => $this->duplicateMessage($conflict)])
                 ->withInput();
         }
 
-        // Vérifier que la durée n'excède pas 8 heures
-        $durationMinutes = $startDate->diffInMinutes($endDate);
-        if ($durationMinutes > 480) {
-            return back()
-                ->withErrors(['course_end_date' => 'La durée du cours ne peut excéder 8 heures.'])
-                ->withInput();
+        try {
+            $cahier->update([
+                'content'           => $request->content,
+                'course_start_date' => $startDate,
+                'course_end_date'   => $endDate,
+            ]);
+        } catch (QueryException $e) {
+            if ($e->getCode() === '23000') {
+                return back()->with('error', 'Un cahier existe déjà sur ce créneau.')->withInput();
+            }
+            throw $e;
         }
-
-        $cahier->update([
-            'content' => $request->content,
-            'course_start_date' => $startDate,
-            'course_end_date' => $endDate,
-        ]);
 
         return back()->with('success', 'Cahier de texte mis à jour avec succès.');
     }

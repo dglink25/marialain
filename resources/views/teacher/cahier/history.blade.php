@@ -87,6 +87,7 @@
 
             <form id="modal-form" method="POST" class="space-y-4">
                 @csrf
+                <input type="hidden" name="idempotency_key" id="idempotency_key">
                 <input type="hidden" name="entry_id" id="entry_id">
                 <input type="hidden" name="class_id" value="{{ $class->id }}">
                 <input type="hidden" name="teacher_id" value="{{ auth()->id() }}">
@@ -126,11 +127,21 @@
                         <div id="duration-display" class="text-sm text-gray-600 mt-2 p-2 bg-blue-50 rounded-lg hidden">
                             <div class="flex items-center justify-between">
                                 <span>Durée : <span id="duration-text" class="font-semibold"></span></span>
-                                <span id="duration-warning" class="text-red-600 font-medium hidden">⚠️ Maximum 5h</span>
+                                <span id="duration-warning" class="text-red-600 font-medium hidden">Maximum 5h</span>
                             </div>
                         </div>
                     </div>
                 </div>
+
+                <div id="duplicate-error" class="hidden text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg p-3 font-medium"></div>
+
+                @if ($errors->any())
+                    <div class="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg p-3">
+                        @foreach ($errors->all() as $error)
+                            <p>{{ $error }}</p>
+                        @endforeach
+                    </div>
+                @endif
 
                 {{-- Content --}}
                 <div class="space-y-2">
@@ -155,8 +166,12 @@
                         Annuler
                     </button>
                     <button type="submit" id="submit-btn"
-                        class="w-full sm:w-auto bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white px-8 py-2.5 rounded-xl shadow-lg transition-all duration-300 font-semibold transform hover:scale-105">
-                        Enregistrer
+                        class="w-full sm:w-auto bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white px-8 py-2.5 rounded-xl shadow-lg transition-all duration-300 font-semibold flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100">
+                        <svg id="submit-spinner" class="hidden animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                        </svg>
+                        <span id="submit-label">Enregistrer</span>
                     </button>
                 </div>
             </form>
@@ -397,175 +412,212 @@
 </div>
 
 <script>
-// Variables globales
-let allEntries = @json($entries);
-let filteredEntries = [...allEntries];
+const CHECK_URL = "{{ route('teacher.cahier.check-duplicate') }}";
+const CLASS_ID = {{ $class->id }};
+const SUBJECT_ID = {{ $subject->id }};
 
-// Fonction pour calculer et afficher la durée
+let allEntries = @json($entries);
+let isSubmitting = false;      // verrou anti double soumission
+let currentEditId = null;      // id du cahier en cours de modification
+let duplicateTimer = null;
+
+// ---------- Utilitaires ----------
+function toLocalInput(date) {
+    const pad = n => String(n).padStart(2, '0');
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+function generateUuid() {
+    if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+        const r = Math.random() * 16 | 0;
+        return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+    });
+}
+
+function setSubmitting(state) {
+    isSubmitting = state;
+    const btn = document.getElementById('submit-btn');
+    btn.disabled = state;
+    document.getElementById('submit-spinner').classList.toggle('hidden', !state);
+    document.getElementById('submit-label').textContent = state ? 'Enregistrement...' : 'Enregistrer';
+}
+
+function showDuplicateError(message) {
+    const box = document.getElementById('duplicate-error');
+    box.textContent = '' + message;
+    box.classList.remove('hidden');
+}
+
+function hideDuplicateError() {
+    document.getElementById('duplicate-error').classList.add('hidden');
+}
+
+// ---------- Vérification de doublon (AJAX) ----------
+async function checkDuplicate() {
+    const start = document.getElementById('course_start_date').value;
+    const end = document.getElementById('course_end_date').value;
+    if (!start || !end) return { duplicate: false };
+
+    const params = new URLSearchParams({
+        class_id: CLASS_ID,
+        subject_id: SUBJECT_ID,
+        course_start_date: start,
+        course_end_date: end,
+    });
+    if (currentEditId) params.append('ignore_id', currentEditId);
+
+    try {
+        const res = await fetch(`${CHECK_URL}?${params.toString()}`, {
+            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            credentials: 'same-origin',
+        });
+        if (!res.ok) return { duplicate: false }; // le serveur revérifiera de toute façon
+        return await res.json();
+    } catch (e) {
+        return { duplicate: false };
+    }
+}
+
+function scheduleDuplicateCheck() {
+    clearTimeout(duplicateTimer);
+    duplicateTimer = setTimeout(async () => {
+        const result = await checkDuplicate();
+        result.duplicate ? showDuplicateError(result.message) : hideDuplicateError();
+    }, 400);
+}
+
+// ---------- Durée ----------
 function calculateDuration() {
     const startInput = document.getElementById('course_start_date');
     const endInput = document.getElementById('course_end_date');
     const durationDisplay = document.getElementById('duration-display');
     const durationText = document.getElementById('duration-text');
     const durationWarning = document.getElementById('duration-warning');
-    
+
     if (startInput.value && endInput.value) {
         const startDate = new Date(startInput.value);
         const endDate = new Date(endInput.value);
-        
+
         if (endDate <= startDate) {
             durationText.textContent = 'La fin doit être après le début';
-            durationDisplay.classList.remove('hidden');
-            durationDisplay.classList.remove('bg-blue-50');
+            durationDisplay.classList.remove('hidden', 'bg-blue-50');
             durationDisplay.classList.add('bg-red-50');
             durationText.classList.add('text-red-600');
             durationWarning.classList.remove('hidden');
             return false;
         }
-        
+
         const diffMs = endDate - startDate;
         const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
         const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-        
+
         durationText.textContent = `${diffHours}h${diffMinutes.toString().padStart(2, '0')}`;
-        durationDisplay.classList.remove('hidden');
-        durationDisplay.classList.remove('bg-red-50');
+        durationDisplay.classList.remove('hidden', 'bg-red-50');
         durationDisplay.classList.add('bg-blue-50');
         durationText.classList.remove('text-red-600');
-        
-        // Vérifier si la durée dépasse 5 heures
+
         if (diffHours > 5 || (diffHours === 5 && diffMinutes > 0)) {
             durationWarning.classList.remove('hidden');
             durationDisplay.classList.remove('bg-blue-50');
             durationDisplay.classList.add('bg-red-50');
             durationText.classList.add('text-red-600');
             return false;
-        } else {
-            durationWarning.classList.add('hidden');
         }
-        
+        durationWarning.classList.add('hidden');
         return true;
     }
-    
+
     durationDisplay.classList.add('hidden');
     return true;
 }
 
-// Vérifier que la date de début n'est pas future
 function validateStartDate() {
     const startInput = document.getElementById('course_start_date');
     const now = new Date();
-    const selectedDate = new Date(startInput.value);
-    
-    if (selectedDate > now) {
+    if (new Date(startInput.value) > now) {
         alert('La date de début ne peut pas être une date future.');
-        startInput.value = now.toISOString().slice(0, 16);
+        startInput.value = toLocalInput(now);
         calculateDuration();
         return false;
     }
     return true;
 }
 
-// Form validation complète
 function validateForm() {
     const startDate = document.getElementById('course_start_date').value;
     const endDate = document.getElementById('course_end_date').value;
     const content = document.getElementById('content').value.trim();
-    
-    if (!startDate) {
-        alert('Veuillez saisir la date et heure de début du cours.');
-        return false;
-    }
-    
-    if (!endDate) {
-        alert('Veuillez saisir la date et heure de fin du cours.');
-        return false;
-    }
-    
-    if (!content) {
-        alert('Veuillez saisir le contenu du cours.');
-        return false;
-    }
-    
-    if (!validateStartDate()) {
-        return false;
-    }
-    
+
+    if (!startDate) { alert('Veuillez saisir la date et heure de début du cours.'); return false; }
+    if (!endDate) { alert('Veuillez saisir la date et heure de fin du cours.'); return false; }
+    if (!content) { alert('Veuillez saisir le contenu du cours.'); return false; }
+    if (!validateStartDate()) return false;
     return calculateDuration();
 }
 
-// Modal functions
+// ---------- Modales ----------
 function openModalForCreate() {
+    currentEditId = null;
+    setSubmitting(false);
+    hideDuplicateError();
+
     document.getElementById('modal-title').innerText = 'Ajouter un Cahier de Texte';
     document.getElementById('modal-form').action = "{{ route('teacher.cahier.store') }}";
     document.getElementById('entry_id').value = '';
     document.getElementById('content').value = '';
-    
-    // Set default dates (now and 1 hour later)
+    // Nouvelle clé d'idempotence à CHAQUE ouverture du formulaire
+    document.getElementById('idempotency_key').value = generateUuid();
+
     const now = new Date();
-    const endTime = new Date(now.getTime() + 60 * 60 * 1000); // 1 hour later
-    
-    document.getElementById('course_start_date').value = now.toISOString().slice(0, 16);
-    document.getElementById('course_end_date').value = endTime.toISOString().slice(0, 16);
-    
+    const endTime = new Date(now.getTime() + 60 * 60 * 1000);
+    document.getElementById('course_start_date').value = toLocalInput(now);
+    document.getElementById('course_end_date').value = toLocalInput(endTime);
     document.getElementById('modal-meta').innerText = '';
-    
-    // Reset form validation
-    document.getElementById('modal-form').onsubmit = function() {
-        return validateForm();
-    };
-    
-    // Calculate initial duration
-    setTimeout(calculateDuration, 100);
-    
+
+    setTimeout(() => { calculateDuration(); scheduleDuplicateCheck(); }, 100);
+
     document.getElementById('cahier-modal').classList.remove('hidden');
     document.body.style.overflow = 'hidden';
 }
 
 function openModalForEdit(entry) {
+    currentEditId = entry.id;
+    setSubmitting(false);
+    hideDuplicateError();
+
     document.getElementById('modal-title').innerText = 'Modifier le Cahier de Texte';
     document.getElementById('modal-form').action = "{{ url('/teacher/cahier/update') }}/" + entry.id;
     document.getElementById('entry_id').value = entry.id;
+    document.getElementById('idempotency_key').value = generateUuid(); // ignoré par update, mais inoffensif
     document.getElementById('content').value = entry.content ?? '';
-    
-    // Set dates from entry
+
     if (entry.course_start_date) {
-        const startDate = new Date(entry.course_start_date);
-        document.getElementById('course_start_date').value = startDate.toISOString().slice(0, 16);
+        document.getElementById('course_start_date').value = toLocalInput(new Date(entry.course_start_date));
     }
-    
     if (entry.course_end_date) {
-        const endDate = new Date(entry.course_end_date);
-        document.getElementById('course_end_date').value = endDate.toISOString().slice(0, 16);
+        document.getElementById('course_end_date').value = toLocalInput(new Date(entry.course_end_date));
     }
-    
-    document.getElementById('modal-meta').innerText = "Créé : " + new Date(entry.created_at).toLocaleString() + " • Dernière modif : " + new Date(entry.updated_at).toLocaleString();
-    
-    // Set form validation
-    document.getElementById('modal-form').onsubmit = function() {
-        return validateForm();
-    };
-    
-    // Calculate duration
+
+    document.getElementById('modal-meta').innerText =
+        "Créé : " + new Date(entry.created_at).toLocaleString() +
+        " • Dernière modif : " + new Date(entry.updated_at).toLocaleString();
+
     setTimeout(calculateDuration, 100);
-    
+
     document.getElementById('cahier-modal').classList.remove('hidden');
     document.body.style.overflow = 'hidden';
 }
 
-// Fonction corrigée pour ouvrir le modal de contenu complet
 function openFullContentModal(content) {
-    console.log('Opening full content modal with content:', content.substring(0, 50) + '...');
     const contentBody = document.getElementById('full-content-body');
-    
-    // Décoder le contenu HTML
     const decodedContent = decodeURIComponent(content)
         .replace(/\\'/g, "'")
         .replace(/\\"/g, '"')
         .replace(/\\n/g, '\n')
         .replace(/\\r/g, '\r')
         .replace(/\\t/g, '\t');
-    
+
     contentBody.textContent = decodedContent;
     document.getElementById('full-content-modal').classList.remove('hidden');
     document.body.style.overflow = 'hidden';
@@ -577,59 +629,36 @@ function closeFullContentModal() {
 }
 
 function closeModal() {
+    if (isSubmitting) return; // on ne ferme pas pendant l'envoi
     document.getElementById('cahier-modal').classList.add('hidden');
     document.body.style.overflow = 'auto';
 }
 
-// Fonctions de filtrage
+// ---------- Filtres ----------
 function applyFilters() {
     const monthFilter = document.getElementById('filter-month').value;
     const statusFilter = document.getElementById('filter-status').value;
     const dateFilter = document.getElementById('filter-date').value;
-    
+
     const rows = document.querySelectorAll('.entry-row, .entry-card');
     let visibleCount = 0;
-    
+
     rows.forEach(row => {
         const month = row.getAttribute('data-month');
         const status = row.getAttribute('data-status');
         const date = row.getAttribute('data-date');
-        
+
         let show = true;
-        
-        // Filtre par mois
-        if (monthFilter !== 'all' && month !== monthFilter) {
-            show = false;
-        }
-        
-        // Filtre par statut
-        if (statusFilter !== 'all' && status !== statusFilter) {
-            show = false;
-        }
-        
-        // Filtre par date
-        if (dateFilter && date !== dateFilter) {
-            show = false;
-        }
-        
-        if (show) {
-            row.style.display = '';
-            visibleCount++;
-        } else {
-            row.style.display = 'none';
-        }
+        if (monthFilter !== 'all' && month !== monthFilter) show = false;
+        if (statusFilter !== 'all' && status !== statusFilter) show = false;
+        if (dateFilter && date !== dateFilter) show = false;
+
+        row.style.display = show ? '' : 'none';
+        if (show) visibleCount++;
     });
-    
-    // Mettre à jour le compteur
+
     document.getElementById('entry-count').textContent = `${visibleCount} enregistrements`;
-    
-    // Afficher/masquer le message "aucun résultat"
-    const noResults = document.getElementById('no-results');
-    if (visibleCount === 0) {
-        noResults.classList.remove('hidden');
-    } else {
-        noResults.classList.add('hidden');
-    }
+    document.getElementById('no-results').classList.toggle('hidden', visibleCount !== 0);
 }
 
 function resetFilters() {
@@ -639,97 +668,86 @@ function resetFilters() {
     applyFilters();
 }
 
-// Initialisation
-document.addEventListener('DOMContentLoaded', function() {
-    // Écouteurs pour les filtres
+// ---------- Initialisation ----------
+document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('filter-month').addEventListener('change', applyFilters);
     document.getElementById('filter-status').addEventListener('change', applyFilters);
     document.getElementById('filter-date').addEventListener('change', applyFilters);
-    
-    // Écouteurs pour les dates
+
     const startDateInput = document.getElementById('course_start_date');
     const endDateInput = document.getElementById('course_end_date');
-    
-    if (startDateInput) {
-        startDateInput.addEventListener('change', function() {
-            validateStartDate();
+
+    startDateInput.addEventListener('change', function () {
+        validateStartDate();
+        calculateDuration();
+
+        const startDate = new Date(this.value);
+        const endDate = new Date(endDateInput.value);
+        if (endDate <= startDate) {
+            endDateInput.value = toLocalInput(new Date(startDate.getTime() + 60 * 60 * 1000));
             calculateDuration();
-            
-            // Ajuster la date de fin si elle est avant la date de début
-            const startDate = new Date(this.value);
-            const endDate = new Date(endDateInput.value);
-            
-            if (endDate <= startDate) {
-                const newEndDate = new Date(startDate.getTime() + 60 * 60 * 1000); // +1 heure
-                endDateInput.value = newEndDate.toISOString().slice(0, 16);
-                calculateDuration();
-            }
-        });
-    }
-    
-    if (endDateInput) {
-        endDateInput.addEventListener('change', calculateDuration);
-    }
-    
-    // Fermer les modales en cliquant à l'extérieur
-    document.addEventListener('click', function(event) {
-        const cahierModal = document.getElementById('cahier-modal');
-        const fullContentModal = document.getElementById('full-content-modal');
-        
-        if (event.target === cahierModal) {
-            closeModal();
         }
-        if (event.target === fullContentModal) {
-            closeFullContentModal();
-        }
+        scheduleDuplicateCheck();
     });
 
-    // Fermer les modales avec la touche Escape
-    document.addEventListener('keydown', function(event) {
+    endDateInput.addEventListener('change', function () {
+        calculateDuration();
+        scheduleDuplicateCheck();
+    });
+
+    document.addEventListener('click', function (event) {
+        if (event.target === document.getElementById('cahier-modal')) closeModal();
+        if (event.target === document.getElementById('full-content-modal')) closeFullContentModal();
+    });
+
+    document.addEventListener('keydown', function (event) {
         if (event.key === 'Escape') {
             closeModal();
             closeFullContentModal();
         }
     });
 
-    // Gestionnaire de soumission du formulaire
+    // ===== SOUMISSION SÉCURISÉE (un seul handler) =====
     const form = document.getElementById('modal-form');
-    if (form) {
-        form.addEventListener('submit', function(e) {
-            if (!validateForm()) {
-                e.preventDefault();
-            }
-        });
-    }
-    
-    // Corriger les boutons "Voir plus" existants
-    document.querySelectorAll('.see-more-btn').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            const content = this.previousElementSibling.getAttribute('data-full-content');
-            openFullContentModal(content);
-        });
+    form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        // Anti double-clic / double Entrée
+        if (isSubmitting) return;
+
+        if (!validateForm()) return;
+
+        setSubmitting(true);
+
+        // Pré-vérification du doublon AVANT d'envoyer
+        const result = await checkDuplicate();
+        if (result.duplicate) {
+            showDuplicateError(result.message);
+            setSubmitting(false);
+            return;
+        }
+
+        hideDuplicateError();
+        // form.submit() ne redéclenche pas l'événement "submit" : pas de boucle
+        form.submit();
     });
-    
-    // Initialiser le compteur
+
+    // Si l'utilisateur revient via le bouton "retour" (page en cache), on réactive le bouton
+    window.addEventListener('pageshow', function (event) {
+        if (event.persisted) setSubmitting(false);
+    });
+
     applyFilters();
 });
 
-// Fonction pour formater les dates en français
 function formatDateFr(dateString) {
     const date = new Date(dateString);
-    const options = { 
-        weekday: 'long', 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    };
-    return date.toLocaleDateString('fr-FR', options);
+    return date.toLocaleDateString('fr-FR', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+    });
 }
 
-// Fonction pour détecter si un cours peut être modifié (moins d'un mois)
 function canEditEntry(createdAt) {
     const createdDate = new Date(createdAt);
     const now = new Date();
