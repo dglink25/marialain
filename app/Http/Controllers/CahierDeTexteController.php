@@ -70,7 +70,7 @@ class CahierDeTexteController extends Controller{
             (int) $data['subject_id'],
             Carbon::parse($data['course_start_date']),
             Carbon::parse($data['course_end_date']),
-            $data['ignore_id'] ?? null
+            isset($data['ignore_id']) ? (int) $data['ignore_id'] : null
         );
 
         return response()->json([
@@ -84,7 +84,7 @@ class CahierDeTexteController extends Controller{
         $request->validate([
             'class_id'          => 'required|integer',
             'subject_id'        => 'required|integer',
-            'timetable_id'      => 'required|integer',
+            'timetable_id'      => 'nullable|integer', // peut être vide s'il n'y a pas de cours ce jour
             'day'               => 'required|string',
             'content'           => 'required|string',
             'course_start_date' => 'required|date',
@@ -139,7 +139,7 @@ class CahierDeTexteController extends Controller{
                 'class_id'          => $request->class_id,
                 'subject_id'        => $request->subject_id,
                 'teacher_id'        => $teacherId,
-                'timetable_id'      => $request->timetable_id,
+                'timetable_id'      => $request->timetable_id ?: null, // la colonne doit être nullable
                 'day'               => $request->day,
                 'content'           => $request->content,
                 'academic_year_id'  => $academicYear->id,
@@ -172,9 +172,10 @@ class CahierDeTexteController extends Controller{
         // L'enseignant ne peut modifier que SES cahiers
         $cahier = CahierDeTexte::where('teacher_id', Auth::id())->findOrFail($id);
 
-        $canEdit = Carbon::now()->diffInMinutes($cahier->created_at, true) <= 10;
+        // Même règle que la vue : modification possible pendant 1 mois après la création
+        $canEdit = $cahier->created_at->gt(now()->subMonth());
         if (!$canEdit) {
-            return back()->with('error', 'Le délai de modification est expiré (10 minutes maximum).');
+            return back()->with('error', 'Le délai de modification est expiré (1 mois maximum).');
         }
 
         $startDate = Carbon::parse($request->course_start_date);
@@ -217,7 +218,6 @@ class CahierDeTexteController extends Controller{
 
     public function history($classId, $subjectId){
         $teacherId = Auth::id();
-        $now = now();
 
         $academicYear = AcademicYear::where('active', 1)->firstOrFail();
 
@@ -241,13 +241,27 @@ class CahierDeTexteController extends Controller{
         $subject = DB::table('subjects')->where('id', $subjectId)->first();
         if (!$subject) abort(404);
 
-        // Cours actuel
-        $currentLesson = DB::table('timetables')
+        // Cours du jour pour cette matière / classe / enseignant / année active
+        $today   = now()->format('l');
+        $timeNow = now()->format('H:i:s');
+
+        $baseLessons = fn () => DB::table('timetables')
             ->where('class_id', $classId)
             ->where('teacher_id', $teacherId)
             ->where('subject_id', $subjectId)
-            ->where('academic_year_id', $academicYear->id)
-            ->first();
+            ->where('academic_year_id', $academicYear->id);
+
+        // Créneaux d'aujourd'hui
+        $todayLessons = $baseLessons()->where('day', $today)->orderBy('start_time')->get();
+
+        // En cours > prochain > premier de la journée
+        $currentLesson =
+            $todayLessons->first(fn ($l) => $l->start_time <= $timeNow && $l->end_time >= $timeNow)
+            ?? $todayLessons->first(fn ($l) => $l->start_time > $timeNow)
+            ?? $todayLessons->first();
+
+        // Pour renseigner timetable_id même s'il n'y a pas de cours aujourd'hui
+        $anyLesson = $currentLesson ?? $baseLessons()->first();
 
         // Cahier filtré par matière + enseignant
         $entries = CahierDeTexte::with(['subject', 'timetable'])
@@ -258,10 +272,12 @@ class CahierDeTexteController extends Controller{
             ->get();
 
         return view('teacher.cahier.history', [
-            'entries'        => $entries,
-            'class'          => $class,
-            'subject'        => $subject,
-            'currentLesson'  => $currentLesson,
+            'entries'       => $entries,
+            'class'         => $class,
+            'subject'       => $subject,
+            'currentLesson' => $currentLesson,
+            'todayLessons'  => $todayLessons,
+            'anyLesson'     => $anyLesson,
         ]);
     }
 
@@ -662,7 +678,5 @@ class CahierDeTexteController extends Controller{
         return redirect()->back()->with('success', 'Montant brut enregistré pour ' . $teacher->name . 
             ' dans la classe ' . $class->name . ' pour la matière ' . $subject->name);
     }
-
-
 
 }
