@@ -69,7 +69,7 @@
             background-color: #fafafa;
         }
 
-        /* Cellule cours — fond coloré, lisible */
+        /* Cellule cours - fond coloré, lisible */
         .course-cell {
             background-color: #e8f0fe;
             vertical-align: middle;
@@ -164,7 +164,7 @@
                         $efmt = str_replace(':', 'h', substr($s->end_time,   0, 5));
                     @endphp
                     <div class="course-block">
-                        <div class="subject-name">{{ $s->subject->name ?? '—' }}</div>
+                        <div class="subject-name">{{ $s->subject->name ?? '-' }}</div>
                         <div class="time-range">{{ $sfmt }} – {{ $efmt }}</div>
                     </div>
                     @endforeach

@@ -105,12 +105,12 @@ class StudentsController extends Controller{
         if ($request->filled('classe'))  $parts[] = $request->classe;
         if ($request->filled('gender'))  $parts[] = ($request->gender === 'M' ? 'Garçons' : 'Filles');
         if ($request->filled('search'))  $parts[] = 'Recherche : "' . $request->search . '"';
-        $label = $parts ? implode(' — ', $parts) : 'Primaire & Maternelle';
+        $label = $parts ? implode(' - ', $parts) : 'Primaire & Maternelle';
 
         $class = (object) ['name' => $label];
 
         $pdf = Pdf::loadView('primaire.ecoliers.pdf', compact('students', 'class'));
-        $filename = 'liste_eleves_' . str_replace([' ', '—', '"', ':'], ['_', '-', '', ''], $label) . '.pdf';
+        $filename = 'liste_eleves_' . str_replace([' ', '-', '"', ':'], ['_', '-', '', ''], $label) . '.pdf';
         return $pdf->download($filename);
     }
 

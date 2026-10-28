@@ -106,7 +106,7 @@
                             <td class="px-4 py-3 whitespace-nowrap border-b">
                                 <div class="flex items-center gap-2">
                                     <span class="text-sm text-gray-900 font-mono phone-display-{{ $student->id }}">
-                                        {{ $student->parent_phone ?? '—' }}
+                                        {{ $student->parent_phone ?? '-' }}
                                     </span>
                                     <button
                                         type="button"
@@ -163,7 +163,7 @@
 
 
 {{-- ═══════════════════════════════════════════════════════
-     MODAL — Modifier le téléphone du parent
+     MODAL - Modifier le téléphone du parent
 ═══════════════════════════════════════════════════════ --}}
 <div id="phoneModal" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true">
     <div class="fixed inset-0 bg-black/50 backdrop-blur-sm" onclick="closePhoneModal()"></div>

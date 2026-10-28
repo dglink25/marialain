@@ -252,11 +252,11 @@
                                 <div id="fee-indicator" class="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm hidden">
                                     <div id="fee-new" class="flex justify-between items-center mb-1">
                                         <span class="text-gray-600">Nouvelle inscription :</span>
-                                        <span id="fee-new-amount" class="font-bold text-blue-700">—</span>
+                                        <span id="fee-new-amount" class="font-bold text-blue-700">-</span>
                                     </div>
                                     <div id="fee-re" class="flex justify-between items-center">
                                         <span class="text-gray-600">Réinscription :</span>
-                                        <span id="fee-re-amount" class="font-bold text-green-700">—</span>
+                                        <span id="fee-re-amount" class="font-bold text-green-700">-</span>
                                     </div>
                                 </div>
                             </div>
@@ -342,7 +342,7 @@
         // Mettre à jour les labels du select
         regSelect.options[1].text = `Nouvelle inscription (${config.newFee.toLocaleString('fr-FR')} FCFA)`;
         regSelect.options[2].text = config.reFee === 0
-            ? 'Réinscription (Gratuit — 0 FCFA)'
+            ? 'Réinscription (Gratuit - 0 FCFA)'
             : `Réinscription (${config.reFee.toLocaleString('fr-FR')} FCFA)`;
     }
 

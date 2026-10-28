@@ -693,6 +693,19 @@ Route::middleware(['auth'])->prefix('cahier-de-texte')->group(function () {
         [CahierDeTexteController::class, 'validateMultiple'])
         ->name('cahier.validate.multiple');
     
+    // Centre de téléchargement des cahiers de texte (filtres matière/classe, prof/classe, toute la classe)
+    Route::get('/telecharger', 
+        [CahierDeTexteController::class, 'exportIndex'])
+        ->name('cahier.export.index');
+
+    Route::match(['get', 'post'], '/telecharger/pdf', 
+        [CahierDeTexteController::class, 'downloadCahierTexte'])
+        ->name('cahier.export.pdf');
+
+    Route::get('/ajax/classe-data/{classeId}', 
+        [CahierDeTexteController::class, 'getClassExportData'])
+        ->name('cahier.export.classe-data');
+
     // Téléchargement du rapport
     Route::get('/teacher/{teacher}/class/{classe}/subject/{subject}/download', 
         [CahierDeTexteController::class, 'downloadReport'])

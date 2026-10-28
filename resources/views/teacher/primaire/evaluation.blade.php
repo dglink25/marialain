@@ -20,8 +20,8 @@
                 <h1 class="text-2xl font-bold text-gray-900">{{ $titre }}</h1>
                 <p class="text-sm text-gray-500 mt-0.5">
                     Classe : <span class="font-semibold text-{{ $couleur }}-700">{{ $classe->name }}</span>
-                    — {{ $annee->name }}
-                    — {{ $classe->students->count() }} élève(s)
+                    - {{ $annee->name }}
+                    - {{ $classe->students->count() }} élève(s)
                 </p>
             </div>
         </div>
@@ -37,13 +37,13 @@
         <div class="w-20 h-20 bg-{{ $couleur }}-50 rounded-full flex items-center justify-center mx-auto mb-5">
             <i class="{{ $icon }} text-{{ $couleur }}-400 text-3xl"></i>
         </div>
-        <h2 class="text-xl font-bold text-gray-700 mb-2">{{ $titre }} — {{ $classe->name }}</h2>
+        <h2 class="text-xl font-bold text-gray-700 mb-2">{{ $titre }} - {{ $classe->name }}</h2>
         <p class="text-gray-500 text-sm mb-6 max-w-md mx-auto">
             {{ $classe->students->count() }} élève(s) inscrit(s) dans cette classe pour l'année {{ $annee->name }}.
         </p>
         <div class="inline-flex items-center gap-2 bg-{{ $couleur }}-50 text-{{ $couleur }}-700 border border-{{ $couleur }}-200 rounded-xl px-5 py-3 text-sm font-medium">
             <i class="fas fa-tools text-xs"></i>
-            Saisie des notes — fonctionnalité en cours de développement.
+            Saisie des notes - fonctionnalité en cours de développement.
         </div>
     </div>
 

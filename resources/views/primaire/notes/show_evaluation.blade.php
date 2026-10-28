@@ -21,13 +21,13 @@
             </div>
             <div>
                 <h1 class="text-xl sm:text-2xl font-bold text-gray-900">
-                    {{ $evaluation->subject->name ?? '—' }}
-                    @if($evaluation->titre) — <span class="text-gray-600">{{ $evaluation->titre }}</span> @endif
+                    {{ $evaluation->subject->name ?? '-' }}
+                    @if($evaluation->titre) - <span class="text-gray-600">{{ $evaluation->titre }}</span> @endif
                 </h1>
                 <p class="text-xs sm:text-sm text-gray-500 mt-0.5">
-                    <span class="font-semibold text-blue-700">{{ $classe->name }}</span> — {{ $annee_academique->name }}
+                    <span class="font-semibold text-blue-700">{{ $classe->name }}</span> - {{ $annee_academique->name }}
                     @if($evaluation->date_evaluation)
-                        — {{ $evaluation->date_evaluation->locale('fr')->isoFormat('D MMM YYYY') }}
+                        - {{ $evaluation->date_evaluation->locale('fr')->isoFormat('D MMM YYYY') }}
                     @endif
                 </p>
             </div>
@@ -55,7 +55,7 @@
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 text-center">
             <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Moyenne</p>
             <p class="text-2xl font-black text-purple-600">
-                {{ $moyenne !== null ? number_format($moyenne, 2, ',', '') : '—' }}
+                {{ $moyenne !== null ? number_format($moyenne, 2, ',', '') : '-' }}
             </p>
         </div>
     </div>
@@ -97,7 +97,7 @@
                     @endphp
                     <tr class="hover:bg-gray-50 transition-colors {{ $i % 2 === 0 ? '' : 'bg-gray-50/40' }}">
                         <td class="px-5 py-2.5 text-center text-gray-400 text-xs">{{ $i + 1 }}</td>
-                        <td class="px-5 py-2.5 text-xs text-gray-500 font-mono">{{ $student->num_educ ?? '—' }}</td>
+                        <td class="px-5 py-2.5 text-xs text-gray-500 font-mono">{{ $student->num_educ ?? '-' }}</td>
                         <td class="px-5 py-2.5 font-semibold text-gray-800">{{ strtoupper($student->last_name) }}</td>
                         <td class="px-5 py-2.5 text-gray-600">{{ $student->first_name }}</td>
                         <td class="px-5 py-2.5 text-center">
@@ -111,10 +111,10 @@
                                     {{ number_format($note, 1, ',', '') }}
                                 </span>
                             @else
-                                <span class="text-gray-300 text-sm italic">—</span>
+                                <span class="text-gray-300 text-sm italic">-</span>
                             @endif
                         </td>
-                        <td class="px-5 py-2.5 text-center font-bold text-gray-700">{{ $rang ?? '—' }}</td>
+                        <td class="px-5 py-2.5 text-center font-bold text-gray-700">{{ $rang ?? '-' }}</td>
                         <td class="px-5 py-2.5 text-center">
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-{{ $aColor }}-100 text-{{ $aColor }}-800">
                                 {{ $aLabel }}

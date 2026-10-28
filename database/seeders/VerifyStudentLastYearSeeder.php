@@ -26,7 +26,7 @@ use Illuminate\Support\Facades\DB;
  */
 class VerifyStudentLastYearSeeder extends Seeder
 {
-    /** ID de l'année active 2025-2026 — NE PAS TOUCHER */
+    /** ID de l'année active 2025-2026 - NE PAS TOUCHER */
     private const ACTIVE_YEAR_ID = 1;
 
     /**

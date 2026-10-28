@@ -239,14 +239,14 @@
                                 @endif
                             </label>
                         </div>
-                        {{-- Réinscription — disponible pour tous, montant selon entité --}}
+                        {{-- Réinscription - disponible pour tous, montant selon entité --}}
                         <div class="flex items-center">
                             <input type="radio" name="registration_type" value="re_registration" id="type_re"
                                    {{ $student->registration_type == 're_registration' ? 'checked' : '' }} class="mr-2">
                             <label for="type_re" class="text-sm text-gray-700">
                                 Réinscription
                                 @if(in_array($student->entity_id, [1, 2]))
-                                    <span class="text-xs font-semibold text-green-600 ml-1">(Gratuit — 0 FCFA)</span>
+                                    <span class="text-xs font-semibold text-green-600 ml-1">(Gratuit - 0 FCFA)</span>
                                 @else
                                     <span class="text-xs text-gray-500 ml-1">(5 000 FCFA)</span>
                                 @endif

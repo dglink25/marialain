@@ -17,7 +17,7 @@
                 <i class="{{ $icon }} text-white text-lg"></i>
             </div>
             <div>
-                <h1 class="text-2xl font-bold text-gray-900">{{ $titre }} — {{ $classe->name }}</h1>
+                <h1 class="text-2xl font-bold text-gray-900">{{ $titre }} - {{ $classe->name }}</h1>
                 <p class="text-sm text-gray-500 mt-0.5">{{ $annee_academique->name }}</p>
             </div>
         </div>
@@ -34,7 +34,7 @@
             <i class="{{ $icon }} text-{{ $couleur }}-400 text-3xl"></i>
         </div>
         <h2 class="text-xl font-bold text-gray-700 mb-2">{{ $titre }}</h2>
-        <p class="text-gray-500 text-sm mb-6">Classe : <strong>{{ $classe->name }}</strong> — {{ $classe->students->count() }} élève(s)</p>
+        <p class="text-gray-500 text-sm mb-6">Classe : <strong>{{ $classe->name }}</strong> - {{ $classe->students->count() }} élève(s)</p>
         <div class="inline-flex items-center gap-2 bg-{{ $couleur }}-50 text-{{ $couleur }}-700 border border-{{ $couleur }}-200 rounded-xl px-5 py-3 text-sm font-medium">
             <i class="fas fa-tools text-xs"></i>
             Cette fonctionnalité est en cours de développement.

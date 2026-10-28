@@ -122,7 +122,7 @@
 </div>
 
 {{-- ══════════════════════════════════════════════
-     MODAL DE SÉCURITÉ — soumission & suppression
+     MODAL DE SÉCURITÉ - soumission & suppression
      Thème blanc/bleu + variante rouge pour delete
 ══════════════════════════════════════════════ --}}
 <style>
@@ -289,7 +289,7 @@
                 </svg>
             </div>
 
-            <h2 class="sm-title blue" id="smTitle">Zone Sécurisée — Saisie de Notes</h2>
+            <h2 class="sm-title blue" id="smTitle">Zone Sécurisée - Saisie de Notes</h2>
             <div class="sm-divider blue" id="smDivider"></div>
 
             <div class="sm-intro blue" id="smIntro">
@@ -334,7 +334,7 @@
             <p class="sm-footnote">Ces mesures s'appliquent conformément à la politique de sécurité et de confidentialité de l'établissement.</p>
 
             <button class="sm-btn-confirm blue" id="smConfirmBtn" onclick="smConfirm()">
-                ✓ &nbsp; D'accord, j'ai compris — Confirmer
+                ✓ &nbsp; D'accord, j'ai compris - Confirmer
             </button>
             <button class="sm-btn-cancel" onclick="smClose()">Annuler</button>
 
@@ -368,12 +368,12 @@
             // Icône triangle danger
             icon.innerHTML = '<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>';
             title.className = 'sm-title red';
-            title.textContent = 'Attention — Suppression Définitive';
+            title.textContent = 'Attention - Suppression Définitive';
             divider.className = 'sm-divider red';
             intro.className = 'sm-intro red';
             intro.innerHTML = 'Vous êtes sur le point de <strong>supprimer définitivement toutes les notes</strong> de cette évaluation. Cette action est <strong>irréversible</strong>.';
             confirmBtn.className = 'sm-btn-confirm red';
-            confirmBtn.innerHTML = '✓ &nbsp; D\'accord, j\'ai compris — Supprimer';
+            confirmBtn.innerHTML = '✓ &nbsp; D\'accord, j\'ai compris - Supprimer';
         } else {
             box.classList.remove('is-delete');
             topBar.classList.remove('red');
@@ -382,12 +382,12 @@
             icon.setAttribute('stroke', '#2563eb');
             icon.innerHTML = '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4" stroke-width="2"/>';
             title.className = 'sm-title blue';
-            title.textContent = 'Zone Sécurisée — Saisie de Notes';
+            title.textContent = 'Zone Sécurisée - Saisie de Notes';
             divider.className = 'sm-divider blue';
             intro.className = 'sm-intro blue';
             intro.innerHTML = 'Vous êtes sur le point de <strong>soumettre des modifications de notes</strong>, une opération hautement confidentielle.';
             confirmBtn.className = 'sm-btn-confirm blue';
-            confirmBtn.innerHTML = '✓ &nbsp; D\'accord, j\'ai compris — Confirmer';
+            confirmBtn.innerHTML = '✓ &nbsp; D\'accord, j\'ai compris - Confirmer';
         }
 
         const overlay = document.getElementById('smOverlay');

@@ -256,7 +256,7 @@
             @foreach($tableauEleves as $row)
             @php
                 $rowClass = $loop->even ? 'row-even' : 'row-odd';
-                $fmtMoy   = fn($v) => $v !== null ? number_format($v, 2, ',', '') : '—';
+                $fmtMoy   = fn($v) => $v !== null ? number_format($v, 2, ',', '') : '-';
             @endphp
             <tr class="{{ $rowClass }}">
                 <td>{{ $row['num'] }}</td>
@@ -267,17 +267,17 @@
                 </td>
 
                 {{-- Trimestre 1 --}}
-                <td>{{ $row['conduite_t1'] > 0 ? number_format($row['conduite_t1'], 2, ',', '') : '—' }}</td>
+                <td>{{ $row['conduite_t1'] > 0 ? number_format($row['conduite_t1'], 2, ',', '') : '-' }}</td>
                 <td><strong>{{ $fmtMoy($row['moy_t1']) }}</strong></td>
                 <td>{{ $row['rang_t1'] }}</td>
 
                 {{-- Trimestre 2 --}}
-                <td>{{ $row['conduite_t2'] > 0 ? number_format($row['conduite_t2'], 2, ',', '') : '—' }}</td>
+                <td>{{ $row['conduite_t2'] > 0 ? number_format($row['conduite_t2'], 2, ',', '') : '-' }}</td>
                 <td><strong>{{ $fmtMoy($row['moy_t2']) }}</strong></td>
                 <td>{{ $row['rang_t2'] }}</td>
 
                 {{-- Trimestre 3 --}}
-                <td>{{ $row['conduite_t3'] > 0 ? number_format($row['conduite_t3'], 2, ',', '') : '—' }}</td>
+                <td>{{ $row['conduite_t3'] > 0 ? number_format($row['conduite_t3'], 2, ',', '') : '-' }}</td>
                 <td><strong>{{ $fmtMoy($row['moy_t3']) }}</strong></td>
                 <td>{{ $row['rang_t3'] }}</td>
 
@@ -290,7 +290,7 @@
                     @elseif($row['statut'] === 'Redouble')
                         <span class="statut-redouble">REDOUBLE</span>
                     @else
-                        <span>—</span>
+                        <span>-</span>
                     @endif
                 </td>
             </tr>

@@ -27,7 +27,7 @@
                 <p class="text-indigo-200 text-sm mt-0.5">
                     <i class="fas fa-clock mr-1"></i>
                     {{ \Carbon\Carbon::parse($slot->start_time)->format('H:i') }}
-                    —
+                    -
                     {{ \Carbon\Carbon::parse($slot->end_time)->format('H:i') }}
                 </p>
             </div>

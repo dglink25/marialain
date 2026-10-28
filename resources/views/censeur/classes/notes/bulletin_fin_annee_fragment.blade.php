@@ -31,7 +31,7 @@
             <div class="student-box">
                 Nom : <strong>{{ strtoupper($d['student']->last_name) }}</strong> &nbsp;&nbsp;
                 Prénoms : <strong>{{ $d['student']->first_name }}</strong><br>
-                N° Matricule : {{ $d['student']->num_educ ?? '—' }} &nbsp;&nbsp;
+                N° Matricule : {{ $d['student']->num_educ ?? '-' }} &nbsp;&nbsp;
                 Sexe : {{ $d['student']->gender == 'M' ? 'Masculin' : 'Féminin' }}
             </div>
             <div class="qr-box">
@@ -76,7 +76,7 @@
                 <tr>
                     <th rowspan="2">Matières</th>
                     <th rowspan="2">Coef</th>
-                    <th colspan="3">Notes de Classe — Trimestre 3</th>
+                    <th colspan="3">Notes de Classe - Trimestre 3</th>
                     <th rowspan="2">Moy. /20</th>
                     <th rowspan="2">Note Coef.</th>
                     <th rowspan="2">Rang T3</th>
@@ -128,7 +128,7 @@
                 <div class="summary-content">
                     Moy. Annuelle : <strong>{{ $d['moyAnnuelle'] }}</strong> / 20<br>
                     Rang Annuel : <strong>{{ $d['rangAnnuel'] }}</strong><br>
-                    Moy. T3 : <strong>{{ $d['moyT3'] }}</strong> — Rang T3 : <strong>{{ $d['rangT3'] }}</strong><br>
+                    Moy. T3 : <strong>{{ $d['moyT3'] }}</strong> - Rang T3 : <strong>{{ $d['rangT3'] }}</strong><br>
                     Mention : <strong>{{ $d['appreciationGenerale'] }}</strong>
                 </div>
             </div>

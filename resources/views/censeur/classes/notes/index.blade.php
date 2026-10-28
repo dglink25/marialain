@@ -362,7 +362,7 @@
 
         const msg = document.getElementById('trimestreSelectedMsg');
         document.getElementById('trimestreSelectedText').textContent =
-            `Trimestre ${num} sélectionné — cliquez sur « Télécharger PDF » pour continuer.`;
+            `Trimestre ${num} sélectionné - cliquez sur « Télécharger PDF » pour continuer.`;
         msg.classList.remove('hidden');
         msg.classList.add('flex');
 
@@ -375,7 +375,7 @@
 
     /* ======================================================
        LANCER LE TÉLÉCHARGEMENT VIA FETCH (Blob)
-       — Remplace le mécanisme iframe qui ne déclenchait
+       - Remplace le mécanisme iframe qui ne déclenchait
          pas toujours l'événement "load" sur les navigateurs
          modernes pour les réponses de type attachment.
     ====================================================== */
@@ -450,7 +450,7 @@
 
         } catch (err) {
             if (err.name === 'AbortError') {
-                // Annulation volontaire — on ne fait rien (closeAnimate gère l'UI)
+                // Annulation volontaire - on ne fait rien (closeAnimate gère l'UI)
                 return;
             }
             // Erreur réseau ou serveur
@@ -504,7 +504,7 @@
         msg.classList.remove('hidden');
         msg.classList.add('flex');
         document.getElementById('trimestreSelectedText').textContent =
-            `Trimestre ${selectedTrimestre} — téléchargement terminé ✓`;
+            `Trimestre ${selectedTrimestre} - téléchargement terminé ✓`;
 
         // Réactiver le bouton PDF
         const btnPdf = document.getElementById('btnTelechargerPdf');

@@ -29,7 +29,7 @@
                 <h1 class="text-2xl font-bold text-gray-900">Annonces - Notes &amp; Évaluations</h1>
                 <p class="text-sm text-gray-500 mt-0.5">
                     @if($classe)
-                        Classe : <span class="font-semibold text-indigo-700">{{ $classe->name }}</span> — {{ $annee->name }}
+                        Classe : <span class="font-semibold text-indigo-700">{{ $classe->name }}</span> - {{ $annee->name }}
                     @else
                         {{ $annee->name }}
                     @endif

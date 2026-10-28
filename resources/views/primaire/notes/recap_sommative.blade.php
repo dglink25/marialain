@@ -9,9 +9,9 @@
                 <i class="fas fa-table text-white"></i>
             </div>
             <div>
-                <h1 class="text-xl sm:text-2xl font-bold text-gray-900">Récapitulatif — Toutes matières</h1>
+                <h1 class="text-xl sm:text-2xl font-bold text-gray-900">Récapitulatif - Toutes matières</h1>
                 <p class="text-xs sm:text-sm text-gray-500 mt-0.5">
-                    <span class="font-semibold text-purple-700">{{ $classe->name }}</span> — {{ $annee_academique->name }}
+                    <span class="font-semibold text-purple-700">{{ $classe->name }}</span> - {{ $annee_academique->name }}
                 </p>
             </div>
         </div>
@@ -30,7 +30,7 @@
     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <div class="px-5 py-4 border-b border-gray-100">
             <h2 class="font-bold text-gray-800">
-                {{ $classe->students->count() }} élève(s) — {{ $matieres->count() }} matière(s)
+                {{ $classe->students->count() }} élève(s) - {{ $matieres->count() }} matière(s)
             </h2>
         </div>
         <div class="overflow-x-auto">
@@ -45,7 +45,7 @@
                         <th rowspan="2" class="px-3 py-3 text-center border-r border-gray-700 w-12">Sexe</th>
                         @foreach($matieres as $eval)
                         <th colspan="2" class="px-3 py-2 text-center border-r border-gray-600 bg-indigo-800 whitespace-nowrap">
-                            {{ $eval->subject->name ?? '—' }}
+                            {{ $eval->subject->name ?? '-' }}
                             <span class="block text-[10px] font-normal text-indigo-300">/{{ number_format($eval->note_max, 0) }}</span>
                         </th>
                         @endforeach
@@ -63,11 +63,11 @@
                     @foreach($classe->students as $i => $student)
                     @php
                         $moy  = $moyennes[$student->id] ?? null;
-                        $rang = $rangGeneraux[$student->id] ?? '—';
+                        $rang = $rangGeneraux[$student->id] ?? '-';
                     @endphp
                     <tr class="hover:bg-gray-50 transition-colors {{ $i % 2 === 0 ? 'bg-white' : 'bg-gray-50/50' }}">
                         <td class="px-3 py-2.5 text-center text-gray-400 text-xs border-r border-gray-100">{{ $i+1 }}</td>
-                        <td class="px-3 py-2.5 text-xs text-gray-500 font-mono border-r border-gray-100">{{ $student->num_educ ?? '—' }}</td>
+                        <td class="px-3 py-2.5 text-xs text-gray-500 font-mono border-r border-gray-100">{{ $student->num_educ ?? '-' }}</td>
                         <td class="px-4 py-2.5 font-semibold text-gray-800 border-r border-gray-100">{{ strtoupper($student->last_name) }}</td>
                         <td class="px-4 py-2.5 text-gray-600 border-r border-gray-100">{{ $student->first_name }}</td>
                         <td class="px-3 py-2.5 text-center border-r border-gray-100">
@@ -89,11 +89,11 @@
                                     {{ number_format($note, 1, ',', '') }}
                                 </span>
                             @else
-                                <span class="text-gray-300 text-xs">—</span>
+                                <span class="text-gray-300 text-xs">-</span>
                             @endif
                         </td>
                         <td class="px-2 py-2.5 text-center border-r border-gray-100 text-xs font-medium text-gray-600">
-                            {{ $rangMat ?? '—' }}
+                            {{ $rangMat ?? '-' }}
                         </td>
                         @endforeach
                         <td class="px-3 py-2.5 text-center border-r border-gray-100">
@@ -102,7 +102,7 @@
                                     {{ number_format($moy, 2, ',', '') }}
                                 </span>
                             @else
-                                <span class="text-gray-300 text-xs">—</span>
+                                <span class="text-gray-300 text-xs">-</span>
                             @endif
                         </td>
                         <td class="px-3 py-2.5 text-center">

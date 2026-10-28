@@ -12,7 +12,7 @@ class PrimaireSubjectController extends Controller
 {
     /**
      * Cherche la classe primaire/maternelle de l'enseignant connecté.
-     * Utilise entity_id IN (1,2) — cohérent avec tout le reste du projet.
+     * Utilise entity_id IN (1,2) - cohérent avec tout le reste du projet.
      */
     private function getTeacherClasse() {
         return Classe::where('teacher_id', Auth::id())

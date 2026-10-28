@@ -37,7 +37,7 @@
         <div style="float:left; width:75%;">
             Nom : <strong>{{ strtoupper($student->last_name) }}</strong> &nbsp;&nbsp;
             Prénoms : <strong>{{ $student->first_name }}</strong><br>
-            N° Matricule : {{ $student->registration_number ?? '—' }} &nbsp;&nbsp;
+            N° Matricule : {{ $student->registration_number ?? '-' }} &nbsp;&nbsp;
             Sexe : {{ $student->gender == 'M' ? 'Masculin' : 'Féminin' }}
         </div>
         <div style="float:right; width:80px; text-align:center;">
@@ -79,7 +79,7 @@
                     {{ $row['moyenne'] }}
                 </td>
                 <td style="border:1px solid #000; padding:3px; text-align:center;">{{ $row['moyCoeff'] }}</td>
-                <td style="border:1px solid #000; padding:3px; text-align:center; font-size:9px;">{{ $row['rang'] ?? '—' }}</td>
+                <td style="border:1px solid #000; padding:3px; text-align:center; font-size:9px;">{{ $row['rang'] ?? '-' }}</td>
                 <td style="border:1px solid #000; padding:3px; text-align:center; font-size:9px;">{{ $row['appreciation'] }}</td>
             </tr>
             @endforeach

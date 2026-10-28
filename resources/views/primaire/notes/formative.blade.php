@@ -11,7 +11,7 @@
             <div>
                 <h1 class="text-xl sm:text-2xl font-bold text-gray-900">Évaluations formatives</h1>
                 <p class="text-xs sm:text-sm text-gray-500 mt-0.5">
-                    Classe : <span class="font-semibold text-emerald-700">{{ $classe->name }}</span> — {{ $annee_academique->name }}
+                    Classe : <span class="font-semibold text-emerald-700">{{ $classe->name }}</span> - {{ $annee_academique->name }}
                 </p>
             </div>
         </div>
@@ -48,14 +48,14 @@
                     @foreach($evaluations as $eval)
                     <tr class="hover:bg-gray-50 transition-colors">
                         <td class="px-5 py-3 font-medium text-gray-700 whitespace-nowrap">
-                            {{ $eval->date_evaluation ? $eval->date_evaluation->locale('fr')->isoFormat('ddd D MMM YYYY') : '—' }}
+                            {{ $eval->date_evaluation ? $eval->date_evaluation->locale('fr')->isoFormat('ddd D MMM YYYY') : '-' }}
                         </td>
                         <td class="px-5 py-3">
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 whitespace-nowrap">
-                                {{ $eval->subject->name ?? '—' }}
+                                {{ $eval->subject->name ?? '-' }}
                             </span>
                         </td>
-                        <td class="px-5 py-3 text-gray-600">{{ $eval->titre ?: '—' }}</td>
+                        <td class="px-5 py-3 text-gray-600">{{ $eval->titre ?: '-' }}</td>
                         <td class="px-5 py-3 text-center font-bold text-gray-700">/{{ number_format($eval->note_max, 0) }}</td>
                         <td class="px-5 py-3 text-center text-xs text-gray-600">
                             {{ $eval->notes->whereNotNull('note')->count() }}/{{ $eval->notes->count() }}

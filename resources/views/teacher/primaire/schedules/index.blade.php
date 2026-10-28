@@ -233,7 +233,7 @@
 .course-actions .btn-delete       { background-color: #DC2626; }
 .course-actions .btn-delete:hover { background-color: #B91C1C; transform: scale(1.03); }
 
-/* Suppression du hide-on-no-hover — boutons toujours visibles */
+/* Suppression du hide-on-no-hover - boutons toujours visibles */
 
 /* Horizontal dashed lines (from time axis across all columns) */
 .grid-hour-bg {
@@ -418,13 +418,13 @@
                             $fEnd   = $item['fEnd'];
                         @endphp
 
-                        {{-- Carte de cours — badge + horaire + boutons toujours visibles --}}
+                        {{-- Carte de cours - badge + horaire + boutons toujours visibles --}}
                         <div class="course-card"
                              style="top: {{ $top }}px; height: {{ $height }}px; background: {{ $c['bg'] }}; border-left-color: {{ $c['border'] }};">
 
                             {{-- Nom de la matière --}}
                             <span class="course-badge" style="background-color: {{ $c['badge'] }};">
-                                {{ $sched->subject->name ?? '—' }}
+                                {{ $sched->subject->name ?? '-' }}
                             </span>
 
                             {{-- Horaire --}}
@@ -505,7 +505,7 @@
                     </label>
                     <select id="add-subject" name="subject_id"
                             class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
-                        <option value="">— Choisir une matière —</option>
+                        <option value="">- Choisir une matière -</option>
                         @foreach($subjects as $subj)
                         <option value="{{ $subj->id }}">{{ $subj->name }}</option>
                         @endforeach
@@ -520,7 +520,7 @@
                     </label>
                     <select id="add-day" name="day_of_week"
                             class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
-                        <option value="">— Choisir un jour —</option>
+                        <option value="">- Choisir un jour -</option>
                         @foreach($days as $d)
                         <option value="{{ $d }}">{{ $d }}</option>
                         @endforeach
@@ -633,7 +633,7 @@
                     </label>
                     <select id="edit-subject" name="subject_id"
                             class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors">
-                        <option value="">— Choisir une matière —</option>
+                        <option value="">- Choisir une matière -</option>
                         @foreach($subjects as $subj)
                         <option value="{{ $subj->id }}">{{ $subj->name }}</option>
                         @endforeach
@@ -648,7 +648,7 @@
                     </label>
                     <select id="edit-day" name="day_of_week"
                             class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors">
-                        <option value="">— Choisir un jour —</option>
+                        <option value="">- Choisir un jour -</option>
                         @foreach($days as $d)
                         <option value="{{ $d }}">{{ $d }}</option>
                         @endforeach
@@ -715,7 +715,7 @@ function showToast(msg) {
 }
 
 // ════════════════════════════════════════════════════
-//  DELETE  — simple window.confirm, then fetch
+//  DELETE  - simple window.confirm, then fetch
 // ════════════════════════════════════════════════════
 async function deleteSchedule(id) {
     if (!confirm('Supprimer ce cours ?')) return;

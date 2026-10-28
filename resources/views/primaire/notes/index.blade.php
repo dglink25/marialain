@@ -34,7 +34,7 @@
                     </div>
                     <h1 class="text-2xl font-bold text-slate-800">Gestion des notes</h1>
                 </div>
-                <p class="text-sm text-slate-500 pl-0.5">Maternelle &amp; Primaire — <span class="font-semibold text-indigo-600">{{ $annee_academique->name }}</span></p>
+                <p class="text-sm text-slate-500 pl-0.5">Maternelle &amp; Primaire - <span class="font-semibold text-indigo-600">{{ $annee_academique->name }}</span></p>
             </div>
             <div class="flex flex-wrap gap-2 shrink-0">
                 @if($isAuthorized)
@@ -108,7 +108,7 @@
                         </td>
                         <td class="px-5 py-3.5">
                             @php $classesComp = $classes->whereIn('id', $comp->classe_ids)->pluck('name')->join(', '); @endphp
-                            <span class="text-slate-600 text-xs">{{ $classesComp ?: '—' }}</span>
+                            <span class="text-slate-600 text-xs">{{ $classesComp ?: '-' }}</span>
                         </td>
                         <td class="px-5 py-3.5 whitespace-nowrap text-xs text-slate-600">
                             <span class="font-semibold">{{ \Carbon\Carbon::parse($comp->composition_debut)->format('d/m/Y') }}</span>
@@ -247,7 +247,7 @@
 </div>
 
 {{-- ══════════════════════════════════════════════
-     MODAL — Annuler une délibération primaire
+     MODAL - Annuler une délibération primaire
 ══════════════════════════════════════════════ --}}
 <div id="annul-overlay" class="fixed inset-0 z-[8002] hidden" onclick="closeAnnulIfBackdrop(event)">
     <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm"></div>
@@ -409,7 +409,7 @@
                         <label for="mois" class="block text-sm font-semibold text-slate-700 mb-1.5">Mois de composition <span class="text-red-500">*</span></label>
                         <select id="mois" name="mois" required
                                 class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
-                            <option value="">— Choisir un mois —</option>
+                            <option value="">- Choisir un mois -</option>
                             @foreach($moisNoms as $num => $nom)
                             <option value="{{ $num }}" {{ old('mois') == $num ? 'selected' : '' }}>{{ $nom }}</option>
                             @endforeach
@@ -468,7 +468,7 @@
 </div>
 
 {{-- ══════════════════════════════════════════════
-     MODAL — Délibération Primaire / Maternelle
+     MODAL - Délibération Primaire / Maternelle
 ══════════════════════════════════════════════ --}}
 <div id="deli-overlay" class="fixed inset-0 z-[8001] hidden" onclick="closeDeliIfBackdrop(event)">
     <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm"></div>
@@ -509,7 +509,7 @@
                     <select id="deli-source-class"
                             onchange="deliChargerEleves()"
                             class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors">
-                        <option value="">— Sélectionnez une classe —</option>
+                        <option value="">- Sélectionnez une classe -</option>
                         @foreach($classesPrimaire as $c)
                         <option value="{{ $c->id }}">{{ $c->name }} (Primaire)</option>
                         @endforeach
@@ -528,7 +528,7 @@
                     <select id="deli-target-year"
                             onchange="deliChargerClassesDest()"
                             class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors">
-                        <option value="">— Sélectionnez une année —</option>
+                        <option value="">- Sélectionnez une année -</option>
                         @foreach(\App\Models\AcademicYear::where('active', false)->orderBy('name')->get() as $ay)
                         <option value="{{ $ay->id }}">{{ $ay->name }}</option>
                         @endforeach
@@ -569,7 +569,7 @@
                     <select id="deli-target-entity"
                             onchange="deliChargerClassesDest()"
                             class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors">
-                        <option value="">— Sélectionnez le cycle —</option>
+                        <option value="">- Sélectionnez le cycle -</option>
                         <option value="1">Maternelle</option>
                         <option value="2">Primaire</option>
                         <option value="3">Secondaire</option>
@@ -585,7 +585,7 @@
                     </label>
                     <select id="deli-target-class"
                             class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors">
-                        <option value="">— Choisissez d'abord le cycle —</option>
+                        <option value="">- Choisissez d'abord le cycle -</option>
                     </select>
                     <p class="text-xs text-slate-400 mt-1">
                         <i class="fas fa-magic mr-1 text-amber-400"></i>
@@ -885,7 +885,7 @@ function deliChargerClassesDest() {
     const sel      = document.getElementById('deli-target-class');
     const loader   = document.getElementById('deli-classes-loader');
 
-    sel.innerHTML = '<option value="">— Choisissez d\'abord le cycle —</option>';
+    sel.innerHTML = '<option value="">- Choisissez d\'abord le cycle -</option>';
     if (!entityId) return;
 
     loader.classList.remove('hidden');
@@ -897,7 +897,7 @@ function deliChargerClassesDest() {
                 sel.innerHTML = '<option value="">Aucune classe disponible</option>';
                 return;
             }
-            sel.innerHTML = '<option value="">— Sélectionnez la classe —</option>' +
+            sel.innerHTML = '<option value="">- Sélectionnez la classe -</option>' +
                 classes.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
         })
         .catch(() => {

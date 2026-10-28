@@ -108,7 +108,7 @@
                 <i class="fas fa-graduation-cap fa-2x"></i>
                 <div>
                     <strong>Moyenne annuelle : {{ number_format($moyAnn, 2, ',', '') }}/20</strong>
-                    — {{ $moyAnn >= 10 ? '✅ Admis(e)' : '❌ Non admis(e)' }}
+                    - {{ $moyAnn >= 10 ? '✅ Admis(e)' : '❌ Non admis(e)' }}
                 </div>
             </div>
         @endif

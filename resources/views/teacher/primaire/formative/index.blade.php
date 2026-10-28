@@ -29,8 +29,8 @@
                 <h1 class="text-xl sm:text-2xl font-bold text-gray-900">Évaluations formatives</h1>
                 <p class="text-xs sm:text-sm text-gray-500 mt-0.5 break-words">
                     Classe : <span class="font-semibold text-emerald-700">{{ $classe->name }}</span>
-                    — {{ $annee->name }}
-                    — Aujourd'hui : <span class="font-medium text-gray-700">{{ $todayFr }}</span>
+                    - {{ $annee->name }}
+                    - Aujourd'hui : <span class="font-medium text-gray-700">{{ $todayFr }}</span>
                 </p>
             </div>
         </div>
@@ -94,10 +94,10 @@
                         </td>
                         <td class="px-4 sm:px-6 py-3">
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 whitespace-nowrap">
-                                {{ $eval->subject->name ?? '—' }}
+                                {{ $eval->subject->name ?? '-' }}
                             </span>
                         </td>
-                        <td class="px-4 sm:px-6 py-3 text-gray-600">{{ $eval->titre ?: '—' }}</td>
+                        <td class="px-4 sm:px-6 py-3 text-gray-600">{{ $eval->titre ?: '-' }}</td>
                         <td class="px-4 sm:px-6 py-3 text-center font-semibold text-gray-700">
                             /{{ number_format($eval->note_max, 0) }}
                         </td>
@@ -124,7 +124,7 @@
 </div>
 
 {{-- ══════════════════════════════════════════
-     MODAL — Nouvelle évaluation formative
+     MODAL - Nouvelle évaluation formative
      Pattern : header fixe / corps scrollable / footer fixe
      => le bouton "Enregistrer" reste toujours accessible,
         même avec une longue liste d'élèves ou sur mobile.
@@ -150,7 +150,7 @@
                     </div>
                     <div class="min-w-0">
                         <h2 class="text-base sm:text-lg font-bold text-gray-900 truncate">Nouvelle évaluation formative</h2>
-                        <p class="text-xs text-gray-400 truncate">{{ $classe->name }} — {{ $annee->name }}</p>
+                        <p class="text-xs text-gray-400 truncate">{{ $classe->name }} - {{ $annee->name }}</p>
                     </div>
                 </div>
                 <button type="button" onclick="closeModal()"
@@ -195,7 +195,7 @@
                             </label>
                             <select id="subject_id" name="subject_id" required
                                     class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                                <option value="">— Choisir —</option>
+                                <option value="">- Choisir -</option>
                             </select>
                             <p id="subject-empty-msg" class="hidden mt-1.5 text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
                                 <i class="fas fa-exclamation-triangle mr-1"></i>
@@ -291,7 +291,7 @@
                                                    min="0"
                                                    step="0.5"
                                                    inputmode="decimal"
-                                                   placeholder="—"
+                                                   placeholder="-"
                                                    class="note-input w-16 sm:w-20 text-center rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 transition-colors">
                                         </td>
                                     </tr>
@@ -349,7 +349,7 @@ function updateMatieresPourDate(preserveOldOnce) {
 
     const matieres = matieresParJour[jour] || [];
 
-    subjectSelect.innerHTML = '<option value="">— Choisir —</option>';
+    subjectSelect.innerHTML = '<option value="">- Choisir -</option>';
     matieres.forEach(mat => {
         const opt = document.createElement('option');
         opt.value = mat.id;

@@ -547,7 +547,7 @@
             <label style="font-size:.85rem;font-weight:700;color:#6d28d9"><i class="fas fa-book mr-1"></i> Matière :</label>
             <select id="matiereSelect" onchange="changeMatiereView()"
                     style="padding:.45rem .9rem;border-radius:8px;border:1.5px solid #c4b5fd;font-size:.85rem;font-weight:600;color:#4c1d95;background:#fff;min-width:220px">
-                <option value="">— Choisir une matière —</option>
+                <option value="">- Choisir une matière -</option>
             </select>
             <label style="font-size:.85rem;font-weight:700;color:#6d28d9"><i class="fas fa-calendar mr-1"></i> Trimestre :</label>
             <div style="display:flex;gap:.4rem" id="matiereTriSelector">
@@ -749,7 +749,7 @@ function buildAnnualTab(data) {
     </div>`;
 }
 
-/* ─── Tab trimestre — colonnes I1-I5 + D1-D2 ─────────────── */
+/* ─── Tab trimestre - colonnes I1-I5 + D1-D2 ─────────────── */
 function buildTrimestreTab(data, t) {
     const td = data.trimestres[t];
     if (!td) return '<p class="text-gray-500 text-center py-8">Aucune donnée pour ce trimestre.</p>';
@@ -769,7 +769,7 @@ function buildTrimestreTab(data, t) {
     // Lignes
     const rows = td.bulletin.map(b => {
         const interros = b.interros || {};
-        // I1 à I5 — clés 1..5 (renvoyés depuis le contrôleur)
+        // I1 à I5 - clés 1..5 (renvoyés depuis le contrôleur)
         const iCells = [1,2,3,4,5].map(k => `<td>${fmtNote(interros[k])}</td>`).join('');
         const miCell  = `<td style="font-weight:600">${fmtNote(b.moyInterro)}</td>`;
         const d1Cell  = `<td>${fmtNote(b.devoir1)}</td>`;
@@ -837,7 +837,7 @@ function buildTrimestreTab(data, t) {
                 <tfoot>
                     <tr>
                         <td colspan="9" style="text-align:right;border-radius:0 0 0 8px">
-                            Moyenne générale — Trimestre ${t}
+                            Moyenne générale - Trimestre ${t}
                         </td>
                         <td style="text-align:center;font-size:1rem">${moyFmt}</td>
                         <td style="text-align:center;border-radius:0 0 8px 0">
@@ -868,7 +868,7 @@ document.addEventListener('keydown', e => {
 
 
 /* ═══════════════════════════════════════════════════════════
-   MODAL PAR MATIÈRE — colonnes I1-I5 + D1-D2
+   MODAL PAR MATIÈRE - colonnes I1-I5 + D1-D2
    ═══════════════════════════════════════════════════════════ */
 const MATIERE_ROUTES = {
     json: ()          => `/archives/${YEAR_ID}/classes/${CLASS_ID}/notes-matiere/json`,
@@ -900,7 +900,7 @@ function closeMatiereOnOverlay(e) { if (e.target === document.getElementById('ma
 
 function populateMatiereSelect() {
     const sel = document.getElementById('matiereSelect');
-    sel.innerHTML = '<option value="">— Toutes les matières —</option>';
+    sel.innerHTML = '<option value="">- Toutes les matières -</option>';
     (matiereData.subjects || []).forEach((s, i) => {
         const opt = document.createElement('option');
         opt.value = i; opt.textContent = `${s.name} (coef. ${s.coef})`;

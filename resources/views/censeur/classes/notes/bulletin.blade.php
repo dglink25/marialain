@@ -136,7 +136,7 @@
                         </div>
                         <div>
                             <p class="text-sm text-gray-500">Matricule</p>
-                            <p class="font-semibold text-gray-900">{{ $student->num_educ ?? '—' }}</p>
+                            <p class="font-semibold text-gray-900">{{ $student->num_educ ?? '-' }}</p>
                         </div>
                     </div>
                     

@@ -12,10 +12,10 @@
             </div>
             <div class="min-w-0">
                 <h1 class="text-xl sm:text-2xl font-bold text-gray-900 truncate">
-                    Récapitulatif — Évaluations formatives
+                    Récapitulatif - Évaluations formatives
                 </h1>
                 <p class="text-xs sm:text-sm text-gray-500 mt-0.5">
-                    {{ $classe->name }} — {{ $annee->name }} — Toutes matières
+                    {{ $classe->name }} - {{ $annee->name }} - Toutes matières
                 </p>
             </div>
         </div>
@@ -79,12 +79,12 @@
                             @if($moy !== null)
                                 <span class="font-semibold text-gray-700">{{ number_format($moy, 1, ',', '') }}</span>
                             @else
-                                <span class="text-gray-300 text-xs italic">—</span>
+                                <span class="text-gray-300 text-xs italic">-</span>
                             @endif
                         </td>
                         @endforeach
                         <td class="px-4 py-2.5 text-center bg-indigo-50/50 font-bold {{ $moyenneEleve !== null && $moyenneEleve >= 10 ? 'text-green-700' : ($moyenneEleve !== null ? 'text-red-600' : 'text-gray-300') }}">
-                            {{ $moyenneEleve !== null ? number_format($moyenneEleve, 2, ',', '') : '—' }}
+                            {{ $moyenneEleve !== null ? number_format($moyenneEleve, 2, ',', '') : '-' }}
                         </td>
                     </tr>
                     @endforeach

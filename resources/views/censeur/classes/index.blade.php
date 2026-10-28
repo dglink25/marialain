@@ -43,18 +43,23 @@
                 <!-- Actions -->
                 <div class="space-y-3 mt-4">
                     <div class="flex items-center justify-between bg-gray-50 hover:bg-gray-100 border border-gray-300 rounded-lg px-4 py-2 text-sm text-gray-700 transition">
-                        <span>👥 Liste des élèves</span>
+                        <span> Liste des élèves</span>
                         <a href="{{ route('censeur.classes.students', $class->id) }}" class="text-blue-600 font-medium hover:underline">Voir</a>
                     </div>
 
                     <div class="flex items-center justify-between bg-gray-50 hover:bg-gray-100 border border-gray-300 rounded-lg px-4 py-2 text-sm text-gray-700 transition">
-                        <span>🕒 Emploi du temps</span>
+                        <span> Emploi du temps</span>
                         <a href="{{ route('censeur.classes.timetable', $class->id) }}" class="text-green-600 font-medium hover:underline">Consulter</a>
                     </div>
 
                     <div class="flex items-center justify-between bg-gray-50 hover:bg-gray-100 border border-gray-300 rounded-lg px-4 py-2 text-sm text-gray-700 transition">
-                        <span>🎓 Liste des enseignants</span>
+                        <span> Liste des enseignants</span>
                         <a href="{{ route('censeur.classes.teachers', $class->id) }}" class="text-purple-600 font-medium hover:underline">Accéder</a>
+                    </div>
+
+                    <div class="flex items-center justify-between bg-indigo-50/60 hover:bg-indigo-100/70 border border-indigo-200 rounded-lg px-4 py-2 text-sm text-indigo-900 transition">
+                        <span> Cahier de texte</span>
+                        <a href="{{ route('cahier.export.index', ['class_id' => $class->id]) }}" class="text-indigo-600 font-semibold hover:underline">Télécharger</a>
                     </div>
                 </div>
             </div>

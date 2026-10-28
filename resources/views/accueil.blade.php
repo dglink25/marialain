@@ -722,7 +722,7 @@
 
             <hr class="border-light mt-5">
             <div class="text-center small">
-                &copy; 2025 CPEG MARIE-ALAIN — Tous droits réservés.
+                &copy; 2025 CPEG MARIE-ALAIN - Tous droits réservés.
             </div>
         </div>
     </footer>

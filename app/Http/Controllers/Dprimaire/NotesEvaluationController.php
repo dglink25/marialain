@@ -117,8 +117,8 @@ class NotesEvaluationController extends Controller{
                 'source_class_id'   => $classId,
                 'source_class_name' => $classe?->name ?? 'Classe #'.$classId,
                 'source_year_name'  => $activeYear->name,
-                'target_class_name' => $nextClasse?->name ?? '—',
-                'target_year_name'  => $nextYear?->name ?? '—',
+                'target_class_name' => $nextClasse?->name ?? '-',
+                'target_year_name'  => $nextYear?->name ?? '-',
                 'student_ids'       => $items->pluck('student_id')->toArray(),
                 'count'             => $items->count(),
             ];
@@ -127,7 +127,7 @@ class NotesEvaluationController extends Controller{
         return response()->json($grouped);
     }
 
-    /** Annuler une délibération primaire — remet les élèves dans leur classe/année d'origine */
+    /** Annuler une délibération primaire - remet les élèves dans leur classe/année d'origine */
     public function annulerDeliberation(\Illuminate\Http\Request $request): \Illuminate\Http\JsonResponse
     {
         $request->validate([
@@ -199,7 +199,7 @@ class NotesEvaluationController extends Controller{
         }
     }
 
-    /** AJAX — liste des élèves validés d'une classe (alphabétique) */
+    /** AJAX - liste des élèves validés d'une classe (alphabétique) */
     public function getElevesClasse(int $classeId): \Illuminate\Http\JsonResponse
     {
         $annee = AcademicYear::where('active', true)->firstOrFail();
@@ -212,14 +212,14 @@ class NotesEvaluationController extends Controller{
         return response()->json($eleves);
     }
 
-    /** AJAX — classes du cycle sélectionné depuis l'année ACTIVE
+    /** AJAX - classes du cycle sélectionné depuis l'année ACTIVE
      *  (ce sont ces classes qui seront créées automatiquement dans l'année cible)
      */
     public function getClassesDestination(\Illuminate\Http\Request $request): \Illuminate\Http\JsonResponse
     {
         $entityId = (int) $request->query('entity_id');
 
-        // Toujours depuis l'année active — indépendamment de l'année cible
+        // Toujours depuis l'année active - indépendamment de l'année cible
         $activeYearId = AcademicYear::where('active', true)->value('id');
 
         $classes = Classe::where('entity_id', $entityId)
@@ -230,7 +230,7 @@ class NotesEvaluationController extends Controller{
         return response()->json($classes);
     }
 
-    /** Délibération primaire/maternelle — transfert simple sans calcul de notes */
+    /** Délibération primaire/maternelle - transfert simple sans calcul de notes */
     public function delibererPrimaire(\Illuminate\Http\Request $request): \Illuminate\Http\JsonResponse
     {
         $request->validate([
@@ -339,7 +339,7 @@ class NotesEvaluationController extends Controller{
             return response()->json([
                 'success' => true,
                 'count'   => count($request->student_ids),
-                'message' => count($request->student_ids) . ' élève(s) transféré(s) vers ' . $targetClass->name . ' — ' . $targetYear->name . $created . '.',
+                'message' => count($request->student_ids) . ' élève(s) transféré(s) vers ' . $targetClass->name . ' - ' . $targetYear->name . $created . '.',
             ]);
 
         } catch (\Throwable $e) {
@@ -484,7 +484,7 @@ class NotesEvaluationController extends Controller{
         $rangGeneraux = [];
         $sorted = collect($moyennes)->filter()->sortDesc()->values()->toArray();
         foreach ($moyennes as $sid => $m) {
-            $rangGeneraux[$sid] = $m !== null ? (array_search($m, $sorted) + 1) : '—';
+            $rangGeneraux[$sid] = $m !== null ? (array_search($m, $sorted) + 1) : '-';
         }
 
         $rangsParMatiere = [];

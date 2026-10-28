@@ -445,34 +445,13 @@ class CahierDeTexteController extends Controller{
 
     // Télécharger le rapport PDF
     public function downloadReport(User $teacher, Classe $classe, Subject $subject){
-        $academicYear = AcademicYear::where('active', true)->firstOrFail();
-
-        $entries = CahierDeTexte::where('teacher_id', $teacher->id)
-            ->where('class_id', $classe->id)
-            ->where('subject_id', $subject->id)
-            ->orderBy('course_start_date', 'desc')
-            ->with(['timetable', 'validator'])
-            ->get();
-
-        $stats = [
-            'total' => $entries->count(),
-            'validated' => $entries->where('is_validated', true)->count(),
-            'pending' => $entries->where('is_validated', false)->count(),
-        ];
-
-        $pdf = Pdf::loadView('pdf.teacher-cahier-report', [
-            'teacher' => $teacher,
-            'class' => $classe,
-            'subject' => $subject,
-            'entries' => $entries,
-            'stats' => $stats,
-            'generated_at' => now(),
-            'generated_by' => Auth::user()->name
+        $req = new Request([
+            'filter_type' => 'subject_class',
+            'class_id'    => $classe->id,
+            'subject_id'  => $subject->id,
+            'teacher_id'  => $teacher->id,
         ]);
-
-        $filename = "cahier-texte-{$teacher->name}-{$classe->name}-{$subject->name}-" . now()->format('Y-m-d') . '.pdf';
-        
-        return $pdf->download($filename);
+        return $this->downloadCahierTexte($req);
     }
 
     public function downloadPdf(Request $request, $subjectId){
@@ -677,6 +656,336 @@ class CahierDeTexteController extends Controller{
 
         return redirect()->back()->with('success', 'Montant brut enregistré pour ' . $teacher->name . 
             ' dans la classe ' . $class->name . ' pour la matière ' . $subject->name);
+    }
+
+    /**
+     * Page d'accueil pour le téléchargement des cahiers de texte
+     */
+    public function exportIndex(Request $request)
+    {
+        $academicYear = AcademicYear::where('active', 1)->first();
+        if (!$academicYear) {
+            return back()->with('error', 'Aucune année académique active trouvée.');
+        }
+
+        $classes = Classe::where('academic_year_id', $academicYear->id)
+            ->orderBy('name')
+            ->get();
+
+        $selectedClassId = $request->query('class_id');
+
+        return view('cahier.export', compact('academicYear', 'classes', 'selectedClassId'));
+    }
+
+    /**
+     * Données AJAX pour une classe donnée (matières et enseignants assignés)
+     */
+    public function getClassExportData($classeId)
+    {
+        $classe = Classe::findOrFail($classeId);
+        $academicYear = AcademicYear::where('active', 1)->first();
+        $yearId = $academicYear ? $academicYear->id : null;
+
+        // Décompte des séances par matière et par enseignant pour l'année active
+        $subjectCounts = CahierDeTexte::where('class_id', $classe->id)
+            ->when($yearId, fn($q) => $q->where('academic_year_id', $yearId))
+            ->selectRaw('subject_id, count(*) as count')
+            ->groupBy('subject_id')
+            ->pluck('count', 'subject_id');
+
+        $teacherCounts = CahierDeTexte::where('class_id', $classe->id)
+            ->when($yearId, fn($q) => $q->where('academic_year_id', $yearId))
+            ->selectRaw('teacher_id, count(*) as count')
+            ->groupBy('teacher_id')
+            ->pluck('count', 'teacher_id');
+
+        // Matières associées à cette classe
+        $subjectIds = DB::table('class_teacher_subject')
+            ->where('class_id', $classe->id)
+            ->pluck('subject_id')
+            ->merge(
+                CahierDeTexte::where('class_id', $classe->id)
+                    ->when($yearId, fn($q) => $q->where('academic_year_id', $yearId))
+                    ->pluck('subject_id')
+            )->unique()->filter();
+
+        $subjects = Subject::whereIn('id', $subjectIds)->orderBy('name')->get(['id', 'name'])->map(function($s) use ($subjectCounts) {
+            return [
+                'id'    => $s->id,
+                'name'  => $s->name,
+                'count' => $subjectCounts->get($s->id, 0),
+            ];
+        });
+
+        // Enseignants associés à cette classe avec les matières qu'ils y enseignent
+        $teacherPivot = DB::table('class_teacher_subject')
+            ->where('class_id', $classe->id)
+            ->join('users', 'users.id', '=', 'class_teacher_subject.teacher_id')
+            ->join('subjects', 'subjects.id', '=', 'class_teacher_subject.subject_id')
+            ->select('users.id as teacher_id', 'users.name as teacher_name', 'subjects.name as subject_name')
+            ->get();
+
+        $cahierEntries = CahierDeTexte::with(['teacher', 'subject'])
+            ->where('class_id', $classe->id)
+            ->when($yearId, fn($q) => $q->where('academic_year_id', $yearId))
+            ->get();
+
+        $teachersMap = [];
+        foreach ($teacherPivot as $row) {
+            if (!isset($teachersMap[$row->teacher_id])) {
+                $teachersMap[$row->teacher_id] = [
+                    'id'       => $row->teacher_id,
+                    'name'     => $row->teacher_name,
+                    'subjects' => [],
+                    'count'    => $teacherCounts->get($row->teacher_id, 0),
+                ];
+            }
+            if (!in_array($row->subject_name, $teachersMap[$row->teacher_id]['subjects'])) {
+                $teachersMap[$row->teacher_id]['subjects'][] = $row->subject_name;
+            }
+        }
+
+        foreach ($cahierEntries as $entry) {
+            if ($entry->teacher) {
+                if (!isset($teachersMap[$entry->teacher_id])) {
+                    $teachersMap[$entry->teacher_id] = [
+                        'id'       => $entry->teacher_id,
+                        'name'     => $entry->teacher->name,
+                        'subjects' => [],
+                        'count'    => $teacherCounts->get($entry->teacher_id, 0),
+                    ];
+                }
+                if ($entry->subject && !in_array($entry->subject->name, $teachersMap[$entry->teacher_id]['subjects'])) {
+                    $teachersMap[$entry->teacher_id]['subjects'][] = $entry->subject->name;
+                }
+            }
+        }
+
+        $teachers = array_values($teachersMap);
+        usort($teachers, fn($a, $b) => strcmp($a['name'], $b['name']));
+
+        $totalEntries = CahierDeTexte::where('class_id', $classe->id)
+            ->when($yearId, fn($q) => $q->where('academic_year_id', $yearId))
+            ->count();
+
+        return response()->json([
+            'classe' => [
+                'id'   => $classe->id,
+                'name' => $classe->name,
+            ],
+            'subjects'      => $subjects,
+            'teachers'      => $teachers,
+            'total_entries' => $totalEntries,
+        ]);
+    }
+
+    /**
+     * Téléchargement officiel du cahier de texte en PDF (Style institutionnel noir et blanc)
+     */
+    public function downloadCahierTexte(Request $request)
+    {
+        $request->validate([
+            'filter_type' => 'required|in:subject_class,teacher_class,all_class',
+            'class_id'    => 'required|integer|exists:classes,id',
+            'subject_id'  => 'nullable|required_if:filter_type,subject_class|integer',
+            'teacher_id'  => 'nullable|required_if:filter_type,teacher_class|integer',
+            'start_date'  => 'nullable|date',
+            'end_date'    => 'nullable|date|after_or_equal:start_date',
+        ]);
+
+        $academicYear = AcademicYear::where('active', 1)->firstOrFail();
+        $classe = Classe::findOrFail($request->class_id);
+
+        $filterType = $request->filter_type;
+        $subject = null;
+        $teacher = null;
+        $teacherNames = '';
+        $subjectNames = '';
+
+        // Construction de la requête principale - PEU IMPORTE LE STATUT DU TEXTE (validé ou non)
+        $query = CahierDeTexte::with(['subject', 'teacher'])
+            ->where('class_id', $classe->id)
+            ->where('academic_year_id', $academicYear->id);
+
+        if ($request->filled('start_date')) {
+            $query->whereDate('course_start_date', '>=', $request->start_date);
+        }
+        if ($request->filled('end_date')) {
+            $query->whereDate('course_start_date', '<=', $request->end_date);
+        }
+
+        if ($filterType === 'subject_class') {
+            $subject = Subject::findOrFail($request->subject_id);
+            $query->where('subject_id', $subject->id);
+        } elseif ($filterType === 'teacher_class') {
+            $teacher = User::findOrFail($request->teacher_id);
+            $query->where('teacher_id', $teacher->id);
+        }
+
+        $entries = $query->orderBy('course_start_date', 'asc')->get();
+
+        // Récupération des informations pour l'en-tête selon le filtre
+        if ($filterType === 'subject_class') {
+            $tNames = $entries->pluck('teacher.name')->filter()->unique();
+            if ($tNames->isEmpty()) {
+                $tNames = DB::table('class_teacher_subject')
+                    ->where('class_id', $classe->id)
+                    ->where('subject_id', $subject->id)
+                    ->join('users', 'users.id', '=', 'class_teacher_subject.teacher_id')
+                    ->pluck('users.name')
+                    ->unique();
+            }
+            $teacherNames = $tNames->implode(', ');
+        } elseif ($filterType === 'teacher_class') {
+            $sNames = $entries->pluck('subject.name')->filter()->unique();
+            if ($sNames->isEmpty()) {
+                $sNames = DB::table('class_teacher_subject')
+                    ->where('class_id', $classe->id)
+                    ->where('teacher_id', $teacher->id)
+                    ->join('subjects', 'subjects.id', '=', 'class_teacher_subject.subject_id')
+                    ->pluck('subjects.name')
+                    ->unique();
+            }
+            $subjectNames = $sNames->implode(', ');
+        }
+
+        // Préparation des groupes par matière
+        $groupedData = [];
+
+        if ($filterType === 'subject_class') {
+            // Groupe unique pour la matière
+            $totalMin = 0;
+            foreach ($entries as $e) {
+                if ($e->course_start_date && $e->course_end_date) {
+                    $totalMin += abs(Carbon::parse($e->course_end_date)->diffInMinutes(Carbon::parse($e->course_start_date)));
+                }
+            }
+            $dH = floor($totalMin / 60);
+            $dM = $totalMin % 60;
+            $durationStr = $dM === 0 ? "{$dH}h" : "{$dH}h" . str_pad($dM, 2, '0', STR_PAD_LEFT);
+
+            $groupedData[] = [
+                'subject'        => $subject,
+                'teachers_label' => $teacherNames,
+                'entries'        => $entries,
+                'count'          => $entries->count(),
+                'duration'       => $durationStr,
+                'minutes'        => $totalMin,
+            ];
+        } else {
+            // Groupement par matière
+            $entriesBySubject = $entries->groupBy('subject_id');
+
+            // Matières concernées
+            if ($filterType === 'teacher_class') {
+                $allSubjectIds = DB::table('class_teacher_subject')
+                    ->where('class_id', $classe->id)
+                    ->where('teacher_id', $teacher->id)
+                    ->pluck('subject_id')
+                    ->merge($entries->pluck('subject_id'))
+                    ->unique()
+                    ->filter();
+            } else {
+                // all_class
+                $allSubjectIds = DB::table('class_teacher_subject')
+                    ->where('class_id', $classe->id)
+                    ->pluck('subject_id')
+                    ->merge($entries->pluck('subject_id'))
+                    ->unique()
+                    ->filter();
+            }
+
+            $allSubjects = Subject::whereIn('id', $allSubjectIds)->orderBy('name')->get();
+
+            foreach ($allSubjects as $subj) {
+                $subjEntries = $entriesBySubject->get($subj->id, collect());
+
+                // Ne pas afficher les matières vides si aucune séance du tout n'existe pour cette matière dans la période
+                if ($subjEntries->isEmpty() && $entries->isNotEmpty()) {
+                    continue;
+                }
+
+                $subjMin = 0;
+                foreach ($subjEntries as $e) {
+                    if ($e->course_start_date && $e->course_end_date) {
+                        $subjMin += abs(Carbon::parse($e->course_end_date)->diffInMinutes(Carbon::parse($e->course_start_date)));
+                    }
+                }
+                $dH = floor($subjMin / 60);
+                $dM = $subjMin % 60;
+                $durationStr = $dM === 0 ? "{$dH}h" : "{$dH}h" . str_pad($dM, 2, '0', STR_PAD_LEFT);
+
+                // Enseignants pour cette matière
+                $subTeach = $subjEntries->pluck('teacher.name')->filter()->unique();
+                if ($subTeach->isEmpty()) {
+                    $subTeach = DB::table('class_teacher_subject')
+                        ->where('class_id', $classe->id)
+                        ->where('subject_id', $subj->id)
+                        ->join('users', 'users.id', '=', 'class_teacher_subject.teacher_id')
+                        ->pluck('users.name')
+                        ->unique();
+                }
+
+                $groupedData[] = [
+                    'subject'        => $subj,
+                    'teachers_label' => $subTeach->implode(', '),
+                    'entries'        => $subjEntries,
+                    'count'          => $subjEntries->count(),
+                    'duration'       => $durationStr,
+                    'minutes'        => $subjMin,
+                ];
+            }
+        }
+
+        // Totaux globaux
+        $grandTotalMinutes = 0;
+        foreach ($entries as $e) {
+            if ($e->course_start_date && $e->course_end_date) {
+                $grandTotalMinutes += abs(Carbon::parse($e->course_end_date)->diffInMinutes(Carbon::parse($e->course_start_date)));
+            }
+        }
+        $gH = floor($grandTotalMinutes / 60);
+        $gM = $grandTotalMinutes % 60;
+        $grandTotalDuration = $gM === 0 ? "{$gH}h" : "{$gH}h" . str_pad($gM, 2, '0', STR_PAD_LEFT);
+        $grandTotalCount = $entries->count();
+
+        // Génération du PDF
+        $pdf = Pdf::loadView('pdf.cahier_texte_pdf', [
+            'classe'             => $classe,
+            'academicYear'       => $academicYear,
+            'filterType'         => $filterType,
+            'subject'            => $subject,
+            'teacher'            => $teacher,
+            'teacherNames'       => $teacherNames,
+            'subjectNames'       => $subjectNames,
+            'startDate'          => $request->start_date,
+            'endDate'            => $request->end_date,
+            'groupedData'        => $groupedData,
+            'grandTotalCount'    => $grandTotalCount,
+            'grandTotalDuration' => $grandTotalDuration,
+        ]);
+
+        $pdf->setPaper('a4', 'portrait');
+
+        // Nom du fichier pro
+        $slugClass = Str::slug($classe->name);
+        $slugYear  = Str::slug($academicYear->name);
+
+        if ($filterType === 'subject_class') {
+            $slugSubject = Str::slug($subject->name);
+            $filename = "Cahier_texte_{$slugClass}_{$slugSubject}_{$slugYear}.pdf";
+        } elseif ($filterType === 'teacher_class') {
+            $slugTeacher = Str::slug($teacher->name);
+            $filename = "Cahier_texte_{$slugClass}_Prof_{$slugTeacher}_{$slugYear}.pdf";
+        } else {
+            $filename = "Cahier_texte_{$slugClass}_Toutes_Matieres_{$slugYear}.pdf";
+        }
+
+        if ($request->boolean('preview')) {
+            return $pdf->stream($filename);
+        }
+
+        return $pdf->download($filename);
     }
 
 }

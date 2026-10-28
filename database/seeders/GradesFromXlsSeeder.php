@@ -663,7 +663,7 @@ class GradesFromXlsSeeder extends Seeder
                 // classe résolue du même XLS → on ne le compte pas en erreur globale ici,
                 // le compteur "unmatched" est par classe
                 $unmatched++;
-                $this->addCsvRow($relPath, $ri+1, $name, '—', '—', '—', '—', 'NON_TROUVÉ');
+                $this->addCsvRow($relPath, $ri+1, $name, '-', '-', '-', '-', 'NON_TROUVÉ');
                 continue;
             }
 
@@ -719,7 +719,7 @@ class GradesFromXlsSeeder extends Seeder
 
             if (!$student) {
                 $unmatched++;
-                $this->addCsvRow($relPath, $ri+1, $name, '—', 'conduite', '—', '—', 'NON_TROUVÉ');
+                $this->addCsvRow($relPath, $ri+1, $name, '-', 'conduite', '-', '-', 'NON_TROUVÉ');
                 continue;
             }
 
@@ -744,7 +744,7 @@ class GradesFromXlsSeeder extends Seeder
             $this->addCsvRow(
                 $relPath, $ri+1, $name,
                 $student->last_name . ' ' . $student->first_name,
-                'conduite', '—', (string)$grade, strtoupper($action)
+                'conduite', '-', (string)$grade, strtoupper($action)
             );
         }
 
@@ -970,11 +970,11 @@ class GradesFromXlsSeeder extends Seeder
         }
 
         if ($teacherId === null) {
-            // Vraiment aucun enseignant en BD — log et continuer sans créer la relation
+            // Vraiment aucun enseignant en BD - log et continuer sans créer la relation
             $this->command->line(
                 '  │  <fg=yellow>⚠</> class_teacher_subject non créée'
                 . " (subject_id={$subjectId} class_id={$classId})"
-                . ' — aucun enseignant disponible en BD.'
+                . ' - aucun enseignant disponible en BD.'
             );
             return;
         }

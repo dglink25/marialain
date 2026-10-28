@@ -95,7 +95,7 @@
 
 <!-- TITRE -->
 <div class="title">Liste des Enseignants</div>
-<div class="subtitle">Année académique : {{ $activeYear->name ?? '—' }} — Matières enseignées</div>
+<div class="subtitle">Année académique : {{ $activeYear->name ?? '-' }} - Matières enseignées</div>
 
 <!-- TABLEAU -->
 <table class="main">

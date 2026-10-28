@@ -853,7 +853,7 @@ class ArchiveController extends Controller
                     $vals = array_values(array_filter($interrosKeyed, fn($v) => $v !== null));
                     $mi   = !empty($vals) ? round(array_sum($vals) / count($vals), 2) : null;
 
-                    // Moyenne matière = moy(moyInterro, d1, d2) — valeurs présentes
+                    // Moyenne matière = moy(moyInterro, d1, d2) - valeurs présentes
                     $notes = array_filter([$mi, $d1, $d2], fn($v) => $v !== null);
                     $moy   = !empty($notes) ? round(array_sum($notes) / count($notes), 2) : null;
 

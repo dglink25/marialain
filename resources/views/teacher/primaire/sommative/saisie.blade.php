@@ -28,7 +28,7 @@
             <div class="min-w-0">
                 <h1 class="text-xl sm:text-2xl font-bold text-gray-900 truncate">{{ $subject->name }}</h1>
                 <p class="text-xs sm:text-sm text-gray-500 mt-0.5">
-                    {{ $classe->name }} — Composition de {{ $moisNoms[$composition->mois] ?? 'Mois '.$composition->mois }}
+                    {{ $classe->name }} - Composition de {{ $moisNoms[$composition->mois] ?? 'Mois '.$composition->mois }}
                 </p>
             </div>
         </div>
@@ -66,7 +66,7 @@
         @if($composition->etape === 'a_venir')
             <span>La période de saisie n'est pas encore ouverte pour cette composition (à partir du {{ \Carbon\Carbon::parse($composition->saisie_debut)->locale('fr')->isoFormat('D MMMM YYYY') }}).</span>
         @else
-            <span>La période de saisie est clôturée depuis le {{ \Carbon\Carbon::parse($composition->saisie_fin)->locale('fr')->isoFormat('D MMMM YYYY') }} — les notes sont affichées en lecture seule.</span>
+            <span>La période de saisie est clôturée depuis le {{ \Carbon\Carbon::parse($composition->saisie_fin)->locale('fr')->isoFormat('D MMMM YYYY') }} - les notes sont affichées en lecture seule.</span>
         @endif
     </div>
     @endif
@@ -80,7 +80,7 @@
             <label class="block text-sm font-semibold text-gray-700 mb-2">
                 <i class="fas fa-sliders-h text-orange-500 mr-1"></i>
                 Note minimale <span class="text-red-500">*</span>
-                <span class="block text-xs font-normal text-gray-400 mt-0.5">Choisie une seule fois pour cette matière — la note max sera le double.</span>
+                <span class="block text-xs font-normal text-gray-400 mt-0.5">Choisie une seule fois pour cette matière - la note max sera le double.</span>
             </label>
             <div class="flex gap-3 max-w-sm">
                 <label class="flex-1 flex items-center justify-center gap-2 cursor-pointer border border-gray-200 rounded-xl px-4 py-2.5 bg-gray-50 hover:bg-orange-50 hover:border-orange-300 transition-colors has-[:checked]:bg-orange-50 has-[:checked]:border-orange-400">
@@ -149,7 +149,7 @@
                                        class="note-input w-16 sm:w-20 text-center rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-orange-400 transition-colors">
                                 @else
                                 <span class="text-sm font-semibold {{ $note !== null ? 'text-gray-800' : 'text-gray-400 italic' }}">
-                                    {{ $note !== null ? number_format($note, 1, ',', '') : '—' }}
+                                    {{ $note !== null ? number_format($note, 1, ',', '') : '-' }}
                                 </span>
                                 @endif
                             </td>

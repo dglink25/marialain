@@ -111,7 +111,7 @@ class HistoricalStudentsSeeder extends Seeder{
         $dataDir = database_path('data');
 
         $this->command->info('════════════════════════════════════════════════════════');
-        $this->command->info('  HistoricalStudentsSeeder — démarrage');
+        $this->command->info('  HistoricalStudentsSeeder - démarrage');
         $this->command->info('════════════════════════════════════════════════════════');
 
         // ── 1. Pré-charger le cache des classes ───────────────────────────────
@@ -172,7 +172,7 @@ class HistoricalStudentsSeeder extends Seeder{
             DB::commit();
         } catch (\Throwable $e) {
             DB::rollBack();
-            $this->command->error("\n    ERREUR — rollback : " . $e->getMessage());
+            $this->command->error("\n    ERREUR - rollback : " . $e->getMessage());
             Log::error('[HistoricalStudentsSeeder] ' . $e->getMessage(), [
                 'file'    => $filePath,
                 'year_id' => $yearId,
@@ -377,7 +377,7 @@ class HistoricalStudentsSeeder extends Seeder{
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    //  HELPERS — PARSING CSV
+    //  HELPERS - PARSING CSV
     // ─────────────────────────────────────────────────────────────────────────
 
     /**
@@ -433,7 +433,7 @@ class HistoricalStudentsSeeder extends Seeder{
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    //  HELPERS — NORMALISATION
+    //  HELPERS - NORMALISATION
     // ─────────────────────────────────────────────────────────────────────────
 
     private function normalizeName(string $value): string
@@ -500,7 +500,7 @@ class HistoricalStudentsSeeder extends Seeder{
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    //  HELPERS — BASE DE DONNÉES
+    //  HELPERS - BASE DE DONNÉES
     // ─────────────────────────────────────────────────────────────────────────
 
     /**
@@ -538,7 +538,7 @@ class HistoricalStudentsSeeder extends Seeder{
     }
 
     /**
-     * Recherche un élève par (last_name, premier prénom) — insensible à la casse,
+     * Recherche un élève par (last_name, premier prénom) - insensible à la casse,
      * insensible aux accents grâce à ILIKE / LOWER sur PostgreSQL.
      *
      * Retourne l'ID de l'élève ou null si non trouvé.

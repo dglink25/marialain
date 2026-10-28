@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Circulaire Sportive — Complexe Scolaire Marie-Alain</title>
+<title>Circulaire Sportive - Complexe Scolaire Marie-Alain</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -467,20 +467,20 @@ Les inscriptions sont ouvertes et se poursuivent au Secrétariat du Complexe.</t
 13h30 – 14h30</textarea></td>
               </tr>
               <tr>
-                <td><textarea placeholder="—"></textarea></td>
-                <td><textarea placeholder="—"></textarea></td>
+                <td><textarea placeholder="-"></textarea></td>
+                <td><textarea placeholder="-"></textarea></td>
                 <td><span class="activity-type">Primaire</span><textarea>Judo
 13h30 – 14h30</textarea></td>
-                <td><textarea placeholder="—"></textarea></td>
-                <td><textarea placeholder="—"></textarea></td>
+                <td><textarea placeholder="-"></textarea></td>
+                <td><textarea placeholder="-"></textarea></td>
               </tr>
               <tr>
-                <td><textarea placeholder="—"></textarea></td>
-                <td><textarea placeholder="—"></textarea></td>
+                <td><textarea placeholder="-"></textarea></td>
+                <td><textarea placeholder="-"></textarea></td>
                 <td><span class="activity-type">Primaire / Collège</span><textarea>Roller
 14h30 – 16h</textarea></td>
-                <td><textarea placeholder="—"></textarea></td>
-                <td><textarea placeholder="—"></textarea></td>
+                <td><textarea placeholder="-"></textarea></td>
+                <td><textarea placeholder="-"></textarea></td>
               </tr>
             </tbody>
           </table>
@@ -551,7 +551,7 @@ function generatePDF() {
 
       doc.setFontSize(7.5);
       doc.setTextColor(...LIGHT);
-      doc.text('Calavi Agori Aitchedji Derrière Séminaire Brésilac — Abomey-Calavi, Bénin', ml + 28, y + 19);
+      doc.text('Calavi Agori Aitchedji Derrière Séminaire Brésilac - Abomey-Calavi, Bénin', ml + 28, y + 19);
 
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(9);
@@ -574,7 +574,7 @@ function generatePDF() {
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(8);
       doc.setTextColor(...B200);
-      doc.text('Classes sportives  —  Circulaire officielle', pW / 2, y + 15.5, { align: 'center' });
+      doc.text('Classes sportives  -  Circulaire officielle', pW / 2, y + 15.5, { align: 'center' });
       y += 27;
 
       // Section helper
@@ -712,7 +712,7 @@ function generatePDF() {
             doc.setFont('helvetica', 'normal');
             doc.setFontSize(13);
             doc.setTextColor(...LIGHT);
-            doc.text('—', cx + cW / 2, ry + rH / 2 + 1, { align: 'center' });
+            doc.text('-', cx + cW / 2, ry + rH / 2 + 1, { align: 'center' });
           }
         });
         y = y; // keep reference
@@ -752,7 +752,7 @@ function generatePDF() {
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(6.5);
         doc.setTextColor(180, 195, 220);
-        doc.text(`Page ${pg} / 2   —   Complexe Scolaire Marie-Alain   —   Année Scolaire 2025-2026`, pW / 2, pH - 1.6, { align: 'center' });
+        doc.text(`Page ${pg} / 2   -   Complexe Scolaire Marie-Alain   -   Année Scolaire 2025-2026`, pW / 2, pH - 1.6, { align: 'center' });
       });
 
       doc.save('Circulaire_Sportive_Marie-Alain.pdf');

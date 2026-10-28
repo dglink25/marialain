@@ -99,7 +99,7 @@ class StudentController extends Controller{
             $inscriptionFee   = 10000;
             $reInscriptionFee = 5000;
         } else {
-            // Primaire & Maternelle — réinscription autorisée mais gratuite (0 FCFA)
+            // Primaire & Maternelle - réinscription autorisée mais gratuite (0 FCFA)
             $inscriptionFee   = 5000;
             $reInscriptionFee = 0;
         }
@@ -188,7 +188,7 @@ class StudentController extends Controller{
         $entities   = Entity::all();
 
         // Charger les classes de l'entité actuelle de l'élève pour l'année active
-        // (pré-remplissage initial — l'AJAX recharge si on change le cycle)
+        // (pré-remplissage initial - l'AJAX recharge si on change le cycle)
         $classes = Classe::where('entity_id', $student->entity_id)
             ->where('academic_year_id', $activeYear->id)
             ->orderBy('name')

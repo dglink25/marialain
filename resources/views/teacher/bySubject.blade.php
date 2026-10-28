@@ -27,6 +27,13 @@
                     <i class="fas fa-book mr-2 text-indigo-600"></i>Matière : 
                     <span class="text-indigo-600 font-semibold">{{ $subject->name }}</span>
                 </p>
+                <div class="mt-3 flex items-center gap-2">
+                    <a href="{{ route('cahier.export.pdf', ['filter_type' => 'subject_class', 'class_id' => $class->id, 'subject_id' => $subject->id]) }}"
+                       target="_blank"
+                       class="inline-flex items-center px-3.5 py-2 bg-gray-900 hover:bg-black text-white text-xs font-semibold rounded-lg shadow-sm transition">
+                        <i class="fas fa-file-pdf mr-1.5 text-red-400"></i> Télécharger Cahier de texte (PDF)
+                    </a>
+                </div>
             </div>
             
             {{-- Statistiques --}}

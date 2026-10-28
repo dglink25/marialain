@@ -11,12 +11,12 @@
             </div>
             <div class="min-w-0">
                 <h1 class="text-xl sm:text-2xl font-bold text-gray-900 truncate">
-                    Notes — {{ $evaluation->subject->name ?? '—' }}
+                    Notes - {{ $evaluation->subject->name ?? '-' }}
                 </h1>
                 <p class="text-xs sm:text-sm text-gray-500 mt-0.5 break-words">
-                    {{ $classe->name }} — {{ $annee->name }}
+                    {{ $classe->name }} - {{ $annee->name }}
                     @if($evaluation->titre)
-                        — <span class="font-medium text-gray-700">{{ $evaluation->titre }}</span>
+                        - <span class="font-medium text-gray-700">{{ $evaluation->titre }}</span>
                     @endif
                 </p>
             </div>
@@ -60,7 +60,7 @@
                 $moyenne = $notesValides->count() > 0 ? round($notesValides->avg(), 2) : null;
             @endphp
             <p class="text-xl sm:text-2xl font-black text-purple-600">
-                {{ $moyenne !== null ? number_format($moyenne, 2, ',', '') : '—' }}
+                {{ $moyenne !== null ? number_format($moyenne, 2, ',', '') : '-' }}
             </p>
         </div>
     </div>
@@ -114,7 +114,7 @@
                                 {{ number_format($note, 1, ',', '') }}
                             </span>
                             @else
-                            <span class="text-gray-400 text-sm italic">—</span>
+                            <span class="text-gray-400 text-sm italic">-</span>
                             @endif
                         </td>
                         <td class="px-4 sm:px-6 py-3 text-center">

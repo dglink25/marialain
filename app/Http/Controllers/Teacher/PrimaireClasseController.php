@@ -58,13 +58,13 @@ class PrimaireClasseController extends Controller
                     $etape         = 'composition';
                     $etapeLabel    = 'Composition en cours';
                     $joursRestants = $today->diffInDays($compFin);
-                    $etapeMessage  = "Composition en cours — se termine dans {$joursRestants} jour(s)";
+                    $etapeMessage  = "Composition en cours - se termine dans {$joursRestants} jour(s)";
                     $couleur       = 'amber';
                 } elseif ($today->between($saisieDebut, $saisieFin)) {
                     $etape         = 'saisie';
                     $etapeLabel    = 'Saisie des notes';
                     $joursRestants = $today->diffInDays($saisieFin);
-                    $etapeMessage  = "Saisie des notes en cours — {$joursRestants} jour(s) restant(s)";
+                    $etapeMessage  = "Saisie des notes en cours - {$joursRestants} jour(s) restant(s)";
                     $couleur       = 'orange';
                 } elseif ($today->gt($saisieFin)) {
                     $etape         = 'terminé';

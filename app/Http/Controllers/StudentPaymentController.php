@@ -127,7 +127,7 @@ class StudentPaymentController extends Controller
             $inscriptionFee   = 10000;
             $reInscriptionFee = 5000;
         } else {
-            // Primaire & Maternelle — réinscription gratuite (0 FCFA)
+            // Primaire & Maternelle - réinscription gratuite (0 FCFA)
             $inscriptionFee   = 5000;
             $reInscriptionFee = 0;
         }

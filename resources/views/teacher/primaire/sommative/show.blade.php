@@ -11,11 +11,11 @@
             </div>
             <div>
                 <h1 class="text-xl sm:text-2xl font-bold text-gray-900">
-                    Notes — {{ $evaluation->subject->name ?? '—' }}
+                    Notes - {{ $evaluation->subject->name ?? '-' }}
                 </h1>
                 <p class="text-xs sm:text-sm text-gray-500 mt-0.5">
-                    {{ $classe->name }} — {{ $annee->name }}
-                    @if($evaluation->titre) — <span class="font-medium text-gray-700">{{ $evaluation->titre }}</span> @endif
+                    {{ $classe->name }} - {{ $annee->name }}
+                    @if($evaluation->titre) - <span class="font-medium text-gray-700">{{ $evaluation->titre }}</span> @endif
                 </p>
             </div>
         </div>
@@ -34,7 +34,7 @@
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 text-center">
             <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Date</p>
             <p class="text-sm font-bold text-gray-800">
-                {{ $evaluation->date_evaluation ? $evaluation->date_evaluation->locale('fr')->isoFormat('D MMM YYYY') : '—' }}
+                {{ $evaluation->date_evaluation ? $evaluation->date_evaluation->locale('fr')->isoFormat('D MMM YYYY') : '-' }}
             </p>
         </div>
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 text-center">
@@ -47,7 +47,7 @@
         </div>
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 text-center">
             <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Moyenne</p>
-            <p class="text-2xl font-black text-purple-600">{{ $moyenne !== null ? number_format($moyenne, 2, ',', '') : '—' }}</p>
+            <p class="text-2xl font-black text-purple-600">{{ $moyenne !== null ? number_format($moyenne, 2, ',', '') : '-' }}</p>
         </div>
     </div>
 
@@ -85,7 +85,7 @@
                     @endphp
                     <tr class="hover:bg-gray-50 transition-colors">
                         <td class="px-5 py-3 text-gray-400 text-xs">{{ $i+1 }}</td>
-                        <td class="px-5 py-3 text-gray-600 text-xs font-mono">{{ $student->num_educ ?? '—' }}</td>
+                        <td class="px-5 py-3 text-gray-600 text-xs font-mono">{{ $student->num_educ ?? '-' }}</td>
                         <td class="px-5 py-3">
                             <span class="font-semibold text-gray-800">{{ strtoupper($student->last_name) }}</span>
                             <span class="text-gray-600"> {{ $student->first_name }}</span>
@@ -97,10 +97,10 @@
                             @if($note !== null)
                             <span class="text-lg font-black {{ $pct >= 50 ? 'text-green-700' : 'text-red-600' }}">{{ number_format($note, 1, ',', '') }}</span>
                             @else
-                            <span class="text-gray-400 italic text-sm">—</span>
+                            <span class="text-gray-400 italic text-sm">-</span>
                             @endif
                         </td>
-                        <td class="px-5 py-3 text-center font-bold text-gray-700">{{ $rang ?? '—' }}</td>
+                        <td class="px-5 py-3 text-center font-bold text-gray-700">{{ $rang ?? '-' }}</td>
                         <td class="px-5 py-3 text-center">
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-{{ $aColor }}-100 text-{{ $aColor }}-800">{{ $aLabel }}</span>
                         </td>

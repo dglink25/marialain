@@ -155,7 +155,7 @@ class PrimaireEvaluationSommativeController extends Controller
             ->where('academic_year_id', $annee->id)
             ->get();
 
-        // Grouper par matière — prendre la dernière évaluation par matière
+        // Grouper par matière - prendre la dernière évaluation par matière
         $evalParMatiere = $evaluations->sortByDesc('date_evaluation')->groupBy('subject_id');
 
         $matieres = $evalParMatiere->map(fn($evals) => $evals->first())->values();
@@ -200,7 +200,7 @@ class PrimaireEvaluationSommativeController extends Controller
         $rangGeneraux = [];
         $sorted = collect($moyennes)->filter()->sortDesc()->values()->toArray();
         foreach ($moyennes as $studentId => $moy) {
-            if ($moy === null) { $rangGeneraux[$studentId] = '—'; continue; }
+            if ($moy === null) { $rangGeneraux[$studentId] = '-'; continue; }
             $pos = array_search($moy, $sorted);
             $rangGeneraux[$studentId] = $pos + 1;
         }

@@ -19,7 +19,7 @@ class WhatsAppService{
 
     public static function send(string $phone, string $message): bool {
         if (! config('whatsapp.enabled')) {
-            Log::info('[WhatsApp] Désactivé — message non envoyé', ['to' => $phone]);
+            Log::info('[WhatsApp] Désactivé - message non envoyé', ['to' => $phone]);
             return true;
         }
 
@@ -85,7 +85,7 @@ class WhatsAppService{
         // Note formatée : 14 au lieu de 14.00, mais 14.5 reste 14.5
         $noteFormatted = rtrim(rtrim(number_format($value, 2, '.', ''), '0'), '.');
 
-        $message = "*CPEG MARIE-ALAIN — {$academicYear}*\n\n"
+        $message = "*CPEG MARIE-ALAIN - {$academicYear}*\n\n"
                  . "Nouvelle note pour *{$studentName}* (*{$className}*)\n"
                  . "Trimestre {$trimestre}\n\n"
                  . " *{$typeLabel} N°{$sequence} {$subjectName}* : *{$noteFormatted}/20*\n\n"

@@ -212,6 +212,12 @@
                                 <i class="fa fa-layer-group w-5"></i>
                                 <span class="ml-2">Classes</span>
                             </a>
+
+                            <a href="{{ route('cahier.export.index') }}" 
+                            class="flex items-center px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('cahier.*') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
+                                <i class="fas fa-book-reader w-5"></i>
+                                <span class="ml-2">Cahiers de texte</span>
+                            </a>
                         @elseif ($isnotCenseur)
                             {{-- 🔹 Menu par défaut --}}
 
@@ -285,6 +291,10 @@
                                         <i class="fa fa-layer-group w-5"></i>
                                         <span class="ml-2">Classes</span>
                                     </a>
+                                    <a href="{{ route('cahier.export.index') }}" class="flex items-center px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('cahier.*') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
+                                        <i class="fas fa-book-reader w-5"></i>
+                                        <span class="ml-2">Cahiers de texte</span>
+                                    </a>
                                     @break
 
                                 @case('censeur')
@@ -312,6 +322,11 @@
                                         class="flex items-center px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('censeur.notes.index') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
                                         <i class="fas fa-sticky-note w-5"></i>
                                         <span class="ml-2">Gestion des notes</span>
+                                    </a>
+                                    <a href="{{ route('cahier.export.index') }}"
+                                        class="flex items-center px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('cahier.*') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
+                                        <i class="fas fa-book-reader w-5"></i>
+                                        <span class="ml-2">Cahiers de texte</span>
                                     </a>
                                     @break
                                 @case('surveillant')
@@ -380,6 +395,9 @@
                                             </a>
                                             <a href="{{ route('subject.teachers.active') }}" class="flex items-center px-3 py-2 rounded-md hover:bg-[#ffffff36] transition">
                                                 <i class="far fa-circle w-4"></i><span class="ml-2">Enseignants/Matières</span>
+                                            </a>
+                                            <a href="{{ route('cahier.export.index') }}" class="flex items-center px-3 py-2 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('cahier.*') ? 'bg-[#ffffff36] font-bold' : '' }}">
+                                                <i class="far fa-circle w-4"></i><span class="ml-2">Cahiers de texte</span>
                                             </a>
                                         </div>
                                     </div>
@@ -607,7 +625,7 @@
             <footer class="bg-white border-t py-4 mt-auto">
                 <div class="container mx-auto px-4">
                     <div class="text-center text-sm text-gray-600">
-                        &copy; {{ now()->format('Y') }} CPEG MARIE-ALAIN — Tous droits réservés.
+                        &copy; {{ now()->format('Y') }} CPEG MARIE-ALAIN - Tous droits réservés.
                     </div>
                 </div>
             </footer>

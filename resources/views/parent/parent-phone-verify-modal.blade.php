@@ -380,7 +380,7 @@ body.phone-not-verified button:not([data-allow])::after {
     // ── Re-envoyer OTP ──
     window.resendOtp = function () {
         window.sendOtp();
-        // sendOtp gère lui-même le retour à step1 si nécessaire — ici on reste step2
+        // sendOtp gère lui-même le retour à step1 si nécessaire - ici on reste step2
         // On réinitialise juste l'input
         document.getElementById('otpInput').value = '';
         showOtpError('');

@@ -103,7 +103,7 @@
 </div>
 
 {{-- ══════════════════════════════════════════════
-     MODAL DE SÉCURITÉ — soumission (blanc/bleu)
+     MODAL DE SÉCURITÉ - soumission (blanc/bleu)
 ══════════════════════════════════════════════ --}}
 <style>
     #smOverlay {
@@ -231,7 +231,7 @@
                     <path d="M9 12l2 2 4-4" stroke-width="2"/>
                 </svg>
             </div>
-            <h2 class="sm-title" id="smTitle">Zone Sécurisée — Saisie de Notes</h2>
+            <h2 class="sm-title" id="smTitle">Zone Sécurisée - Saisie de Notes</h2>
             <div class="sm-divider"></div>
             <div class="sm-intro" id="smIntro">
                 Vous êtes sur le point d'<strong>enregistrer des notes</strong>,
@@ -271,7 +271,7 @@
             </div>
             <p class="sm-footnote">Ces mesures s'appliquent conformément à la politique de sécurité et de confidentialité de l'établissement.</p>
             <button class="sm-btn-confirm" id="smConfirmBtn" onclick="smConfirm()">
-                ✓ &nbsp; D'accord, j'ai compris — Enregistrer
+                ✓ &nbsp; D'accord, j'ai compris - Enregistrer
             </button>
             <button class="sm-btn-cancel" onclick="smClose()">Annuler</button>
         </div>

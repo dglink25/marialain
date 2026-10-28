@@ -214,7 +214,7 @@ class UpdateStudentsFromPdf extends Command
         $this->printBanner();
 
         if ($this->dryRun) {
-            $this->warn('⚠️  MODE DRY-RUN activé — aucune modification en base de données');
+            $this->warn('⚠️  MODE DRY-RUN activé - aucune modification en base de données');
         }
 
         // Charger tous les étudiants une seule fois (optimisation)
@@ -350,7 +350,7 @@ class UpdateStudentsFromPdf extends Command
             $this->recordFailure(
                 $context,
                 "SÉCURITÉ : aucun prénom commun entre « {$candidate->first_name} » (base) "
-                . "et « {$pdfFirstNames} » (PDF) pour l'élève ID {$candidate->id} — mise à jour refusée"
+                . "et « {$pdfFirstNames} » (PDF) pour l'élève ID {$candidate->id} - mise à jour refusée"
             );
             return;
         }
@@ -388,17 +388,17 @@ class UpdateStudentsFromPdf extends Command
                 });
             } catch (\Exception $e) {
                 $this->recordFailure($context, "Erreur DB lors de la mise à jour ID {$candidate->id}: " . $e->getMessage());
-                Log::error("UpdateStudentsFromPdf: {$context} — " . $e->getMessage());
+                Log::error("UpdateStudentsFromPdf: {$context} - " . $e->getMessage());
                 return;
             }
         }
 
         $this->updated++;
         $prefix = $this->dryRun ? '🔵 DRY  ' : '✅ MÀJ  ';
-        $this->log[] = "{$prefix}[{$matchMethod}] {$context} — " . implode(' | ', $changes);
+        $this->log[] = "{$prefix}[{$matchMethod}] {$context} - " . implode(' | ', $changes);
 
         if ($this->verboseLog) {
-            $this->line("  {$prefix}{$context} — " . implode(' | ', $changes));
+            $this->line("  {$prefix}{$context} - " . implode(' | ', $changes));
         }
     }
 
@@ -490,7 +490,7 @@ class UpdateStudentsFromPdf extends Command
     private function recordFailure(string $context, string $reason): void
     {
         $this->failures[] = ['context' => $context, 'reason' => $reason];
-        Log::warning("UpdateStudentsFromPdf FAILURE: {$context} — {$reason}");
+        Log::warning("UpdateStudentsFromPdf FAILURE: {$context} - {$reason}");
     }
 
     // ─────────────────────────────────────────────
@@ -500,7 +500,7 @@ class UpdateStudentsFromPdf extends Command
     {
         $this->info('');
         $this->info('╔══════════════════════════════════════════════════════════════╗');
-        $this->info('║   CPEG Marie-Alain — Mise à jour matricules & prénoms       ║');
+        $this->info('║   CPEG Marie-Alain - Mise à jour matricules & prénoms       ║');
         $this->info('║   Année scolaire 2025-2026                                  ║');
         $this->info('╚══════════════════════════════════════════════════════════════╝');
     }

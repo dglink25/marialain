@@ -30,7 +30,7 @@
                     </button>
 
                     {{-- ================================================================
-                         Boutons Bulletins Fin d'Année — RÉSERVÉS Directeur & Secrétaire
+                         Boutons Bulletins Fin d'Année - RÉSERVÉS Directeur & Secrétaire
                     ================================================================ --}}
                     @if($isAuthorized)
                         {{-- Télécharger PDF --}}
@@ -117,7 +117,7 @@
                     @php
                         $isRedouble = $row['statut'] === 'Redouble';
                         $rowBg      = $isRedouble ? 'bg-red-50 hover:bg-red-100' : 'bg-white hover:bg-gray-50';
-                        $fmtMoy     = fn($v) => $v !== null ? number_format($v, 2, ',', '') : '—';
+                        $fmtMoy     = fn($v) => $v !== null ? number_format($v, 2, ',', '') : '-';
                     @endphp
                     <tr class="{{ $rowBg }} transition-colors duration-150">
                         <td class="px-3 py-2.5 text-center text-gray-500 font-medium border-r border-gray-100">{{ $row['student']->num_educ }}</td>
@@ -125,17 +125,17 @@
                             <div class="font-semibold text-gray-900">{{ strtoupper($row['student']->last_name) }}</div>
                             <div class="text-gray-500 text-xs">{{ $row['student']->first_name }}</div>
                         </td>
-                        <td class="px-3 py-2.5 text-center border-r border-gray-100 text-gray-600 text-xs">{{ $row['conduite_t1'] > 0 ? number_format($row['conduite_t1'], 2, ',', '') : '—' }}</td>
+                        <td class="px-3 py-2.5 text-center border-r border-gray-100 text-gray-600 text-xs">{{ $row['conduite_t1'] > 0 ? number_format($row['conduite_t1'], 2, ',', '') : '-' }}</td>
                         <td class="px-3 py-2.5 text-center border-r border-gray-100 font-semibold {{ $row['moy_t1'] !== null ? ($row['moy_t1'] >= 10 ? 'text-green-700' : 'text-red-700') : 'text-gray-400' }}">{{ $fmtMoy($row['moy_t1']) }}</td>
                         <td class="px-3 py-2.5 text-center border-r border-gray-100 text-gray-500 text-xs">
                             <button onclick="ouvrirBulletin({{ $row['student']->id }}, 1)" class="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 hover:underline text-xs font-medium">{{ $row['rang_t1'] }} <i class="fas fa-eye text-xs"></i></button>
                         </td>
-                        <td class="px-3 py-2.5 text-center border-r border-gray-100 text-gray-600 text-xs">{{ $row['conduite_t2'] > 0 ? number_format($row['conduite_t2'], 2, ',', '') : '—' }}</td>
+                        <td class="px-3 py-2.5 text-center border-r border-gray-100 text-gray-600 text-xs">{{ $row['conduite_t2'] > 0 ? number_format($row['conduite_t2'], 2, ',', '') : '-' }}</td>
                         <td class="px-3 py-2.5 text-center border-r border-gray-100 font-semibold {{ $row['moy_t2'] !== null ? ($row['moy_t2'] >= 10 ? 'text-green-700' : 'text-red-700') : 'text-gray-400' }}">{{ $fmtMoy($row['moy_t2']) }}</td>
                         <td class="px-3 py-2.5 text-center border-r border-gray-100 text-gray-500 text-xs">
                             <button onclick="ouvrirBulletin({{ $row['student']->id }}, 2)" class="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 hover:underline text-xs font-medium">{{ $row['rang_t2'] }} <i class="fas fa-eye text-xs"></i></button>
                         </td>
-                        <td class="px-3 py-2.5 text-center border-r border-gray-100 text-gray-600 text-xs">{{ $row['conduite_t3'] > 0 ? number_format($row['conduite_t3'], 2, ',', '') : '—' }}</td>
+                        <td class="px-3 py-2.5 text-center border-r border-gray-100 text-gray-600 text-xs">{{ $row['conduite_t3'] > 0 ? number_format($row['conduite_t3'], 2, ',', '') : '-' }}</td>
                         <td class="px-3 py-2.5 text-center border-r border-gray-100 font-semibold {{ $row['moy_t3'] !== null ? ($row['moy_t3'] >= 10 ? 'text-green-700' : 'text-red-700') : 'text-gray-400' }}">{{ $fmtMoy($row['moy_t3']) }}</td>
                         <td class="px-3 py-2.5 text-center border-r border-gray-100 text-gray-500 text-xs">
                             <button onclick="ouvrirBulletin({{ $row['student']->id }}, 3)" class="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 hover:underline text-xs font-medium">{{ $row['rang_t3'] }} <i class="fas fa-eye text-xs"></i></button>
@@ -148,12 +148,12 @@
                             @elseif($row['statut'] === 'Redouble')
                                 <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-red-100 text-red-800 border border-red-300"><i class="fas fa-times-circle mr-1"></i>REDOUBLE</span>
                             @else
-                                <span class="text-gray-400 text-xs">—</span>
+                                <span class="text-gray-400 text-xs">-</span>
                             @endif
                         </td>
 
                         {{-- ============================================================
-                             Colonne PDF Fin d'Année — RÉSERVÉE Directeur & Secrétaire
+                             Colonne PDF Fin d'Année - RÉSERVÉE Directeur & Secrétaire
                         ============================================================ --}}
                         <td class="px-3 py-2.5 text-center border-l border-gray-200 bg-emerald-50">
                             @if($isAuthorized)
@@ -275,7 +275,7 @@
                         </div>
                         <div>
                             <h2 class="text-xl font-bold text-white">Délibération</h2>
-                            <p class="text-indigo-200 text-sm">{{ $classe->name }} — Année active : {{ $activeYear->name }}</p>
+                            <p class="text-indigo-200 text-sm">{{ $classe->name }} - Année active : {{ $activeYear->name }}</p>
                         </div>
                     </div>
                     <button onclick="fermerModalDeliberation()" class="text-white/70 hover:text-white transition-colors">
@@ -710,7 +710,7 @@ function remplirFormulaire(data) {
     if (existingDeliberation) {
         alertDiv.classList.remove('hidden');
         document.getElementById('deliExistingInfo').textContent =
-            `Délibération du ${existingDeliberation.deliberated_at} — ${existingDeliberation.passed_count} admis, ${existingDeliberation.repeated_count} redoublants.`;
+            `Délibération du ${existingDeliberation.deliberated_at} - ${existingDeliberation.passed_count} admis, ${existingDeliberation.repeated_count} redoublants.`;
         deliForm.querySelectorAll('select, input, button').forEach(el => el.disabled = true);
         document.getElementById('btnSoumettreDeli').classList.add('opacity-50', 'cursor-not-allowed');
     } else {
@@ -754,7 +754,7 @@ function appliquerClasseParDefaut() {
         const admis = moy !== null && moy >= seuil;
         if (admis) admisCount++; else redoublantCount++;
 
-        const moyStr   = moy !== null ? moy.toFixed(2).replace('.', ',') : '—';
+        const moyStr   = moy !== null ? moy.toFixed(2).replace('.', ',') : '-';
         const moyColor = moy !== null ? (admis ? 'text-green-700 font-bold' : 'text-red-700 font-bold') : 'text-gray-400';
         const statutBadge = admis
             ? '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-800"><i class="fas fa-check mr-1"></i>Admis</span>'
@@ -1025,7 +1025,7 @@ function ouvrirBulletin(studentId, trimestre) {
     modal.classList.remove('hidden');
     loader.classList.remove('hidden');
     content.classList.add('hidden');
-    subtitle.textContent = 'Trimestre ' + trimestre + ' — Chargement...';
+    subtitle.textContent = 'Trimestre ' + trimestre + ' - Chargement...';
 
     fetch(`/censeur/classes/${CLASSE_ID}/students/${studentId}/bulletin/${trimestre}/modal`, {
         headers: { 'X-Requested-With': 'XMLHttpRequest' }

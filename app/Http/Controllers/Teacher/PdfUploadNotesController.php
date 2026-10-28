@@ -26,7 +26,7 @@ class PdfUploadNotesController extends Controller
     private const DEVOIR_COUNT    = 2;
 
     // ─────────────────────────────────────────────────────────────────────────
-    //  UPLOAD — analyse le PDF et stocke le résultat en session
+    //  UPLOAD - analyse le PDF et stocke le résultat en session
     // ─────────────────────────────────────────────────────────────────────────
     public function upload(Request $request, int $classId, int $subjectId, int $trimestre)
     {
@@ -44,7 +44,7 @@ class PdfUploadNotesController extends Controller
             'pdf_fiche.max'      => 'Le fichier ne doit pas dépasser ' . self::MAX_PDF_SIZE_MB . ' Mo.',
         ]);
 
-        // ── 2. Sécurité — vérifier que l'enseignant est autorisé ─────────────
+        // ── 2. Sécurité - vérifier que l'enseignant est autorisé ─────────────
         $teacher    = Auth::user();
         $activeYear = AcademicYear::where('active', true)->firstOrFail();
 
@@ -129,7 +129,7 @@ class PdfUploadNotesController extends Controller
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    //  SAVE — persiste les notes en base et génère le PDF récapitulatif
+    //  SAVE - persiste les notes en base et génère le PDF récapitulatif
     // ─────────────────────────────────────────────────────────────────────────
     public function save(Request $request, int $classId, int $subjectId, int $trimestre)
     {
@@ -296,7 +296,7 @@ class PdfUploadNotesController extends Controller
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    //  PARSING — extrait les données du texte PDF
+    //  PARSING - extrait les données du texte PDF
     // ─────────────────────────────────────────────────────────────────────────
     /**
      * Analyse le texte brut du PDF et retourne un tableau indexé par num_educ.
@@ -358,7 +358,7 @@ class PdfUploadNotesController extends Controller
                 // Fallback : récupérer les tokens qui ressemblent à des notes ou à des tirets
                 foreach ($tokens as $tok) {
                     $cleaned = $this->parseNote($tok);
-                    if ($cleaned !== null || in_array(trim($tok), ['—', '-', '--', '', 'null'], true)) {
+                    if ($cleaned !== null || in_array(trim($tok), ['-', '-', '--', '', 'null'], true)) {
                         $noteTokens[] = $tok;
                     }
                 }
@@ -394,13 +394,13 @@ class PdfUploadNotesController extends Controller
 
     /**
      * Convertit un token texte en float ou null.
-     * Gère : "—", "-", "", "19,5", "19.5", "0", "20"
+     * Gère : "-", "-", "", "19,5", "19.5", "0", "20"
      */
     private function parseNote(string $token): ?float
     {
         $t = trim($token);
 
-        if (in_array($t, ['—', '-', '--', '', 'null', 'N/A', 'n/a', '*'], true)) {
+        if (in_array($t, ['-', '-', '--', '', 'null', 'N/A', 'n/a', '*'], true)) {
             return null;
         }
 

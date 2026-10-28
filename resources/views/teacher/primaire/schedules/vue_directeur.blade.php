@@ -162,7 +162,7 @@
     z-index: 1;
 }
 
-/* Course cards — lecture seule (pas de boutons) */
+/* Course cards - lecture seule (pas de boutons) */
 .course-card {
     position: absolute;
     left: 4px;
@@ -313,7 +313,7 @@
                              style="top: {{ $top }}px; height: {{ $height }}px; background: {{ $c['bg'] }}; border-left-color: {{ $c['border'] }};">
 
                             <span class="course-badge" style="background-color: {{ $c['badge'] }};">
-                                {{ $sched->subject->name ?? '—' }}
+                                {{ $sched->subject->name ?? '-' }}
                             </span>
 
                             <span class="course-time" style="color: {{ $c['text'] }};">

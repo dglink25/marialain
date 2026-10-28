@@ -74,7 +74,7 @@
                 <h1 class="text-2xl font-bold text-gray-900">
                     Fiche de Notes
                     @if(isset($subject)) <span class="text-indigo-700">{{ $subject->name }}</span> @endif
-                    — Classe <span class="text-indigo-700">{{ $classe->name }}</span> / Trimestre {{ $trimestre }}
+                    - Classe <span class="text-indigo-700">{{ $classe->name }}</span> / Trimestre {{ $trimestre }}
                 </h1>
                 <a href="{{ route('teacher.classes.notes.list', [$classe->id, $subject->id, $trimestre]) }}"
                    class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 text-sm font-medium">
@@ -229,7 +229,7 @@
                                 Téléverser une fiche de notes (PDF)
                             </h2>
                             <p style="font-size:.75rem;color:#64748b;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                                Matière : <strong>{{ $subject->name }}</strong> — Classe : <strong>{{ $classe->name }}</strong> — Trim. {{ $trimestre }}
+                                Matière : <strong>{{ $subject->name }}</strong> - Classe : <strong>{{ $classe->name }}</strong> - Trim. {{ $trimestre }}
                             </p>
                         </div>
                     </div>
@@ -417,7 +417,7 @@
                                         <svg class="w-4 h-4 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                                         </svg>
-                                        <span class="text-xs text-green-700 font-medium">Liste conforme — tous les élèves correspondent à cette classe et cette année académique.</span>
+                                        <span class="text-xs text-green-700 font-medium">Liste conforme - tous les élèves correspondent à cette classe et cette année académique.</span>
                                     </div>
                                 @endif
                             </div>
@@ -469,7 +469,7 @@
 
                                                 {{-- Matricule (num_educ) --}}
                                                 <td class="px-3 py-2 border font-mono text-gray-700 whitespace-nowrap text-xs">
-                                                    {{ $row['student']->num_educ ?? '—' }}
+                                                    {{ $row['student']->num_educ ?? '-' }}
                                                 </td>
 
                                                 {{-- Nom BDD --}}
@@ -487,7 +487,7 @@
                                                             <span class="ml-1 text-xs text-red-600">⚠ Divergence</span>
                                                         @endif
                                                     @else
-                                                        <span class="text-gray-400">—</span>
+                                                        <span class="text-gray-400">-</span>
                                                     @endif
                                                 </td>
 
@@ -506,15 +506,15 @@
                                                         'bg-gray-50 text-gray-400 border-gray-200')) }}">
                                                         @if($cell['status'] === 'conflict')
                                                             <span title="Note existante : {{ $cell['existing'] }}">
-                                                                {{ $cell['value'] !== null ? number_format($cell['value'], 2, ',', '') : '—' }}
+                                                                {{ $cell['value'] !== null ? number_format($cell['value'], 2, ',', '') : '-' }}
                                                                 <br><span class="text-xs font-normal text-red-600">Existe: {{ $cell['existing'] }}</span>
                                                             </span>
                                                         @elseif($cell['status'] === 'ok')
                                                             {{ number_format($cell['value'], 2, ',', '') }}
                                                         @elseif($cell['status'] === 'no_pdf_data')
-                                                            <span class="text-yellow-500">—</span>
+                                                            <span class="text-yellow-500">-</span>
                                                         @else
-                                                            <span class="text-gray-400">—</span>
+                                                            <span class="text-gray-400">-</span>
                                                         @endif
                                                     </td>
                                                 @endfor
@@ -529,15 +529,15 @@
                                                         'bg-gray-50 text-gray-400 border-gray-200')) }}">
                                                         @if($cell['status'] === 'conflict')
                                                             <span title="Note existante : {{ $cell['existing'] }}">
-                                                                {{ $cell['value'] !== null ? number_format($cell['value'], 2, ',', '') : '—' }}
+                                                                {{ $cell['value'] !== null ? number_format($cell['value'], 2, ',', '') : '-' }}
                                                                 <br><span class="text-xs font-normal text-red-600">Existe: {{ $cell['existing'] }}</span>
                                                             </span>
                                                         @elseif($cell['status'] === 'ok')
                                                             {{ number_format($cell['value'], 2, ',', '') }}
                                                         @elseif($cell['status'] === 'no_pdf_data')
-                                                            <span class="text-yellow-500">—</span>
+                                                            <span class="text-yellow-500">-</span>
                                                         @else
-                                                            <span class="text-gray-400">—</span>
+                                                            <span class="text-gray-400">-</span>
                                                         @endif
                                                     </td>
                                                 @endfor
@@ -558,7 +558,7 @@
                                     </h4>
                                     <ul class="space-y-1 text-xs text-red-700 list-disc list-inside">
                                         @if($conflictCount > 0)
-                                            <li><strong>{{ $conflictCount }}</strong> case(s) en conflit — une note existe déjà en base.</li>
+                                            <li><strong>{{ $conflictCount }}</strong> case(s) en conflit - une note existe déjà en base.</li>
                                         @endif
                                         @if($noPdfDataCount > 0)
                                             <li><strong>{{ $noPdfDataCount }}</strong> élève(s) de la classe non trouvé(s) dans le PDF.</li>
@@ -666,7 +666,7 @@
         </div>
 
         {{-- ════════════════════════════════════════════════════════════════════
-             MODAL DE SÉCURITÉ — navigation (blanc/bleu)
+             MODAL DE SÉCURITÉ - navigation (blanc/bleu)
         ════════════════════════════════════════════════════════════════════ --}}
         <style>
             #smOverlay {
@@ -752,7 +752,7 @@
                             <path d="M9 12l2 2 4-4" stroke-width="2"/>
                         </svg>
                     </div>
-                    <h2 class="sm-title">Zone Sécurisée — Saisie de Notes</h2>
+                    <h2 class="sm-title">Zone Sécurisée - Saisie de Notes</h2>
                     <div class="sm-divider"></div>
                     <div class="sm-intro">
                         Vous accédez à une fonctionnalité <strong>hautement confidentielle</strong>.

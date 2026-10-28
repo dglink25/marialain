@@ -120,7 +120,7 @@
         }
 
         /* ════════════════════════════════════════════════════════════
-           BARRE D'OUTILS — masquée à l'impression
+           BARRE D'OUTILS - masquée à l'impression
            ════════════════════════════════════════════════════════════ */
         #toolbar {
             position: fixed;
@@ -174,7 +174,7 @@
         #content { padding-top: 58px; }
 
         /* ════════════════════════════════════════════════════════════
-           IMPRESSION — on supprime tout sauf les bulletins
+           IMPRESSION - on supprime tout sauf les bulletins
            ════════════════════════════════════════════════════════════ */
         @media print {
             @page {
@@ -272,7 +272,7 @@
             const resp = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
             if (!resp.ok) throw new Error('HTTP ' + resp.status);
             const html = await resp.text();
-            // Injecter directement — le fragment commence par <div class="bulletin-page">
+            // Injecter directement - le fragment commence par <div class="bulletin-page">
             container.insertAdjacentHTML('beforeend', html);
         } catch (e) {
             container.insertAdjacentHTML('beforeend',

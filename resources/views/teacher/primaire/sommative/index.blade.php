@@ -24,7 +24,7 @@
             <div>
                 <h1 class="text-xl sm:text-2xl font-bold text-gray-900">Évaluations sommatives</h1>
                 <p class="text-xs sm:text-sm text-gray-500 mt-0.5">
-                    <span class="font-semibold text-orange-700">{{ $classe->name }}</span> — {{ $annee->name }} — {{ $todayFr }}
+                    <span class="font-semibold text-orange-700">{{ $classe->name }}</span> - {{ $annee->name }} - {{ $todayFr }}
                 </p>
             </div>
         </div>
@@ -79,14 +79,14 @@
                     @foreach($evaluations as $eval)
                     <tr class="hover:bg-gray-50 transition-colors">
                         <td class="px-5 py-3 font-medium text-gray-700 whitespace-nowrap">
-                            {{ $eval->date_evaluation ? $eval->date_evaluation->locale('fr')->isoFormat('ddd D MMM YYYY') : '—' }}
+                            {{ $eval->date_evaluation ? $eval->date_evaluation->locale('fr')->isoFormat('ddd D MMM YYYY') : '-' }}
                         </td>
                         <td class="px-5 py-3">
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-orange-100 text-orange-800 whitespace-nowrap">
-                                {{ $eval->subject->name ?? '—' }}
+                                {{ $eval->subject->name ?? '-' }}
                             </span>
                         </td>
-                        <td class="px-5 py-3 text-gray-600">{{ $eval->titre ?: '—' }}</td>
+                        <td class="px-5 py-3 text-gray-600">{{ $eval->titre ?: '-' }}</td>
                         <td class="px-5 py-3 text-center font-bold text-gray-700">/{{ number_format($eval->note_max, 0) }}</td>
                         <td class="px-5 py-3 text-center text-xs text-gray-600">
                             {{ $eval->notes->whereNotNull('note')->count() }}/{{ $eval->notes->count() }}
@@ -121,7 +121,7 @@
                     </div>
                     <div>
                         <h2 class="text-base sm:text-lg font-bold text-gray-900">Nouvelle évaluation sommative</h2>
-                        <p class="text-xs text-gray-400">{{ $classe->name }} — {{ $annee->name }}</p>
+                        <p class="text-xs text-gray-400">{{ $classe->name }} - {{ $annee->name }}</p>
                     </div>
                 </div>
                 <button type="button" onclick="closeModal()" class="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 transition shrink-0">
@@ -142,7 +142,7 @@
                             <p class="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">Aucune matière au programme aujourd'hui.</p>
                             @else
                             <select name="subject_id" required class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors">
-                                <option value="">— Choisir —</option>
+                                <option value="">- Choisir -</option>
                                 @foreach($matieresAujourdhui as $mat)
                                 <option value="{{ $mat->id }}" {{ old('subject_id')==$mat->id?'selected':'' }}>{{ $mat->name }}</option>
                                 @endforeach
@@ -217,7 +217,7 @@
                                         <td class="px-3 py-2 text-center">
                                             <input type="number" name="notes[{{ $student->id }}]"
                                                    value="{{ old('notes.'.$student->id) }}"
-                                                   min="0" step="0.5" inputmode="decimal" placeholder="—"
+                                                   min="0" step="0.5" inputmode="decimal" placeholder="-"
                                                    class="note-input w-16 text-center rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-orange-400 transition-colors">
                                         </td>
                                     </tr>
