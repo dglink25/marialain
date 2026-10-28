@@ -59,7 +59,7 @@
 
                     <div class="flex items-center justify-between bg-indigo-50/60 hover:bg-indigo-100/70 border border-indigo-200 rounded-lg px-4 py-2 text-sm text-indigo-900 transition">
                         <span> Cahier de texte</span>
-                        <a href="{{ route('cahier.export.index', ['class_id' => $class->id]) }}" class="text-indigo-600 font-semibold hover:underline">Télécharger</a>
+                        <a href="{{ route('cahier.export.index', ['class_id' => $class->id, 'entity_id' => $class->entity_id ?? 3]) }}" class="text-indigo-600 font-semibold hover:underline">Télécharger</a>
                     </div>
                 </div>
             </div>

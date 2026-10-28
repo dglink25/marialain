@@ -256,7 +256,7 @@
 
     {{-- PIED DE PAGE FIXE POUR TOUTES LES PAGES --}}
     <div class="footer-pagination">
-        CPEG MARIE-ALAIN - Cahier de texte officiel | Année scolaire : {{ $academicYear->name }} - Classe : {{ $classe->name }} | Page <span class="pagenum"></span>
+        CPEG MARIE-ALAIN - Cahier de texte officiel | Année scolaire : {{ $academicYear->name }} - Classe : {{ $classe->name }}@if($classe->entity) ({{ $classe->entity->name }})@endif | Page <span class="pagenum"></span>
     </div>
 
     {{-- EN-TÊTE INSTITUTIONNEL --}}
@@ -269,8 +269,13 @@
             </td>
             <td class="header-info">
                 <div class="bold">RÉPUBLIQUE DU BÉNIN</div>
-                <div>MINISTÈRE DES ENSEIGNEMENTS SECONDAIRE, TECHNIQUE ET DE LA FORMATION PROFESSIONNELLE</div>
-                <div>DIRECTION DÉPARTEMENTALE DES ENSEIGNEMENTS SECONDAIRE, TECHNIQUE ET DE LA FORMATION PROFESSIONNELLE DE L'ATLANTIQUE</div>
+                @if(($classe->entity_id ?? 3) == 3)
+                    <div>MINISTÈRE DES ENSEIGNEMENTS SECONDAIRE, TECHNIQUE ET DE LA FORMATION PROFESSIONNELLE</div>
+                    <div>DIRECTION DÉPARTEMENTALE DES ENSEIGNEMENTS SECONDAIRE, TECHNIQUE ET DE LA FORMATION PROFESSIONNELLE DE L'ATLANTIQUE</div>
+                @else
+                    <div>MINISTÈRE DES ENSEIGNEMENTS MATERNEL ET PRIMAIRE</div>
+                    <div>DIRECTION DÉPARTEMENTALE DES ENSEIGNEMENTS MATERNEL ET PRIMAIRE DE L'ATLANTIQUE</div>
+                @endif
                 <div class="school-name">CPEG « MARIE-ALAIN »</div>
                 <div style="font-size: 7.5pt; font-style: italic;">Discipline - Travail - Succès</div>
             </td>
@@ -296,7 +301,12 @@
             <td class="label">Année académique :</td>
             <td class="value"><strong>{{ $academicYear->name }}</strong></td>
             <td class="label">Classe :</td>
-            <td class="value"><strong>{{ $classe->name }}</strong></td>
+            <td class="value">
+                <strong>{{ $classe->name }}</strong>
+                @if($classe->entity)
+                    <span style="font-size: 8pt; font-weight: normal; color: #333333;">({{ $classe->entity->name }})</span>
+                @endif
+            </td>
         </tr>
 
         @if($filterType === 'subject_class')
@@ -462,7 +472,15 @@
                 </td>
                 <td style="width: 50%; text-align: right;">
                     Visé par la Direction Pédagogique,<br><br>
-                    <div class="signature-title" style="text-align: right;">Le Censeur des Études</div>
+                    <div class="signature-title" style="text-align: right;">
+                        @if(($classe->entity_id ?? 3) == 3)
+                            Le Censeur des Études
+                        @elseif(($classe->entity_id ?? 3) == 2)
+                            Le Directeur du Primaire
+                        @else
+                            La Direction Pédagogique
+                        @endif
+                    </div>
                     <div style="height: 45px;"></div>
                     <div class="signature-name" style="text-align: right;">Direction Pédagogique</div>
                 </td>

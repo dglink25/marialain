@@ -13,8 +13,19 @@
     <div class="mb-8">
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-                <div class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100 mb-2">
-                    <i class="fas fa-file-pdf mr-1.5"></i> Édition Officielle &bull; Année {{ $academicYear->name }}
+                <div class="flex items-center gap-2 mb-2 flex-wrap">
+                    <div class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">
+                        <i class="fas fa-file-pdf mr-1.5"></i> Édition Officielle &bull; Année {{ $academicYear->name }}
+                    </div>
+                    @if($isCenseur || (isset($entityId) && $entityId == 3))
+                        <div class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 border border-blue-200">
+                            <i class="fas fa-graduation-cap mr-1.5"></i> Secondaire (Collège & Lycée)
+                        </div>
+                    @elseif($isPrimaire || (isset($entityId) && $entityId == 2))
+                        <div class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                            <i class="fas fa-child mr-1.5"></i> Primaire
+                        </div>
+                    @endif
                 </div>
                 <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">
                     Téléchargement des Cahiers de Texte
@@ -29,6 +40,24 @@
                 </a>
             </div>
         </div>
+
+        @if(!$isCenseur && !$isPrimaire)
+            <div class="flex items-center gap-2 mt-4 pt-4 border-t border-gray-200">
+                <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider mr-1">Filtrer par entité :</span>
+                <a href="{{ route('cahier.export.index') }}" 
+                   class="px-3 py-1.5 rounded-lg text-xs font-medium transition {{ empty($entityId) ? 'bg-indigo-600 text-white shadow-sm' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}">
+                    Toutes les classes
+                </a>
+                <a href="{{ route('cahier.export.index', ['entity_id' => 3]) }}" 
+                   class="px-3 py-1.5 rounded-lg text-xs font-medium transition {{ (isset($entityId) && $entityId == 3) ? 'bg-blue-600 text-white shadow-sm' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}">
+                    <i class="fas fa-graduation-cap mr-1"></i> Secondaire
+                </a>
+                <a href="{{ route('cahier.export.index', ['entity_id' => 2]) }}" 
+                   class="px-3 py-1.5 rounded-lg text-xs font-medium transition {{ (isset($entityId) && $entityId == 2) ? 'bg-emerald-600 text-white shadow-sm' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}">
+                    <i class="fas fa-child mr-1"></i> Primaire
+                </a>
+            </div>
+        @endif
     </div>
 
     {{-- Messages flash --}}
@@ -60,6 +89,7 @@
     {{-- Formulaire de génération --}}
     <form id="cahierExportForm" action="{{ route('cahier.export.pdf') }}" method="POST" target="_blank" class="space-y-8">
         @csrf
+        <input type="hidden" name="entity_id" id="entity_id" value="{{ $entityId ?? '' }}">
 
         {{-- ÉTAPE 1 : Choix du type de filtre --}}
         <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 md:p-8">
@@ -150,7 +180,7 @@
                         <option value="">-- Sélectionnez une classe --</option>
                         @foreach($classes as $c)
                             <option value="{{ $c->id }}" {{ (isset($selectedClassId) && $selectedClassId == $c->id) ? 'selected' : '' }}>
-                                {{ $c->name }} (Année {{ $academicYear->name }})
+                                {{ $c->name }}@if(!$entityId && $c->entity) ({{ $c->entity->name }})@endif
                             </option>
                         @endforeach
                     </select>
@@ -213,9 +243,10 @@
 
             {{-- Statut & Décompte --}}
             <div id="classStatsBanner" class="hidden mt-6 p-4 rounded-xl bg-gray-50 border border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm">
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-2 flex-wrap">
                     <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
                     <span class="text-gray-700">Séances enregistrées pour cette classe : <strong id="statsTotalEntries" class="text-gray-900 font-bold">0</strong></span>
+                    <span id="classEntityBadge" class="hidden px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 border border-blue-200"></span>
                 </div>
                 <div class="text-xs text-gray-500">
                     <i class="fas fa-check-double mr-1 text-emerald-600"></i> Tous les statuts sont inclus (validés ou non)
@@ -357,8 +388,15 @@
                     selectTeacher.innerHTML = '<option value="">Aucun enseignant trouvé pour cette classe</option>';
                 }
 
-                // Afficher le décompte
+                // Afficher le décompte et l'entité
                 statsEntries.textContent = data.total_entries || 0;
+                const entityBadge = document.getElementById('classEntityBadge');
+                if (data.classe && data.classe.entity) {
+                    entityBadge.textContent = data.classe.entity;
+                    entityBadge.classList.remove('hidden');
+                } else {
+                    entityBadge.classList.add('hidden');
+                }
                 statsBanner.classList.remove('hidden');
             })
             .catch(err => {

@@ -668,21 +668,74 @@ class CahierDeTexteController extends Controller{
             return back()->with('error', 'Aucune année académique active trouvée.');
         }
 
-        $classes = Classe::where('academic_year_id', $academicYear->id)
-            ->orderBy('name')
-            ->get();
+        $user = Auth::user();
+        $userRole = $user && $user->role ? $user->role->name : null;
+
+        // Détection du rôle de l'utilisateur
+        $isCenseur = ($userRole === 'censeur') || ($user && $user->role_id === 4) || ($request->query('from') === 'censeur');
+        $isPrimaire = ($userRole === 'directeur_primaire') || ($user && $user->role_id === 3);
+        $isEnseignant = ($userRole === 'enseignant') || ($user && $user->role_id === 8);
 
         $selectedClassId = $request->query('class_id');
+        $selectedClass = $selectedClassId ? Classe::find($selectedClassId) : null;
 
-        return view('cahier.export', compact('academicYear', 'classes', 'selectedClassId'));
+        // Récupération de l'entity_id souhaité
+        if ($request->filled('entity_id')) {
+            $entityId = (int) $request->query('entity_id');
+        } elseif ($selectedClass && $selectedClass->entity_id) {
+            $entityId = (int) $selectedClass->entity_id;
+        } elseif ($isCenseur) {
+            // Le censeur supervise exclusivement les classes du Secondaire (entity_id = 3)
+            $entityId = 3;
+        } elseif ($isPrimaire) {
+            $entityId = 2;
+        } else {
+            $entityId = null;
+        }
+
+        $classesQuery = Classe::with('entity')
+            ->where('academic_year_id', $academicYear->id);
+
+        if ($entityId) {
+            $classesQuery->where('entity_id', $entityId);
+        } elseif ($isPrimaire) {
+            $classesQuery->whereIn('entity_id', [1, 2]);
+        }
+
+        // Si l'utilisateur est un enseignant, limiter à ses classes
+        if ($isEnseignant) {
+            $classesQuery->where(function ($q) use ($user) {
+                $q->whereIn('id', function ($sub) use ($user) {
+                    $sub->select('class_id')
+                        ->from('class_teacher_subject')
+                        ->where('teacher_id', $user->id);
+                })->orWhereIn('id', function ($sub) use ($user) {
+                    $sub->select('class_id')
+                        ->from('cahier_de_texte')
+                        ->where('teacher_id', $user->id);
+                });
+            });
+        }
+
+        $classes = $classesQuery->orderBy('name')->get();
+        $entities = \App\Models\Entity::all();
+
+        return view('cahier.export', compact(
+            'academicYear',
+            'classes',
+            'selectedClassId',
+            'entityId',
+            'entities',
+            'isCenseur',
+            'isPrimaire'
+        ));
     }
 
     /**
      * Données AJAX pour une classe donnée (matières et enseignants assignés)
      */
-    public function getClassExportData($classeId)
-    {
-        $classe = Classe::findOrFail($classeId);
+    public function getClassExportData($classeId)    {
+        $classe = Classe::with('entity')->findOrFail($classeId);
         $academicYear = AcademicYear::where('active', 1)->first();
         $yearId = $academicYear ? $academicYear->id : null;
 
@@ -770,8 +823,10 @@ class CahierDeTexteController extends Controller{
 
         return response()->json([
             'classe' => [
-                'id'   => $classe->id,
-                'name' => $classe->name,
+                'id'        => $classe->id,
+                'name'      => $classe->name,
+                'entity_id' => $classe->entity_id,
+                'entity'    => $classe->entity ? $classe->entity->name : null,
             ],
             'subjects'      => $subjects,
             'teachers'      => $teachers,
@@ -794,7 +849,7 @@ class CahierDeTexteController extends Controller{
         ]);
 
         $academicYear = AcademicYear::where('active', 1)->firstOrFail();
-        $classe = Classe::findOrFail($request->class_id);
+        $classe = Classe::with('entity')->findOrFail($request->class_id);
 
         $filterType = $request->filter_type;
         $subject = null;
