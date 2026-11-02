@@ -322,14 +322,17 @@ class DeliberationController extends Controller{
                     // Diplômé : pas de nouvelle classe, l'élève reste avec son ID
                     // mais on met academic_year_id à la nouvelle année pour traçabilité
                     $newClassId = $student->class_id; // garde la même classe
+                    $targetClassForStudent = $student->classe;
                 } elseif ($statut === 'passed') {
                     $origTargetClassId    = is_int($dest) ? $dest : null;
                     $newClassInTargetYear = ($origTargetClassId && isset($targetClassesInTargetYear[$origTargetClassId]))
                         ? $targetClassesInTargetYear[$origTargetClassId]
                         : $mainTargetClassInTargetYear;
                     $newClassId = $newClassInTargetYear->id;
+                    $targetClassForStudent = $newClassInTargetYear;
                 } else {
                     $newClassId = $sourceClassInTargetYear->id;
+                    $targetClassForStudent = $sourceClassInTargetYear;
                 }
 
                 DeliberationStudent::create([
@@ -345,12 +348,22 @@ class DeliberationController extends Controller{
                     'annual_average'         => $moyAnn,
                 ]);
 
+                $newSchoolFees = (float) ($targetClassForStudent?->school_fees ?? 0);
+                $entityId = (int) ($targetClassForStudent?->entity_id ?? $student->entity_id);
+                $reRegFee = ($entityId === 3)
+                    ? (float) ($targetClassForStudent?->re_registration_fee ?? 5000)
+                    : 0;
+                $newTotalFees = ($statut === 'graduated') ? 0 : ($newSchoolFees + $reRegFee);
+
                 $student->update([
                     'class_id'          => $newClassId,
                     'academic_year_id'  => $targetYear->id,
                     'registration_type' => $statut === 'graduated' ? 'graduated' : 're_registration',
-                    'total_fees'        => 0,
+                    'school_fees'       => $newSchoolFees,
+                    'total_fees'        => $newTotalFees,
                     'amount_paid'       => 0,
+                    'school_fees_paid'  => 0,
+                    'fully_paid'        => false,
                 ]);
             }
 
@@ -518,11 +531,24 @@ class DeliberationController extends Controller{
                 $student = Student::find($ds->student_id);
                 if (!$student) continue;
 
-                if ($ds->status === 'passed') {
+                if ($ds->status === 'passed' || $ds->status === 'repeated' || $ds->status === 'graduated') {
+                    $oldClass = Classe::find($ds->old_class_id);
+                    $oldPayments = (float) $student->payments()->where('academic_year_id', $ds->old_academic_year_id)->sum('amount');
+                    $oldSchoolFees = (float) ($oldClass?->school_fees ?? 0);
+                    $oldEntityId = (int) ($oldClass?->entity_id ?? $student->entity_id);
+                    $oldReRegFee = ($oldEntityId === 3) ? (float) ($oldClass?->re_registration_fee ?? 5000) : 0;
+                    $oldInscriptionFee = ($oldEntityId === 3) ? (float) ($oldClass?->registration_fee ?? 10000) : 5000;
+                    $oldTotalFees = $oldSchoolFees + ($ds->old_registration_type === 'new' ? $oldInscriptionFee : $oldReRegFee);
+
                     $student->update([
                         'class_id'          => $ds->old_class_id,
                         'academic_year_id'  => $ds->old_academic_year_id,
                         'registration_type' => $ds->old_registration_type,
+                        'school_fees'       => $oldSchoolFees,
+                        'total_fees'        => $oldTotalFees,
+                        'amount_paid'       => $oldPayments,
+                        'school_fees_paid'  => $oldPayments,
+                        'fully_paid'        => ($oldPayments >= $oldTotalFees && $oldTotalFees > 0),
                     ]);
                 }
 

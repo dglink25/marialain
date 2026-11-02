@@ -52,7 +52,7 @@ class ParentDashboardController extends Controller{
                     $totalFeesToPay += $student->classe->re_registration_fee ?? 0;
                 }
             }
-            $totalPaid += $student->payments->sum('amount');
+            $totalPaid += (float) $student->total_paid;
         }
         
         $paymentPercentage = $totalFeesToPay > 0 
@@ -125,9 +125,9 @@ class ParentDashboardController extends Controller{
         $average = 1;
 
         // Récupérer les informations de frais
-        $totalFees = $student->total_fees;
-        $totalPaid = $student->payments->sum('amount');
-        $remainingFees = $totalFees - $totalPaid;
+        $totalFees = ($student->total_fees > 0) ? (float) $student->total_fees : ($student->calculateTotalFees() ?: (float) ($student->classe?->school_fees ?? 0));
+        $totalPaid = (float) $student->total_paid;
+        $remainingFees = max($totalFees - $totalPaid, 0);
         $paymentStatus = $totalFees > 0 ? round(($totalPaid / $totalFees) * 100) : 0;
 
         return [

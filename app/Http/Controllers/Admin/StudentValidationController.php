@@ -71,11 +71,14 @@ class StudentValidationController extends Controller{
             'amount_paid' => $request->amount_paid,
         ]);
 
+        $yearId = $student->academic_year_id ?? $activeYear->id;
+
         // ✅ Enregistrement du paiement
         $payment = $student->payments()->create([
-            'tranche'      => 1,
-            'amount'       => $request->amount_paid,
-            'payment_date' => now(),
+            'tranche'          => 1,
+            'amount'           => $request->amount_paid,
+            'academic_year_id' => $yearId,
+            'payment_date'     => now(),
         ]);
 
         // ✅ Génération du PDF
@@ -104,9 +107,13 @@ class StudentValidationController extends Controller{
         @unlink($tempPath);
 
         // ✅ Mise à jour de l’élève
+        $student->load('classe');
+        $newTotalPaid = (float) $student->payments()->where('academic_year_id', $yearId)->sum('amount');
+        $totalFees = ($student->total_fees > 0) ? (float) $student->total_fees : ($student->calculateTotalFees() ?: (float) ($student->classe?->school_fees ?? 0));
         $student->receipt_url = $pdfUrl;
-        $student->school_fees_paid = $student->payments()->sum('amount');
-        $student->fully_paid = $student->school_fees_paid >= $student->classe->school_fees;
+        $student->amount_paid = $newTotalPaid;
+        $student->school_fees_paid = $newTotalPaid;
+        $student->fully_paid = ($newTotalPaid >= $totalFees && $totalFees > 0);
         $student->save();
 
         // Envoi d’un mail si tu veux

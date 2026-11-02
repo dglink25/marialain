@@ -16,12 +16,13 @@ class StudentPaymentController extends Controller
     // Afficher les paiements d'un étudiant
     public function index(Student $student) {
         $student->load('classe'); // Charger la classe pour avoir les frais
-        $payments = $student->payments()->latest()->get();
+        $yearId = $student->academic_year_id;
+        $payments = $student->payments()->where('academic_year_id', $yearId)->latest()->get();
         
         // Calculer les totaux avec le nouveau système
-        $totalFees = $student->total_fees ?? $student->classe->school_fees ?? 0;
-        $totalPaid = $student->payments()->sum('amount');
-        $remainingFees = $totalFees - $totalPaid;
+        $totalFees = ($student->total_fees > 0) ? (float) $student->total_fees : ($student->calculateTotalFees() ?: (float) ($student->classe?->school_fees ?? 0));
+        $totalPaid = (float) $student->payments()->where('academic_year_id', $yearId)->sum('amount');
+        $remainingFees = max($totalFees - $totalPaid, 0);
         
         return view('admin.students.payments.index', compact('student', 'payments', 'totalFees', 'totalPaid', 'remainingFees'));
     }
@@ -29,11 +30,12 @@ class StudentPaymentController extends Controller
     // Formulaire pour ajouter un paiement
     public function create(Student $student){
         $student->load('classe');
+        $yearId = $student->academic_year_id;
         
         // Utiliser total_fees au lieu de school_fees
-        $totalFees = $student->total_fees ?? $student->classe->school_fees ?? 0;
-        $totalPaid = $student->payments()->sum('amount');
-        $remainingFees = $totalFees - $totalPaid;
+        $totalFees = ($student->total_fees > 0) ? (float) $student->total_fees : ($student->calculateTotalFees() ?: (float) ($student->classe?->school_fees ?? 0));
+        $totalPaid = (float) $student->payments()->where('academic_year_id', $yearId)->sum('amount');
+        $remainingFees = max($totalFees - $totalPaid, 0);
         
         return view('admin.students.payments.create', compact('student', 'totalFees', 'remainingFees'));
     }
@@ -42,11 +44,12 @@ class StudentPaymentController extends Controller
     public function store(Request $request, Student $student){
         $activeAcademicYear = AcademicYear::where('active', true)->first();
         $student->load('classe');
+        $yearId = $student->academic_year_id ?? $activeAcademicYear?->id;
         
         // Calculer le montant total des frais
-        $totalFees = $student->total_fees ?? $student->classe->school_fees ?? 0;
-        $totalPaid = $student->payments()->sum('amount');
-        $remainingFees = $totalFees - $totalPaid;
+        $totalFees = ($student->total_fees > 0) ? (float) $student->total_fees : ($student->calculateTotalFees() ?: (float) ($student->classe?->school_fees ?? 0));
+        $totalPaid = (float) $student->payments()->where('academic_year_id', $yearId)->sum('amount');
+        $remainingFees = max($totalFees - $totalPaid, 0);
         
         $request->validate([
             'tranche' => 'required|integer|min:1|max:3',
@@ -67,15 +70,17 @@ class StudentPaymentController extends Controller
         $payment = $student->payments()->create([
             'tranche' => $request->tranche,
             'amount' => $request->amount,
-            'academic_year_id' => $activeAcademicYear->id,
+            'academic_year_id' => $yearId,
             'payment_date' => $request->payment_date,
         ]);
 
         // Mettre à jour amount_paid dans la table students
-        $newTotalPaid = $totalPaid + $request->amount;
+        $newTotalPaid = $totalPaid + (float) $request->amount;
         $student->update([
-            'amount_paid' => $newTotalPaid,
-            'is_validated' => $newTotalPaid >= $totalFees ? 1 : $student->is_validated, // Valider si tout payé
+            'amount_paid'      => $newTotalPaid,
+            'school_fees_paid' => $newTotalPaid,
+            'fully_paid'       => ($newTotalPaid >= $totalFees && $totalFees > 0),
+            'is_validated'     => ($newTotalPaid >= $totalFees ? 1 : $student->is_validated),
         ]);
 
         // Générer PDF du reçu
@@ -156,15 +161,17 @@ class StudentPaymentController extends Controller
         
         // Si pas de fichier, générer à la volée
         $student = $payment->student;
-        $totalFees = $student->total_fees ?? $student->classe->school_fees ?? 0;
-        $totalPaid = $student->payments()->sum('amount');
+        $student->load('classe');
+        $yearId = $payment->academic_year_id ?? $student->academic_year_id;
+        $totalFees = ($student->total_fees > 0) ? (float) $student->total_fees : ($student->calculateTotalFees() ?: (float) ($student->classe?->school_fees ?? 0));
+        $totalPaid = (float) $student->payments()->where('academic_year_id', $yearId)->sum('amount');
         
         $pdf = Pdf::loadView('pdf.receipt', [
             'student' => $student,
             'payment' => $payment,
             'totalFees' => $totalFees,
             'totalPaid' => $totalPaid,
-            'remainingFees' => $totalFees - $totalPaid
+            'remainingFees' => max($totalFees - $totalPaid, 0)
         ]);
         
         return $pdf->download('recu_' . $payment->id . '.pdf');

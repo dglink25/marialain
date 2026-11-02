@@ -134,24 +134,38 @@ class StudentController extends Controller{
                 'parent_phone'         => $data['parent_phone'],
                 'num_educ'             => $data['num_educ'],
                 'age'                  => $data['age'],
+                'school_fees'          => $classe->school_fees ?? 0,
+                'amount_paid'          => 0,
+                'school_fees_paid'     => 0,
             ];
 
             // Création de l’élève
             $student = Student::create($studentData);
 
-            // Si la colonne school_fees existe
-            if (Schema::hasColumn('students', 'school_fees') && isset($data['school_fees'])) {
+            // Si un paiement initial a été renseigné
+            if (isset($data['school_fees']) && (float)$data['school_fees'] > 0) {
+                $initialPayment = (float) $data['school_fees'];
                 $student->update([
-                    'school_fees' => $data['school_fees'],
-                    'amount_paid' => $data['school_fees'],
-                    'is_validated' => true,
+                    'school_fees'      => $classe->school_fees ?? 0,
+                    'amount_paid'      => $initialPayment,
+                    'school_fees_paid' => $initialPayment,
+                    'fully_paid'       => ($initialPayment >= $totalFees && $totalFees > 0),
+                    'is_validated'     => true,
                 ]);
 
-                // Création du paiement associé
+                // Création du paiement associé avec academic_year_id
                 $student->payments()->create([
-                    'tranche'      => 1,
-                    'amount'       => $data['school_fees'],
-                    'payment_date' => now(),
+                    'tranche'          => 1,
+                    'amount'           => $initialPayment,
+                    'academic_year_id' => $activeYear->id,
+                    'payment_date'     => now(),
+                ]);
+            } else {
+                $student->update([
+                    'school_fees'      => $classe->school_fees ?? 0,
+                    'amount_paid'      => 0,
+                    'school_fees_paid' => 0,
+                    'fully_paid'       => false,
                 ]);
             }
 
@@ -586,9 +600,10 @@ class StudentController extends Controller{
             ->orderBy('first_name')
             ->get();
 
-        $data = $students->values()->map(function ($student, $index) {
-            $totalFees     = $student->total_fees ?? $student->classe->school_fees ?? 0;
-            $totalPaid     = $student->payments()->sum('amount');
+        $data = $students->values()->map(function ($student, $index) use ($activeYear) {
+            $yearId        = $student->academic_year_id ?? $activeYear->id;
+            $totalFees     = ($student->total_fees > 0) ? (float) $student->total_fees : ($student->calculateTotalFees() ?: (float) ($student->classe?->school_fees ?? 0));
+            $totalPaid     = (float) $student->payments()->where('academic_year_id', $yearId)->sum('amount');
             $remainingFees = max($totalFees - $totalPaid, 0);
 
             return [
@@ -625,8 +640,9 @@ class StudentController extends Controller{
             ], 422);
         }
 
-        $totalFees     = $student->total_fees ?? $student->classe->school_fees ?? 0;
-        $totalPaid     = $student->payments()->sum('amount');
+        $yearId        = $student->academic_year_id ?? $activeAcademicYear->id;
+        $totalFees     = ($student->total_fees > 0) ? (float) $student->total_fees : ($student->calculateTotalFees() ?: (float) ($student->classe?->school_fees ?? 0));
+        $totalPaid     = (float) $student->payments()->where('academic_year_id', $yearId)->sum('amount');
         $remainingFees = max($totalFees - $totalPaid, 0);
 
         if ($remainingFees <= 0) {
@@ -653,14 +669,16 @@ class StudentController extends Controller{
         $payment = $student->payments()->create([
             'tranche'          => $request->tranche,
             'amount'           => $request->amount,
-            'academic_year_id' => $activeAcademicYear->id,
+            'academic_year_id' => $yearId,
             'payment_date'     => $request->payment_date,
         ]);
 
-        $newTotalPaid = $totalPaid + $request->amount;
+        $newTotalPaid = $totalPaid + (float) $request->amount;
         $student->update([
-            'amount_paid'  => $newTotalPaid,
-            'is_validated' => $newTotalPaid >= $totalFees ? 1 : $student->is_validated,
+            'amount_paid'      => $newTotalPaid,
+            'school_fees_paid' => $newTotalPaid,
+            'fully_paid'       => ($newTotalPaid >= $totalFees && $totalFees > 0),
+            'is_validated'     => $newTotalPaid >= $totalFees ? 1 : $student->is_validated,
         ]);
 
         // Génération du reçu PDF (même logique que StudentPaymentController::store)

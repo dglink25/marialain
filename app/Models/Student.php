@@ -39,19 +39,29 @@ class Student extends Model{
             return 0;
         }
 
-        $fees = $this->classe->school_fees ?? 0;
-        
+        $fees = (float) ($this->classe->school_fees ?? 0);
+        $entityId = (int) ($this->entity_id ?? $this->classe->entity_id);
+
+        $inscriptionFee = ($entityId === 3)
+            ? (float) ($this->classe->registration_fee ?? 10000)
+            : 5000;
+
+        $reInscriptionFee = ($entityId === 3)
+            ? (float) ($this->classe->re_registration_fee ?? 5000)
+            : 0;
+
         if ($this->registration_type === 'new') {
-            $fees += $this->classe->registration_fee ?? 0;
+            $fees += $inscriptionFee;
         } elseif ($this->registration_type === 're_registration') {
-            $fees += $this->classe->re_registration_fee ?? 0;
+            $fees += $reInscriptionFee;
         }
-        
+
         return $fees;
     }
 
     public function getRemainingFeesAttribute(){
-        return $this->total_fees - $this->total_paid;
+        $totalFees = ($this->total_fees > 0) ? (float) $this->total_fees : $this->calculateTotalFees();
+        return max($totalFees - $this->total_paid, 0);
     }
 
 
@@ -67,16 +77,21 @@ class Student extends Model{
         return $this->hasMany(StudentPayment::class);
     }
 
+    public function currentYearPayments(){
+        return $this->hasMany(StudentPayment::class)->where('academic_year_id', $this->academic_year_id);
+    }
+
     public function getTotalPaidAttribute(){
-        return $this->payments->sum('amount');
+        return (float) $this->payments()->where('academic_year_id', $this->academic_year_id)->sum('amount');
     }
 
     public function getPaidAttribute(){
-        return $this->classe->school_fees;
+        return $this->classe?->school_fees ?? 0;
     }
 
     public function getIsFullyPaidAttribute() {
-        return ($this->total_fees - $this->total_paid) <= 0;
+        $totalFees = ($this->total_fees > 0) ? (float) $this->total_fees : $this->calculateTotalFees();
+        return $totalFees > 0 && ($totalFees - $this->total_paid) <= 0;
     }
 
     public function academicYear(){

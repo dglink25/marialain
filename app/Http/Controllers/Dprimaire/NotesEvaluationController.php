@@ -163,13 +163,21 @@ class NotesEvaluationController extends Controller{
                 if (!$snapshot || !$student) continue;
 
                 // Remettre l'élève dans sa classe/année/entité d'origine
+                $origClass = \App\Models\Classe::find($snapshot->class_id);
+                $origSchoolFees = (float) ($origClass?->school_fees ?? 0);
+                $origTotalFees = $snapshot->total_fees ?? $origSchoolFees;
+                $origPaid = (float) ($snapshot->amount_paid ?? 0);
+
                 $student->update([
                     'class_id'          => $snapshot->class_id,
                     'entity_id'         => $snapshot->entity_id,
                     'academic_year_id'  => $activeYear->id,
                     'registration_type' => $snapshot->registration_type,
-                    'total_fees'        => $snapshot->total_fees ?? 0,
-                    'amount_paid'       => $snapshot->amount_paid ?? 0,
+                    'school_fees'       => $origSchoolFees,
+                    'total_fees'        => $origTotalFees,
+                    'amount_paid'       => $origPaid,
+                    'school_fees_paid'  => $origPaid,
+                    'fully_paid'        => ($origPaid >= $origTotalFees && $origTotalFees > 0),
                 ]);
 
                 // Réinitialiser le snapshot
@@ -318,6 +326,12 @@ class NotesEvaluationController extends Controller{
         // ── ÉTAPE 2 : Déplacer les élèves DANS la transaction ─────────────────────
         DB::beginTransaction();
         try {
+            $newSchoolFees = (float) ($targetClass->school_fees ?? 0);
+            $reRegFee = ($targetEntityId === 3)
+                ? (float) ($targetClass->re_registration_fee ?? 5000)
+                : 0;
+            $newTotalFees = $newSchoolFees + $reRegFee;
+
             foreach ($request->student_ids as $studentId) {
                 $student = $students[$studentId] ?? null;
                 if (!$student) continue;
@@ -327,8 +341,11 @@ class NotesEvaluationController extends Controller{
                     'entity_id'         => $targetEntityId,
                     'academic_year_id'  => $targetYear->id,
                     'registration_type' => 're_registration',
-                    'total_fees'        => 0,
+                    'school_fees'       => $newSchoolFees,
+                    'total_fees'        => $newTotalFees,
                     'amount_paid'       => 0,
+                    'school_fees_paid'  => 0,
+                    'fully_paid'        => false,
                 ]);
             }
 
