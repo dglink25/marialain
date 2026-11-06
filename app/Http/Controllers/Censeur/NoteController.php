@@ -30,6 +30,96 @@ use App\Exports\ConducteExport;
 
     class NoteController extends Controller{
 
+        public function ficheEleveAjax(int $classId, int $studentId, int $trimestre): \Illuminate\Http\JsonResponse
+        {
+            $activeYear = AcademicYear::where('active', true)->firstOrFail();
+            $student    = Student::findOrFail($studentId);
+
+            $subjects = Subject::whereHas('classTeacherSubjects', function ($q) use ($classId, $activeYear) {
+                $q->where('class_id', $classId)->where('academic_year_id', $activeYear->id);
+            })->with(['classTeacherSubjects' => function ($q) use ($classId, $activeYear) {
+                $q->where('class_id', $classId)->where('academic_year_id', $activeYear->id);
+            }])->orderBy('name')->get();
+
+            $grades = Grade::where('student_id', $studentId)
+                ->where('class_id', $classId)
+                ->where('academic_year_id', $activeYear->id)
+                ->where('trimestre', $trimestre)
+                ->get()
+                ->groupBy(fn($g) => $g->subject_id . '_' . $g->type . '_' . $g->sequence);
+
+            $conduct    = Conduct::where('student_id', $studentId)->where('trimestre', $trimestre)->where('academic_year_id', $activeYear->id)->first();
+            $punishHours= Punishment::where('student_id', $studentId)->where('academic_year_id', $activeYear->id)->sum('hours');
+            $condFinale = max(0, ($conduct ? $conduct->grade : 0) - ($punishHours / 2));
+
+            $rows = [];
+            $totalPoints = 0;
+            $totalCoef   = 0;
+
+            foreach ($subjects as $subject) {
+                $coef = $subject->classTeacherSubjects->first()->coefficient ?? 1;
+
+                $interros = [];
+                for ($i = 1; $i <= 5; $i++) {
+                    $interros[$i] = $grades->get($subject->id . '_interrogation_' . $i)?->first()?->value;
+                }
+                $devoirs = [];
+                for ($i = 1; $i <= 2; $i++) {
+                    $devoirs[$i] = $grades->get($subject->id . '_devoir_' . $i)?->first()?->value;
+                }
+
+                $interroVals = collect($interros)->filter(fn($v) => $v !== null);
+                $devoirVals  = collect($devoirs)->filter(fn($v) => $v !== null);
+                $moyInterro  = $interroVals->isNotEmpty() ? round($interroVals->avg(), 2) : null;
+                $notesPour   = array_filter(array_merge($moyInterro !== null ? [$moyInterro] : [], $devoirVals->toArray()));
+                $moy         = !empty($notesPour) ? round(array_sum($notesPour) / count($notesPour), 2) : null;
+
+                if ($moy !== null) {
+                    $totalPoints += $moy * $coef;
+                    $totalCoef   += $coef;
+                }
+
+                $appreciation = match(true) {
+                    $moy === null => '—',
+                    $moy >= 16   => 'Très Bien',
+                    $moy >= 14   => 'Bien',
+                    $moy >= 12   => 'Assez Bien',
+                    $moy >= 10   => 'Passable',
+                    $moy >= 8    => 'Insuffisant',
+                    $moy >= 6    => 'Faible',
+                    default      => 'Médiocre',
+                };
+
+                $rows[] = [
+                    'subject'     => $subject->name,
+                    'coef'        => $coef,
+                    'i1' => $interros[1], 'i2' => $interros[2], 'i3' => $interros[3], 'i4' => $interros[4], 'i5' => $interros[5],
+                    'moy_interro' => $moyInterro,
+                    'd1' => $devoirs[1], 'd2' => $devoirs[2],
+                    'moy'         => $moy,
+                    'moy_coef'    => $moy !== null ? round($moy * $coef, 2) : null,
+                    'appreciation'=> $appreciation,
+                ];
+            }
+
+            if ($condFinale > 0) {
+                $totalPoints += $condFinale;
+                $totalCoef   += 1;
+            }
+
+            $moyGen = $totalCoef > 0 ? round($totalPoints / $totalCoef, 2) : null;
+
+            return response()->json([
+                'student'   => ['name' => $student->last_name . ' ' . $student->first_name, 'num_educ' => $student->num_educ],
+                'trimestre' => $trimestre,
+                'rows'      => $rows,
+                'conduite'  => round($condFinale, 2),
+                'total_coef'=> $totalCoef,
+                'total_pts' => round($totalPoints, 2),
+                'moy_gen'   => $moyGen,
+            ]);
+        }
+
         public function ficheComplete(int $classId, int $studentId)
         {
             $activeYear = AcademicYear::where('active', true)->firstOrFail();
@@ -858,27 +948,25 @@ use App\Exports\ConducteExport;
                 ->when($activeYear, fn($q) => $q->where('academic_year_id', $activeYear->id))
                 ->get();
 
-            // On mappe pour exposer les champs utiles dans la vue
             $matieres = $matieresPivot->map(function ($item) {
                 $subject = $item->subject;
                 if (!$subject) return null;
-
-                // On enrichit l'objet subject avec les infos du pivot
-                $subject->coefficient  = $item->coefficient ?? 1;
-                // subject_id : l'ID réel de la matière (utile dans le select de la vue)
-                $subject->subject_id   = $subject->id;
-
+                $subject->coefficient = $item->coefficient ?? 1;
+                $subject->subject_id  = $subject->id;
                 return $subject;
-            })->filter()->values(); // supprime les null et réindexe
+            })->filter()->values();
 
             $coef = $matieresPivot->first();
 
+            // Élèves validés de la classe pour le modal fiche élève
+            $students = Student::where('class_id', $id)
+                ->when($activeYear, fn($q) => $q->where('academic_year_id', $activeYear->id))
+                ->where('is_validated', 1)
+                ->orderBy('last_name')->orderBy('first_name')
+                ->get(['id', 'last_name', 'first_name', 'num_educ']);
+
             return view('censeur.classes.notes.trimestres', compact(
-                'classe',
-                'trimestres',
-                'matieres',
-                'coef',
-                'activeYear'
+                'classe', 'trimestres', 'matieres', 'coef', 'activeYear', 'students'
             ));
         }
 

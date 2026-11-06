@@ -388,6 +388,11 @@ Route::middleware(['auth'])->get('/censeur/classes/{classId}/students/{studentId
     [App\Http\Controllers\Censeur\NoteController::class, 'ficheComplete']
 )->name('censeur.classes.students.fiche_complete');
 
+// AJAX — notes d'un élève pour un trimestre (modal fiche élève)
+Route::middleware(['auth'])->get('/censeur/classes/{classId}/students/{studentId}/notes-ajax/{trimestre}',
+    [App\Http\Controllers\Censeur\NoteController::class, 'ficheEleveAjax']
+)->name('censeur.classes.students.notes_ajax');
+
 // Route pour consulter les notes d'une évaluation spécifique
 Route::middleware(['auth'])->get('classes/{classId}/notes/{subjectId}/{type}/{sequence}/trimestre/{trimestre}', 
     [App\Http\Controllers\Censeur\NoteController::class, 'viewEvaluationNotes']
