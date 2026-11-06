@@ -71,6 +71,14 @@ class StudentValidationController extends Controller{
             'amount_paid' => $request->amount_paid,
         ]);
 
+        \App\Services\ActivityLogger::log(
+            'validate',
+            "Validation de l'élève {$student->last_name} {$student->first_name} — Montant payé : {$request->amount_paid} FCFA",
+            'Student', $student->id,
+            null,
+            ['is_validated' => true, 'amount_paid' => $request->amount_paid]
+        );
+
         $yearId = $student->academic_year_id ?? $activeYear->id;
 
         // ✅ Enregistrement du paiement

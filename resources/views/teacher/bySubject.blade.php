@@ -28,11 +28,20 @@
                     <span class="text-indigo-600 font-semibold">{{ $subject->name }}</span>
                 </p>
                 <div class="mt-3 flex items-center gap-2">
+                    @php
+                        $userRole = optional(auth()->user()->role)->name ?? '';
+                        $canDownloadOthers = in_array($userRole, ['super_admin', 'secretaire', 'censeur', 'surveillant']);
+                        $isOwner = auth()->id() == $teacher->id;
+                    @endphp
+
+                    {{-- Télécharger uniquement si c'est son propre cahier OU si admin/censeur --}}
+                    @if($isOwner || $canDownloadOthers)
                     <a href="{{ route('cahier.export.pdf', ['filter_type' => 'subject_class', 'class_id' => $class->id, 'subject_id' => $subject->id]) }}"
                        target="_blank"
                        class="inline-flex items-center px-3.5 py-2 bg-gray-900 hover:bg-black text-white text-xs font-semibold rounded-lg shadow-sm transition">
                         <i class="fas fa-file-pdf mr-1.5 text-red-400"></i> Télécharger Cahier de texte (PDF)
                     </a>
+                    @endif
                 </div>
             </div>
             

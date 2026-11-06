@@ -48,12 +48,19 @@
             </div>
 
             <div class="flex flex-wrap justify-center lg:justify-end gap-3">
+                @php
+                    $userRole = optional(auth()->user()->role)->name ?? '';
+                    $canDownload = in_array($userRole, ['super_admin', 'secretaire', 'censeur', 'surveillant'])
+                        || auth()->id() == $teacher->id;
+                @endphp
+                @if($canDownload)
                 <a href="{{ route('cahier.export.pdf', ['filter_type' => 'subject_class', 'class_id' => $class->id, 'subject_id' => $subject->id]) }}"
                    target="_blank"
                    class="bg-gray-800 hover:bg-black text-white px-5 py-3 rounded-xl shadow-md transition-all duration-300 font-semibold flex items-center gap-2">
                     <i class="fas fa-file-pdf text-red-400"></i>
                     Télécharger PDF
                 </a>
+                @endif
                 <button onclick="openModalForCreate()"
                     class="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white px-6 py-3 rounded-xl shadow-lg transition-all duration-300 font-semibold transform hover:scale-105 flex items-center gap-2">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

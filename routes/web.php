@@ -17,6 +17,7 @@ use App\Http\Controllers\DashboardPrimaireController;
 use App\Http\Controllers\Admin\AdminAuthController;
 use App\Http\Controllers\Admin\InvitationController as AdminInvitationController;
 use App\Http\Controllers\Admin\AcademicYearController;
+use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\ClassController;
 use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\Admin\StudentExportController;
@@ -333,6 +334,10 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
 
     // Années académiques
     Route::resource('academic_years', AcademicYearController::class)->only(['index', 'store', 'create', 'edit', 'destroy', 'update']);
+
+    // Logs d'activité (admin uniquement)
+    Route::get('/activity-logs', [ActivityLogController::class, 'index'])->name('admin.activity_logs.index');
+    Route::get('/activity-logs/{activityLog}', [ActivityLogController::class, 'show'])->name('admin.activity_logs.show');
 
     // Classes
     Route::resource('classes', ClassController::class);

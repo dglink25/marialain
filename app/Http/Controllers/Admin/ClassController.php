@@ -6,6 +6,9 @@ use Illuminate\Http\Request;
 use App\Models\Classe; 
 use App\Models\AcademicYear;
 use App\Models\Entity;
+use App\Models\Timetable;
+use App\Models\ClassTeacherSubject;
+use Illuminate\Support\Facades\DB;
 
 class ClassController extends Controller
 {
@@ -92,19 +95,38 @@ class ClassController extends Controller
         return redirect()->route('admin.classes.index')->with('success', 'Classe mise à jour avec succès.');
     }
 
-    public function destroy($id)
-    {
+    public function destroy($id)    {
         if (!$this->checkActiveYear() instanceof AcademicYear) {
             return $this->checkActiveYear();
         }
         $classe = Classe::findOrFail($id);
+
+        // ── Protection : bloquer si la classe a des données liées ──
+        $nbStudents  = \App\Models\Student::where('class_id', $id)->count();
+        $nbGrades    = \DB::table('grades')->where('class_id', $id)->count();
+        $nbTimetables= \App\Models\Timetable::where('class_id', $id)->count();
+        $nbCts       = \App\Models\ClassTeacherSubject::where('class_id', $id)->count();
+        $nbCahier    = \DB::table('cahier_de_texte')->where('class_id', $id)->count();
+
+        if ($nbStudents > 0 || $nbGrades > 0 || $nbTimetables > 0 || $nbCts > 0 || $nbCahier > 0) {
+            \App\Services\ActivityLogger::logDelete(
+                "Tentative de suppression BLOQUÉE de la classe {$classe->name} (élèves:{$nbStudents}, notes:{$nbGrades}, EDT:{$nbTimetables}, CTS:{$nbCts}, cahiers:{$nbCahier})",
+                'Classe', $id, $classe->toArray()
+            );
+            return redirect()->route('admin.classes.index')
+                ->with('error', "Impossible de supprimer la classe \"{$classe->name}\" : elle contient {$nbStudents} élève(s), {$nbGrades} note(s), {$nbTimetables} créneau(x), {$nbCts} relation(s) enseignant-matière et {$nbCahier} cahier(s) de texte. Videz-la d'abord.");
+        }
+
+        \App\Services\ActivityLogger::logDelete(
+            "Suppression de la classe {$classe->name} (vide)",
+            'Classe', $id, $classe->toArray()
+        );
         $classe->delete();
 
         return redirect()->route('admin.classes.index')->with('success', 'Classe supprimée avec succès.');
     }
 
-    public function store(Request $request)
-    {
+    public function store(Request $request)   {
         if (!$this->checkActiveYear() instanceof AcademicYear) {
             return $this->checkActiveYear();
         }

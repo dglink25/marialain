@@ -170,17 +170,36 @@ class InvitationController extends Controller{
         return back()->with('success', 'Nom mis à jour avec succès.');
     }
 
-    public function destroy(TeacherInvitation $invitation){
-        // Supprimer d'abord le user concerné
+    public function destroy(TeacherInvitation $invitation)
+    {
+        \App\Services\ActivityLogger::logDelete(
+            "Suppression enseignant : {$invitation->name} ({$invitation->email})",
+            'TeacherInvitation',
+            $invitation->id,
+            ['name' => $invitation->name, 'email' => $invitation->email]
+        );
+
         if ($invitation->user) {
             $invitation->user->delete();
         }
-
-        // Supprimer l’invitation elle-même
         $invitation->delete();
 
         return back()->with('success', 'Enseignant supprimé avec succès.');
     }
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 }

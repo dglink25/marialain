@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\AcademicYear;
+use Illuminate\Support\Facades\DB;
 
 class AcademicYearController extends Controller
 {
@@ -57,11 +58,33 @@ class AcademicYearController extends Controller
 
     public function destroy(AcademicYear $academicYear)
     {
-        
+        // ── Protection absolue : bloquer si l'année a des données ──
+        $nbClasses  = \App\Models\Classe::where('academic_year_id', $academicYear->id)->count();
+        $nbStudents = \App\Models\Student::where('academic_year_id', $academicYear->id)->count();
+        $nbGrades   = \DB::table('grades')->where('academic_year_id', $academicYear->id)->count();
+
+        if ($nbClasses > 0 || $nbStudents > 0 || $nbGrades > 0) {
+            \App\Services\ActivityLogger::logDelete(
+                "Tentative de suppression BLOQUÉE de l'année {$academicYear->name} (classes:{$nbClasses}, élèves:{$nbStudents}, notes:{$nbGrades})",
+                'AcademicYear', $academicYear->id, $academicYear->toArray()
+            );
+            return redirect()->route('admin.academic_years.index')
+                ->with('error', "Impossible de supprimer l'année \"{$academicYear->name}\" : elle contient {$nbClasses} classe(s), {$nbStudents} élève(s) et {$nbGrades} note(s). Cette opération est irréversible et interdite.");
+        }
+
+        if ($academicYear->active) {
+            return redirect()->route('admin.academic_years.index')
+                ->with('error', "Impossible de supprimer l'année active \"{$academicYear->name}\". Désactivez-la d'abord.");
+        }
+
+        \App\Services\ActivityLogger::logDelete(
+            "Suppression de l'année académique {$academicYear->name}",
+            'AcademicYear', $academicYear->id, $academicYear->toArray()
+        );
         $academicYear->delete();
 
         return redirect()->route('admin.academic_years.index')
-                         ->with('success', 'Année académique supprimée. Toutes les données associées ont été perdues.');
+                         ->with('success', 'Année académique supprimée.');
     }
 
     public function activate(Request $request){

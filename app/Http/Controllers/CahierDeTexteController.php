@@ -848,6 +848,37 @@ class CahierDeTexteController extends Controller{
             'end_date'    => 'nullable|date|after_or_equal:start_date',
         ]);
 
+        // ── Restriction : un enseignant ne peut télécharger que SON propre cahier ──
+        $user     = auth()->user();
+        $userRole = optional($user->role)->name ?? '';
+        $isAdmin  = in_array($userRole, ['super_admin', 'secretaire', 'censeur', 'surveillant', 'directeur_primaire']);
+
+        if (!$isAdmin) {
+            // Vérifier que le cahier demandé appartient à l'enseignant connecté
+            $filterType    = $request->filter_type;
+            $requestedTeacherId = $request->teacher_id ?? null;
+
+            if ($filterType === 'subject_class') {
+                // Pour subject_class, vérifier que cet enseignant enseigne cette matière dans cette classe
+                $isOwner = \App\Models\ClassTeacherSubject::where('class_id', $request->class_id)
+                    ->where('subject_id', $request->subject_id)
+                    ->where('teacher_id', $user->id)
+                    ->exists();
+                if (!$isOwner) {
+                    abort(403, "Vous n'êtes pas autorisé à télécharger ce cahier de texte.");
+                }
+            } elseif ($filterType === 'teacher_class') {
+                if ($requestedTeacherId && $requestedTeacherId != $user->id) {
+                    abort(403, "Vous ne pouvez télécharger que votre propre cahier de texte.");
+                }
+                // Forcer le teacher_id à l'utilisateur connecté
+                $request->merge(['teacher_id' => $user->id]);
+            } else {
+                // all_class : interdit aux enseignants
+                abort(403, "Accès non autorisé.");
+            }
+        }
+
         $academicYear = AcademicYear::where('active', 1)->firstOrFail();
         $classe = Classe::with('entity')->findOrFail($request->class_id);
 

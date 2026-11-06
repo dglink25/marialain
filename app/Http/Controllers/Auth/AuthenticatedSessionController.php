@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Services\ActivityLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -25,33 +26,31 @@ class AuthenticatedSessionController extends Controller
     public function store(LoginRequest $request): RedirectResponse  {
         try {
             $request->authenticate();
-            
             $request->session()->regenerate();
-            
+
+            ActivityLogger::log('login', 'Connexion réussie', 'User', auth()->id());
+
             return redirect()->intended(route('admin.accueil'));
-            
+
         } catch (\Illuminate\Validation\ValidationException $e) {
-            // Pour les erreurs de validation (mauvais identifiants)
+            // Log tentative échouée
+            ActivityLogger::log('login_failed', 'Tentative de connexion échouée pour : ' . $request->email, null, null);
             return back()
                 ->withErrors(['email' => 'Les identifiants fournis ne correspondent pas à nos enregistrements.'])
                 ->withInput($request->only('email', 'remember'));
-        } 
+        }
         catch (\Exception $e) {
-            // Pour toutes les autres erreurs
             return back()
                 ->withErrors(['auth' => 'Identifiants incorrects'])
                 ->withInput($request->only('email', 'remember'));
         }
     }
 
-    /**
-     * Destroy an authenticated session.
-     */
     public function destroy(Request $request): RedirectResponse {
+        ActivityLogger::log('logout', 'Déconnexion', 'User', auth()->id());
+
         Auth::guard('web')->logout();
-
         $request->session()->invalidate();
-
         $request->session()->regenerateToken();
 
         return redirect('/home');

@@ -436,6 +436,10 @@
                                         <i class="fas fa-calendar-alt w-5"></i>
                                         <span class="ml-2">Années académiques</span>
                                     </a>
+                                    <a href="{{ route('admin.activity_logs.index') }}" class="flex items-center px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('admin.activity_logs.*') ? 'bg-[#ffffff36] font-bold' : '' }}">
+                                        <i class="fas fa-history w-5"></i>
+                                        <span class="ml-2">Historique activités</span>
+                                    </a>
 
                                     {{-- Élèves --}}
                                     <div x-data="{ open: {{ request()->routeIs('admin.students.*') || request()->routeIs('students.create') ? 'true' : 'false' }} }" class="space-y-1">
