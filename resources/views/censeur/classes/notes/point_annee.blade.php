@@ -123,7 +123,14 @@
                         <td class="px-3 py-2.5 text-center text-gray-500 font-medium border-r border-gray-100">{{ $row['student']->num_educ }}</td>
                         <td class="px-4 py-2.5 border-r border-gray-100">
                             <div class="font-semibold text-gray-900">{{ strtoupper($row['student']->last_name) }}</div>
-                            <div class="text-gray-500 text-xs">{{ $row['student']->first_name }}</div>
+                            <div class="text-gray-500 text-xs flex items-center gap-1.5">
+                                {{ $row['student']->first_name }}
+                                <a href="{{ route('censeur.classes.students.fiche_complete', [$classe->id, $row['student']->id]) }}"
+                                   class="inline-flex items-center gap-1 px-1.5 py-0.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded text-xs font-semibold transition"
+                                   title="Voir toutes les notes">
+                                    <i class="fas fa-chart-bar text-xs"></i>
+                                </a>
+                            </div>
                         </td>
                         <td class="px-3 py-2.5 text-center border-r border-gray-100 text-gray-600 text-xs">{{ $row['conduite_t1'] > 0 ? number_format($row['conduite_t1'], 2, ',', '') : '-' }}</td>
                         <td class="px-3 py-2.5 text-center border-r border-gray-100 font-semibold {{ $row['moy_t1'] !== null ? ($row['moy_t1'] >= 10 ? 'text-green-700' : 'text-red-700') : 'text-gray-400' }}">{{ $fmtMoy($row['moy_t1']) }}</td>

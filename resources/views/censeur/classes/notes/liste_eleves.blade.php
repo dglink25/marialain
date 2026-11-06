@@ -227,8 +227,13 @@
                                         <div class="font-medium text-gray-900">
                                             {{ strtoupper($student->last_name) }} {{ ucfirst($student->first_name) }}
                                         </div>
-                                        <div class="text-xs text-gray-500">
-                                            {{ $student->num_educ ?? 'N/A' }}
+                                        <div class="text-xs text-gray-500 flex items-center gap-2">
+                                            <span>{{ $student->num_educ ?? 'N/A' }}</span>
+                                            <a href="{{ route('censeur.classes.students.fiche_complete', [$classe->id, $student->id]) }}"
+                                               class="inline-flex items-center gap-1 px-2 py-0.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-lg text-xs font-semibold transition"
+                                               title="Voir toutes les notes">
+                                                <i class="fas fa-chart-bar text-xs"></i> Fiche
+                                            </a>
                                         </div>
                                     </div>
                                 </div>

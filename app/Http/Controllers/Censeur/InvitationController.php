@@ -188,18 +188,3 @@ class InvitationController extends Controller{
     }
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-}

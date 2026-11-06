@@ -383,6 +383,11 @@ Route::middleware(['auth'])->get('/censeur/classes/{classId}/students/{studentId
     [App\Http\Controllers\Censeur\NoteController::class, 'downloadPdf']
 )->name('censeur.classes.notes.bulletin.pdf');
 
+// Fiche complète d'un élève — toutes les notes des 3 trimestres
+Route::middleware(['auth'])->get('/censeur/classes/{classId}/students/{studentId}/fiche-complete',
+    [App\Http\Controllers\Censeur\NoteController::class, 'ficheComplete']
+)->name('censeur.classes.students.fiche_complete');
+
 // Route pour consulter les notes d'une évaluation spécifique
 Route::middleware(['auth'])->get('classes/{classId}/notes/{subjectId}/{type}/{sequence}/trimestre/{trimestre}', 
     [App\Http\Controllers\Censeur\NoteController::class, 'viewEvaluationNotes']

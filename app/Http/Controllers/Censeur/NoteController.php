@@ -30,6 +30,119 @@ use App\Exports\ConducteExport;
 
     class NoteController extends Controller{
 
+        public function ficheComplete(int $classId, int $studentId)
+        {
+            $activeYear = AcademicYear::where('active', true)->firstOrFail();
+            $student    = Student::findOrFail($studentId);
+            $classe     = Classe::findOrFail($classId);
+
+            // Matières de la classe avec coefficients
+            $subjects = Subject::whereHas('classTeacherSubjects', function ($q) use ($classId, $activeYear) {
+                $q->where('class_id', $classId)->where('academic_year_id', $activeYear->id);
+            })->with(['classTeacherSubjects' => function ($q) use ($classId, $activeYear) {
+                $q->where('class_id', $classId)->where('academic_year_id', $activeYear->id);
+            }])->orderBy('name')->get();
+
+            // Toutes les notes de l'élève pour l'année
+            $allGrades = Grade::where('student_id', $studentId)
+                ->where('class_id', $classId)
+                ->where('academic_year_id', $activeYear->id)
+                ->get()
+                ->groupBy(fn($g) => $g->trimestre . '_' . $g->subject_id . '_' . $g->type . '_' . $g->sequence);
+
+            // Conduites
+            $conduites = Conduct::where('student_id', $studentId)
+                ->where('academic_year_id', $activeYear->id)
+                ->get()->keyBy('trimestre');
+
+            $punishHours = Punishment::where('student_id', $studentId)
+                ->where('academic_year_id', $activeYear->id)->sum('hours');
+
+            // Construire la matrice : trimestre → matière → données
+            $data = [];
+            foreach ([1, 2, 3] as $trimestre) {
+                $totalPoints = 0;
+                $totalCoef   = 0;
+                $rows        = [];
+
+                foreach ($subjects as $subject) {
+                    $coef = $subject->classTeacherSubjects->first()->coefficient ?? 1;
+
+                    $interros = [];
+                    for ($i = 1; $i <= 5; $i++) {
+                        $key = $trimestre . '_' . $subject->id . '_interrogation_' . $i;
+                        $interros[$i] = $allGrades->get($key)?->first()?->value;
+                    }
+                    $devoirs = [];
+                    for ($i = 1; $i <= 2; $i++) {
+                        $key = $trimestre . '_' . $subject->id . '_devoir_' . $i;
+                        $devoirs[$i] = $allGrades->get($key)?->first()?->value;
+                    }
+
+                    $interroVals = collect($interros)->filter(fn($v) => $v !== null);
+                    $devoirVals  = collect($devoirs)->filter(fn($v) => $v !== null);
+
+                    $moyInterro = $interroVals->isNotEmpty() ? round($interroVals->avg(), 2) : null;
+                    $notesPour  = array_filter(array_merge($moyInterro !== null ? [$moyInterro] : [], $devoirVals->toArray()), fn($v) => $v !== null);
+                    $moy        = !empty($notesPour) ? round(array_sum($notesPour) / count($notesPour), 2) : null;
+
+                    if ($moy !== null) {
+                        $totalPoints += $moy * $coef;
+                        $totalCoef   += $coef;
+                    }
+
+                    $appreciation = match(true) {
+                        $moy === null   => '—',
+                        $moy >= 16      => 'Très Bien',
+                        $moy >= 14      => 'Bien',
+                        $moy >= 12      => 'Assez Bien',
+                        $moy >= 10      => 'Passable',
+                        $moy >= 8       => 'Insuffisant',
+                        $moy >= 6       => 'Faible',
+                        default         => 'Médiocre',
+                    };
+
+                    $rows[] = [
+                        'subject'     => $subject->name,
+                        'coef'        => $coef,
+                        'interros'    => $interros,
+                        'devoirs'     => $devoirs,
+                        'moyInterro'  => $moyInterro,
+                        'moy'         => $moy,
+                        'moyCoef'     => $moy !== null ? round($moy * $coef, 2) : null,
+                        'appreciation'=> $appreciation,
+                    ];
+                }
+
+                // Conduite
+                $conduct     = $conduites->get($trimestre);
+                $condGrade   = $conduct ? $conduct->grade : 0;
+                $condFinale  = max(0, $condGrade - ($punishHours / 2));
+                if ($condFinale > 0) {
+                    $totalPoints += $condFinale;
+                    $totalCoef   += 1;
+                }
+
+                $moyGen = $totalCoef > 0 ? round($totalPoints / $totalCoef, 2) : null;
+
+                $data[$trimestre] = [
+                    'rows'     => $rows,
+                    'conduite' => round($condFinale, 2),
+                    'totalCoef'=> $totalCoef,
+                    'totalPts' => round($totalPoints, 2),
+                    'moyGen'   => $moyGen,
+                ];
+            }
+
+            // Moyenne annuelle
+            $moys = array_filter(array_column($data, 'moyGen'));
+            $moyAnnuelle = !empty($moys) ? round(array_sum($moys) / count($moys), 2) : null;
+
+            return view('censeur.classes.notes.fiche_complete', compact(
+                'student', 'classe', 'data', 'moyAnnuelle', 'activeYear'
+            ));
+        }
+
         public function index(){
             $activeYear = AcademicYear::where('active', true)->firstOrFail();
 
