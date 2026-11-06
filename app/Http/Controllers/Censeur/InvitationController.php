@@ -13,8 +13,7 @@ use App\Models\TeacherInvitation;
 use App\Mail\TeacherInvitationMail;
 use App\Models\AcademicYear;
 
-
-class InvitationController extends Controller{
+class InvitationController extends Controller {
 
     public function checkActiveYear(){
         $activeYear = AcademicYear::where('active', 1)->first();
@@ -24,7 +23,7 @@ class InvitationController extends Controller{
         }
         return $activeYear;
     }
-    
+
     public function index(){
         // Récupère l'année scolaire active
         $activeYear = AcademicYear::where('active', true)->first();
@@ -115,7 +114,6 @@ class InvitationController extends Controller{
         return redirect('/login')->with('success', 'Votre compte est activé, veuillez vous connecter.');
     }
 
-
     public function destroy(TeacherInvitation $invitation){
         // Supprimer d'abord le user concerné
         if ($invitation->user) {
@@ -127,6 +125,4 @@ class InvitationController extends Controller{
 
         return back()->with('success', 'Enseignant supprimé avec succès.');
     }
-
-
 }
