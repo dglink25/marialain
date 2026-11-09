@@ -290,11 +290,7 @@
                                     <a href="{{ route('teacher.classes') }}" class="flex items-center px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('teacher.classes') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
                                         <i class="fa fa-layer-group w-5"></i>
                                         <span class="ml-2">Classes</span>
-                                    </a>
-                                    <a href="{{ route('cahier.export.index') }}" class="flex items-center px-3 py-3 rounded-md hover:bg-[#ffffff36] transition {{ request()->routeIs('cahier.*') ? 'bg-[#ffffff36] font-bold' : 'hover:bg-[#63c6ff70]' }}">
-                                        <i class="fas fa-book-reader w-5"></i>
-                                        <span class="ml-2">Cahiers de texte</span>
-                                    </a>
+                                    </a>                                    
                                     @break
 
                                 @case('censeur')

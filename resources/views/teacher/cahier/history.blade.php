@@ -49,9 +49,10 @@
 
             <div class="flex flex-wrap justify-center lg:justify-end gap-3">
                 @php
-                    $userRole = optional(auth()->user()->role)->name ?? '';
+                    $userRole    = optional(auth()->user()->role)->name ?? '';
+                    $teacherId   = isset($teacher) ? $teacher->id : auth()->id();
                     $canDownload = in_array($userRole, ['super_admin', 'secretaire', 'censeur', 'surveillant'])
-                        || auth()->id() == $teacher->id;
+                        || auth()->id() == $teacherId;
                 @endphp
                 @if($canDownload)
                 <a href="{{ route('cahier.export.pdf', ['filter_type' => 'subject_class', 'class_id' => $class->id, 'subject_id' => $subject->id]) }}"
